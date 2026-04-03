@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop – SHRISH LLC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="announcement-bar"><span>🥭 Fresh Indian Mangoes Now Available — Pickup in Short Pump & Chesterfield</span></div>
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo"><img src="logo.png" alt="Shrish LLC" class="logo-img"></a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="nav-link">Home</a></li>
+      <li><a href="about.html" class="nav-link">About</a></li>
+      <li><a href="shop.html" class="nav-link active">Shop</a></li>
+      <li><a href="recipes.html" class="nav-link">Recipes</a></li>
+      <li><a href="contact.html" class="nav-link">Contact</a></li>
+    </ul>
+    <a href="order.html" class="nav-cta btn-primary">Order Now</a>
+    <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+  </div>
+  <div class="nav-mobile" id="navMobile">
+    <a href="index.html">Home</a><a href="about.html">About</a><a href="shop.html">Shop</a>
+    <a href="recipes.html">Recipes</a><a href="contact.html">Contact</a>
+    <a href="order.html" class="mobile-cta">Order Now</a>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <h1>Mango <em>Shop</em></h1>
+  <p>All our Indian mango varieties — availability updated seasonally. Check the order form for what's in stock today.</p>
+</div>
+
+<section class="section">
+<div class="container">
+  <div class="shop-filters">
+    <button class="filter-btn active" onclick="filterProducts('all', this)">All Varieties</button>
+    <button class="filter-btn" onclick="filterProducts('available', this)">✓ Available Now</button>
+    <button class="filter-btn" onclick="filterProducts('unavailable', this)">Coming Soon</button>
+  </div>
+  <div class="products-grid" id="shopGrid"></div>
+  <div style="text-align:center;margin-top:48px;padding:32px;background:var(--cream-d);border-radius:var(--radius-lg)">
+    <div style="font-size:32px;margin-bottom:12px">🥭</div>
+    <h3 style="font-family:var(--font-display);font-size:24px;color:var(--dark);margin-bottom:8px">Ready to Order?</h3>
+    <p style="color:var(--text-light);margin-bottom:20px">Place your order online. Pay at pickup. No card needed.</p>
+    <a href="order.html" class="btn-primary">Place an Order →</a>
+  </div>
+</div>
+</section>
+
+<footer class="footer">
+  <div class="footer-bottom"><span>© 2025 Shrish LLC. All rights reserved.</span>
+    <div class="footer-legal"><a href="privacy.html">Privacy Policy</a><a href="refund.html">Refund Policy</a><a href="terms.html">Terms</a></div>
+  </div>
+</footer>
+<script src="data.js"></script>
+<script src="main.js"></script>
+<script>
+let currentFilter = 'all';
+function buildShop(filter) {
+  const grid = document.getElementById('shopGrid');
+  const products = filter === 'all' ? SHRISH_DATA.products
+    : filter === 'available' ? SHRISH_DATA.products.filter(p => p.available)
+    : SHRISH_DATA.products.filter(p => !p.available);
+  grid.innerHTML = products.map(p => `
+    <div class="product-card ${p.available ? '' : 'product-card-unavailable'}">
+      ${p.tag ? `<div class="product-card-badge">${p.tag}</div>` : ''}
+      <div class="product-card-img">${p.emoji}</div>
+      <div class="product-card-body">
+        <h3>${p.name}</h3>
+        <p>${p.description}</p>
+        <div class="product-card-footer">
+          <div>
+            <div class="product-price">${p.price}</div>
+            <div class="product-unit">${p.unit}</div>
+          </div>
+          <span class="product-status-badge ${p.available ? 'available' : 'unavailable'}">
+            ${p.available ? '✓ Available' : 'Sold Out'}
+          </span>
+        </div>
+        ${p.available ? `<a href="order.html" class="btn-primary" style="width:100%;text-align:center;margin-top:16px;display:block">Order Now</a>` : `<div style="text-align:center;margin-top:16px;color:var(--text-light);font-size:13px">Check back soon</div>`}
+      </div>
+    </div>`).join('');
+}
+function filterProducts(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  buildShop(filter);
+}
+buildShop('all');
+</script>
+</body>
+</html>

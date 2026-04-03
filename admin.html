@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard – SHRISH LLC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body style="background:var(--cream)">
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="admin-login">
+  <div style="text-align:center;margin-bottom:32px">
+    <img src="logo.png" alt="Shrish LLC" style="height:70px;margin:0 auto 16px">
+    <h2 style="font-family:var(--font-display);font-size:28px;color:var(--dark)">Admin Login</h2>
+    <p style="color:var(--text-light);font-size:14px">Shrish LLC — Order Management</p>
+  </div>
+  <div class="order-card">
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" class="form-control" id="adminPassword" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <button class="submit-btn" onclick="login()">Login</button>
+    <div id="loginError" style="color:#C62828;font-size:13px;text-align:center;margin-top:12px;display:none">Incorrect password. Try again.</div>
+  </div>
+  <p style="text-align:center;font-size:12px;color:var(--text-light);margin-top:16px">Default password: <strong>shrish2025</strong> — change in data.js</p>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div id="adminDashboard" style="display:none">
+  <nav style="background:var(--dark);padding:16px 24px;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:16px">
+      <img src="logo.png" alt="Shrish" style="height:44px">
+      <span style="color:var(--gold-l);font-family:var(--font-display);font-size:20px">Admin Dashboard</span>
+    </div>
+    <button class="admin-logout" onclick="logout()">Logout</button>
+  </nav>
+
+  <div class="admin-page">
+    <!-- STATS -->
+    <div class="admin-stats" id="adminStats"></div>
+
+    <!-- TABS -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchTab('orders',this)">📋 Orders</button>
+      <button class="admin-tab" onclick="switchTab('products',this)">🥭 Manage Products</button>
+    </div>
+
+    <!-- ORDERS TAB -->
+    <div id="tab-orders">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <h2 style="font-family:var(--font-display);font-size:24px;color:var(--dark)">Customer Orders</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <select id="statusFilter" class="form-control" style="width:auto;padding:8px 14px;font-size:13px" onchange="renderOrders()">
+            <option value="all">All Orders</option>
+            <option value="pending">Pending</option>
+            <option value="fulfilled">Fulfilled</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <button class="btn-outline" style="padding:8px 16px;font-size:13px" onclick="exportCSV()">⬇ Export CSV</button>
+          <button class="btn-outline" style="padding:8px 16px;font-size:13px;color:#C62828;border-color:#C62828" onclick="clearFulfilled()">🗑 Clear Fulfilled</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="orders-table" id="ordersTable">
+          <thead>
+            <tr>
+              <th>Order #</th>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Product</th>
+              <th>Qty</th>
+              <th>Location</th>
+              <th>Pickup Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ordersBody"></tbody>
+        </table>
+        <div id="noOrders" style="text-align:center;padding:48px;color:var(--text-light);display:none">
+          <div style="font-size:48px;margin-bottom:12px">📋</div>
+          <p>No orders yet. They'll appear here when customers place orders.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS TAB -->
+    <div id="tab-products" style="display:none">
+      <h2 style="font-family:var(--font-display);font-size:24px;color:var(--dark);margin-bottom:8px">Manage Product Availability</h2>
+      <p style="color:var(--text-light);font-size:14px;margin-bottom:28px">Toggle products on/off. Unavailable items won't appear in the order form.</p>
+      <div class="product-manage-grid" id="productManageGrid"></div>
+      <div style="margin-top:24px;padding:20px;background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow)">
+        <p style="font-size:13px;color:var(--text-light)">⚠️ <strong>Note:</strong> Changes to availability here update your browser's local data. To permanently update the website for all users, edit the <code>data.js</code> file and set <code>available: true/false</code> for each product.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+// ── CONFIG ─────────────────────────────────────────────────
+const ADMIN_PASS = 'shrish2025'; // change this!
+const ORDERS_KEY = 'shrish_orders';
+
+// ── AUTH ───────────────────────────────────────────────────
+function login() {
+  const pw = document.getElementById('adminPassword').value;
+  if (pw === ADMIN_PASS) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminDashboard').style.display = 'block';
+    loadDashboard();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+function logout() {
+  document.getElementById('loginScreen').style.display = 'block';
+  document.getElementById('adminDashboard').style.display = 'none';
+  document.getElementById('adminPassword').value = '';
+}
+
+// ── DATA ───────────────────────────────────────────────────
+function getOrders() {
+  try { return JSON.parse(localStorage.getItem(ORDERS_KEY)) || []; }
+  catch { return []; }
+}
+function saveOrders(orders) {
+  localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+}
+
+// ── STATS ──────────────────────────────────────────────────
+function renderStats() {
+  const orders = getOrders();
+  const pending   = orders.filter(o => o.status === 'pending').length;
+  const fulfilled = orders.filter(o => o.status === 'fulfilled').length;
+  const available = SHRISH_DATA.products.filter(p => p.available).length;
+  document.getElementById('adminStats').innerHTML = `
+    <div class="admin-stat-card">
+      <div class="stat-label">Total Orders</div>
+      <div class="stat-value">${orders.length}</div>
+    </div>
+    <div class="admin-stat-card">
+      <div class="stat-label">Pending Pickup</div>
+      <div class="stat-value accent">${pending}</div>
+    </div>
+    <div class="admin-stat-card">
+      <div class="stat-label">Fulfilled</div>
+      <div class="stat-value">${fulfilled}</div>
+    </div>
+    <div class="admin-stat-card">
+      <div class="stat-label">Products Available</div>
+      <div class="stat-value">${available} / ${SHRISH_DATA.products.length}</div>
+    </div>`;
+}
+
+// ── ORDERS ─────────────────────────────────────────────────
+function renderOrders() {
+  const filter = document.getElementById('statusFilter').value;
+  let orders = getOrders();
+  if (filter !== 'all') orders = orders.filter(o => o.status === filter);
+  orders = orders.slice().reverse();
+
+  const tbody = document.getElementById('ordersBody');
+  const noOrders = document.getElementById('noOrders');
+
+  if (!orders.length) {
+    tbody.innerHTML = '';
+    noOrders.style.display = 'block';
+    return;
+  }
+  noOrders.style.display = 'none';
+
+  tbody.innerHTML = orders.map(o => `
+    <tr>
+      <td><strong style="color:var(--saffron)">${o.id}</strong></td>
+      <td>${o.firstName} ${o.lastName}</td>
+      <td><a href="tel:${o.phone}" style="color:var(--saffron)">${o.phone}</a></td>
+      <td style="font-size:13px">${o.email}</td>
+      <td>${o.productName || o.product}</td>
+      <td>${o.quantity}</td>
+      <td>${o.location === 'shortpump' ? 'Short Pump' : 'Chesterfield'}</td>
+      <td>${formatDate(o.pickupDate)}</td>
+      <td><span class="order-status status-${o.status}">${o.status}</span></td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${o.status === 'pending' ? `<button class="action-btn btn-fulfill" onclick="updateStatus('${o.id}','fulfilled')">✓ Fulfill</button>` : ''}
+          ${o.status === 'pending' ? `<button class="action-btn btn-cancel"  onclick="updateStatus('${o.id}','cancelled')">✗ Cancel</button>` : ''}
+          ${o.status !== 'pending' ? `<button class="action-btn btn-fulfill" onclick="updateStatus('${o.id}','pending')" style="border-color:var(--saffron);color:var(--saffron)">↩ Reopen</button>` : ''}
+          <button class="action-btn" style="border-color:#666;color:#666" onclick="resetPhone('${o.phone}','${o.id}')">🔓 Reset</button>
+        </div>
+        ${o.notes ? `<div style="font-size:12px;color:var(--text-light);margin-top:4px">📝 ${o.notes}</div>` : ''}
+      </td>
+    </tr>`).join('');
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  const date = new Date(d + 'T00:00:00');
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function updateStatus(orderId, newStatus) {
+  const orders = getOrders();
+  const idx = orders.findIndex(o => o.id === orderId);
+  if (idx !== -1) { orders[idx].status = newStatus; saveOrders(orders); }
+  renderStats(); renderOrders();
+}
+
+function resetPhone(phone, excludeId) {
+  if (!confirm(`Reset the duplicate-order lock for phone ${phone}? This allows them to place a new order.`)) return;
+  const orders = getOrders();
+  orders.forEach(o => { if (o.phone === phone && o.id !== excludeId && o.status === 'pending') o.status = 'reset'; });
+  saveOrders(orders); renderStats(); renderOrders();
+  alert('Phone number reset. Customer can now place a new order.');
+}
+
+function clearFulfilled() {
+  if (!confirm('Remove all fulfilled and cancelled orders from view? (They stay in storage but status is archived)')) return;
+  const orders = getOrders().map(o => {
+    if (o.status === 'fulfilled') o.status = 'archived';
+    return o;
+  });
+  saveOrders(orders); renderStats(); renderOrders();
+}
+
+// ── PRODUCTS ───────────────────────────────────────────────
+function renderProducts() {
+  const grid = document.getElementById('productManageGrid');
+  grid.innerHTML = SHRISH_DATA.products.map(p => `
+    <div class="product-manage-card">
+      <div class="product-manage-emoji">${p.emoji}</div>
+      <div class="product-manage-info">
+        <h4>${p.name}</h4>
+        <p>${p.price} · ${p.unit}</p>
+        <p style="font-size:11px;margin-top:2px;color:${p.available ? '#2E7D32' : '#C62828'}">${p.available ? '✓ Currently Available' : '✗ Sold Out'}</p>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" ${p.available ? 'checked' : ''} onchange="toggleProduct('${p.id}', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>`).join('');
+}
+
+function toggleProduct(productId, available) {
+  const p = SHRISH_DATA.products.find(p => p.id === productId);
+  if (p) {
+    p.available = available;
+    renderStats();
+    renderProducts();
+    // Show reminder
+    showToast(`${p.name} marked as ${available ? 'available' : 'sold out'}. Update data.js to persist across sessions.`);
+  }
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--dark);color:white;padding:12px 24px;border-radius:50px;font-size:14px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);max-width:90vw;text-align:center';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ── EXPORT ─────────────────────────────────────────────────
+function exportCSV() {
+  const orders = getOrders();
+  if (!orders.length) { alert('No orders to export.'); return; }
+  const headers = ['Order #','First Name','Last Name','Phone','Email','Product','Quantity','Location','Pickup Date','Status','Notes','Referral','Timestamp'];
+  const rows = orders.map(o => [
+    o.id, o.firstName, o.lastName, o.phone, o.email,
+    o.productName || o.product, o.quantity,
+    o.location === 'shortpump' ? 'Short Pump VA' : 'Chesterfield VA',
+    o.pickupDate, o.status, `"${(o.notes||'').replace(/"/g,'""')}"`,
+    o.referral || '', o.timestamp
+  ]);
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = `shrish-orders-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+// ── TABS ───────────────────────────────────────────────────
+function switchTab(tab, btn) {
+  document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-orders').style.display   = tab === 'orders'   ? 'block' : 'none';
+  document.getElementById('tab-products').style.display = tab === 'products' ? 'block' : 'none';
+}
+
+function loadDashboard() { renderStats(); renderOrders(); renderProducts(); }
+
+// Auto-refresh every 30s
+setInterval(() => { if (document.getElementById('adminDashboard').style.display !== 'none') { renderStats(); renderOrders(); } }, 30000);
+</script>
+</body>
+</html>
