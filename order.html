@@ -8,10 +8,6 @@
 <link rel="stylesheet" href="styles.css">
 <style>
 .checkout-wrap{max-width:1100px;margin:0 auto;padding:60px 24px 80px;display:grid;grid-template-columns:1.15fr 1fr;gap:40px}
-.checkout-title{font-family:var(--font-display);font-size:32px;color:var(--dark);margin-bottom:6px}
-.checkout-sub{color:var(--text-light);font-size:14px;margin-bottom:28px}
-
-/* Cart review card */
 .review-card{background:#fff;border-radius:20px;padding:28px;box-shadow:0 4px 20px rgba(26,18,8,.08);margin-bottom:24px}
 .review-card-title{font-family:var(--font-display);font-size:22px;color:var(--dark);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
 .review-card-title a{font-size:13px;color:var(--saffron);font-family:var(--font-body);font-weight:600}
@@ -33,13 +29,10 @@
 .cart-empty-note{text-align:center;padding:32px;color:var(--text-light)}
 .cart-empty-note .en-icon{font-size:40px;margin-bottom:10px}
 
-/* Form card */
 .form-card{background:#fff;border-radius:20px;padding:28px 32px;box-shadow:0 4px 20px rgba(26,18,8,.08)}
 .form-card-title{font-family:var(--font-display);font-size:22px;color:var(--dark);margin-bottom:20px}
 .step-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--saffron);margin-bottom:14px}
 .form-divider{height:1px;background:var(--cream-d);margin:20px 0}
-
-/* Location cards */
 .loc-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px}
 .loc-card{border:2px solid #E0D0B8;border-radius:14px;padding:16px;cursor:pointer;transition:all .25s;position:relative}
 .loc-card:hover{border-color:var(--saffron)}
@@ -50,13 +43,11 @@
 .loc-icon{font-size:24px;margin-bottom:8px}
 .loc-name{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:3px}
 .loc-sub{font-size:12px;color:var(--text-light);line-height:1.5}
-
 .submit-btn{width:100%;padding:16px;background:var(--saffron);color:#fff;border:none;border-radius:50px;font-family:var(--font-body);font-size:16px;font-weight:700;cursor:pointer;transition:all .3s;margin-top:8px}
 .submit-btn:hover:not(:disabled){background:var(--saffron-d);transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,121,26,.35)}
 .submit-btn:disabled{background:#ccc;cursor:not-allowed;transform:none}
 .pay-note-small{font-size:12px;color:var(--text-light);text-align:center;margin-top:10px}
 
-/* Sidebar */
 .checkout-sidebar{display:flex;flex-direction:column;gap:20px}
 .info-card{background:#fff;border-radius:20px;padding:24px;box-shadow:0 4px 20px rgba(26,18,8,.08)}
 .info-card h4{font-family:var(--font-display);font-size:20px;color:var(--dark);margin-bottom:16px}
@@ -65,24 +56,39 @@
 .ir strong{display:block;font-size:13px;color:var(--dark);margin-bottom:2px}
 .ir span{font-size:13px;color:var(--text-light)}
 
-/* Success screen */
-.success-screen{display:none;max-width:600px;margin:80px auto;padding:0 24px;text-align:center}
+/* Success + Social */
+.success-screen{display:none;max-width:640px;margin:60px auto;padding:0 24px 80px;text-align:center}
 .success-icon-big{font-size:72px;margin-bottom:20px}
 .success-screen h2{font-family:var(--font-display);font-size:36px;color:var(--dark);margin-bottom:12px}
-.success-screen p{color:var(--text-light);font-size:16px;line-height:1.7;margin-bottom:8px}
-.order-badge{display:inline-block;background:var(--cream-d);border-radius:50px;padding:10px 24px;font-size:18px;font-weight:700;color:var(--saffron);margin:16px 0 24px}
-.success-summary{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(26,18,8,.08);margin-bottom:28px;text-align:left}
-.ss-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--cream-d);font-size:14px}
+.success-screen>p{color:var(--text-light);font-size:15px;line-height:1.7;margin-bottom:6px}
+.order-badge{display:inline-block;background:var(--cream-d);border-radius:50px;padding:10px 24px;font-size:18px;font-weight:700;color:var(--saffron);margin:16px 0 20px}
+.success-summary{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(26,18,8,.08);margin-bottom:24px;text-align:left}
+.ss-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--cream-d);font-size:14px}
 .ss-row:last-child{border-bottom:none}
-.ss-row span:first-child{color:var(--text-light)}
-.ss-row span:last-child{font-weight:600;color:var(--dark);text-align:right;max-width:60%}
-.ss-items-list{display:flex;flex-direction:column;gap:4px}
-.ss-item-line{font-size:13px;color:var(--dark)}
+.ss-row span:first-child{color:var(--text-light);flex-shrink:0;margin-right:12px}
+.ss-row span:last-child{font-weight:600;color:var(--dark);text-align:right}
+.success-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:32px}
+
+/* Community / social section */
+.community-section{background:linear-gradient(135deg,var(--dark) 0%,#2E1A05 100%);border-radius:24px;padding:32px 28px;text-align:center;margin-top:8px}
+.community-section h3{font-family:var(--font-display);font-size:26px;color:var(--gold-l);margin-bottom:10px}
+.community-section>p{color:rgba(255,255,255,.65);font-size:14px;line-height:1.7;max-width:460px;margin:0 auto 24px}
+.community-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.comm-btn{display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:50px;font-family:var(--font-body);font-size:14px;font-weight:700;cursor:pointer;transition:all .3s;text-decoration:none;border:none;white-space:nowrap}
+.comm-btn svg{width:18px;height:18px;flex-shrink:0}
+.cb-wa-group{background:#25D366;color:#fff}
+.cb-wa-group:hover{background:#1da851;transform:translateY(-2px);box-shadow:0 6px 20px rgba(37,211,102,.4)}
+.cb-wa{background:#128C7E;color:#fff}
+.cb-wa:hover{background:#0d6b5f;transform:translateY(-2px);box-shadow:0 6px 20px rgba(18,140,126,.35)}
+.cb-ig{background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff}
+.cb-ig:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(220,39,67,.4)}
+.comm-note{font-size:12px;color:rgba(255,255,255,.4);margin-top:16px}
 
 @media(max-width:900px){
   .checkout-wrap{grid-template-columns:1fr;padding:40px 20px 60px}
   .loc-cards{grid-template-columns:1fr}
 }
+@media(max-width:480px){ .community-btns{flex-direction:column;align-items:center} }
 </style>
 </head>
 <body>
@@ -111,27 +117,21 @@
 
 <div class="page-hero">
   <h1>🛒 <em>Checkout</em></h1>
-  <p>Review your order, enter your details, and submit. We'll confirm by call or text.</p>
+  <p>Review your order, choose pickup, and submit. Pay cash at pickup — no card needed.</p>
 </div>
 
 <!-- CHECKOUT LAYOUT -->
 <div class="checkout-wrap" id="checkoutWrap">
-
-  <!-- LEFT COLUMN -->
   <div>
-    <!-- CART REVIEW -->
+    <!-- Cart Review -->
     <div class="review-card">
-      <div class="review-card-title">
-        Your Order
-        <a href="shop.html">← Edit in Shop</a>
-      </div>
+      <div class="review-card-title">Your Order <a href="shop.html">← Edit in Shop</a></div>
       <div id="cartReviewContainer"></div>
     </div>
 
-    <!-- CUSTOMER FORM -->
-    <div class="form-card" id="orderFormCard">
+    <!-- Form -->
+    <div class="form-card">
       <div class="form-card-title">Your Details</div>
-
       <div class="step-label">Step 1 — Contact Information</div>
       <div class="form-row">
         <div class="form-group">
@@ -158,7 +158,6 @@
 
       <div class="form-divider"></div>
       <div class="step-label">Step 2 — Pickup Location</div>
-
       <div class="loc-cards">
         <div class="loc-card" id="loc-shortpump" onclick="selectLoc('shortpump')">
           <input type="radio" name="location" value="shortpump">
@@ -179,7 +178,6 @@
 
       <div class="form-divider"></div>
       <div class="step-label">Step 3 — Optional</div>
-
       <div class="form-group">
         <label class="form-label">How did you hear about us?</label>
         <select class="form-control" id="referral">
@@ -194,17 +192,17 @@
       </div>
       <div class="form-group">
         <label class="form-label">Special Instructions / Notes</label>
-        <textarea class="form-control" id="notes" rows="3" placeholder="Any special requests or notes for your order..."></textarea>
+        <textarea class="form-control" id="notes" rows="3" placeholder="Any special requests or notes..."></textarea>
       </div>
 
       <button class="submit-btn" id="submitBtn" onclick="submitOrder()">
         🥭 Place Order — Pay at Pickup
       </button>
-      <p class="pay-note-small">💵 No payment needed now. Pay cash when you pick up.</p>
+      <p class="pay-note-small">💵 No payment needed now. Bring cash when you pick up.</p>
     </div>
   </div>
 
-  <!-- RIGHT SIDEBAR -->
+  <!-- Sidebar -->
   <div class="checkout-sidebar">
     <div class="info-card">
       <h4>📍 Pickup Locations</h4>
@@ -217,24 +215,53 @@
       <div class="ir"><span class="ir-icon">2️⃣</span><div><strong>We call to confirm</strong><span><a href="tel:+17653255577" style="color:var(--saffron)">+1 (765) 325-5577</a></span></div></div>
       <div class="ir"><span class="ir-icon">3️⃣</span><div><strong>Pick up & pay cash</strong><span>Bring exact change or small bills</span></div></div>
     </div>
-    <div class="info-card">
-      <h4>❓ Questions?</h4>
-      <div class="ir"><span class="ir-icon">📧</span><div><strong>Email</strong><span><a href="mailto:contact@shrishllc.com" style="color:var(--saffron)">contact@shrishllc.com</a></span></div></div>
-      <div class="ir"><span class="ir-icon">📞</span><div><strong>Call / Text</strong><span><a href="tel:+17653255577" style="color:var(--saffron)">+1 (765) 325-5577</a></span></div></div>
+    <div class="info-card" style="background:var(--dark)">
+      <h4 style="color:var(--gold-l)">💬 Quick Help</h4>
+      <div class="ir"><span class="ir-icon">📱</span><div><strong style="color:white">WhatsApp</strong><span><a href="https://wa.me/17653255577" target="_blank" style="color:#25D366;font-weight:600">Chat with us instantly</a></span></div></div>
+      <div class="ir"><span class="ir-icon">📧</span><div><strong style="color:white">Email</strong><span><a href="/cdn-cgi/l/email-protection#d3b0bcbda7b2b0a793a0bba1baa0bbbfbfb0fdb0bcbe" style="color:var(--saffron)"><span class="__cf_email__" data-cfemail="99faf6f7edf8faedd9eaf1ebf0eaf1f5f5fab7faf6f4">[email&#160;protected]</span></a></span></div></div>
     </div>
   </div>
 </div>
 
-<!-- SUCCESS SCREEN -->
+<!-- ═══════════════════════════════════
+     SUCCESS SCREEN
+════════════════════════════════════ -->
 <div class="success-screen" id="successScreen">
-  <div class="success-icon-big">🥭</div>
+  <div class="success-icon-big">🎉</div>
   <h2>Order Placed!</h2>
   <div class="order-badge" id="successOrderNum"></div>
-  <p>Thank you! We'll call or text to confirm your pickup details.</p>
-  <p>Payment is collected at pickup — no card needed.</p>
+  <p>Thank you! We'll call or text you shortly to confirm pickup details.</p>
+  <p>Remember — payment is collected at pickup. No card needed.</p>
+
+  <!-- Order Summary -->
   <div class="success-summary" id="successSummary"></div>
-  <a href="shop.html" class="btn-primary" style="margin-right:12px">Continue Shopping</a>
-  <a href="index.html" class="btn-outline">Back to Home</a>
+
+  <!-- Action Buttons -->
+  <div class="success-actions">
+    <a href="shop.html" class="btn-primary">Continue Shopping</a>
+    <a href="index.html" class="btn-outline">Back to Home</a>
+  </div>
+
+  <!-- ✨ Community / Social Section -->
+  <div class="community-section">
+    <h3>🥭 Join Our Community!</h3>
+    <p>Get notified first when new mango varieties arrive, seasonal deals drop, and more. Stay connected with the Shrish family!</p>
+    <div class="community-btns">
+      <a href="https://chat.whatsapp.com/EHk3KbL03s4J9zfFIeEOi9" target="_blank" rel="noopener" class="comm-btn cb-wa-group">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Join WhatsApp Group
+      </a>
+      <a href="https://wa.me/17653255577?text=Hi%20Shrish!%20Just%20placed%20my%20order%20%F0%9F%A5%AD%20Looking%20forward%20to%20it!" target="_blank" rel="noopener" class="comm-btn cb-wa">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp Us Directly
+      </a>
+      <a href="https://www.instagram.com/richmond_mangos/" target="_blank" rel="noopener" class="comm-btn cb-ig">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        Follow on Instagram
+      </a>
+    </div>
+    <p class="comm-note">🔔 WhatsApp group members get early access to new varieties & exclusive deals</p>
+  </div>
 </div>
 
 <footer class="footer">
@@ -247,38 +274,27 @@
   </div>
 </footer>
 
-<script src="data.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="data.js"></script>
 <script src="main.js"></script>
 <script>
-// ── LOAD CART ─────────────────────────────────────────────
 let cart = JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
 let selectedLoc = '';
 
-// ── RENDER CART REVIEW ────────────────────────────────────
 function renderCartReview() {
   const container = document.getElementById('cartReviewContainer');
   const submitBtn = document.getElementById('submitBtn');
   if (!cart.length) {
-    container.innerHTML = `<div class="cart-empty-note">
-      <div class="en-icon">🛒</div>
-      <p>Your cart is empty. <a href="shop.html" style="color:var(--saffron);font-weight:600">← Go back to shop</a></p>
-    </div>`;
+    container.innerHTML = `<div class="cart-empty-note"><div class="en-icon">🛒</div><p>Your cart is empty. <a href="shop.html" style="color:var(--saffron);font-weight:600">← Go back to shop</a></p></div>`;
     if (submitBtn) submitBtn.disabled = true;
     return;
   }
   if (submitBtn) submitBtn.disabled = false;
-
   const totalQty = cart.reduce((s,i) => s+i.qty, 0);
   let html = cart.map(item => {
-    const imgContent = item.image
-      ? `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='🥭'">`
-      : '🥭';
+    const imgContent = item.image ? `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='🥭'">` : '🥭';
     return `<div class="review-item">
       <div class="ri-thumb">${imgContent}</div>
-      <div class="ri-info">
-        <div class="ri-name">${item.name}</div>
-        <div class="ri-price">${item.price} · ${item.unit}</div>
-      </div>
+      <div class="ri-info"><div class="ri-name">${item.name}</div><div class="ri-price">${item.price} · ${item.unit}</div></div>
       <div class="ri-qty-ctrl">
         <button class="ri-qty-btn" onclick="reviewQty('${item.id}',-1)">−</button>
         <span class="ri-qty-num">${item.qty}</span>
@@ -288,29 +304,20 @@ function renderCartReview() {
       <button class="ri-remove" onclick="reviewRemove('${item.id}')" title="Remove">✕</button>
     </div>`;
   }).join('');
-
-  html += `<div class="review-total">
-    <span>Total</span>
-    <span>${totalQty} box${totalQty!==1?'es':''}</span>
-  </div>`;
-
+  html += `<div class="review-total"><span>Total</span><span>${totalQty} box${totalQty!==1?'es':''}</span></div>`;
   container.innerHTML = html;
 }
 
 function reviewQty(id, delta) {
-  const item = cart.find(x => x.id === id);
-  if (!item) return;
-  item.qty = Math.max(1, item.qty + delta);
-  sessionStorage.setItem('shrish_cart', JSON.stringify(cart));
-  renderCartReview();
+  const item = cart.find(x => x.id===id);
+  if (item) { item.qty = Math.max(1, item.qty+delta); sessionStorage.setItem('shrish_cart', JSON.stringify(cart)); renderCartReview(); }
 }
 function reviewRemove(id) {
-  cart = cart.filter(x => x.id !== id);
+  cart = cart.filter(x => x.id!==id);
   sessionStorage.setItem('shrish_cart', JSON.stringify(cart));
   renderCartReview();
 }
 
-// ── LOCATION SELECT ───────────────────────────────────────
 function selectLoc(id) {
   selectedLoc = id;
   ['shortpump','chesterfield'].forEach(l => {
@@ -320,7 +327,6 @@ function selectLoc(id) {
   document.getElementById('err-location').style.display = 'none';
 }
 
-// ── VALIDATION ────────────────────────────────────────────
 function validate(id, ok, errId) {
   const el = document.getElementById(id);
   const err = document.getElementById(errId||'err-'+id);
@@ -328,7 +334,6 @@ function validate(id, ok, errId) {
   el.classList.remove('error'); if(err) err.style.display='none'; return true;
 }
 
-// ── DUPLICATE CHECK ───────────────────────────────────────
 const ORDERS_KEY = 'shrish_orders';
 function getOrders() { try { return JSON.parse(localStorage.getItem(ORDERS_KEY))||[]; } catch { return []; } }
 function isDuplicate(phone) {
@@ -336,10 +341,8 @@ function isDuplicate(phone) {
   return getOrders().some(o => o.phone.replace(/\D/g,'')===clean && o.status==='pending');
 }
 
-// ── SUBMIT ────────────────────────────────────────────────
 function submitOrder() {
   if (!cart.length) { alert('Your cart is empty. Add products first.'); return; }
-
   const firstName = document.getElementById('firstName').value.trim();
   const lastName  = document.getElementById('lastName').value.trim();
   const phone     = document.getElementById('phone').value.trim();
@@ -352,72 +355,37 @@ function submitOrder() {
   ok = validate('lastName',  lastName.length>=2)  && ok;
   ok = validate('phone',     /^\+?[\d\s\-().]{10,15}$/.test(phone)) && ok;
   ok = validate('email',     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) && ok;
-
-  if (!selectedLoc) {
-    document.getElementById('err-location').style.display = 'block';
-    ok = false;
-  }
-
+  if (!selectedLoc) { document.getElementById('err-location').style.display='block'; ok=false; }
   if (!ok) { window.scrollTo({top:300,behavior:'smooth'}); return; }
 
-  // Duplicate check
   if (isDuplicate(phone)) {
-    alert('⚠️ An order with this phone number is already pending.\n\nTo make changes, please contact us:\n📞 +1 (765) 325-5577\n📧 contact@shrishllc.com');
+    alert('⚠️ An order with this phone number is already pending.\n\nTo make changes, please contact us:\n📱 WhatsApp: +1 (765) 325-5577\n📧 contact@shrishllc.com');
     return;
   }
 
-  // Build order — no more undefined!
-  const orderNum = 'SHR-' + Date.now().toString().slice(-6);
-  const locLabel  = selectedLoc === 'shortpump' ? 'Short Pump, VA' : 'Chesterfield, VA';
-
+  const orderNum  = 'SHR-' + Date.now().toString().slice(-6);
+  const locLabel  = selectedLoc==='shortpump' ? 'Short Pump, VA' : 'Chesterfield, VA';
   const order = {
-    id: orderNum,
-    firstName, lastName, phone, email,
-    location: selectedLoc,
-    locationLabel: locLabel,
-    referral: referral || 'Not specified',
-    notes: notes || '',
-    items: cart.map(i => ({
-      id:    i.id,
-      name:  i.name  || 'Unknown Product',
-      price: i.price || 'TBD',
-      unit:  i.unit  || '',
-      qty:   i.qty   || 1
-    })),
-    totalBoxes: cart.reduce((s,i) => s + (i.qty||1), 0),
-    status: 'pending',
-    timestamp: new Date().toISOString()
+    id: orderNum, firstName, lastName, phone, email,
+    location: selectedLoc, locationLabel: locLabel,
+    referral: referral||'Not specified', notes: notes||'',
+    items: cart.map(i => ({ id:i.id, name:i.name||'Unknown', price:i.price||'TBD', unit:i.unit||'', qty:i.qty||1 })),
+    totalBoxes: cart.reduce((s,i) => s+(i.qty||1), 0),
+    status: 'pending', timestamp: new Date().toISOString()
   };
 
-  // Save
-  const orders = getOrders();
-  orders.push(order);
+  const orders = getOrders(); orders.push(order);
   localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
   sessionStorage.removeItem('shrish_cart');
 
-  // Show success
-  document.getElementById('checkoutWrap').style.display = 'none';
+  document.getElementById('checkoutWrap').style.display  = 'none';
   document.getElementById('successScreen').style.display = 'block';
-  document.getElementById('successOrderNum').textContent = `Order #${orderNum}`;
+  document.getElementById('successOrderNum').textContent  = `Order #${orderNum}`;
 
-  // Summary — guaranteed no undefined
-  const itemLines = order.items.map(i =>
-    `<div class="ss-item-line">• ${i.name} × ${i.qty} box${i.qty!==1?'es':''}</div>`
-  ).join('');
-
+  const itemLines = order.items.map(i => `<div>• ${i.name} × ${i.qty} box${i.qty!==1?'es':''}</div>`).join('');
   document.getElementById('successSummary').innerHTML = `
-    <div class="ss-row"><span>Items</span><span><div class="ss-items-list">${itemLines}</div></span></div>
+    <div class="ss-row"><span>Items</span><span style="display:flex;flex-direction:column;gap:4px">${itemLines}</span></div>
     <div class="ss-row"><span>Total</span><span>${order.totalBoxes} box${order.totalBoxes!==1?'es':''}</span></div>
-    <div class="ss-row"><span>Pickup Location</span><span>${locLabel}</span></div>
+    <div class="ss-row"><span>Pickup</span><span>${locLabel}</span></div>
     <div class="ss-row"><span>Name</span><span>${firstName} ${lastName}</span></div>
-    <div class="ss-row"><span>Phone</span><span>${phone}</span></div>
-    <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">💵 Cash at Pickup</span></div>`;
-
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-// ── INIT ─────────────────────────────────────────────────
-renderCartReview();
-</script>
-</body>
-</html>
+    <div class="ss-row"><span>Phone</span>
