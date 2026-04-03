@@ -64,15 +64,21 @@
 .pc-price-wrap .pc-unit{font-size:11px;color:var(--text-light);margin-top:2px}
 
 /* Card actions */
-.pc-card-actions{display:flex;gap:8px;align-items:center}
-.pc-details-btn{padding:8px 14px;border-radius:50px;border:1.5px solid var(--saffron);background:transparent;color:var(--saffron);font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer;transition:all .25s;white-space:nowrap}
+.pc-card-actions{display:flex;gap:8px;align-items:center;margin-top:12px}
+.pc-details-btn{padding:8px 14px;border-radius:50px;border:1.5px solid var(--saffron);background:transparent;color:var(--saffron);font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer;transition:all .25s;white-space:nowrap;flex-shrink:0}
 .pc-details-btn:hover{background:var(--saffron);color:#fff}
-.pc-add-btn{padding:9px 16px;border-radius:50px;border:none;background:var(--saffron);color:#fff;font-family:var(--font-body);font-size:13px;font-weight:700;cursor:pointer;transition:all .25s;white-space:nowrap}
+.pc-add-btn{padding:9px 16px;border-radius:50px;border:none;background:var(--saffron);color:#fff;font-family:var(--font-body);font-size:13px;font-weight:700;cursor:pointer;transition:all .25s;white-space:nowrap;flex:1}
 .pc-add-btn:hover{background:var(--saffron-d);transform:translateY(-1px)}
-.pc-add-btn.added{background:#2E7D32}
 .pc-add-btn:disabled{background:#ccc;cursor:not-allowed;transform:none}
 .pc-notify-btn{width:100%;padding:10px;border-radius:50px;border:none;background:var(--dark);color:var(--gold-l);font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;transition:all .25s;margin-top:10px}
 .pc-notify-btn:hover{background:#2E1F08}
+/* Inline qty control on card — replaces Add to Cart after first click */
+.card-qty-wrap{display:flex;align-items:center;flex:1;gap:0;background:var(--saffron);border-radius:50px;overflow:hidden;height:36px}
+.card-qty-btn{width:36px;height:36px;border:none;background:transparent;color:#fff;font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--font-body);flex-shrink:0;transition:background .15s;line-height:1}
+.card-qty-btn:hover{background:rgba(0,0,0,.18)}
+.card-qty-btn.remove-btn{background:rgba(0,0,0,.2)}
+.card-qty-mid{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;color:#fff;font-size:12px;font-weight:600}
+.card-qty-mid .cqn{font-size:15px;font-weight:800;min-width:18px;text-align:center}
 
 /* ── PRODUCT MODAL ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;backdrop-filter:blur(4px)}
@@ -355,10 +361,12 @@ function cartQty(id, delta) {
   item.qty = Math.max(0, item.qty + delta);
   if (item.qty === 0) cart = cart.filter(x => x.id !== id);
   saveCart(); updateCartUI();
+  if (typeof renderCardQty === 'function') renderCardQty(id);
 }
 function cartRemove(id) {
   cart = cart.filter(x => x.id !== id);
   saveCart(); updateCartUI();
+  if (typeof renderCardQty === 'function') renderCardQty(id);
 }
 function addToCart(productId, qty) {
   const p = SHRISH_DATA.products.find(x => x.id === productId);
@@ -368,6 +376,8 @@ function addToCart(productId, qty) {
   else cart.push({ id:p.id, name:p.name, price:p.price, unit:p.unit, image:p.image||null, qty });
   saveCart(); updateCartUI();
   showToast(`✓ ${p.name} added!`);
+  // Refresh card qty display if visible
+  if (typeof renderCardQty === 'function') renderCardQty(productId);
 }
 function openCart()  { document.getElementById('cartDrawer').classList.add('open'); document.getElementById('cartOverlay').classList.add('open'); document.body.style.overflow='hidden'; }
 function closeCart() { document.getElementById('cartDrawer').classList.remove('open'); document.getElementById('cartOverlay').classList.remove('open'); document.body.style.overflow=''; }
@@ -568,7 +578,7 @@ function renderCard(p) {
     actionHtml = `<button class="pc-notify-btn" onclick="notifyMe('${p.id}','${p.name.replace(/'/g,"\\'")}')">🔔 Notify Me</button>`;
   } else if (isAvail) {
     actionHtml = `
-      <div class="pc-card-actions">
+      <div class="pc-card-actions" id="card-actions-${p.id}">
         <button class="pc-details-btn" onclick="openModal('${p.id}')">Details</button>
         <button class="pc-add-btn" id="card-add-${p.id}" onclick="quickAdd('${p.id}')">+ Add to Cart</button>
       </div>`;
@@ -605,15 +615,48 @@ function renderCard(p) {
     </div>`;
 }
 
-// Quick add (1 box) directly from card
+// Quick add — first click adds 1 box, then shows inline qty control
 function quickAdd(productId) {
   addToCart(productId, 1);
-  const btn = document.getElementById('card-add-' + productId);
-  if (btn) {
-    btn.textContent = '✓ Added!';
-    btn.classList.add('added');
-    setTimeout(() => { btn.textContent = '+ Add to Cart'; btn.classList.remove('added'); }, 1800);
+  renderCardQty(productId);
+}
+
+// Render the inline qty control on the card
+function renderCardQty(productId) {
+  const wrap = document.getElementById('card-actions-' + productId);
+  if (!wrap) return;
+  const item = cart.find(x => x.id === productId);
+  const qty = item ? item.qty : 0;
+  if (qty === 0) {
+    // Cart item removed — revert to original Add to Cart button
+    wrap.innerHTML = `
+      <button class="pc-details-btn" onclick="openModal('${productId}')">Details</button>
+      <button class="pc-add-btn" onclick="quickAdd('${productId}')">+ Add to Cart</button>`;
+    return;
   }
+  // Show inline qty control
+  wrap.innerHTML = `
+    <button class="pc-details-btn" onclick="openModal('${productId}')">Details</button>
+    <div class="card-qty-wrap">
+      <button class="card-qty-btn remove-btn" onclick="cardQtyChange('${productId}',-1)" title="Remove one">−</button>
+      <div class="card-qty-mid"><span class="cqn">${qty}</span><span style="font-size:11px;opacity:.85">box${qty!==1?'es':''}</span></div>
+      <button class="card-qty-btn" onclick="cardQtyChange('${productId}',1)" title="Add one">+</button>
+    </div>`;
+}
+
+function cardQtyChange(productId, delta) {
+  const item = cart.find(x => x.id === productId);
+  if (!item) return;
+  item.qty = Math.max(0, item.qty + delta);
+  if (item.qty === 0) {
+    cart = cart.filter(x => x.id !== productId);
+    showToast('Removed from cart');
+  } else {
+    showToast(delta > 0 ? '✓ Added one more box!' : 'Removed one box');
+  }
+  saveCart();
+  updateCartUI();
+  renderCardQty(productId);
 }
 
 // ── BUILD FILTERS ─────────────────────────────────────────
