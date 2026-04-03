@@ -2,6 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- SEO & Open Graph -->
+  <meta property="og:title" content="Contact SHRISH LLC | Indian Mangoes Richmond, VA">
+  <meta property="og:description" content="Contact Shrish LLC for fresh Indian mangoes in Richmond, VA. WhatsApp, email, or call us!">
+  <meta property="og:image" content="https://gvkiran.github.io/shrish.co/img_alphonso.jpeg">
+  <meta property="og:url" content="https://shrish.co/contact.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Shrish LLC">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#C8791A">
+  <meta name="description" content="Contact Shrish LLC for fresh Indian mangoes in Richmond, VA. WhatsApp, email, or call us!">
 <title>Contact – SHRISH LLC</title>
 <meta name="description" content="Contact Shrish LLC for fresh Indian mangoes in Richmond, VA. Reach us by email, phone, or WhatsApp.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -96,7 +106,7 @@
     <p class="subtitle">Fill in the form below and we'll reply within a few hours.</p>
 
     <!-- Formspree form — sign up free at formspree.io, replace YOUR_FORM_ID -->
-    <form id="contactForm" action="https://formspree.io/f/mzdkjrnw" method="POST" onsubmit="handleSubmit(event)" novalidate>
+    <form id="contactForm" action="https://formspree.io/f/YOUR_FORM_ID" method="POST" onsubmit="handleSubmit(event)" novalidate>
       <div class="form-group">
         <label class="form-label">Full Name <span class="req">*</span></label>
         <input type="text" name="name" class="form-control" id="cName" placeholder="Your full name" required>
@@ -136,6 +146,47 @@
     </div>
   </div>
 </div>
+
+
+<!-- PICKUP LOCATIONS MAP -->
+<div style="max-width:1000px;margin:0 auto;padding:0 24px 64px">
+  <div style="text-align:center;margin-bottom:32px">
+    <div class="section-label">Find Us</div>
+    <h2 class="section-title">Pickup <em>Locations</em></h2>
+    <p style="color:var(--text-light);font-size:15px">Two convenient locations in the Richmond area. Exact address confirmed when we call you.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div style="background:var(--white);border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(26,18,8,.08)">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3162.5!2d-77.6367!3d37.6509!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89b1680ae3b10001%3A0x1!2sShort+Pump%2C+VA!5e0!3m2!1sen!2sus!4v1"
+        width="100%" height="220" style="border:0;display:block" allowfullscreen="" loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade" title="Short Pump VA map"></iframe>
+      <div style="padding:16px 20px">
+        <div style="font-weight:700;color:var(--dark);font-size:16px;margin-bottom:4px">📍 Short Pump, VA</div>
+        <div style="font-size:13px;color:var(--text-light)">Richmond West End · Exact address on confirmation</div>
+        <a href="https://maps.google.com/?q=Short+Pump+VA" target="_blank" rel="noopener"
+           style="display:inline-block;margin-top:10px;font-size:13px;color:var(--saffron);font-weight:600">Open in Google Maps →</a>
+      </div>
+    </div>
+    <div style="background:var(--white);border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(26,18,8,.08)">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3163.5!2d-77.5867!3d37.3776!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89b1540000000001%3A0x1!2sChesterfield%2C+VA!5e0!3m2!1sen!2sus!4v1"
+        width="100%" height="220" style="border:0;display:block" allowfullscreen="" loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade" title="Chesterfield VA map"></iframe>
+      <div style="padding:16px 20px">
+        <div style="font-weight:700;color:var(--dark);font-size:16px;margin-bottom:4px">📍 Chesterfield, VA</div>
+        <div style="font-size:13px;color:var(--text-light)">South of Richmond · Exact address on confirmation</div>
+        <a href="https://maps.google.com/?q=Chesterfield+VA" target="_blank" rel="noopener"
+           style="display:inline-block;margin-top:10px;font-size:13px;color:var(--saffron);font-weight:600">Open in Google Maps →</a>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+@media(max-width:600px){
+  #maps-grid{grid-template-columns:1fr !important}
+}
+</style>
 
 <footer class="footer">
   <div class="footer-bottom">
@@ -186,3 +237,13 @@ async function handleSubmit(e) {
       document.getElementById('contactSuccess').style.display = 'block';
     } else {
       throw new Erro
+    } else {
+      btn.textContent = 'Send Message';
+      btn.disabled = false;
+      alert('Could not send. Please WhatsApp us at +1 (765) 325-5577 or email contact@shrishllc.com');
+    }
+  }
+}
+</script>
+</body>
+</html>

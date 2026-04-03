@@ -2,6 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- SEO & Open Graph -->
+  <meta property="og:title" content="Place Your Order – SHRISH LLC | Fresh Indian Mangoes">
+  <meta property="og:description" content="Order fresh Indian mangoes online. Pick up in Short Pump or Chesterfield, VA. Pay cash at pickup — no card needed!">
+  <meta property="og:image" content="https://gvkiran.github.io/shrish.co/img_alphonso.jpeg">
+  <meta property="og:url" content="https://shrish.co/order.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Shrish LLC">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#C8791A">
+  <meta name="description" content="Order fresh Indian mangoes online. Pick up in Short Pump or Chesterfield, VA. Pay cash at pickup — no card needed!">
 <title>Checkout – SHRISH LLC</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -146,14 +156,20 @@
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Phone Number <span class="req">*</span></label>
-        <input type="tel" class="form-control" id="phone" placeholder="(804) 555-1234">
+        <label class="form-label">Phone Number <span class="req">*</span>
+          <span id="phoneDigitCount" style="font-weight:400;font-size:11px;color:var(--text-light);margin-left:8px"></span>
+        </label>
+        <input type="tel" class="form-control" id="phone" placeholder="(804) 555-1234"
+          oninput="updatePhoneCount(this.value)"
+          onblur="validatePhoneOnBlur(this.value)">
         <div class="form-error" id="err-phone">Please enter a valid phone number</div>
+        <div style="font-size:11px;color:var(--text-light);margin-top:4px">Format: (804) 555-1234 or +1 804 555 1234</div>
       </div>
       <div class="form-group">
         <label class="form-label">Email Address <span class="req">*</span></label>
-        <input type="email" class="form-control" id="email" placeholder="ravi@example.com">
-        <div class="form-error" id="err-email">Please enter a valid email address</div>
+        <input type="email" class="form-control" id="email" placeholder="ravi@gmail.com"
+          onblur="validateEmailOnBlur(this.value)">
+        <div class="form-error" id="err-email">Please enter a valid email (e.g. <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1678777b7356717b777f7a3875797b">[email&#160;protected]</a>)</div>
       </div>
 
       <div class="form-divider"></div>
@@ -274,11 +290,13 @@
   </div>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="data.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="data.js"></script>
 <script src="main.js"></script>
 <script>
 let cart = JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
 let selectedLoc = '';
+// Expose all functions globally so HTML onclick= attributes work
+window._shrishOrder = true;
 
 function renderCartReview() {
   const container = document.getElementById('cartReviewContainer');
@@ -315,77 +333,17 @@ function reviewQty(id, delta) {
 function reviewRemove(id) {
   cart = cart.filter(x => x.id!==id);
   sessionStorage.setItem('shrish_cart', JSON.stringify(cart));
-  renderCartReview();
-}
+  
+// ── Expose all functions to global scope for HTML onclick= attributes ──────
+window.selectLoc          = selectLoc;
+window.reviewQty          = reviewQty;
+window.reviewRemove       = reviewRemove;
+window.submitOrder        = submitOrder;
+window.updatePhoneCount   = updatePhoneCount;
+window.validatePhoneOnBlur = validatePhoneOnBlur;
+window.validateEmailOnBlur = validateEmailOnBlur;
 
-function selectLoc(id) {
-  selectedLoc = id;
-  ['shortpump','chesterfield'].forEach(l => {
-    document.getElementById('loc-'+l).classList.toggle('selected', l===id);
-    document.getElementById('check-'+l).textContent = l===id ? '✓' : '';
-  });
-  document.getElementById('err-location').style.display = 'none';
-}
-
-function validate(id, ok, errId) {
-  const el = document.getElementById(id);
-  const err = document.getElementById(errId||'err-'+id);
-  if (!ok) { el.classList.add('error'); if(err) err.style.display='block'; return false; }
-  el.classList.remove('error'); if(err) err.style.display='none'; return true;
-}
-
-const ORDERS_KEY = 'shrish_orders';
-function getOrders() { try { return JSON.parse(localStorage.getItem(ORDERS_KEY))||[]; } catch { return []; } }
-function isDuplicate(phone) {
-  const clean = phone.replace(/\D/g,'');
-  return getOrders().some(o => o.phone.replace(/\D/g,'')===clean && o.status==='pending');
-}
-
-function submitOrder() {
-  if (!cart.length) { alert('Your cart is empty. Add products first.'); return; }
-  const firstName = document.getElementById('firstName').value.trim();
-  const lastName  = document.getElementById('lastName').value.trim();
-  const phone     = document.getElementById('phone').value.trim();
-  const email     = document.getElementById('email').value.trim();
-  const referral  = document.getElementById('referral').value;
-  const notes     = document.getElementById('notes').value.trim();
-
-  let ok = true;
-  ok = validate('firstName', firstName.length>=2) && ok;
-  ok = validate('lastName',  lastName.length>=2)  && ok;
-  ok = validate('phone',     /^\+?[\d\s\-().]{10,15}$/.test(phone)) && ok;
-  ok = validate('email',     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) && ok;
-  if (!selectedLoc) { document.getElementById('err-location').style.display='block'; ok=false; }
-  if (!ok) { window.scrollTo({top:300,behavior:'smooth'}); return; }
-
-  if (isDuplicate(phone)) {
-    alert('⚠️ An order with this phone number is already pending.\n\nTo make changes, please contact us:\n📱 WhatsApp: +1 (765) 325-5577\n📧 contact@shrishllc.com');
-    return;
-  }
-
-  const orderNum  = 'SHR-' + Date.now().toString().slice(-6);
-  const locLabel  = selectedLoc==='shortpump' ? 'Short Pump, VA' : 'Chesterfield, VA';
-  const order = {
-    id: orderNum, firstName, lastName, phone, email,
-    location: selectedLoc, locationLabel: locLabel,
-    referral: referral||'Not specified', notes: notes||'',
-    items: cart.map(i => ({ id:i.id, name:i.name||'Unknown', price:i.price||'TBD', unit:i.unit||'', qty:i.qty||1 })),
-    totalBoxes: cart.reduce((s,i) => s+(i.qty||1), 0),
-    status: 'pending', timestamp: new Date().toISOString()
-  };
-
-  const orders = getOrders(); orders.push(order);
-  localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-  sessionStorage.removeItem('shrish_cart');
-
-  document.getElementById('checkoutWrap').style.display  = 'none';
-  document.getElementById('successScreen').style.display = 'block';
-  document.getElementById('successOrderNum').textContent  = `Order #${orderNum}`;
-
-  const itemLines = order.items.map(i => `<div>• ${i.name} × ${i.qty} box${i.qty!==1?'es':''}</div>`).join('');
-  document.getElementById('successSummary').innerHTML = `
-    <div class="ss-row"><span>Items</span><span style="display:flex;flex-direction:column;gap:4px">${itemLines}</span></div>
-    <div class="ss-row"><span>Total</span><span>${order.totalBoxes} box${order.totalBoxes!==1?'es':''}</span></div>
-    <div class="ss-row"><span>Pickup</span><span>${locLabel}</span></div>
-    <div class="ss-row"><span>Name</span><span>${firstName} ${lastName}</span></div>
-    <div class="ss-row"><span>Phone</span>
+renderCartReview();
+</script>
+</body>
+</html>

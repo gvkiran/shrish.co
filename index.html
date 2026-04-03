@@ -3,6 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- SEO & Open Graph -->
+  <meta property="og:title" content="SHRISH LLC – Fresh Indian Mangoes & Sweets | Richmond, VA">
+  <meta property="og:description" content="Premium Indian mango varieties sourced directly from farms. Pickup in Short Pump & Chesterfield, VA. Order online, pay at pickup!">
+  <meta property="og:image" content="https://gvkiran.github.io/shrish.co/img_alphonso.jpeg">
+  <meta property="og:url" content="https://shrish.co/index.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Shrish LLC">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#C8791A">
+  <meta name="description" content="Premium Indian mango varieties sourced directly from farms. Pickup in Short Pump & Chesterfield, VA. Order online, pay at pickup!">
 <title>SHRISH LLC – Fresh Indian Mangoes & Sweets | Richmond, VA</title>
 <meta name="description" content="Authentic Indian mangoes & sweets delivered to Richmond, VA. Premium varieties sourced directly from farms. Pickup in Short Pump & Chesterfield.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -221,6 +231,77 @@
 </section>
 
 <!-- TESTIMONIALS -->
+
+<!-- FAQ SECTION -->
+<section class="section" style="background:var(--cream-d)">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">Got Questions?</div>
+      <h2 class="section-title">Frequently Asked <em>Questions</em></h2>
+    </div>
+    <div style="max-width:720px;margin:0 auto" id="faqList">
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">How do I place an order? <span class="faq-icon">+</span></div>
+        <div class="faq-a">Browse our <a href="shop.html" style="color:var(--saffron)">Shop page</a>, click any mango to view details, add your desired quantity to the cart, then go to checkout. Fill in your name, phone, email, and select a pickup location. No payment needed online — you pay cash at pickup!</div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">Where can I pick up my order? <span class="faq-icon">+</span></div>
+        <div class="faq-a">We currently have two pickup locations: <strong>Short Pump, VA</strong> (Richmond West End) and <strong>Chesterfield, VA</strong> (South of Richmond). The exact address is shared when we call to confirm your order.</div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">How do I pay? <span class="faq-icon">+</span></div>
+        <div class="faq-a">We collect payment at pickup — <strong>cash only</strong>. No credit/debit card needed. Please bring exact change or small bills. There is no online payment required when placing your order.</div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">Which mango varieties are currently available? <span class="faq-icon">+</span></div>
+        <div class="faq-a">Availability changes with the season. Currently, <strong>Alphonso (Hapus)</strong> and <strong>Kesar</strong> are available. Visit our <a href="shop.html" style="color:var(--saffron)">Shop page</a> to see live availability — available varieties show first with a green "Available" badge.</div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">How fresh are the mangoes? <span class="faq-icon">+</span></div>
+        <div class="faq-a">Our mangoes are sourced directly from farms and delivered to Richmond. We order in small batches to ensure maximum freshness. Once you pick up your order, mangoes typically last 3–7 days at room temperature or up to 2 weeks refrigerated.</div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">Can I cancel or modify my order? <span class="faq-icon">+</span></div>
+        <div class="faq-a">Yes! Contact us as soon as possible via <a href="https://wa.me/17653255577" style="color:#25D366;font-weight:600" target="_blank">WhatsApp</a> at +1 (765) 325-5577 or email <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f89b97968c999b8cb88b908a918b9094949bd69b9795">[email&#160;protected]</a>. Since we prepare orders fresh, modifications are easiest within 24 hours of placing.</div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">Do you deliver to my home? <span class="faq-icon">+</span></div>
+        <div class="faq-a">Currently we offer <strong>pickup only</strong> at Short Pump and Chesterfield. Home delivery is coming soon! Join our <a href="https://chat.whatsapp.com/EHk3KbL03s4J9zfFIeEOi9" style="color:#25D366;font-weight:600" target="_blank">WhatsApp group</a> to be notified when delivery launches.</div>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-q">Will you carry Indian sweets (Putharekulu)? <span class="faq-icon">+</span></div>
+        <div class="faq-a">Yes! Authentic GI-tagged Putharekulu from Atreyapuram, Andhra Pradesh is coming soon in multiple varieties — Plain, Sugar+Dry Fruits, Jaggery, and Sugar-Free. Join our <a href="https://chat.whatsapp.com/EHk3KbL03s4J9zfFIeEOi9" style="color:#25D366;font-weight:600" target="_blank">WhatsApp group</a> to be first in line!</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<style>
+.faq-item{background:var(--white);border-radius:14px;margin-bottom:12px;cursor:pointer;overflow:hidden;box-shadow:0 2px 12px rgba(26,18,8,.06);transition:box-shadow .25s}
+.faq-item:hover{box-shadow:0 4px 20px rgba(26,18,8,.1)}
+.faq-q{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;font-size:16px;font-weight:600;color:var(--dark);gap:12px}
+.faq-icon{font-size:22px;color:var(--saffron);font-weight:300;transition:transform .3s;flex-shrink:0}
+.faq-item.open .faq-icon{transform:rotate(45deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1),padding .3s;padding:0 22px;font-size:14px;color:var(--text-light);line-height:1.75}
+.faq-item.open .faq-a{max-height:200px;padding:0 22px 18px}
+</style>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+function toggleFaq(el){
+  const wasOpen = el.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if(!wasOpen) el.classList.add('open');
+}
+</script>
+
 <section class="testimonials section">
   <div class="container">
     <div class="section-header">
@@ -293,16 +374,15 @@
       </div>
     </div>
   </div>
-  <div class="footer-bottom">
+    <div class="footer-bottom">
     <span>© 2025 Shrish LLC. All rights reserved.</span>
     <div class="footer-legal">
       <a href="privacy.html">Privacy Policy</a>
       <a href="refund.html">Refund Policy</a>
-      <a href="terms.html">Terms & Conditions</a>
+      <a href="terms.html">Terms &amp; Conditions</a>
     </div>
   </div>
 </footer>
-
 <script src="data.js"></script>
 <script src="main.js"></script>
 </body>

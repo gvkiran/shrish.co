@@ -1,7 +1,18 @@
 <!DOCTYPE html>
+<!-- Shrish Shop v20260403-1536 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- SEO & Open Graph -->
+  <meta property="og:title" content="Shop Mangoes – SHRISH LLC | Richmond, VA">
+  <meta property="og:description" content="Browse 10+ Indian mango varieties — Alphonso, Kesar, Rasalu & more. Available for pickup in Short Pump & Chesterfield, VA.">
+  <meta property="og:image" content="https://gvkiran.github.io/shrish.co/img_alphonso.jpeg">
+  <meta property="og:url" content="https://shrish.co/shop.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Shrish LLC">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#C8791A">
+  <meta name="description" content="Browse 10+ Indian mango varieties — Alphonso, Kesar, Rasalu & more. Available for pickup in Short Pump & Chesterfield, VA.">
 <title>Shop – SHRISH LLC | Indian Mangoes, Putharekulu & Sweets</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -209,7 +220,7 @@
       <li><a href="recipes.html" class="nav-link">Recipes</a></li>
       <li><a href="contact.html" class="nav-link">Contact</a></li>
     </ul>
-    <button class="cart-fab" id="navCartBtn" style="position:relative;display:none;padding:10px 18px;font-size:14px" onclick="openCart()">
+    <button class="cart-fab" id="navCartBtn" style="position:relative;display:flex;padding:10px 18px;font-size:14px" onclick="openCart()">
       🛒 Cart <span class="cart-fab-count" id="navCartCount">0</span>
     </button>
     <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
@@ -240,7 +251,7 @@
 </div>
 
 <!-- FLOATING CART FAB -->
-<button class="cart-fab" id="cartFab" onclick="openCart()">
+<button class="cart-fab" id="cartFab" onclick="openCart()" style="display:flex">
   🛒 View Cart <span class="cart-fab-count" id="cartFabCount">0</span>
 </button>
 
@@ -313,11 +324,15 @@ function updateCartUI() {
   document.getElementById('cartFabCount').textContent = total;
   const nc = document.getElementById('navCartCount');
   if (nc) nc.textContent = total;
-  const show = total > 0;
-  document.getElementById('cartFab').style.display = show ? 'flex' : 'none';
+  // Cart FAB always visible; show count badge
+  const fab = document.getElementById('cartFab');
+  if (fab) fab.style.display = 'flex';
+  // Nav cart button always visible
   const nb = document.getElementById('navCartBtn');
-  if (nb) nb.style.display = show ? 'flex' : 'none';
-  document.getElementById('orderCta').style.display = show ? 'block' : 'none';
+  if (nb) nb.style.display = 'flex';
+  // Order CTA strip only shows when cart has items
+  const cta = document.getElementById('orderCta');
+  if (cta) cta.style.display = total > 0 ? 'block' : 'none';
   renderCartDrawer();
 }
 
@@ -327,7 +342,14 @@ function renderCartDrawer() {
   const foot = document.getElementById('cartFootPanel');
   const totalEl = document.getElementById('cartTotalQty');
   if (!cart.length) {
-    list.innerHTML = `<div class="cart-empty-state"><div class="ce-icon">🛒</div><p>Cart is empty.<br>Browse products and add some!</p></div>`;
+    list.innerHTML = `<div class="cart-empty-state">
+      <div class="ce-icon">🛒</div>
+      <p style="font-size:16px;font-weight:600;color:var(--dark);margin-bottom:8px">Your cart is empty</p>
+      <p style="font-size:14px;color:var(--text-light);margin-bottom:20px">Browse our fresh Indian mangoes and add some to your cart!</p>
+      <a href="shop.html" onclick="closeCart()" style="display:inline-flex;align-items:center;gap:8px;background:var(--saffron);color:white;padding:12px 24px;border-radius:50px;font-family:var(--font-body);font-size:14px;font-weight:700;text-decoration:none;transition:all .3s">
+        🥭 Shop Mangoes
+      </a>
+    </div>`;
     foot.style.display = 'none';
     return;
   }
@@ -535,6 +557,22 @@ function modalAddToCart() {
 // Keyboard close
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeCart(); } });
 
+// Copy product link to clipboard
+function copyProductLink(productName) {
+  const url = window.location.href.split('?')[0];
+  const text = `🥭 ${productName} from Shrish LLC – Fresh Indian Mangoes in Richmond, VA
+${url}`;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showToast('🔗 Link copied! Share with friends'));
+  } else {
+    const el = document.createElement('textarea');
+    el.value = text; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    showToast('🔗 Link copied! Share with friends');
+  }
+}
+window.copyProductLink = copyProductLink;
+
 // ── NOTIFY ME ──────────────────────────────────────────────
 function notifyMe(productId, productName) {
   const email = prompt(`Get notified when "${productName}" is available:\nEnter your email:`);
@@ -731,6 +769,23 @@ function init() {
   renderShop();
   updateCartUI();
 }
+
+// Expose all functions used in HTML onclick= attributes to global window scope
+window.openCart        = openCart;
+window.closeCart       = closeCart;
+window.openModal       = openModal;
+window.closeModal      = closeModal;
+window.handleModalOverlayClick = handleModalOverlayClick;
+window.switchModalImg  = switchModalImg;
+window.modalChangeQty  = modalChangeQty;
+window.modalAddToCart  = modalAddToCart;
+window.quickAdd        = quickAdd;
+window.cardQtyChange   = cardQtyChange;
+window.renderCardQty   = renderCardQty;
+window.cartQty         = cartQty;
+window.cartRemove      = cartRemove;
+window.notifyMe        = notifyMe;
+window.goCheckout      = goCheckout;
 
 document.readyState === 'loading'
   ? document.addEventListener('DOMContentLoaded', init)
