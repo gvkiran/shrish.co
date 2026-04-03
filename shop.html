@@ -7,85 +7,151 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
-/* ── SHOP EXTRAS ── */
-.shop-hero { background: linear-gradient(135deg, var(--dark), var(--dark-m)); padding: 80px 24px 60px; text-align: center; position: relative; overflow: hidden; }
-.shop-hero::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 60% 50%, rgba(200,121,26,0.18), transparent 70%); pointer-events:none; }
+/* ── SHOP PAGE STYLES ── */
+.shop-hero { background:linear-gradient(135deg,var(--dark),var(--dark-m)); padding:80px 24px 60px; text-align:center; position:relative; overflow:hidden; }
+.shop-hero::after { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 60% 50%,rgba(200,121,26,0.18),transparent 70%); pointer-events:none; }
 .shop-hero h1 { font-family:var(--font-display); font-size:clamp(2.2rem,5vw,3.8rem); color:white; position:relative; z-index:1; }
 .shop-hero h1 em { color:var(--gold-l); font-style:italic; }
 .shop-hero p { color:rgba(255,255,255,0.6); max-width:540px; margin:12px auto 0; font-size:16px; position:relative; z-index:1; }
 
+/* Filter bar */
 .filter-bar { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; padding:36px 24px 0; }
 .filter-btn { padding:10px 22px; border-radius:50px; border:1.5px solid #E0D0B8; background:var(--white); font-family:var(--font-body); font-size:14px; font-weight:500; cursor:pointer; transition:all 0.3s; color:var(--text-light); }
 .filter-btn.active, .filter-btn:hover { background:var(--saffron); color:white; border-color:var(--saffron); }
-.filter-count { display:inline-block; background:rgba(255,255,255,0.25); border-radius:50px; padding:1px 7px; font-size:11px; margin-left:4px; }
+.filter-count { display:inline-block; background:rgba(0,0,0,0.1); border-radius:50px; padding:1px 7px; font-size:11px; margin-left:4px; }
 .active .filter-count { background:rgba(255,255,255,0.25); }
 
-.shop-section { padding:48px 24px 24px; max-width:1200px; margin:0 auto; }
-.shop-section-title { font-family:var(--font-display); font-size:28px; color:var(--dark); margin-bottom:8px; display:flex; align-items:center; gap:12px; }
+/* Shop section */
+.shop-section { padding:40px 24px 16px; max-width:1200px; margin:0 auto; }
+.shop-section-title { font-family:var(--font-display); font-size:26px; color:var(--dark); margin-bottom:6px; }
 .shop-section-title em { font-style:italic; color:var(--saffron); }
-.shop-section-subtitle { color:var(--text-light); font-size:15px; margin-bottom:32px; }
-.section-divider { height:1px; background:linear-gradient(to right, var(--saffron), transparent); margin:8px 0 32px; max-width:200px; }
+.section-divider { height:1px; background:linear-gradient(to right,var(--saffron),transparent); margin:6px 0 24px; max-width:160px; }
 
-/* Product Card with Real Image */
-.product-card-v2 { background:var(--white); border-radius:20px; overflow:hidden; box-shadow:0 4px 20px rgba(26,18,8,0.08); transition:transform 0.3s, box-shadow 0.3s; position:relative; display:flex; flex-direction:column; }
-.product-card-v2:hover { transform:translateY(-6px); box-shadow:0 16px 48px rgba(26,18,8,0.14); }
-.pc-badge { position:absolute; top:14px; left:14px; z-index:2; background:var(--saffron); color:white; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:4px 10px; border-radius:50px; }
-.pc-badge.coming { background:var(--dark); }
-.pc-badge.requested { background:#6B4A20; }
-.pc-badge.diabetic { background:#2E7D32; }
-.pc-badge.limited { background:#B71C1C; }
+/* Product grid */
+.products-grid-v2 { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:24px; }
 
-.pc-img-wrap { height:220px; overflow:hidden; position:relative; background:var(--cream-d); }
-.pc-img-wrap img { width:100%; height:100%; object-fit:cover; transition:transform 0.4s; }
-.product-card-v2:hover .pc-img-wrap img { transform:scale(1.05); }
-.pc-img-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:64px; }
-.pc-available-ribbon { position:absolute; bottom:0; left:0; right:0; padding:6px 14px; font-size:12px; font-weight:700; text-align:center; }
-.pc-available-ribbon.avail { background:rgba(46,125,50,0.9); color:white; }
-.pc-available-ribbon.sold { background:rgba(198,40,40,0.85); color:white; }
-.pc-available-ribbon.coming-soon { background:rgba(26,18,8,0.85); color:var(--gold-l); }
+/* Product card */
+.pc { background:var(--white); border-radius:20px; overflow:hidden; box-shadow:0 4px 20px rgba(26,18,8,0.08); transition:box-shadow 0.3s; position:relative; display:flex; flex-direction:column; }
+.pc:hover { box-shadow:0 8px 32px rgba(26,18,8,0.14); }
+.pc.sold-out { opacity:0.7; }
+.pc.display-only { border:1px dashed rgba(200,121,26,0.3); }
 
-.pc-body { padding:20px 22px 24px; flex:1; display:flex; flex-direction:column; }
-.pc-origin { font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--saffron); margin-bottom:6px; }
-.pc-name { font-family:var(--font-display); font-size:22px; font-weight:600; color:var(--dark); margin-bottom:4px; line-height:1.2; }
-.pc-local { font-size:13px; color:var(--text-light); margin-bottom:12px; font-style:italic; }
-.pc-desc { font-size:14px; color:var(--text-light); line-height:1.65; margin-bottom:16px; flex:1; }
-.pc-meta { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
-.pc-meta-pill { font-size:11px; background:var(--cream-d); color:var(--text-light); padding:4px 10px; border-radius:50px; font-weight:500; }
-.pc-footer { display:flex; align-items:center; justify-content:space-between; }
-.pc-price { font-size:20px; font-weight:700; color:var(--saffron); }
-.pc-unit { font-size:12px; color:var(--text-light); margin-top:2px; }
+/* Badge */
+.pc-tag { position:absolute; top:14px; left:14px; z-index:3; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:4px 10px; border-radius:50px; }
+.pc-tag.available-tag { background:var(--saffron); color:white; }
+.pc-tag.coming-tag { background:var(--dark); color:var(--gold-l); }
+.pc-tag.popular-tag { background:var(--saffron); color:white; }
+.pc-tag.rare-tag { background:#7B3F00; color:#FFD700; }
+.pc-tag.diabetic-tag { background:#2E7D32; color:white; }
+.pc-tag.requested-tag { background:#6B4A20; color:white; }
 
-.pc-badges { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
-.pc-badge-tag { font-size:11px; padding:3px 8px; border-radius:50px; border:1px solid; }
-.pc-badge-tag.gi { border-color:var(--gold); color:var(--gold); }
-.pc-badge-tag.iso { border-color:#1565C0; color:#1565C0; }
-.pc-badge-tag.limited { border-color:#B71C1C; color:#B71C1C; }
-.pc-badge-tag.health { border-color:#2E7D32; color:#2E7D32; }
-.pc-badge-tag.generic { border-color:var(--saffron); color:var(--saffron); }
+/* Image area */
+.pc-img { height:200px; overflow:hidden; position:relative; background:var(--cream-d); cursor:pointer; }
+.pc-img img { width:100%; height:100%; object-fit:cover; transition:transform 0.4s; }
+.pc:hover .pc-img img { transform:scale(1.04); }
+.pc-img-emoji { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:64px; }
+.pc-status-strip { position:absolute; bottom:0; left:0; right:0; padding:6px; font-size:12px; font-weight:700; text-align:center; }
+.pc-status-strip.avail { background:rgba(46,125,50,0.88); color:white; }
+.pc-status-strip.sold { background:rgba(180,40,40,0.85); color:white; }
+.pc-status-strip.soon { background:rgba(26,18,8,0.88); color:var(--gold-l); }
 
-.pc-details { font-size:12px; color:var(--text-light); background:var(--cream-d); border-radius:8px; padding:10px 12px; margin-bottom:14px; line-height:1.6; }
+/* Card header (always visible) */
+.pc-header { padding:18px 20px 14px; cursor:pointer; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; user-select:none; }
+.pc-header-left { flex:1; }
+.pc-origin-label { font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--saffron); margin-bottom:4px; }
+.pc-name { font-family:var(--font-display); font-size:21px; font-weight:600; color:var(--dark); line-height:1.2; margin-bottom:2px; }
+.pc-local { font-size:12px; color:var(--text-light); font-style:italic; }
+.pc-price-inline { text-align:right; flex-shrink:0; }
+.pc-price-inline .price { font-size:18px; font-weight:700; color:var(--saffron); }
+.pc-price-inline .unit { font-size:11px; color:var(--text-light); }
+.pc-expand-icon { color:var(--saffron); font-size:18px; transition:transform 0.3s; flex-shrink:0; margin-top:4px; }
+.pc.expanded .pc-expand-icon { transform:rotate(180deg); }
 
-.btn-order { display:block; text-align:center; background:var(--saffron); color:white; padding:12px; border-radius:50px; font-family:var(--font-body); font-size:14px; font-weight:600; transition:all 0.3s; border:none; cursor:pointer; }
-.btn-order:hover { background:var(--saffron-d); transform:translateY(-1px); }
-.btn-order.disabled { background:#ccc; cursor:not-allowed; transform:none; }
-.btn-order.notify { background:var(--dark); color:var(--gold-l); }
-.btn-order.notify:hover { background:#2E1F08; }
+/* Expandable details */
+.pc-details { max-height:0; overflow:hidden; transition:max-height 0.45s cubic-bezier(0.4,0,0.2,1), padding 0.3s; padding:0 20px; }
+.pc.expanded .pc-details { max-height:600px; padding:0 20px 20px; }
+.pc-desc { font-size:14px; color:var(--text-light); line-height:1.7; margin-bottom:14px; }
+.pc-meta-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.pc-meta-chip { font-size:11px; background:var(--cream-d); color:var(--text-light); padding:4px 10px; border-radius:50px; font-weight:500; }
+.pc-info-note { font-size:12px; color:var(--text-light); background:var(--cream-d); border-radius:8px; padding:10px 12px; margin-bottom:14px; line-height:1.6; }
+.pc-badges-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.pc-badge-pill { font-size:11px; padding:3px 8px; border-radius:50px; border:1px solid var(--saffron); color:var(--saffron); }
+.pc-badge-pill.green { border-color:#2E7D32; color:#2E7D32; }
+.pc-badge-pill.blue { border-color:#1565C0; color:#1565C0; }
+.pc-badge-pill.red { border-color:#B71C1C; color:#B71C1C; }
 
-.products-grid-v2 { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:28px; }
+/* Quantity + Add to Cart */
+.pc-actions { display:flex; align-items:center; gap:12px; }
+.qty-control { display:flex; align-items:center; gap:0; border:1.5px solid #E0D0B8; border-radius:50px; overflow:hidden; }
+.qty-btn { width:34px; height:34px; border:none; background:transparent; font-size:18px; cursor:pointer; color:var(--saffron); font-weight:700; transition:background 0.2s; display:flex; align-items:center; justify-content:center; }
+.qty-btn:hover { background:var(--cream-d); }
+.qty-num { width:32px; text-align:center; font-size:15px; font-weight:700; color:var(--dark); }
+.add-cart-btn { flex:1; padding:10px 16px; background:var(--saffron); color:white; border:none; border-radius:50px; font-family:var(--font-body); font-size:14px; font-weight:700; cursor:pointer; transition:all 0.3s; }
+.add-cart-btn:hover { background:var(--saffron-d); transform:translateY(-1px); box-shadow:0 4px 16px rgba(200,121,26,0.3); }
+.add-cart-btn:active { transform:scale(0.97); }
+.add-cart-btn.added { background:#2E7D32; }
+.notify-btn { flex:1; padding:10px 16px; background:var(--dark); color:var(--gold-l); border:none; border-radius:50px; font-family:var(--font-body); font-size:14px; font-weight:600; cursor:pointer; transition:all 0.3s; }
+.notify-btn:hover { background:#2E1F08; }
+
+/* Coming soon banner */
+.coming-banner { background:linear-gradient(135deg,var(--dark),#2E1A05); border-radius:16px; padding:24px 28px; margin-bottom:24px; display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+.coming-banner .cb-icon { font-size:40px; flex-shrink:0; }
+.coming-banner h3 { font-family:var(--font-display); font-size:22px; color:var(--gold-l); margin-bottom:6px; }
+.coming-banner p { color:rgba(255,255,255,0.65); font-size:14px; }
+
+/* ── FLOATING CART ── */
+.cart-fab { position:fixed; bottom:28px; right:28px; z-index:1000; background:var(--saffron); color:white; border:none; border-radius:50px; padding:14px 22px; font-family:var(--font-body); font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 8px 32px rgba(200,121,26,0.45); transition:all 0.3s; display:none; align-items:center; gap:10px; }
+.cart-fab:hover { background:var(--saffron-d); transform:translateY(-3px); }
+.cart-fab-count { background:white; color:var(--saffron); width:24px; height:24px; border-radius:50%; font-size:13px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+
+/* ── CART DRAWER ── */
+.cart-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1100; }
+.cart-drawer { position:fixed; right:0; top:0; bottom:0; width:min(420px, 100vw); background:white; z-index:1200; box-shadow:-8px 0 48px rgba(0,0,0,0.2); display:flex; flex-direction:column; transform:translateX(100%); transition:transform 0.35s cubic-bezier(0.4,0,0.2,1); }
+.cart-drawer.open { transform:translateX(0); }
+.cart-overlay.open { display:block; }
+.cart-head { padding:20px 24px; border-bottom:1px solid var(--cream-d); display:flex; align-items:center; justify-content:space-between; }
+.cart-head h3 { font-family:var(--font-display); font-size:24px; color:var(--dark); }
+.cart-close { background:none; border:none; font-size:24px; cursor:pointer; color:var(--text-light); transition:color 0.2s; }
+.cart-close:hover { color:var(--dark); }
+.cart-items { flex:1; overflow-y:auto; padding:20px 24px; }
+.cart-empty { text-align:center; padding:48px 0; }
+.cart-empty .ce-icon { font-size:48px; margin-bottom:12px; }
+.cart-empty p { color:var(--text-light); }
+.cart-item { display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--cream-d); }
+.ci-img { width:60px; height:60px; border-radius:10px; object-fit:cover; background:var(--cream-d); display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; overflow:hidden; }
+.ci-img img { width:100%; height:100%; object-fit:cover; }
+.ci-info { flex:1; }
+.ci-name { font-size:14px; font-weight:700; color:var(--dark); margin-bottom:3px; }
+.ci-price { font-size:13px; color:var(--saffron); font-weight:600; }
+.ci-qty-wrap { display:flex; align-items:center; gap:8px; margin-top:8px; }
+.ci-qty-btn { width:26px; height:26px; border-radius:50%; border:1.5px solid #E0D0B8; background:transparent; cursor:pointer; font-size:16px; color:var(--saffron); display:flex; align-items:center; justify-content:center; transition:background 0.2s; }
+.ci-qty-btn:hover { background:var(--cream-d); }
+.ci-qty-num { font-size:14px; font-weight:700; color:var(--dark); min-width:20px; text-align:center; }
+.ci-remove { background:none; border:none; color:#C62828; cursor:pointer; font-size:18px; padding:4px; transition:opacity 0.2s; }
+.ci-remove:hover { opacity:0.7; }
+.cart-foot { padding:20px 24px; border-top:1px solid var(--cream-d); }
+.cart-summary { margin-bottom:16px; }
+.cart-summary-row { display:flex; justify-content:space-between; font-size:14px; color:var(--text-light); margin-bottom:6px; }
+.cart-summary-row.total { font-size:18px; font-weight:700; color:var(--dark); margin-top:10px; padding-top:10px; border-top:1px solid var(--cream-d); }
+.cart-summary-row.total span:last-child { color:var(--saffron); }
+.cart-note { font-size:12px; color:var(--text-light); background:var(--cream-d); border-radius:8px; padding:10px 12px; margin-bottom:14px; }
+.cart-checkout-btn { width:100%; padding:15px; background:var(--saffron); color:white; border:none; border-radius:50px; font-family:var(--font-body); font-size:16px; font-weight:700; cursor:pointer; transition:all 0.3s; }
+.cart-checkout-btn:hover { background:var(--saffron-d); }
+
+/* Toast notification */
+.toast { position:fixed; bottom:100px; right:28px; z-index:2000; background:var(--dark); color:white; padding:12px 20px; border-radius:50px; font-size:14px; font-weight:500; box-shadow:0 4px 20px rgba(0,0,0,0.3); transform:translateY(20px); opacity:0; transition:all 0.3s; pointer-events:none; }
+.toast.show { transform:translateY(0); opacity:1; }
+
+/* No results */
 .no-results { text-align:center; padding:64px 24px; color:var(--text-light); }
-.no-results .no-icon { font-size:48px; margin-bottom:12px; }
+.no-results .nr-icon { font-size:48px; margin-bottom:12px; }
 
-/* Coming soon banner for putharekulu */
-.coming-soon-banner { background:linear-gradient(135deg, var(--dark) 0%, #2E1A05 100%); border-radius:20px; padding:32px 36px; margin-bottom:32px; display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
-.csb-text h3 { font-family:var(--font-display); font-size:26px; color:var(--gold-l); margin-bottom:8px; }
-.csb-text p { color:rgba(255,255,255,0.7); font-size:15px; max-width:520px; }
-.csb-icon { font-size:56px; flex-shrink:0; }
-
-.order-cta-strip { background:var(--saffron); border-radius:20px; padding:36px; text-align:center; margin:48px 24px 64px; max-width:1200px; margin-left:auto; margin-right:auto; }
+/* Order CTA strip */
+.order-cta-strip { background:var(--saffron); border-radius:20px; padding:36px; text-align:center; margin:40px 24px 64px; max-width:1200px; margin-left:auto; margin-right:auto; }
 .order-cta-strip h3 { font-family:var(--font-display); font-size:28px; color:white; margin-bottom:10px; }
 .order-cta-strip p { color:rgba(255,255,255,0.85); margin-bottom:24px; }
-.btn-white { display:inline-flex; align-items:center; gap:8px; background:white; color:var(--saffron); padding:14px 32px; border-radius:50px; font-family:var(--font-body); font-size:15px; font-weight:700; transition:all 0.3s; }
-.btn-white:hover { background:var(--cream); transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.15); }
+.btn-white { display:inline-flex; align-items:center; gap:8px; background:white; color:var(--saffron); padding:14px 32px; border-radius:50px; font-family:var(--font-body); font-size:15px; font-weight:700; transition:all 0.3s; cursor:pointer; border:none; }
+.btn-white:hover { background:var(--cream); transform:translateY(-2px); }
 </style>
 </head>
 <body>
@@ -102,33 +168,59 @@
       <li><a href="recipes.html" class="nav-link">Recipes</a></li>
       <li><a href="contact.html" class="nav-link">Contact</a></li>
     </ul>
-    <a href="order.html" class="nav-cta btn-primary">Order Now</a>
+    <button class="cart-fab" id="navCartBtn" style="display:none;position:relative;padding:10px 18px;font-size:14px">
+      🛒 Cart <span class="cart-fab-count" id="navCartCount">0</span>
+    </button>
     <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
   </div>
   <div class="nav-mobile" id="navMobile">
     <a href="index.html">Home</a><a href="about.html">About</a><a href="shop.html">Shop</a>
     <a href="recipes.html">Recipes</a><a href="contact.html">Contact</a>
-    <a href="order.html" class="mobile-cta">Order Now</a>
   </div>
 </nav>
 
 <!-- HERO -->
 <div class="shop-hero">
   <h1>Our <em>Products</em></h1>
-  <p>Fresh Indian mangoes, authentic Putharekulu from Atreyapuram, and traditional jelly snacks. Availability updated seasonally.</p>
+  <p>Click any product to explore — add to cart and checkout when ready. Pay cash at pickup.</p>
 </div>
 
-<!-- FILTER BAR -->
+<!-- FILTERS -->
 <div class="filter-bar" id="filterBar"></div>
 
-<!-- SHOP CONTENT -->
+<!-- PRODUCTS -->
 <div id="shopContent"></div>
 
 <!-- ORDER CTA -->
-<div class="order-cta-strip">
-  <h3>Ready to Order? 🥭</h3>
-  <p>Place your order online — pickup in Short Pump or Chesterfield. Pay cash at pickup, no card needed.</p>
-  <a href="order.html" class="btn-white">Place Your Order →</a>
+<div class="order-cta-strip" id="orderCta" style="display:none">
+  <h3>Ready to Checkout? 🥭</h3>
+  <p>Review your cart and place your order. Pay cash at pickup — no card needed.</p>
+  <button class="btn-white" onclick="openCart()">View Cart & Checkout →</button>
+</div>
+
+<!-- FLOATING CART BUTTON -->
+<button class="cart-fab" id="cartFab" onclick="openCart()">
+  🛒 View Cart <span class="cart-fab-count" id="cartFabCount">0</span>
+</button>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- CART OVERLAY -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+
+<!-- CART DRAWER -->
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-head">
+    <h3>🛒 Your Cart</h3>
+    <button class="cart-close" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-foot" id="cartFoot" style="display:none">
+    <div class="cart-summary" id="cartSummary"></div>
+    <div class="cart-note">💵 Payment is collected at pickup — no card needed.</div>
+    <button class="cart-checkout-btn" onclick="goCheckout()">Proceed to Checkout →</button>
+  </div>
 </div>
 
 <footer class="footer">
@@ -145,11 +237,275 @@
 <script src="data.js"></script>
 <script src="main.js"></script>
 <script>
+
+// ── CART STATE ────────────────────────────────────────────
+let cart = JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
 let activeFilter = 'all';
 
-// ── BUILD FILTER BUTTONS ─────────────────────────────────
+function saveCart() {
+  sessionStorage.setItem('shrish_cart', JSON.stringify(cart));
+}
+
+// ── CART COUNT ────────────────────────────────────────────
+function updateCartUI() {
+  const total = cart.reduce((s, i) => s + i.qty, 0);
+  ['cartFabCount','navCartCount'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = total;
+  });
+  const fab = document.getElementById('cartFab');
+  const navBtn = document.getElementById('navCartBtn');
+  const cta = document.getElementById('orderCta');
+  if (total > 0) {
+    if (fab) fab.style.display = 'flex';
+    if (navBtn) navBtn.style.display = 'flex';
+    if (cta) cta.style.display = 'block';
+  } else {
+    if (fab) fab.style.display = 'none';
+    if (navBtn) navBtn.style.display = 'none';
+    if (cta) cta.style.display = 'none';
+  }
+  renderCartItems();
+}
+
+// ── ADD TO CART ───────────────────────────────────────────
+function addToCart(productId, qty) {
+  const p = SHRISH_DATA.products.find(x => x.id === productId);
+  if (!p || !p.available || p.displayOnly) return;
+  const existing = cart.find(x => x.id === productId);
+  if (existing) {
+    existing.qty += qty;
+  } else {
+    cart.push({ id: p.id, name: p.name, price: p.price, unit: p.unit, image: p.image || null, qty });
+  }
+  saveCart();
+  updateCartUI();
+  showToast(`✓ ${p.name} added to cart!`);
+  // Flash button
+  const btn = document.getElementById('add-btn-' + productId);
+  if (btn) {
+    btn.textContent = '✓ Added!';
+    btn.classList.add('added');
+    setTimeout(() => { btn.textContent = 'Add to Cart'; btn.classList.remove('added'); }, 1800);
+  }
+}
+
+// ── CART QUANTITY CONTROLS ────────────────────────────────
+function updateCartItem(productId, delta) {
+  const item = cart.find(x => x.id === productId);
+  if (!item) return;
+  item.qty = Math.max(0, item.qty + delta);
+  if (item.qty === 0) cart = cart.filter(x => x.id !== productId);
+  saveCart();
+  updateCartUI();
+}
+
+function removeCartItem(productId) {
+  cart = cart.filter(x => x.id !== productId);
+  saveCart();
+  updateCartUI();
+}
+
+// ── RENDER CART ITEMS ─────────────────────────────────────
+function renderCartItems() {
+  const container = document.getElementById('cartItems');
+  const foot = document.getElementById('cartFoot');
+  if (!container) return;
+  if (!cart.length) {
+    container.innerHTML = `<div class="cart-empty"><div class="ce-icon">🛒</div><p>Your cart is empty.<br>Add some mangoes from the shop!</p></div>`;
+    if (foot) foot.style.display = 'none';
+    return;
+  }
+  if (foot) foot.style.display = 'block';
+  container.innerHTML = cart.map(item => {
+    const imgHtml = item.image
+      ? `<img src="${item.image}" alt="${item.name}" onerror="this.style.display='none'">`
+      : '🥭';
+    return `<div class="cart-item">
+      <div class="ci-img">${imgHtml}</div>
+      <div class="ci-info">
+        <div class="ci-name">${item.name}</div>
+        <div class="ci-price">${item.price} / ${item.unit}</div>
+        <div class="ci-qty-wrap">
+          <button class="ci-qty-btn" onclick="updateCartItem('${item.id}',-1)">−</button>
+          <span class="ci-qty-num">${item.qty}</span>
+          <button class="ci-qty-btn" onclick="updateCartItem('${item.id}',1)">+</button>
+          <span style="font-size:12px;color:var(--text-light);margin-left:4px">box${item.qty > 1 ? 'es' : ''}</span>
+        </div>
+      </div>
+      <button class="ci-remove" onclick="removeCartItem('${item.id}')" title="Remove">✕</button>
+    </div>`;
+  }).join('');
+
+  // Summary
+  const summary = document.getElementById('cartSummary');
+  if (summary) {
+    const totalQty = cart.reduce((s,i) => s + i.qty, 0);
+    summary.innerHTML = `
+      <div class="cart-summary-row"><span>${totalQty} item${totalQty !== 1 ? 's' : ''}</span><span></span></div>
+      <div class="cart-summary-row total"><span>Total Items</span><span>${totalQty} box${totalQty !== 1 ? 'es' : ''}</span></div>`;
+  }
+}
+
+// ── OPEN / CLOSE CART ─────────────────────────────────────
+function openCart() {
+  document.getElementById('cartDrawer').classList.add('open');
+  document.getElementById('cartOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeCart() {
+  document.getElementById('cartDrawer').classList.remove('open');
+  document.getElementById('cartOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── CHECKOUT ─────────────────────────────────────────────
+function goCheckout() {
+  if (!cart.length) { showToast('Your cart is empty!'); return; }
+  saveCart();
+  window.location.href = 'order.html';
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── CARD HTML ─────────────────────────────────────────────
+function renderCard(p) {
+  const isAvail   = p.available && !p.displayOnly;
+  const isSoon    = p.displayOnly;
+  const isSoldOut = !p.available && !p.displayOnly;
+
+  // Tag
+  let tagHtml = '';
+  if (p.tag) {
+    let tagClass = 'popular-tag';
+    const t = p.tag.toLowerCase();
+    if (t.includes('coming')) tagClass = 'coming-tag';
+    else if (t.includes('rare') || t.includes('seasonal')) tagClass = 'rare-tag';
+    else if (t.includes('diabetic') || t.includes('sugar free')) tagClass = 'diabetic-tag';
+    else if (t.includes('requested')) tagClass = 'requested-tag';
+    tagHtml = `<div class="pc-tag ${tagClass}">${p.tag}</div>`;
+  }
+
+  // Image
+  const imgHtml = p.image
+    ? `<img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    : '';
+  const emojiStyle = p.image ? 'style="display:none"' : '';
+  const stripCls = isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
+  const stripTxt = isSoon ? '🔔 Coming Soon' : isAvail ? '✓ Available Now' : '✗ Currently Sold Out';
+
+  // Meta chips
+  const metaChips = [
+    p.season ? `📅 ${p.season}` : '',
+    p.taste  ? `👅 ${p.taste}`  : '',
+  ].filter(Boolean).map(m => `<span class="pc-meta-chip">${m}</span>`).join('');
+
+  // Badges
+  const badgeHtml = (p.badges||[]).map(b => {
+    let cls = '';
+    if (b.toLowerCase().includes('gi') || b.toLowerCase().includes('iso')) cls = 'blue';
+    else if (b.toLowerCase().includes('free') || b.toLowerCase().includes('diabetic') || b.toLowerCase().includes('health')) cls = 'green';
+    else if (b.toLowerCase().includes('limited') || b.toLowerCase().includes('seasonal')) cls = 'red';
+    return `<span class="pc-badge-pill ${cls}">${b}</span>`;
+  }).join('');
+
+  // Details note
+  const detailNote = p.details ? `<div class="pc-info-note">ℹ️ ${p.details}</div>` : '';
+
+  // Best for
+  const bestFor = p.bestFor ? `<div style="font-size:12px;color:var(--text-light);margin-bottom:14px">🍽 <strong>Best for:</strong> ${p.bestFor}</div>` : '';
+
+  // Action buttons
+  let actionHtml = '';
+  if (isSoon) {
+    actionHtml = `<button class="notify-btn" onclick="notifyMe('${p.id}','${p.name.replace(/'/g,"\\'")}')">🔔 Notify When Available</button>`;
+  } else if (isAvail) {
+    actionHtml = `
+      <div class="pc-actions">
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty('${p.id}',-1)">−</button>
+          <span class="qty-num" id="qty-${p.id}">1</span>
+          <button class="qty-btn" onclick="changeQty('${p.id}',1)">+</button>
+        </div>
+        <button class="add-cart-btn" id="add-btn-${p.id}" onclick="addToCart('${p.id}',+document.getElementById('qty-${p.id}').textContent)">
+          Add to Cart
+        </button>
+      </div>`;
+  } else {
+    actionHtml = `<button class="add-cart-btn" style="background:#bbb;cursor:not-allowed" disabled>Sold Out</button>`;
+  }
+
+  return `
+    <div class="pc ${isSoon ? 'display-only' : ''} ${isSoldOut ? 'sold-out' : ''}" id="card-${p.id}">
+      ${tagHtml}
+      <div class="pc-img" onclick="toggleCard('${p.id}')">
+        ${imgHtml}
+        <div class="pc-img-emoji" ${emojiStyle}>🥭</div>
+        <div class="pc-status-strip ${stripCls}">${stripTxt}</div>
+      </div>
+      <div class="pc-header" onclick="toggleCard('${p.id}')">
+        <div class="pc-header-left">
+          <div class="pc-origin-label">${p.origin}</div>
+          <div class="pc-name">${p.name}</div>
+          ${p.localName ? `<div class="pc-local">${p.localName}</div>` : ''}
+        </div>
+        <div class="pc-price-inline">
+          <div class="price">${p.price}</div>
+          <div class="unit">${p.unit}</div>
+        </div>
+        <div class="pc-expand-icon">▾</div>
+      </div>
+      <div class="pc-details">
+        <div class="pc-desc">${p.description}</div>
+        ${metaChips ? `<div class="pc-meta-row">${metaChips}</div>` : ''}
+        ${badgeHtml ? `<div class="pc-badges-row">${badgeHtml}</div>` : ''}
+        ${detailNote}
+        ${bestFor}
+        ${actionHtml}
+      </div>
+    </div>`;
+}
+
+// ── TOGGLE CARD EXPAND ────────────────────────────────────
+function toggleCard(productId) {
+  const card = document.getElementById('card-' + productId);
+  if (!card) return;
+  const wasOpen = card.classList.contains('expanded');
+  // Close all first
+  document.querySelectorAll('.pc.expanded').forEach(c => c.classList.remove('expanded'));
+  if (!wasOpen) card.classList.add('expanded');
+}
+
+// ── QTY CONTROL ───────────────────────────────────────────
+function changeQty(productId, delta) {
+  const el = document.getElementById('qty-' + productId);
+  if (!el) return;
+  const current = parseInt(el.textContent) || 1;
+  el.textContent = Math.max(1, Math.min(20, current + delta));
+}
+
+// ── NOTIFY ME ─────────────────────────────────────────────
+function notifyMe(productId, productName) {
+  const email = prompt(`Get notified when "${productName}" is available:\nEnter your email address:`);
+  if (email && email.includes('@')) {
+    const list = JSON.parse(localStorage.getItem('shrish_notify') || '[]');
+    list.push({ id: productId, name: productName, email, date: new Date().toISOString() });
+    localStorage.setItem('shrish_notify', JSON.stringify(list));
+    showToast(`✓ We'll email ${email} when it's available!`);
+  }
+}
+
+// ── BUILD FILTERS ─────────────────────────────────────────
 function buildFilters() {
   const bar = document.getElementById('filterBar');
+  if (!bar || !SHRISH_DATA) return;
+  bar.innerHTML = '';
   SHRISH_DATA.categories.forEach(cat => {
     const count = cat.id === 'all'
       ? SHRISH_DATA.products.length
@@ -167,203 +523,73 @@ function buildFilters() {
   });
 }
 
-// ── BADGE COLOR ──────────────────────────────────────────
-function badgeClass(tag) {
-  if (!tag) return '';
-  const t = tag.toLowerCase();
-  if (t.includes('coming')) return 'coming';
-  if (t.includes('requested')) return 'requested';
-  if (t.includes('diabetic') || t.includes('sugar free')) return 'diabetic';
-  if (t.includes('limited') || t.includes('seasonal')) return 'limited';
-  return '';
-}
-
-// ── RENDER A PRODUCT CARD ────────────────────────────────
-function renderCard(p) {
-  const imgHtml = p.image
-    ? `<img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-    : '';
-  const placeholder = `<div class="pc-img-placeholder" ${p.image ? 'style="display:none"' : ''}>🥭</div>`;
-
-  let ribbonHtml = '';
-  if (p.displayOnly) {
-    ribbonHtml = `<div class="pc-available-ribbon coming-soon">🔔 Coming Soon — Not Yet Available to Order</div>`;
-  } else if (p.available) {
-    ribbonHtml = `<div class="pc-available-ribbon avail">✓ Available Now</div>`;
-  } else {
-    ribbonHtml = `<div class="pc-available-ribbon sold">✗ Currently Sold Out</div>`;
-  }
-
-  // Badges
-  let badgesHtml = '';
-  if (p.badges && p.badges.length) {
-    badgesHtml = `<div class="pc-badges">${p.badges.map(b => {
-      let cls = 'generic';
-      if (b.toLowerCase().includes('gi')) cls = 'gi';
-      else if (b.toLowerCase().includes('iso')) cls = 'iso';
-      else if (b.toLowerCase().includes('limited') || b.toLowerCase().includes('seasonal')) cls = 'limited';
-      else if (b.toLowerCase().includes('diabetic') || b.toLowerCase().includes('free')) cls = 'health';
-      return `<span class="pc-badge-tag ${cls}">${b}</span>`;
-    }).join('')}</div>`;
-  }
-
-  // Details block for putharekulu/jelly
-  const detailsHtml = p.details
-    ? `<div class="pc-details">ℹ️ ${p.details}</div>`
-    : '';
-
-  // Meta pills for mangoes
-  let metaHtml = '';
-  if (p.season) {
-    metaHtml = `<div class="pc-meta">
-      <span class="pc-meta-pill">📅 ${p.season}</span>
-      <span class="pc-meta-pill">👅 ${p.taste}</span>
-    </div>`;
-  }
-
-  // Footer button
-  let btnHtml = '';
-  if (p.displayOnly) {
-    btnHtml = `<button class="btn-order notify" onclick="notifyMe('${p.name}')">🔔 Notify When Available</button>`;
-  } else if (p.available) {
-    btnHtml = `<a href="order.html" class="btn-order">Order Now →</a>`;
-  } else {
-    btnHtml = `<button class="btn-order disabled" disabled>Currently Sold Out</button>`;
-  }
-
-  return `
-    <div class="product-card-v2">
-      ${p.tag ? `<div class="pc-badge ${badgeClass(p.tag)}">${p.tag}</div>` : ''}
-      <div class="pc-img-wrap">
-        ${imgHtml}${placeholder}
-        ${ribbonHtml}
-      </div>
-      <div class="pc-body">
-        <div class="pc-origin">${p.origin}</div>
-        <div class="pc-name">${p.name}</div>
-        ${p.localName ? `<div class="pc-local">${p.localName}</div>` : ''}
-        <div class="pc-desc">${p.description}</div>
-        ${badgesHtml}
-        ${metaHtml}
-        ${detailsHtml}
-        <div class="pc-footer">
-          <div>
-            <div class="pc-price">${p.price}</div>
-            <div class="pc-unit">${p.unit}</div>
-          </div>
-        </div>
-        <div style="margin-top:14px">${btnHtml}</div>
-        ${p.bestFor ? `<div style="font-size:12px;color:var(--text-light);margin-top:10px">🍽 Best for: ${p.bestFor}</div>` : ''}
-      </div>
-    </div>`;
-}
-
-// ── RENDER SHOP CONTENT ──────────────────────────────────
+// ── RENDER SHOP ───────────────────────────────────────────
 function renderShop() {
   const container = document.getElementById('shopContent');
+  if (!container || !SHRISH_DATA) return;
   container.innerHTML = '';
 
-  const filtered = activeFilter === 'all'
-    ? SHRISH_DATA.products
-    : SHRISH_DATA.products.filter(p => p.category === activeFilter);
+  // Sort: available first, then sold out, then coming soon
+  const sortProducts = arr => [
+    ...arr.filter(p => p.available && !p.displayOnly),
+    ...arr.filter(p => !p.available && !p.displayOnly),
+    ...arr.filter(p => p.displayOnly)
+  ];
 
-  if (!filtered.length) {
-    container.innerHTML = `<div class="no-results"><div class="no-icon">🔍</div><p>No products in this category yet.</p></div>`;
-    return;
-  }
+  const catMeta = {
+    mangoes:     { title: '🥭 Indian Mango', em: 'Varieties', sub: 'Click any variety to expand and add to cart. Available varieties show first.', showBanner: false },
+    putharekulu: { title: '🍬 Authentic', em: 'Putharekulu', sub: 'Hand-crafted in Atreyapuram — the GI-tagged birthplace of Putharekulu. Coming soon!', showBanner: true },
+    jellysnacks: { title: '🍡 Mango & Palm', em: 'Jelly Snacks', sub: 'Traditional Mamidi Thandra and Thati Thandra from Atreyapuram. Coming soon.', showBanner: false }
+  };
 
-  // Group by category when showing all
   if (activeFilter === 'all') {
-    const cats = ['mangoes', 'putharekulu', 'jellysnacks'];
-    const catMeta = {
-      mangoes:     { title: '🥭 Indian Mango', em: 'Varieties', sub: 'Sourced directly from farms across India. Availability changes each season.', showBanner: false },
-      putharekulu: { title: '🍬 Authentic', em: 'Putharekulu', sub: 'Hand-crafted in Atreyapuram, Andhra Pradesh — the birthplace of Putharekulu. Coming soon to Shrish LLC.', showBanner: true },
-      jellysnacks: { title: '🍡 Mango & Palm', em: 'Jelly Snacks', sub: 'Traditional Mamidi Thandra and Thati Thandra from Atreyapuram. Coming soon.', showBanner: false }
-    };
-
-    cats.forEach(catId => {
-      const items = SHRISH_DATA.products.filter(p => p.category === catId);
+    ['mangoes','putharekulu','jellysnacks'].forEach(catId => {
+      const items = sortProducts(SHRISH_DATA.products.filter(p => p.category === catId));
       if (!items.length) return;
       const meta = catMeta[catId];
-
-      let sectionHtml = `<div class="shop-section">
+      let html = `<div class="shop-section">
         <div class="shop-section-title">${meta.title} <em>${meta.em}</em></div>
         <div class="section-divider"></div>
-        <p class="shop-section-subtitle">${meta.sub}</p>`;
-
+        <p style="color:var(--text-light);font-size:14px;margin-bottom:24px">${meta.sub}</p>`;
       if (meta.showBanner) {
-        sectionHtml += `<div class="coming-soon-banner">
-          <div class="csb-icon">🍬</div>
-          <div class="csb-text">
-            <h3>Putharekulu — Coming Soon!</h3>
-            <p>We are working on bringing authentic GI-tagged Putharekulu from Atreyapuram directly to Richmond. Browse all varieties below and we'll notify you when they're available to order.</p>
-          </div>
-        </div>`;
+        html += `<div class="coming-banner"><div class="cb-icon">🍬</div><div>
+          <h3>Coming Soon to Shrish LLC!</h3>
+          <p>Authentic GI-tagged Putharekulu direct from Atreyapuram. Hit "Notify Me" to be first in line when we launch.</p>
+        </div></div>`;
       }
-
-      sectionHtml += `<div class="products-grid-v2">${items.map(renderCard).join('')}</div></div>`;
-      container.innerHTML += sectionHtml;
+      html += `<div class="products-grid-v2">${items.map(renderCard).join('')}</div></div>`;
+      container.innerHTML += html;
     });
-
   } else {
-    // Single category view
-    const catMeta = SHRISH_DATA.categories.find(c => c.id === activeFilter);
+    const items = sortProducts(SHRISH_DATA.products.filter(p => p.category === activeFilter));
     let html = `<div class="shop-section">`;
-
     if (activeFilter === 'putharekulu') {
-      html += `<div class="coming-soon-banner">
-        <div class="csb-icon">🍬</div>
-        <div class="csb-text">
-          <h3>Putharekulu — Coming Soon!</h3>
-          <p>Authentic GI-tagged Putharekulu from Atreyapuram, Andhra Pradesh — coming to Shrish LLC soon. Click "Notify Me" on any variety below and we'll let you know the moment it's available!</p>
-        </div>
-      </div>`;
+      html += `<div class="coming-banner"><div class="cb-icon">🍬</div><div>
+        <h3>Coming Soon!</h3>
+        <p>Authentic Atreyapuram Putharekulu — click "Notify Me" to be first in line!</p>
+      </div></div>`;
     }
-    if (activeFilter === 'jellysnacks') {
-      html += `<div class="coming-soon-banner" style="background:linear-gradient(135deg,#1A2A1A,#0A1A0A)">
-        <div class="csb-icon">🍡</div>
-        <div class="csb-text">
-          <h3>Jelly & Snacks — Coming Soon!</h3>
-          <p>Traditional Mamidi Thandra (Mango Jelly) and Thati Thandra (Palm Jelly) from Atreyapuram are on their way. Hit "Notify Me" to be first in line!</p>
-        </div>
-      </div>`;
-    }
-
-    html += `<div class="products-grid-v2">${filtered.map(renderCard).join('')}</div></div>`;
+    html += `<div class="products-grid-v2">${items.map(renderCard).join('')}</div></div>`;
     container.innerHTML = html;
   }
 }
 
-// ── NOTIFY ME ────────────────────────────────────────────
-function notifyMe(productName) {
-  const email = prompt(`Enter your email to be notified when "${productName}" is available:`);
-  if (email && email.includes('@')) {
-    // In production: send to your backend or email service
-    const notifications = JSON.parse(localStorage.getItem('shrish_notify') || '[]');
-    notifications.push({ product: productName, email, date: new Date().toISOString() });
-    localStorage.setItem('shrish_notify', JSON.stringify(notifications));
-    alert(`✅ Got it! We'll email ${email} when ${productName} is available.`);
-  } else if (email !== null) {
-    alert('Please enter a valid email address.');
-  }
-}
-
 // ── INIT ─────────────────────────────────────────────────
-function initShop() {
+function init() {
   if (typeof SHRISH_DATA === 'undefined') {
-    console.error('SHRISH_DATA not loaded — check data.js');
     document.getElementById('shopContent').innerHTML =
-      '<div class="no-results"><div class="no-icon">⚠️</div><p>Could not load products. Please refresh the page.</p></div>';
+      '<div class="no-results"><div class="nr-icon">⚠️</div><p>Could not load products. Please refresh.</p></div>';
     return;
   }
   buildFilters();
   renderShop();
+  updateCartUI();
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initShop);
+  document.addEventListener('DOMContentLoaded', init);
 } else {
-  initShop();
+  init();
 }
 </script>
 </body>
