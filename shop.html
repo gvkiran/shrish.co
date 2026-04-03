@@ -349,8 +349,22 @@ function notifyMe(productName) {
 }
 
 // ── INIT ─────────────────────────────────────────────────
-buildFilters();
-renderShop();
+function initShop() {
+  if (typeof SHRISH_DATA === 'undefined') {
+    console.error('SHRISH_DATA not loaded — check data.js');
+    document.getElementById('shopContent').innerHTML =
+      '<div class="no-results"><div class="no-icon">⚠️</div><p>Could not load products. Please refresh the page.</p></div>';
+    return;
+  }
+  buildFilters();
+  renderShop();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initShop);
+} else {
+  initShop();
+}
 </script>
 </body>
 </html>

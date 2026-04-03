@@ -32,34 +32,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ── RENDER HOMEPAGE PRODUCTS ─────────────────────────────
+  // ── RENDER HOMEPAGE PRODUCTS (with real images) ───────────
   const productsGrid = document.getElementById('productsGrid');
-  if (productsGrid && window.SHRISH_DATA) {
-    const available = SHRISH_DATA.products.filter(p => p.available).slice(0, 3);
-    const toShow = available.length ? available : SHRISH_DATA.products.slice(0, 3);
-    toShow.forEach(p => {
-      productsGrid.innerHTML += `
-        <div class="product-card ${p.available ? '' : 'product-card-unavailable'}">
-          ${p.tag ? `<div class="product-card-badge">${p.tag}</div>` : ''}
-          <div class="product-card-img">${p.emoji}</div>
-          <div class="product-card-body">
-            <h3>${p.name}</h3>
-            <p>${p.description}</p>
-            <div class="product-card-footer">
-              <div>
-                <div class="product-price">${p.price}</div>
-                <div class="product-unit">${p.unit}</div>
-              </div>
-              <span class="product-status-badge ${p.available ? 'available' : 'unavailable'}">
-                ${p.available ? '✓ Available' : 'Sold Out'}
-              </span>
+  if (productsGrid) {
+    if (!window.SHRISH_DATA) {
+      productsGrid.innerHTML = '<p style="color:var(--text-light);text-align:center;padding:32px">Loading products...</p>';
+    } else {
+      // Show up to 3 available mangoes on homepage
+      const mangoes = SHRISH_DATA.products.filter(p => p.category === 'mangoes');
+      const available = mangoes.filter(p => p.available);
+      const toShow = (available.length ? available : mangoes).slice(0, 3);
+
+      toShow.forEach(p => {
+        const imgHtml = p.image
+          ? `<img src="${p.image}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+          : '';
+        const fallback = `<span style="font-size:56px;${p.image ? 'display:none' : ''}">🥭</span>`;
+
+        productsGrid.innerHTML += `
+          <div class="product-card ${p.available ? '' : 'product-card-unavailable'}">
+            ${p.tag ? `<div class="product-card-badge">${p.tag}</div>` : ''}
+            <div class="product-card-img" style="padding:0;overflow:hidden;${p.image ? '' : 'display:flex;align-items:center;justify-content:center'}">
+              ${imgHtml}${fallback}
             </div>
-          </div>
-        </div>`;
-    });
+            <div class="product-card-body">
+              <h3>${p.name}</h3>
+              <p>${p.description}</p>
+              <div class="product-card-footer">
+                <div>
+                  <div class="product-price">${p.price}</div>
+                  <div class="product-unit">${p.unit}</div>
+                </div>
+                <span class="product-status-badge ${p.available ? 'available' : 'unavailable'}">
+                  ${p.available ? '✓ Available' : 'Sold Out'}
+                </span>
+              </div>
+            </div>
+          </div>`;
+      });
+    }
   }
 
-  // ── SMOOTH SCROLL REVEAL ─────────────────────────────────
+  // ── SCROLL REVEAL ANIMATIONS ─────────────────────────────
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -69,7 +83,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }, { threshold: 0.1 });
 
-  document.querySelectorAll('.section-header, .product-card, .how-step, .recipe-card, .testimonial-card').forEach(el => {
+  document.querySelectorAll(
+    '.section-header, .product-card, .how-step, .recipe-card, .testimonial-card'
+  ).forEach(el => {
     el.style.opacity = '0';
     el.style.transform = 'translateY(20px)';
     el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
