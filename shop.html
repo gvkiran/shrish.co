@@ -219,8 +219,13 @@
       <li><a href="shop.html" class="nav-link active">Shop</a></li>
       <li><a href="recipes.html" class="nav-link">Recipes</a></li>
       <li><a href="contact.html" class="nav-link">Contact</a></li>
-    </ul>
-    <button class="cart-fab" id="navCartBtn" style="position:relative;display:flex;padding:10px 18px;font-size:14px" onclick="openCart()">
+          <li style="margin-left:16px">
+        <a href="shop.html" id="navCartLink"
+           style="display:inline-flex;align-items:center;gap:7px;background:var(--saffron);color:#fff;padding:8px 18px;border-radius:50px;font-size:13px;font-weight:700;white-space:nowrap">
+          🛒 Cart <span id="navCartBadge" style="background:rgba(255,255,255,.25);border-radius:50px;padding:1px 7px;font-size:12px;font-weight:800">0</span>
+        </a>
+      </li>
+    </ul>    <button class="cart-fab" id="navCartBtn" style="position:relative;display:flex;padding:10px 18px;font-size:14px" onclick="openCart()">
       🛒 Cart <span class="cart-fab-count" id="navCartCount">0</span>
     </button>
     <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>

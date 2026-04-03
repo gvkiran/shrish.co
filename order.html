@@ -1,23 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- SEO & Open Graph -->
-  <meta property="og:title" content="Place Your Order – SHRISH LLC | Fresh Indian Mangoes">
-  <meta property="og:description" content="Order fresh Indian mangoes online. Pick up in Short Pump or Chesterfield, VA. Pay cash at pickup — no card needed!">
-  <meta property="og:image" content="https://gvkiran.github.io/shrish.co/img_alphonso.jpeg">
-  <meta property="og:url" content="https://shrish.co/order.html">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Shrish LLC">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="theme-color" content="#C8791A">
-  <meta name="description" content="Order fresh Indian mangoes online. Pick up in Short Pump or Chesterfield, VA. Pay cash at pickup — no card needed!">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:title" content="Place Your Order – SHRISH LLC | Fresh Indian Mangoes">
+<meta property="og:description" content="Order fresh Indian mangoes online. Pick up in Short Pump or Chesterfield, VA. Pay cash at pickup — no card needed!">
+<meta property="og:image" content="https://gvkiran.github.io/shrish.co/img_alphonso.jpeg">
+<meta name="description" content="Order fresh Indian mangoes online. Pick up in Short Pump or Chesterfield, VA. Pay cash at pickup.">
 <title>Checkout – SHRISH LLC</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
+/* ── LAYOUT ── */
 .checkout-wrap{max-width:1100px;margin:0 auto;padding:60px 24px 80px;display:grid;grid-template-columns:1.15fr 1fr;gap:40px}
+
+/* ── CART REVIEW ── */
 .review-card{background:#fff;border-radius:20px;padding:28px;box-shadow:0 4px 20px rgba(26,18,8,.08);margin-bottom:24px}
 .review-card-title{font-family:var(--font-display);font-size:22px;color:var(--dark);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
 .review-card-title a{font-size:13px;color:var(--saffron);font-family:var(--font-body);font-weight:600}
@@ -29,35 +27,54 @@
 .ri-name{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:3px}
 .ri-price{font-size:13px;color:var(--saffron);font-weight:600}
 .ri-qty-ctrl{display:flex;align-items:center;gap:8px}
-.ri-qty-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid #E0D0B8;background:#fff;cursor:pointer;font-size:16px;color:var(--saffron);display:flex;align-items:center;justify-content:center}
+.ri-qty-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid #E0D0B8;background:#fff;cursor:pointer;font-size:16px;color:var(--saffron);display:flex;align-items:center;justify-content:center;font-family:var(--font-body)}
 .ri-qty-btn:hover{background:var(--cream-d)}
-.ri-qty-num{font-size:15px;font-weight:700;color:var(--dark);min-width:22px;text-align:center}
 .ri-remove{background:none;border:none;color:#bbb;cursor:pointer;font-size:16px;padding:4px}
 .ri-remove:hover{color:#C62828}
-.review-total{display:flex;justify-content:space-between;align-items:center;padding:14px 0 0;margin-top:4px;border-top:1px solid var(--cream-d);font-weight:700;font-size:16px;color:var(--dark)}
+.review-total{display:flex;justify-content:space-between;align-items:center;padding:14px 0 0;border-top:1px solid var(--cream-d);font-weight:700;font-size:16px;color:var(--dark)}
 .review-total span:last-child{color:var(--saffron);font-size:20px}
 .cart-empty-note{text-align:center;padding:32px;color:var(--text-light)}
 .cart-empty-note .en-icon{font-size:40px;margin-bottom:10px}
 
+/* ── FORM ── */
 .form-card{background:#fff;border-radius:20px;padding:28px 32px;box-shadow:0 4px 20px rgba(26,18,8,.08)}
 .form-card-title{font-family:var(--font-display);font-size:22px;color:var(--dark);margin-bottom:20px}
 .step-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--saffron);margin-bottom:14px}
 .form-divider{height:1px;background:var(--cream-d);margin:20px 0}
+
+/* ── LOCATION CARDS ── */
 .loc-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px}
-.loc-card{border:2px solid #E0D0B8;border-radius:14px;padding:16px;cursor:pointer;transition:all .25s;position:relative}
-.loc-card:hover{border-color:var(--saffron)}
-.loc-card.selected{border-color:var(--saffron);background:rgba(200,121,26,.04)}
-.loc-card input[type=radio]{display:none}
-.loc-card-check{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;border:2px solid #E0D0B8;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .25s}
-.loc-card.selected .loc-card-check{background:var(--saffron);border-color:var(--saffron);color:#fff}
-.loc-icon{font-size:24px;margin-bottom:8px}
+.loc-card{border:2px solid #E0D0B8;border-radius:14px;padding:16px;cursor:pointer;transition:border-color .25s,background .25s;position:relative;user-select:none}
+.loc-card:hover{border-color:var(--saffron);background:rgba(200,121,26,.03)}
+.loc-card.selected{border-color:var(--saffron) !important;background:rgba(200,121,26,.06) !important}
+.loc-check{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;border:2px solid #E0D0B8;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;transition:all .25s;color:transparent;background:transparent}
+.loc-card.selected .loc-check{background:var(--saffron);border-color:var(--saffron);color:#fff}
+.loc-icon{font-size:26px;margin-bottom:8px}
 .loc-name{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:3px}
 .loc-sub{font-size:12px;color:var(--text-light);line-height:1.5}
+
+/* ── ERROR BANNER ── */
+.error-banner{display:none;background:#FFF3CD;border:1.5px solid #F0A500;border-radius:14px;padding:16px 20px;margin-bottom:20px}
+.error-banner.show{display:block}
+.error-banner-title{font-size:14px;font-weight:700;color:#856404;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.error-banner ul{margin:0;padding-left:18px}
+.error-banner ul li{font-size:13px;color:#856404;margin-bottom:4px}
+.error-banner.hard-error{background:#FFEBEE;border-color:#C62828}
+.error-banner.hard-error .error-banner-title{color:#C62828}
+.error-banner.hard-error ul li{color:#C62828}
+
+/* ── PHONE COUNTER ── */
+.phone-counter{font-size:11px;font-weight:600;margin-left:8px;transition:color .2s}
+.phone-counter.ok{color:#2E7D32}
+.phone-counter.bad{color:#C62828}
+
+/* ── SUBMIT ── */
 .submit-btn{width:100%;padding:16px;background:var(--saffron);color:#fff;border:none;border-radius:50px;font-family:var(--font-body);font-size:16px;font-weight:700;cursor:pointer;transition:all .3s;margin-top:8px}
 .submit-btn:hover:not(:disabled){background:var(--saffron-d);transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,121,26,.35)}
 .submit-btn:disabled{background:#ccc;cursor:not-allowed;transform:none}
 .pay-note-small{font-size:12px;color:var(--text-light);text-align:center;margin-top:10px}
 
+/* ── SIDEBAR ── */
 .checkout-sidebar{display:flex;flex-direction:column;gap:20px}
 .info-card{background:#fff;border-radius:20px;padding:24px;box-shadow:0 4px 20px rgba(26,18,8,.08)}
 .info-card h4{font-family:var(--font-display);font-size:20px;color:var(--dark);margin-bottom:16px}
@@ -66,7 +83,7 @@
 .ir strong{display:block;font-size:13px;color:var(--dark);margin-bottom:2px}
 .ir span{font-size:13px;color:var(--text-light)}
 
-/* Success + Social */
+/* ── SUCCESS SCREEN ── */
 .success-screen{display:none;max-width:640px;margin:60px auto;padding:0 24px 80px;text-align:center}
 .success-icon-big{font-size:72px;margin-bottom:20px}
 .success-screen h2{font-family:var(--font-display);font-size:36px;color:var(--dark);margin-bottom:12px}
@@ -79,32 +96,30 @@
 .ss-row span:last-child{font-weight:600;color:var(--dark);text-align:right}
 .success-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:32px}
 
-/* Community / social section */
+/* ── COMMUNITY SECTION ── */
 .community-section{background:linear-gradient(135deg,var(--dark) 0%,#2E1A05 100%);border-radius:24px;padding:32px 28px;text-align:center;margin-top:8px}
 .community-section h3{font-family:var(--font-display);font-size:26px;color:var(--gold-l);margin-bottom:10px}
 .community-section>p{color:rgba(255,255,255,.65);font-size:14px;line-height:1.7;max-width:460px;margin:0 auto 24px}
 .community-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.comm-btn{display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:50px;font-family:var(--font-body);font-size:14px;font-weight:700;cursor:pointer;transition:all .3s;text-decoration:none;border:none;white-space:nowrap}
+.comm-btn{display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:50px;font-family:var(--font-body);font-size:14px;font-weight:700;transition:all .3s;text-decoration:none;white-space:nowrap}
 .comm-btn svg{width:18px;height:18px;flex-shrink:0}
 .cb-wa-group{background:#25D366;color:#fff}
 .cb-wa-group:hover{background:#1da851;transform:translateY(-2px);box-shadow:0 6px 20px rgba(37,211,102,.4)}
 .cb-wa{background:#128C7E;color:#fff}
-.cb-wa:hover{background:#0d6b5f;transform:translateY(-2px);box-shadow:0 6px 20px rgba(18,140,126,.35)}
+.cb-wa:hover{background:#0d6b5f;transform:translateY(-2px)}
 .cb-ig{background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff}
 .cb-ig:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(220,39,67,.4)}
 .comm-note{font-size:12px;color:rgba(255,255,255,.4);margin-top:16px}
 
-@media(max-width:900px){
-  .checkout-wrap{grid-template-columns:1fr;padding:40px 20px 60px}
-  .loc-cards{grid-template-columns:1fr}
-}
-@media(max-width:480px){ .community-btns{flex-direction:column;align-items:center} }
+@media(max-width:900px){.checkout-wrap{grid-template-columns:1fr;padding:40px 20px 60px}}
+@media(max-width:480px){.loc-cards{grid-template-columns:1fr}.community-btns{flex-direction:column;align-items:center}}
 </style>
 </head>
 <body>
 
 <div class="announcement-bar"><span>🥭 Fresh Indian Mangoes — Pickup in Short Pump & Chesterfield, VA</span></div>
 
+<!-- NAV — cart button placed AFTER contact in nav links -->
 <nav class="nav" id="nav">
   <div class="nav-inner">
     <a href="index.html" class="nav-logo"><img src="logo.png" alt="Shrish LLC" class="logo-img"></a>
@@ -114,14 +129,23 @@
       <li><a href="shop.html" class="nav-link">Shop</a></li>
       <li><a href="recipes.html" class="nav-link">Recipes</a></li>
       <li><a href="contact.html" class="nav-link">Contact</a></li>
+      <li style="margin-left:16px">
+        <a href="shop.html" id="navCartLink"
+           style="display:inline-flex;align-items:center;gap:7px;background:var(--saffron);color:#fff;padding:8px 18px;border-radius:50px;font-size:13px;font-weight:700;white-space:nowrap;transition:all .3s">
+          🛒 Cart <span id="navCartBadge" style="background:rgba(255,255,255,.25);border-radius:50px;padding:1px 7px;font-size:12px;font-weight:800">0</span>
+        </a>
+      </li>
     </ul>
-    <a href="shop.html" class="btn-outline" style="padding:10px 20px;font-size:13px;flex-shrink:0">← Back to Shop</a>
+    <a href="shop.html" class="btn-outline" style="padding:10px 20px;font-size:13px;flex-shrink:0">← Shop</a>
     <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
   </div>
   <div class="nav-mobile" id="navMobile">
     <a href="index.html">Home</a><a href="about.html">About</a>
     <a href="shop.html">Shop</a><a href="recipes.html">Recipes</a>
     <a href="contact.html">Contact</a>
+    <a href="shop.html" style="display:flex;align-items:center;gap:8px;margin-top:8px;background:var(--saffron);color:#fff;padding:12px 20px;border-radius:50px;font-weight:700;justify-content:center">
+      🛒 Cart (<span id="mobileCartCount">0</span>)
+    </a>
   </div>
 </nav>
 
@@ -132,59 +156,70 @@
 
 <!-- CHECKOUT LAYOUT -->
 <div class="checkout-wrap" id="checkoutWrap">
+
+  <!-- LEFT COLUMN -->
   <div>
     <!-- Cart Review -->
     <div class="review-card">
-      <div class="review-card-title">Your Order <a href="shop.html">← Edit in Shop</a></div>
+      <div class="review-card-title">
+        Your Order
+        <a href="shop.html">← Edit in Shop</a>
+      </div>
       <div id="cartReviewContainer"></div>
+    </div>
+
+    <!-- Error Banner — shown when validation fails -->
+    <div class="error-banner" id="errorBanner">
+      <div class="error-banner-title">⚠️ Please fix the following before placing your order:</div>
+      <ul id="errorList"></ul>
     </div>
 
     <!-- Form -->
     <div class="form-card">
       <div class="form-card-title">Your Details</div>
+
       <div class="step-label">Step 1 — Contact Information</div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">First Name <span class="req">*</span></label>
-          <input type="text" class="form-control" id="firstName" placeholder="Ravi">
+          <input type="text" class="form-control" id="firstName" placeholder="Ravi" autocomplete="given-name">
           <div class="form-error" id="err-firstName">Please enter your first name</div>
         </div>
         <div class="form-group">
           <label class="form-label">Last Name <span class="req">*</span></label>
-          <input type="text" class="form-control" id="lastName" placeholder="Sharma">
+          <input type="text" class="form-control" id="lastName" placeholder="Sharma" autocomplete="family-name">
           <div class="form-error" id="err-lastName">Please enter your last name</div>
         </div>
       </div>
+
       <div class="form-group">
-        <label class="form-label">Phone Number <span class="req">*</span>
-          <span id="phoneDigitCount" style="font-weight:400;font-size:11px;color:var(--text-light);margin-left:8px"></span>
+        <label class="form-label">
+          Phone Number <span class="req">*</span>
+          <span class="phone-counter" id="phoneCounter"></span>
         </label>
-        <input type="tel" class="form-control" id="phone" placeholder="(804) 555-1234"
-          oninput="updatePhoneCount(this.value)"
-          onblur="validatePhoneOnBlur(this.value)">
-        <div class="form-error" id="err-phone">Please enter a valid phone number</div>
-        <div style="font-size:11px;color:var(--text-light);margin-top:4px">Format: (804) 555-1234 or +1 804 555 1234</div>
+        <input type="tel" class="form-control" id="phone" placeholder="(804) 555-1234" autocomplete="tel" maxlength="16">
+        <div class="form-error" id="err-phone">Please enter a valid 10-digit phone number</div>
+        <div style="font-size:11px;color:var(--text-light);margin-top:5px">Format: (804) 555-1234 or +1 804 555 1234</div>
       </div>
+
       <div class="form-group">
         <label class="form-label">Email Address <span class="req">*</span></label>
-        <input type="email" class="form-control" id="email" placeholder="ravi@gmail.com"
-          onblur="validateEmailOnBlur(this.value)">
-        <div class="form-error" id="err-email">Please enter a valid email (e.g. <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1678777b7356717b777f7a3875797b">[email&#160;protected]</a>)</div>
+        <input type="email" class="form-control" id="email" placeholder="ravi@gmail.com" autocomplete="email">
+        <div class="form-error" id="err-email">Please enter a valid email (e.g. name@gmail.com)</div>
       </div>
 
       <div class="form-divider"></div>
       <div class="step-label">Step 2 — Pickup Location</div>
-      <div class="loc-cards">
-        <div class="loc-card" id="loc-shortpump" onclick="selectLoc('shortpump')">
-          <input type="radio" name="location" value="shortpump">
-          <div class="loc-card-check" id="check-shortpump"></div>
+
+      <div class="loc-cards" id="locCards">
+        <div class="loc-card" id="loc-shortpump" data-loc="shortpump">
+          <div class="loc-check" id="check-shortpump">✓</div>
           <div class="loc-icon">📍</div>
           <div class="loc-name">Short Pump, VA</div>
           <div class="loc-sub">Richmond West End<br>Address sent on confirmation</div>
         </div>
-        <div class="loc-card" id="loc-chesterfield" onclick="selectLoc('chesterfield')">
-          <input type="radio" name="location" value="chesterfield">
-          <div class="loc-card-check" id="check-chesterfield"></div>
+        <div class="loc-card" id="loc-chesterfield" data-loc="chesterfield">
+          <div class="loc-check" id="check-chesterfield">✓</div>
           <div class="loc-icon">📍</div>
           <div class="loc-name">Chesterfield, VA</div>
           <div class="loc-sub">South of Richmond<br>Address sent on confirmation</div>
@@ -194,13 +229,14 @@
 
       <div class="form-divider"></div>
       <div class="step-label">Step 3 — Optional</div>
+
       <div class="form-group">
         <label class="form-label">How did you hear about us?</label>
         <select class="form-control" id="referral">
           <option value="">Select one (optional)</option>
           <option value="friend">Friend / Family</option>
-          <option value="instagram">Instagram</option>
-          <option value="whatsapp">WhatsApp</option>
+          <option value="instagram">Instagram (@richmond_mangos)</option>
+          <option value="whatsapp">WhatsApp Group</option>
           <option value="google">Google Search</option>
           <option value="community">Indian Community Group</option>
           <option value="other">Other</option>
@@ -208,57 +244,49 @@
       </div>
       <div class="form-group">
         <label class="form-label">Special Instructions / Notes</label>
-        <textarea class="form-control" id="notes" rows="3" placeholder="Any special requests or notes..."></textarea>
+        <textarea class="form-control" id="notes" rows="3" placeholder="Any special requests or notes for your order..."></textarea>
       </div>
 
-      <button class="submit-btn" id="submitBtn" onclick="submitOrder()">
+      <button class="submit-btn" id="submitBtn">
         🥭 Place Order — Pay at Pickup
       </button>
       <p class="pay-note-small">💵 No payment needed now. Bring cash when you pick up.</p>
     </div>
   </div>
 
-  <!-- Sidebar -->
+  <!-- RIGHT SIDEBAR -->
   <div class="checkout-sidebar">
     <div class="info-card">
       <h4>📍 Pickup Locations</h4>
-      <div class="ir"><span class="ir-icon">🏪</span><div><strong>Short Pump, VA</strong><span>Exact address shared when we confirm your order</span></div></div>
-      <div class="ir"><span class="ir-icon">🏪</span><div><strong>Chesterfield, VA</strong><span>Exact address shared when we confirm your order</span></div></div>
+      <div class="ir"><span class="ir-icon">🏪</span><div><strong>Short Pump, VA</strong><span>Richmond West End · Address shared on confirmation</span></div></div>
+      <div class="ir"><span class="ir-icon">🏪</span><div><strong>Chesterfield, VA</strong><span>South of Richmond · Address shared on confirmation</span></div></div>
     </div>
     <div class="info-card">
       <h4>💳 How It Works</h4>
       <div class="ir"><span class="ir-icon">1️⃣</span><div><strong>Place order online</strong><span>No payment needed now</span></div></div>
       <div class="ir"><span class="ir-icon">2️⃣</span><div><strong>We call to confirm</strong><span><a href="tel:+17653255577" style="color:var(--saffron)">+1 (765) 325-5577</a></span></div></div>
-      <div class="ir"><span class="ir-icon">3️⃣</span><div><strong>Pick up & pay cash</strong><span>Bring exact change or small bills</span></div></div>
+      <div class="ir"><span class="ir-icon">3️⃣</span><div><strong>Pick up &amp; pay cash</strong><span>Bring exact change or small bills</span></div></div>
     </div>
     <div class="info-card" style="background:var(--dark)">
-      <h4 style="color:var(--gold-l)">💬 Quick Help</h4>
-      <div class="ir"><span class="ir-icon">📱</span><div><strong style="color:white">WhatsApp</strong><span><a href="https://wa.me/17653255577" target="_blank" style="color:#25D366;font-weight:600">Chat with us instantly</a></span></div></div>
-      <div class="ir"><span class="ir-icon">📧</span><div><strong style="color:white">Email</strong><span><a href="/cdn-cgi/l/email-protection#d3b0bcbda7b2b0a793a0bba1baa0bbbfbfb0fdb0bcbe" style="color:var(--saffron)"><span class="__cf_email__" data-cfemail="99faf6f7edf8faedd9eaf1ebf0eaf1f5f5fab7faf6f4">[email&#160;protected]</span></a></span></div></div>
+      <h4 style="color:var(--gold-l)">💬 Need Help?</h4>
+      <div class="ir"><span class="ir-icon">📱</span><div><strong style="color:#fff">WhatsApp</strong><span><a href="https://wa.me/17653255577" target="_blank" style="color:#25D366;font-weight:600">Chat with us instantly</a></span></div></div>
+      <div class="ir"><span class="ir-icon">📧</span><div><strong style="color:#fff">Email</strong><span><a href="mailto:contact@shrishllc.com" style="color:var(--saffron)">contact@shrishllc.com</a></span></div></div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════
-     SUCCESS SCREEN
-════════════════════════════════════ -->
+<!-- SUCCESS SCREEN -->
 <div class="success-screen" id="successScreen">
   <div class="success-icon-big">🎉</div>
   <h2>Order Placed!</h2>
   <div class="order-badge" id="successOrderNum"></div>
-  <p>Thank you! We'll call or text you shortly to confirm pickup details.</p>
-  <p>Remember — payment is collected at pickup. No card needed.</p>
-
-  <!-- Order Summary -->
+  <p>Thank you! We'll call or text you shortly to confirm your pickup details.</p>
+  <p>Payment is collected at pickup — no card needed.</p>
   <div class="success-summary" id="successSummary"></div>
-
-  <!-- Action Buttons -->
   <div class="success-actions">
     <a href="shop.html" class="btn-primary">Continue Shopping</a>
     <a href="index.html" class="btn-outline">Back to Home</a>
   </div>
-
-  <!-- ✨ Community / Social Section -->
   <div class="community-section">
     <h3>🥭 Join Our Community!</h3>
     <p>Get notified first when new mango varieties arrive, seasonal deals drop, and more. Stay connected with the Shrish family!</p>
@@ -267,16 +295,16 @@
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         Join WhatsApp Group
       </a>
-      <a href="https://wa.me/17653255577?text=Hi%20Shrish!%20Just%20placed%20my%20order%20%F0%9F%A5%AD%20Looking%20forward%20to%20it!" target="_blank" rel="noopener" class="comm-btn cb-wa">
+      <a href="https://wa.me/17653255577?text=Hi%20Shrish!%20Just%20placed%20my%20order%20%F0%9F%A5%AD" target="_blank" rel="noopener" class="comm-btn cb-wa">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        WhatsApp Us Directly
+        WhatsApp Us
       </a>
       <a href="https://www.instagram.com/richmond_mangos/" target="_blank" rel="noopener" class="comm-btn cb-ig">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
         Follow on Instagram
       </a>
     </div>
-    <p class="comm-note">🔔 WhatsApp group members get early access to new varieties & exclusive deals</p>
+    <p class="comm-note">🔔 WhatsApp group members get early access to new varieties &amp; exclusive deals</p>
   </div>
 </div>
 
@@ -290,59 +318,309 @@
   </div>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="data.js"></script>
+<script src="data.js"></script>
 <script src="main.js"></script>
 <script>
+// ════════════════════════════════════════════════════════
+//  ORDER PAGE — All logic uses addEventListener (no onclick=)
+//  This avoids ALL scope issues with HTML onclick= attributes
+// ════════════════════════════════════════════════════════
+'use strict';
+
+// ── STATE ─────────────────────────────────────────────────
 let cart = JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
 let selectedLoc = '';
-// Expose all functions globally so HTML onclick= attributes work
-window._shrishOrder = true;
 
+// ── UPDATE NAV CART BADGE ─────────────────────────────────
+function updateNavCart() {
+  const total = cart.reduce((s, i) => s + i.qty, 0);
+  const badge = document.getElementById('navCartBadge');
+  const mobile = document.getElementById('mobileCartCount');
+  if (badge) badge.textContent = total;
+  if (mobile) mobile.textContent = total;
+}
+updateNavCart();
+
+// ── RENDER CART REVIEW ────────────────────────────────────
 function renderCartReview() {
   const container = document.getElementById('cartReviewContainer');
   const submitBtn = document.getElementById('submitBtn');
   if (!cart.length) {
-    container.innerHTML = `<div class="cart-empty-note"><div class="en-icon">🛒</div><p>Your cart is empty. <a href="shop.html" style="color:var(--saffron);font-weight:600">← Go back to shop</a></p></div>`;
+    container.innerHTML = `
+      <div class="cart-empty-note">
+        <div class="en-icon">🛒</div>
+        <p style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:8px">Your cart is empty</p>
+        <p style="font-size:13px;color:var(--text-light);margin-bottom:16px">Go back to shop and add some mangoes!</p>
+        <a href="shop.html" class="btn-primary" style="font-size:14px;padding:11px 24px">🥭 Browse Shop</a>
+      </div>`;
     if (submitBtn) submitBtn.disabled = true;
     return;
   }
   if (submitBtn) submitBtn.disabled = false;
-  const totalQty = cart.reduce((s,i) => s+i.qty, 0);
-  let html = cart.map(item => {
-    const imgContent = item.image ? `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='🥭'">` : '🥭';
-    return `<div class="review-item">
-      <div class="ri-thumb">${imgContent}</div>
-      <div class="ri-info"><div class="ri-name">${item.name}</div><div class="ri-price">${item.price} · ${item.unit}</div></div>
-      <div class="ri-qty-ctrl">
-        <button class="ri-qty-btn" onclick="reviewQty('${item.id}',-1)">−</button>
-        <span class="ri-qty-num">${item.qty}</span>
-        <button class="ri-qty-btn" onclick="reviewQty('${item.id}',1)">+</button>
-        <span style="font-size:11px;color:var(--text-light);margin-left:4px">box${item.qty>1?'es':''}</span>
-      </div>
-      <button class="ri-remove" onclick="reviewRemove('${item.id}')" title="Remove">✕</button>
+
+  const totalQty = cart.reduce((s, i) => s + i.qty, 0);
+  container.innerHTML = cart.map(item => {
+    const imgContent = item.image
+      ? `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='🥭'">`
+      : '🥭';
+    return `
+      <div class="review-item">
+        <div class="ri-thumb">${imgContent}</div>
+        <div class="ri-info">
+          <div class="ri-name">${item.name}</div>
+          <div class="ri-price">${item.price} · ${item.unit}</div>
+        </div>
+        <div class="ri-qty-ctrl">
+          <button class="ri-qty-btn" data-id="${item.id}" data-delta="-1">−</button>
+          <span style="font-size:15px;font-weight:700;color:var(--dark);min-width:22px;text-align:center">${item.qty}</span>
+          <button class="ri-qty-btn" data-id="${item.id}" data-delta="1">+</button>
+          <span style="font-size:11px;color:var(--text-light);margin-left:4px">box${item.qty > 1 ? 'es' : ''}</span>
+        </div>
+        <button class="ri-remove" data-id="${item.id}" title="Remove">✕</button>
+      </div>`;
+  }).join('') + `
+    <div class="review-total">
+      <span>Total</span>
+      <span>${totalQty} box${totalQty !== 1 ? 'es' : ''}</span>
     </div>`;
-  }).join('');
-  html += `<div class="review-total"><span>Total</span><span>${totalQty} box${totalQty!==1?'es':''}</span></div>`;
-  container.innerHTML = html;
+
+  // Attach qty button listeners
+  container.querySelectorAll('.ri-qty-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const delta = parseInt(btn.dataset.delta);
+      const item = cart.find(x => x.id === id);
+      if (item) {
+        item.qty = Math.max(1, item.qty + delta);
+        sessionStorage.setItem('shrish_cart', JSON.stringify(cart));
+        renderCartReview();
+        updateNavCart();
+      }
+    });
+  });
+  container.querySelectorAll('.ri-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      cart = cart.filter(x => x.id !== btn.dataset.id);
+      sessionStorage.setItem('shrish_cart', JSON.stringify(cart));
+      renderCartReview();
+      updateNavCart();
+    });
+  });
 }
 
-function reviewQty(id, delta) {
-  const item = cart.find(x => x.id===id);
-  if (item) { item.qty = Math.max(1, item.qty+delta); sessionStorage.setItem('shrish_cart', JSON.stringify(cart)); renderCartReview(); }
-}
-function reviewRemove(id) {
-  cart = cart.filter(x => x.id!==id);
-  sessionStorage.setItem('shrish_cart', JSON.stringify(cart));
-  
-// ── Expose all functions to global scope for HTML onclick= attributes ──────
-window.selectLoc          = selectLoc;
-window.reviewQty          = reviewQty;
-window.reviewRemove       = reviewRemove;
-window.submitOrder        = submitOrder;
-window.updatePhoneCount   = updatePhoneCount;
-window.validatePhoneOnBlur = validatePhoneOnBlur;
-window.validateEmailOnBlur = validateEmailOnBlur;
+// ── LOCATION SELECTION — addEventListener only ────────────
+document.querySelectorAll('.loc-card').forEach(card => {
+  card.addEventListener('click', () => {
+    selectedLoc = card.dataset.loc;
+    // Visual update
+    document.querySelectorAll('.loc-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    // Hide error
+    const errEl = document.getElementById('err-location');
+    if (errEl) errEl.style.display = 'none';
+    // Hide from error banner too
+    rebuildErrorBanner();
+  });
+  // Also make keyboard accessible
+  card.setAttribute('tabindex', '0');
+  card.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+  });
+});
 
+// ── PHONE — real-time digit counter ──────────────────────
+const phoneInput = document.getElementById('phone');
+const phoneCounter = document.getElementById('phoneCounter');
+if (phoneInput) {
+  phoneInput.addEventListener('input', () => {
+    const digits = phoneInput.value.replace(/\D/g, '');
+    if (!phoneCounter) return;
+    if (digits.length === 0) { phoneCounter.textContent = ''; return; }
+    if (digits.length < 10) {
+      phoneCounter.textContent = `${digits.length}/10 digits`;
+      phoneCounter.className = 'phone-counter bad';
+    } else {
+      phoneCounter.textContent = `✓ ${digits.length} digits`;
+      phoneCounter.className = 'phone-counter ok';
+      // Clear error if valid
+      document.getElementById('err-phone').style.display = 'none';
+      phoneInput.classList.remove('error');
+    }
+  });
+  phoneInput.addEventListener('blur', () => {
+    const digits = phoneInput.value.replace(/\D/g, '');
+    if (!phoneInput.value.trim()) return;
+    const errEl = document.getElementById('err-phone');
+    if (digits.length < 10) {
+      errEl.textContent = `Too short — need 10 digits, you entered ${digits.length}`;
+      errEl.style.display = 'block';
+      phoneInput.classList.add('error');
+    } else {
+      errEl.style.display = 'none';
+      phoneInput.classList.remove('error');
+    }
+  });
+}
+
+// ── EMAIL — blur validation ───────────────────────────────
+const emailInput = document.getElementById('email');
+if (emailInput) {
+  emailInput.addEventListener('blur', () => {
+    const val = emailInput.value.trim();
+    if (!val) return;
+    const errEl = document.getElementById('err-email');
+    const valid = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(val);
+    if (!valid) {
+      errEl.textContent = val.includes('@') ? 'Invalid format — check after the @ (e.g. name@gmail.com)' : 'Missing @ symbol — try name@gmail.com';
+      errEl.style.display = 'block';
+      emailInput.classList.add('error');
+    } else {
+      errEl.style.display = 'none';
+      emailInput.classList.remove('error');
+    }
+  });
+}
+
+// ── ERROR BANNER ──────────────────────────────────────────
+function rebuildErrorBanner() {
+  const banner = document.getElementById('errorBanner');
+  const list = document.getElementById('errorList');
+  if (!banner || !list) return;
+  // Count visible field errors
+  const errors = [];
+  if (document.getElementById('err-firstName')?.style.display === 'block') errors.push('First name is required');
+  if (document.getElementById('err-lastName')?.style.display === 'block') errors.push('Last name is required');
+  if (document.getElementById('err-phone')?.style.display === 'block') errors.push(document.getElementById('err-phone').textContent || 'Valid phone number required');
+  if (document.getElementById('err-email')?.style.display === 'block') errors.push(document.getElementById('err-email').textContent || 'Valid email required');
+  if (!selectedLoc) errors.push('Please select a pickup location (Short Pump or Chesterfield)');
+  if (!cart.length) errors.push('Your cart is empty — go back to shop and add items');
+
+  if (errors.length) {
+    list.innerHTML = errors.map(e => `<li>${e}</li>`).join('');
+    banner.className = 'error-banner show';
+    banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } else {
+    banner.className = 'error-banner';
+  }
+}
+
+// ── VALIDATION ────────────────────────────────────────────
+function validateField(id, condition, message) {
+  const el = document.getElementById(id);
+  const err = document.getElementById('err-' + id);
+  if (!el) return condition;
+  if (!condition) {
+    el.classList.add('error');
+    if (err) { err.textContent = message || err.textContent; err.style.display = 'block'; }
+    return false;
+  }
+  el.classList.remove('error');
+  if (err) err.style.display = 'none';
+  return true;
+}
+
+// ── DUPLICATE CHECK ───────────────────────────────────────
+const ORDERS_KEY = 'shrish_orders';
+function getOrders() { try { return JSON.parse(localStorage.getItem(ORDERS_KEY)) || []; } catch { return []; } }
+function isDuplicate(phone) {
+  const clean = phone.replace(/\D/g, '');
+  return getOrders().some(o => o.phone.replace(/\D/g, '') === clean && o.status === 'pending');
+}
+
+// ── SUBMIT — via addEventListener ─────────────────────────
+document.getElementById('submitBtn').addEventListener('click', () => {
+  const firstName = document.getElementById('firstName').value.trim();
+  const lastName  = document.getElementById('lastName').value.trim();
+  const phone     = document.getElementById('phone').value.trim();
+  const email     = document.getElementById('email').value.trim();
+  const referral  = document.getElementById('referral').value;
+  const notes     = document.getElementById('notes').value.trim();
+
+  const phoneDigits = phone.replace(/\D/g, '');
+  const emailValid  = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email);
+
+  let ok = true;
+  ok = validateField('firstName', firstName.length >= 2, 'First name must be at least 2 characters') && ok;
+  ok = validateField('lastName',  lastName.length >= 2,  'Last name must be at least 2 characters')  && ok;
+  ok = validateField('phone',
+    phoneDigits.length >= 10 && phoneDigits.length <= 15,
+    phoneDigits.length < 10 ? `Phone too short — need 10 digits, you entered ${phoneDigits.length}` : 'Invalid phone number'
+  ) && ok;
+  ok = validateField('email', emailValid,
+    email.includes('@') ? 'Invalid email format — e.g. name@gmail.com' : 'Missing @ — e.g. name@gmail.com'
+  ) && ok;
+
+  if (!cart.length) {
+    const banner = document.getElementById('errorBanner');
+    const list = document.getElementById('errorList');
+    list.innerHTML = '<li>Your cart is empty — go back to shop and add items first</li>';
+    banner.className = 'error-banner show hard-error';
+    banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  if (!selectedLoc) {
+    document.getElementById('err-location').style.display = 'block';
+    ok = false;
+  } else {
+    document.getElementById('err-location').style.display = 'none';
+  }
+
+  if (!ok) {
+    rebuildErrorBanner();
+    return;
+  }
+
+  // ── Duplicate check ───────────────────────────────────
+  if (isDuplicate(phone)) {
+    const banner = document.getElementById('errorBanner');
+    const list = document.getElementById('errorList');
+    list.innerHTML = `<li>An order with phone <strong>${phone}</strong> is already pending.</li><li>To modify, call us: <a href="tel:+17653255577" style="color:inherit;font-weight:700">+1 (765) 325-5577</a> or <a href="https://wa.me/17653255577" style="color:inherit;font-weight:700">WhatsApp</a></li>`;
+    banner.className = 'error-banner show hard-error';
+    banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  // ── Build & save order ────────────────────────────────
+  const orderNum = 'SHR-' + Date.now().toString().slice(-6);
+  const locLabel  = selectedLoc === 'shortpump' ? 'Short Pump, VA' : 'Chesterfield, VA';
+  const order = {
+    id: orderNum, firstName, lastName, phone, email,
+    location: selectedLoc, locationLabel: locLabel,
+    referral: referral || 'Not specified',
+    notes: notes || '',
+    items: cart.map(i => ({ id: i.id, name: i.name || 'Unknown', price: i.price || 'TBD', unit: i.unit || '', qty: i.qty || 1 })),
+    totalBoxes: cart.reduce((s, i) => s + (i.qty || 1), 0),
+    status: 'pending',
+    timestamp: new Date().toISOString()
+  };
+
+  const orders = getOrders();
+  orders.push(order);
+  localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+  sessionStorage.removeItem('shrish_cart');
+
+  // ── Show success ──────────────────────────────────────
+  document.getElementById('checkoutWrap').style.display = 'none';
+  document.getElementById('successScreen').style.display = 'block';
+  document.getElementById('successOrderNum').textContent = `Order #${orderNum}`;
+
+  const itemLines = order.items.map(i =>
+    `<div style="font-size:13px">• ${i.name} × ${i.qty} box${i.qty !== 1 ? 'es' : ''}</div>`
+  ).join('');
+
+  document.getElementById('successSummary').innerHTML = `
+    <div class="ss-row"><span>Items</span><span style="display:flex;flex-direction:column;gap:3px">${itemLines}</span></div>
+    <div class="ss-row"><span>Total</span><span>${order.totalBoxes} box${order.totalBoxes !== 1 ? 'es' : ''}</span></div>
+    <div class="ss-row"><span>Pickup</span><span>${locLabel}</span></div>
+    <div class="ss-row"><span>Name</span><span>${firstName} ${lastName}</span></div>
+    <div class="ss-row"><span>Phone</span><span>${phone}</span></div>
+    <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">💵 Cash at Pickup</span></div>`;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ── INIT ─────────────────────────────────────────────────
 renderCartReview();
 </script>
 </body>

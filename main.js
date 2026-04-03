@@ -121,7 +121,16 @@ function injectGlobalUI() {
     footer.parentNode.insertBefore(strip, footer);
   }
 
-  // 5. Add "Order Now" to mobile nav if missing
+  // 5. Update nav cart badge count from session cart
+  const sessionCart = JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
+  const navBadgeCount = sessionCart.reduce((s, i) => s + (i.qty || 1), 0);
+  const navBadgeEl = document.getElementById('navCartBadge');
+  if (navBadgeEl) navBadgeEl.textContent = navBadgeCount;
+  // Make cart link go to order.html if cart has items, else shop.html
+  const navCartLinkEl = document.getElementById('navCartLink');
+  if (navCartLinkEl && navBadgeCount > 0) navCartLinkEl.href = 'order.html';
+
+  // 6. Add "Order Now" to mobile nav if missing
   const navMobile = document.getElementById('navMobile');
   if (navMobile && !navMobile.querySelector('.mobile-order-btn')) {
     const orderLink = document.createElement('a');
