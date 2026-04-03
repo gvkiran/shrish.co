@@ -7,78 +7,81 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
-.checkout-layout { display:grid; grid-template-columns:1.15fr 1fr; gap:40px; max-width:1100px; margin:0 auto; padding:60px 24px 80px; }
-.checkout-left h2 { font-family:var(--font-display); font-size:28px; color:var(--dark); margin-bottom:6px; }
-.checkout-left .sub { color:var(--text-light); font-size:14px; margin-bottom:28px; }
+.checkout-wrap{max-width:1100px;margin:0 auto;padding:60px 24px 80px;display:grid;grid-template-columns:1.15fr 1fr;gap:40px}
+.checkout-title{font-family:var(--font-display);font-size:32px;color:var(--dark);margin-bottom:6px}
+.checkout-sub{color:var(--text-light);font-size:14px;margin-bottom:28px}
 
-/* Cart review */
-.cart-review { background:var(--white); border-radius:20px; padding:28px; box-shadow:0 4px 20px rgba(26,18,8,0.08); margin-bottom:24px; }
-.cart-review h3 { font-family:var(--font-display); font-size:22px; color:var(--dark); margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; }
-.cart-review h3 a { font-size:13px; color:var(--saffron); font-family:var(--font-body); font-weight:600; }
-.cr-item { display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid var(--cream-d); }
-.cr-item:last-child { border-bottom:none; }
-.cr-thumb { width:56px; height:56px; border-radius:10px; object-fit:cover; background:var(--cream-d); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; overflow:hidden; }
-.cr-thumb img { width:100%; height:100%; object-fit:cover; }
-.cr-info { flex:1; }
-.cr-name { font-size:14px; font-weight:700; color:var(--dark); margin-bottom:3px; }
-.cr-price { font-size:13px; color:var(--saffron); }
-.cr-qty-ctrl { display:flex; align-items:center; gap:8px; }
-.cr-qty-btn { width:28px; height:28px; border-radius:50%; border:1.5px solid #E0D0B8; background:white; cursor:pointer; font-size:16px; color:var(--saffron); display:flex; align-items:center; justify-content:center; font-family:var(--font-body); }
-.cr-qty-btn:hover { background:var(--cream-d); }
-.cr-qty-num { font-size:15px; font-weight:700; color:var(--dark); min-width:22px; text-align:center; }
-.cr-remove { background:none; border:none; color:#aaa; cursor:pointer; font-size:16px; transition:color 0.2s; }
-.cr-remove:hover { color:#C62828; }
-.cart-empty-msg { text-align:center; padding:32px; color:var(--text-light); }
-.cart-empty-msg .em-icon { font-size:40px; margin-bottom:10px; }
-.cr-total { display:flex; justify-content:space-between; align-items:center; padding:14px 0 0; margin-top:4px; border-top:1px solid var(--cream-d); font-weight:700; font-size:16px; color:var(--dark); }
-.cr-total span:last-child { color:var(--saffron); font-size:20px; }
+/* Cart review card */
+.review-card{background:#fff;border-radius:20px;padding:28px;box-shadow:0 4px 20px rgba(26,18,8,.08);margin-bottom:24px}
+.review-card-title{font-family:var(--font-display);font-size:22px;color:var(--dark);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.review-card-title a{font-size:13px;color:var(--saffron);font-family:var(--font-body);font-weight:600}
+.review-item{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--cream-d)}
+.review-item:last-of-type{border-bottom:none}
+.ri-thumb{width:56px;height:56px;border-radius:10px;background:var(--cream-d);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden}
+.ri-thumb img{width:100%;height:100%;object-fit:cover}
+.ri-info{flex:1}
+.ri-name{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:3px}
+.ri-price{font-size:13px;color:var(--saffron);font-weight:600}
+.ri-qty-ctrl{display:flex;align-items:center;gap:8px}
+.ri-qty-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid #E0D0B8;background:#fff;cursor:pointer;font-size:16px;color:var(--saffron);display:flex;align-items:center;justify-content:center}
+.ri-qty-btn:hover{background:var(--cream-d)}
+.ri-qty-num{font-size:15px;font-weight:700;color:var(--dark);min-width:22px;text-align:center}
+.ri-remove{background:none;border:none;color:#bbb;cursor:pointer;font-size:16px;padding:4px}
+.ri-remove:hover{color:#C62828}
+.review-total{display:flex;justify-content:space-between;align-items:center;padding:14px 0 0;margin-top:4px;border-top:1px solid var(--cream-d);font-weight:700;font-size:16px;color:var(--dark)}
+.review-total span:last-child{color:var(--saffron);font-size:20px}
+.cart-empty-note{text-align:center;padding:32px;color:var(--text-light)}
+.cart-empty-note .en-icon{font-size:40px;margin-bottom:10px}
 
 /* Form card */
-.form-card { background:var(--white); border-radius:20px; padding:28px 32px; box-shadow:0 4px 20px rgba(26,18,8,0.08); }
-.form-card h3 { font-family:var(--font-display); font-size:22px; color:var(--dark); margin-bottom:20px; }
-.form-step-label { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--saffron); margin-bottom:16px; }
-.form-divider { height:1px; background:var(--cream-d); margin:20px 0; }
+.form-card{background:#fff;border-radius:20px;padding:28px 32px;box-shadow:0 4px 20px rgba(26,18,8,.08)}
+.form-card-title{font-family:var(--font-display);font-size:22px;color:var(--dark);margin-bottom:20px}
+.step-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--saffron);margin-bottom:14px}
+.form-divider{height:1px;background:var(--cream-d);margin:20px 0}
 
-/* Pickup location cards */
-.location-cards { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
-.loc-card { border:2px solid #E0D0B8; border-radius:12px; padding:14px 16px; cursor:pointer; transition:all 0.25s; }
-.loc-card:hover { border-color:var(--saffron); }
-.loc-card.selected { border-color:var(--saffron); background:rgba(200,121,26,0.05); }
-.loc-card input { display:none; }
-.loc-card-icon { font-size:22px; margin-bottom:6px; }
-.loc-card-name { font-size:14px; font-weight:700; color:var(--dark); }
-.loc-card-sub { font-size:12px; color:var(--text-light); margin-top:3px; }
+/* Location cards */
+.loc-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px}
+.loc-card{border:2px solid #E0D0B8;border-radius:14px;padding:16px;cursor:pointer;transition:all .25s;position:relative}
+.loc-card:hover{border-color:var(--saffron)}
+.loc-card.selected{border-color:var(--saffron);background:rgba(200,121,26,.04)}
+.loc-card input[type=radio]{display:none}
+.loc-card-check{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;border:2px solid #E0D0B8;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .25s}
+.loc-card.selected .loc-card-check{background:var(--saffron);border-color:var(--saffron);color:#fff}
+.loc-icon{font-size:24px;margin-bottom:8px}
+.loc-name{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:3px}
+.loc-sub{font-size:12px;color:var(--text-light);line-height:1.5}
 
-/* Submit button */
-.submit-btn { width:100%; padding:16px; background:var(--saffron); color:white; border:none; border-radius:50px; font-family:var(--font-body); font-size:16px; font-weight:700; cursor:pointer; transition:all 0.3s; margin-top:8px; }
-.submit-btn:hover:not(:disabled) { background:var(--saffron-d); transform:translateY(-2px); box-shadow:0 8px 24px rgba(200,121,26,0.35); }
-.submit-btn:disabled { background:#ccc; cursor:not-allowed; transform:none; }
-.pay-note { font-size:12px; color:var(--text-light); text-align:center; margin-top:10px; }
+.submit-btn{width:100%;padding:16px;background:var(--saffron);color:#fff;border:none;border-radius:50px;font-family:var(--font-body);font-size:16px;font-weight:700;cursor:pointer;transition:all .3s;margin-top:8px}
+.submit-btn:hover:not(:disabled){background:var(--saffron-d);transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,121,26,.35)}
+.submit-btn:disabled{background:#ccc;cursor:not-allowed;transform:none}
+.pay-note-small{font-size:12px;color:var(--text-light);text-align:center;margin-top:10px}
 
-/* Info sidebar */
-.info-sidebar { display:flex; flex-direction:column; gap:20px; }
-.info-card { background:var(--white); border-radius:20px; padding:24px; box-shadow:0 4px 20px rgba(26,18,8,0.08); }
-.info-card h4 { font-family:var(--font-display); font-size:20px; color:var(--dark); margin-bottom:16px; }
-.info-row { display:flex; gap:12px; margin-bottom:14px; }
-.info-row .ir-icon { font-size:20px; flex-shrink:0; }
-.info-row strong { display:block; font-size:13px; color:var(--dark); margin-bottom:2px; }
-.info-row span { font-size:13px; color:var(--text-light); }
+/* Sidebar */
+.checkout-sidebar{display:flex;flex-direction:column;gap:20px}
+.info-card{background:#fff;border-radius:20px;padding:24px;box-shadow:0 4px 20px rgba(26,18,8,.08)}
+.info-card h4{font-family:var(--font-display);font-size:20px;color:var(--dark);margin-bottom:16px}
+.ir{display:flex;gap:12px;margin-bottom:14px}
+.ir .ir-icon{font-size:20px;flex-shrink:0}
+.ir strong{display:block;font-size:13px;color:var(--dark);margin-bottom:2px}
+.ir span{font-size:13px;color:var(--text-light)}
 
 /* Success screen */
-.success-screen { display:none; max-width:600px; margin:80px auto; padding:0 24px; text-align:center; }
-.success-icon { font-size:72px; margin-bottom:20px; }
-.success-screen h2 { font-family:var(--font-display); font-size:36px; color:var(--dark); margin-bottom:12px; }
-.success-screen p { color:var(--text-light); font-size:16px; line-height:1.7; margin-bottom:8px; }
-.order-badge { display:inline-block; background:var(--cream-d); border-radius:50px; padding:10px 24px; font-size:18px; font-weight:700; color:var(--saffron); margin:16px 0 24px; }
-.success-details { background:var(--white); border-radius:16px; padding:24px; box-shadow:var(--shadow); margin-bottom:28px; text-align:left; }
-.sd-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--cream-d); font-size:14px; }
-.sd-row:last-child { border-bottom:none; }
-.sd-row span:first-child { color:var(--text-light); }
-.sd-row span:last-child { font-weight:600; color:var(--dark); }
+.success-screen{display:none;max-width:600px;margin:80px auto;padding:0 24px;text-align:center}
+.success-icon-big{font-size:72px;margin-bottom:20px}
+.success-screen h2{font-family:var(--font-display);font-size:36px;color:var(--dark);margin-bottom:12px}
+.success-screen p{color:var(--text-light);font-size:16px;line-height:1.7;margin-bottom:8px}
+.order-badge{display:inline-block;background:var(--cream-d);border-radius:50px;padding:10px 24px;font-size:18px;font-weight:700;color:var(--saffron);margin:16px 0 24px}
+.success-summary{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(26,18,8,.08);margin-bottom:28px;text-align:left}
+.ss-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--cream-d);font-size:14px}
+.ss-row:last-child{border-bottom:none}
+.ss-row span:first-child{color:var(--text-light)}
+.ss-row span:last-child{font-weight:600;color:var(--dark);text-align:right;max-width:60%}
+.ss-items-list{display:flex;flex-direction:column;gap:4px}
+.ss-item-line{font-size:13px;color:var(--dark)}
 
-@media (max-width:900px) {
-  .checkout-layout { grid-template-columns:1fr; padding:40px 20px 60px; }
-  .location-cards { grid-template-columns:1fr; }
+@media(max-width:900px){
+  .checkout-wrap{grid-template-columns:1fr;padding:40px 20px 60px}
+  .loc-cards{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -96,7 +99,7 @@
       <li><a href="recipes.html" class="nav-link">Recipes</a></li>
       <li><a href="contact.html" class="nav-link">Contact</a></li>
     </ul>
-    <a href="shop.html" class="btn-outline" style="padding:10px 20px;font-size:13px">← Back to Shop</a>
+    <a href="shop.html" class="btn-outline" style="padding:10px 20px;font-size:13px;flex-shrink:0">← Back to Shop</a>
     <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
   </div>
   <div class="nav-mobile" id="navMobile">
@@ -108,36 +111,38 @@
 
 <div class="page-hero">
   <h1>🛒 <em>Checkout</em></h1>
-  <p>Review your order, choose pickup location, and submit. Pay cash at pickup.</p>
+  <p>Review your order, enter your details, and submit. We'll confirm by call or text.</p>
 </div>
 
 <!-- CHECKOUT LAYOUT -->
-<div class="checkout-layout" id="checkoutLayout">
+<div class="checkout-wrap" id="checkoutWrap">
 
-  <!-- LEFT: CART + FORM -->
-  <div class="checkout-left">
-
+  <!-- LEFT COLUMN -->
+  <div>
     <!-- CART REVIEW -->
-    <div class="cart-review">
-      <h3>Your Order <a href="shop.html">← Edit</a></h3>
-      <div id="cartReview"></div>
+    <div class="review-card">
+      <div class="review-card-title">
+        Your Order
+        <a href="shop.html">← Edit in Shop</a>
+      </div>
+      <div id="cartReviewContainer"></div>
     </div>
 
-    <!-- ORDER FORM -->
+    <!-- CUSTOMER FORM -->
     <div class="form-card" id="orderFormCard">
-      <h3>Your Details</h3>
+      <div class="form-card-title">Your Details</div>
 
-      <div class="form-step-label">Step 1 — Contact Information</div>
+      <div class="step-label">Step 1 — Contact Information</div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">First Name <span class="req">*</span></label>
           <input type="text" class="form-control" id="firstName" placeholder="Ravi">
-          <div class="form-error" id="err-firstName">Required</div>
+          <div class="form-error" id="err-firstName">Please enter your first name</div>
         </div>
         <div class="form-group">
           <label class="form-label">Last Name <span class="req">*</span></label>
           <input type="text" class="form-control" id="lastName" placeholder="Sharma">
-          <div class="form-error" id="err-lastName">Required</div>
+          <div class="form-error" id="err-lastName">Please enter your last name</div>
         </div>
       </div>
       <div class="form-group">
@@ -148,39 +153,32 @@
       <div class="form-group">
         <label class="form-label">Email Address <span class="req">*</span></label>
         <input type="email" class="form-control" id="email" placeholder="ravi@example.com">
-        <div class="form-error" id="err-email">Please enter a valid email</div>
+        <div class="form-error" id="err-email">Please enter a valid email address</div>
       </div>
 
       <div class="form-divider"></div>
-      <div class="form-step-label">Step 2 — Pickup Details</div>
+      <div class="step-label">Step 2 — Pickup Location</div>
 
-      <div class="form-group">
-        <label class="form-label">Pickup Location <span class="req">*</span></label>
-        <div class="location-cards">
-          <label class="loc-card" id="loc-shortpump" onclick="selectLocation('shortpump')">
-            <input type="radio" name="location" value="shortpump">
-            <div class="loc-card-icon">📍</div>
-            <div class="loc-card-name">Short Pump, VA</div>
-            <div class="loc-card-sub">Richmond West End<br>Address shared on confirmation</div>
-          </label>
-          <label class="loc-card" id="loc-chesterfield" onclick="selectLocation('chesterfield')">
-            <input type="radio" name="location" value="chesterfield">
-            <div class="loc-card-icon">📍</div>
-            <div class="loc-card-name">Chesterfield, VA</div>
-            <div class="loc-card-sub">South of Richmond<br>Address shared on confirmation</div>
-          </label>
+      <div class="loc-cards">
+        <div class="loc-card" id="loc-shortpump" onclick="selectLoc('shortpump')">
+          <input type="radio" name="location" value="shortpump">
+          <div class="loc-card-check" id="check-shortpump"></div>
+          <div class="loc-icon">📍</div>
+          <div class="loc-name">Short Pump, VA</div>
+          <div class="loc-sub">Richmond West End<br>Address sent on confirmation</div>
         </div>
-        <div class="form-error" id="err-location">Please select a pickup location</div>
+        <div class="loc-card" id="loc-chesterfield" onclick="selectLoc('chesterfield')">
+          <input type="radio" name="location" value="chesterfield">
+          <div class="loc-card-check" id="check-chesterfield"></div>
+          <div class="loc-icon">📍</div>
+          <div class="loc-name">Chesterfield, VA</div>
+          <div class="loc-sub">South of Richmond<br>Address sent on confirmation</div>
+        </div>
       </div>
-
-      <div class="form-group">
-        <label class="form-label">Preferred Pickup Date <span class="req">*</span></label>
-        <input type="date" class="form-control" id="pickupDate">
-        <div class="form-error" id="err-pickupDate">Please select a date</div>
-      </div>
+      <div class="form-error" id="err-location" style="margin-bottom:16px">Please select a pickup location</div>
 
       <div class="form-divider"></div>
-      <div class="form-step-label">Step 3 — Optional</div>
+      <div class="step-label">Step 3 — Optional</div>
 
       <div class="form-group">
         <label class="form-label">How did you hear about us?</label>
@@ -196,53 +194,47 @@
       </div>
       <div class="form-group">
         <label class="form-label">Special Instructions / Notes</label>
-        <textarea class="form-control" id="notes" rows="3" placeholder="Any special requests or notes..."></textarea>
+        <textarea class="form-control" id="notes" rows="3" placeholder="Any special requests or notes for your order..."></textarea>
       </div>
 
       <button class="submit-btn" id="submitBtn" onclick="submitOrder()">
         🥭 Place Order — Pay at Pickup
       </button>
-      <p class="pay-note">💵 No payment needed now. Bring cash at pickup.</p>
+      <p class="pay-note-small">💵 No payment needed now. Pay cash when you pick up.</p>
     </div>
   </div>
 
-  <!-- RIGHT: INFO SIDEBAR -->
-  <div class="info-sidebar">
+  <!-- RIGHT SIDEBAR -->
+  <div class="checkout-sidebar">
     <div class="info-card">
       <h4>📍 Pickup Locations</h4>
-      <div class="info-row">
-        <span class="ir-icon">🏪</span>
-        <div><strong>Short Pump, VA</strong><span>Exact address shared when we confirm your order</span></div>
-      </div>
-      <div class="info-row">
-        <span class="ir-icon">🏪</span>
-        <div><strong>Chesterfield, VA</strong><span>Exact address shared when we confirm your order</span></div>
-      </div>
+      <div class="ir"><span class="ir-icon">🏪</span><div><strong>Short Pump, VA</strong><span>Exact address shared when we confirm your order</span></div></div>
+      <div class="ir"><span class="ir-icon">🏪</span><div><strong>Chesterfield, VA</strong><span>Exact address shared when we confirm your order</span></div></div>
     </div>
     <div class="info-card">
-      <h4>💳 How Payment Works</h4>
-      <div class="info-row"><span class="ir-icon">✅</span><div><strong>No payment needed now</strong><span>Just place your order online</span></div></div>
-      <div class="info-row"><span class="ir-icon">💵</span><div><strong>Pay cash at pickup</strong><span>Bring exact change or small bills</span></div></div>
-      <div class="info-row"><span class="ir-icon">📱</span><div><strong>We'll call to confirm</strong><span><a href="tel:+17653255577" style="color:var(--saffron)">+1 (765) 325-5577</a></span></div></div>
+      <h4>💳 How It Works</h4>
+      <div class="ir"><span class="ir-icon">1️⃣</span><div><strong>Place order online</strong><span>No payment needed now</span></div></div>
+      <div class="ir"><span class="ir-icon">2️⃣</span><div><strong>We call to confirm</strong><span><a href="tel:+17653255577" style="color:var(--saffron)">+1 (765) 325-5577</a></span></div></div>
+      <div class="ir"><span class="ir-icon">3️⃣</span><div><strong>Pick up & pay cash</strong><span>Bring exact change or small bills</span></div></div>
     </div>
     <div class="info-card">
       <h4>❓ Questions?</h4>
-      <div class="info-row"><span class="ir-icon">📧</span><div><strong>Email</strong><span><a href="mailto:contact@shrishllc.com" style="color:var(--saffron)">contact@shrishllc.com</a></span></div></div>
-      <div class="info-row"><span class="ir-icon">📞</span><div><strong>Call / Text</strong><span><a href="tel:+17653255577" style="color:var(--saffron)">+1 (765) 325-5577</a></span></div></div>
+      <div class="ir"><span class="ir-icon">📧</span><div><strong>Email</strong><span><a href="mailto:contact@shrishllc.com" style="color:var(--saffron)">contact@shrishllc.com</a></span></div></div>
+      <div class="ir"><span class="ir-icon">📞</span><div><strong>Call / Text</strong><span><a href="tel:+17653255577" style="color:var(--saffron)">+1 (765) 325-5577</a></span></div></div>
     </div>
   </div>
 </div>
 
 <!-- SUCCESS SCREEN -->
 <div class="success-screen" id="successScreen">
-  <div class="success-icon">🥭</div>
+  <div class="success-icon-big">🥭</div>
   <h2>Order Placed!</h2>
   <div class="order-badge" id="successOrderNum"></div>
-  <p>Thank you! We'll call or text you to confirm your pickup details.</p>
+  <p>Thank you! We'll call or text to confirm your pickup details.</p>
   <p>Payment is collected at pickup — no card needed.</p>
-  <div class="success-details" id="successDetails"></div>
-  <a href="shop.html" class="btn-primary">Continue Shopping</a>
-  <div style="margin-top:14px"><a href="index.html" class="btn-outline">Back to Home</a></div>
+  <div class="success-summary" id="successSummary"></div>
+  <a href="shop.html" class="btn-primary" style="margin-right:12px">Continue Shopping</a>
+  <a href="index.html" class="btn-outline">Back to Home</a>
 </div>
 
 <footer class="footer">
@@ -258,115 +250,110 @@
 <script src="data.js"></script>
 <script src="main.js"></script>
 <script>
-// ── LOAD CART FROM SESSION ────────────────────────────────
+// ── LOAD CART ─────────────────────────────────────────────
 let cart = JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
-let selectedLocation = '';
-
-// ── SET MIN DATE ──────────────────────────────────────────
-const tomorrow = new Date();
-tomorrow.setDate(tomorrow.getDate() + 1);
-document.getElementById('pickupDate').min = tomorrow.toISOString().split('T')[0];
+let selectedLoc = '';
 
 // ── RENDER CART REVIEW ────────────────────────────────────
 function renderCartReview() {
-  const container = document.getElementById('cartReview');
+  const container = document.getElementById('cartReviewContainer');
+  const submitBtn = document.getElementById('submitBtn');
   if (!cart.length) {
-    container.innerHTML = `<div class="cart-empty-msg">
-      <div class="em-icon">🛒</div>
-      <p>Your cart is empty. <a href="shop.html" style="color:var(--saffron);font-weight:600">Go back to shop</a></p>
+    container.innerHTML = `<div class="cart-empty-note">
+      <div class="en-icon">🛒</div>
+      <p>Your cart is empty. <a href="shop.html" style="color:var(--saffron);font-weight:600">← Go back to shop</a></p>
     </div>`;
-    document.getElementById('submitBtn').disabled = true;
+    if (submitBtn) submitBtn.disabled = true;
     return;
   }
+  if (submitBtn) submitBtn.disabled = false;
 
-  const totalQty = cart.reduce((s,i) => s + i.qty, 0);
+  const totalQty = cart.reduce((s,i) => s+i.qty, 0);
   let html = cart.map(item => {
-    const imgHtml = item.image
-      ? `<div class="cr-thumb"><img src="${item.image}" alt="${item.name}" onerror="this.parentElement.textContent='🥭'"></div>`
-      : `<div class="cr-thumb">🥭</div>`;
-    return `<div class="cr-item">
-      ${imgHtml}
-      <div class="cr-info">
-        <div class="cr-name">${item.name}</div>
-        <div class="cr-price">${item.price} · ${item.unit}</div>
+    const imgContent = item.image
+      ? `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='🥭'">`
+      : '🥭';
+    return `<div class="review-item">
+      <div class="ri-thumb">${imgContent}</div>
+      <div class="ri-info">
+        <div class="ri-name">${item.name}</div>
+        <div class="ri-price">${item.price} · ${item.unit}</div>
       </div>
-      <div class="cr-qty-ctrl">
-        <button class="cr-qty-btn" onclick="updateQty('${item.id}',-1)">−</button>
-        <span class="cr-qty-num" id="cr-qty-${item.id}">${item.qty}</span>
-        <button class="cr-qty-btn" onclick="updateQty('${item.id}',1)">+</button>
-        <span style="font-size:12px;color:var(--text-light);margin-left:4px">box${item.qty > 1 ? 'es' : ''}</span>
+      <div class="ri-qty-ctrl">
+        <button class="ri-qty-btn" onclick="reviewQty('${item.id}',-1)">−</button>
+        <span class="ri-qty-num">${item.qty}</span>
+        <button class="ri-qty-btn" onclick="reviewQty('${item.id}',1)">+</button>
+        <span style="font-size:11px;color:var(--text-light);margin-left:4px">box${item.qty>1?'es':''}</span>
       </div>
-      <button class="cr-remove" onclick="removeItem('${item.id}')" title="Remove">✕</button>
+      <button class="ri-remove" onclick="reviewRemove('${item.id}')" title="Remove">✕</button>
     </div>`;
   }).join('');
 
-  html += `<div class="cr-total">
+  html += `<div class="review-total">
     <span>Total</span>
-    <span>${totalQty} box${totalQty !== 1 ? 'es' : ''}</span>
+    <span>${totalQty} box${totalQty!==1?'es':''}</span>
   </div>`;
 
   container.innerHTML = html;
-  document.getElementById('submitBtn').disabled = false;
 }
 
-function updateQty(id, delta) {
+function reviewQty(id, delta) {
   const item = cart.find(x => x.id === id);
   if (!item) return;
   item.qty = Math.max(1, item.qty + delta);
   sessionStorage.setItem('shrish_cart', JSON.stringify(cart));
   renderCartReview();
 }
-
-function removeItem(id) {
+function reviewRemove(id) {
   cart = cart.filter(x => x.id !== id);
   sessionStorage.setItem('shrish_cart', JSON.stringify(cart));
   renderCartReview();
 }
 
 // ── LOCATION SELECT ───────────────────────────────────────
-function selectLocation(locId) {
-  selectedLocation = locId;
-  document.querySelectorAll('.loc-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('loc-' + locId).classList.add('selected');
+function selectLoc(id) {
+  selectedLoc = id;
+  ['shortpump','chesterfield'].forEach(l => {
+    document.getElementById('loc-'+l).classList.toggle('selected', l===id);
+    document.getElementById('check-'+l).textContent = l===id ? '✓' : '';
+  });
   document.getElementById('err-location').style.display = 'none';
 }
 
 // ── VALIDATION ────────────────────────────────────────────
-function val(id, condition, errId) {
+function validate(id, ok, errId) {
   const el = document.getElementById(id);
-  const err = document.getElementById(errId || 'err-' + id);
-  if (!condition) { el.classList.add('error'); if(err) err.style.display='block'; return false; }
+  const err = document.getElementById(errId||'err-'+id);
+  if (!ok) { el.classList.add('error'); if(err) err.style.display='block'; return false; }
   el.classList.remove('error'); if(err) err.style.display='none'; return true;
 }
 
 // ── DUPLICATE CHECK ───────────────────────────────────────
 const ORDERS_KEY = 'shrish_orders';
-function getOrders() { try { return JSON.parse(localStorage.getItem(ORDERS_KEY)) || []; } catch { return []; } }
+function getOrders() { try { return JSON.parse(localStorage.getItem(ORDERS_KEY))||[]; } catch { return []; } }
 function isDuplicate(phone) {
   const clean = phone.replace(/\D/g,'');
-  return getOrders().some(o => o.phone.replace(/\D/g,'') === clean && o.status === 'pending');
+  return getOrders().some(o => o.phone.replace(/\D/g,'')===clean && o.status==='pending');
 }
 
 // ── SUBMIT ────────────────────────────────────────────────
 function submitOrder() {
   if (!cart.length) { alert('Your cart is empty. Add products first.'); return; }
 
-  const firstName  = document.getElementById('firstName').value.trim();
-  const lastName   = document.getElementById('lastName').value.trim();
-  const phone      = document.getElementById('phone').value.trim();
-  const email      = document.getElementById('email').value.trim();
-  const pickupDate = document.getElementById('pickupDate').value;
-  const referral   = document.getElementById('referral').value;
-  const notes      = document.getElementById('notes').value.trim();
+  const firstName = document.getElementById('firstName').value.trim();
+  const lastName  = document.getElementById('lastName').value.trim();
+  const phone     = document.getElementById('phone').value.trim();
+  const email     = document.getElementById('email').value.trim();
+  const referral  = document.getElementById('referral').value;
+  const notes     = document.getElementById('notes').value.trim();
 
   let ok = true;
-  ok = val('firstName', firstName.length >= 2) && ok;
-  ok = val('lastName',  lastName.length >= 2)  && ok;
-  ok = val('phone',     /^\+?[\d\s\-().]{10,15}$/.test(phone)) && ok;
-  ok = val('email',     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) && ok;
-  ok = val('pickupDate',pickupDate !== '') && ok;
+  ok = validate('firstName', firstName.length>=2) && ok;
+  ok = validate('lastName',  lastName.length>=2)  && ok;
+  ok = validate('phone',     /^\+?[\d\s\-().]{10,15}$/.test(phone)) && ok;
+  ok = validate('email',     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) && ok;
 
-  if (!selectedLocation) {
+  if (!selectedLoc) {
     document.getElementById('err-location').style.display = 'block';
     ok = false;
   }
@@ -375,62 +362,58 @@ function submitOrder() {
 
   // Duplicate check
   if (isDuplicate(phone)) {
-    alert('⚠️ An order with this phone number is already pending.\n\nTo make changes, please contact us at +1 (765) 325-5577.');
+    alert('⚠️ An order with this phone number is already pending.\n\nTo make changes, please contact us:\n📞 +1 (765) 325-5577\n📧 contact@shrishllc.com');
     return;
   }
 
-  // Build order
+  // Build order — no more undefined!
   const orderNum = 'SHR-' + Date.now().toString().slice(-6);
-  const locationLabel = selectedLocation === 'shortpump' ? 'Short Pump, VA' : 'Chesterfield, VA';
+  const locLabel  = selectedLoc === 'shortpump' ? 'Short Pump, VA' : 'Chesterfield, VA';
 
   const order = {
     id: orderNum,
     firstName, lastName, phone, email,
-    location: selectedLocation,
-    locationLabel,
-    pickupDate,
+    location: selectedLoc,
+    locationLabel: locLabel,
     referral: referral || 'Not specified',
     notes: notes || '',
-    items: cart.map(i => ({ id: i.id, name: i.name, price: i.price, unit: i.unit, qty: i.qty })),
-    totalBoxes: cart.reduce((s,i) => s+i.qty, 0),
+    items: cart.map(i => ({
+      id:    i.id,
+      name:  i.name  || 'Unknown Product',
+      price: i.price || 'TBD',
+      unit:  i.unit  || '',
+      qty:   i.qty   || 1
+    })),
+    totalBoxes: cart.reduce((s,i) => s + (i.qty||1), 0),
     status: 'pending',
     timestamp: new Date().toISOString()
   };
 
-  // Save order
+  // Save
   const orders = getOrders();
   orders.push(order);
   localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-
-  // Clear cart
   sessionStorage.removeItem('shrish_cart');
 
   // Show success
-  document.getElementById('checkoutLayout').style.display = 'none';
+  document.getElementById('checkoutWrap').style.display = 'none';
   document.getElementById('successScreen').style.display = 'block';
   document.getElementById('successOrderNum').textContent = `Order #${orderNum}`;
 
-  // Build summary
-  const itemLines = order.items.map(i => `
-    <div class="sd-row">
-      <span>${i.name}</span>
-      <span>${i.qty} box${i.qty > 1 ? 'es' : ''}</span>
-    </div>`).join('');
+  // Summary — guaranteed no undefined
+  const itemLines = order.items.map(i =>
+    `<div class="ss-item-line">• ${i.name} × ${i.qty} box${i.qty!==1?'es':''}</div>`
+  ).join('');
 
-  document.getElementById('successDetails').innerHTML = `
-    ${itemLines}
-    <div class="sd-row"><span>Pickup Location</span><span>${locationLabel}</span></div>
-    <div class="sd-row"><span>Pickup Date</span><span>${formatDate(pickupDate)}</span></div>
-    <div class="sd-row"><span>Contact</span><span>${firstName} ${lastName}</span></div>
-    <div class="sd-row"><span>Phone</span><span>${phone}</span></div>
-    <div class="sd-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Cash at Pickup</span></div>`;
+  document.getElementById('successSummary').innerHTML = `
+    <div class="ss-row"><span>Items</span><span><div class="ss-items-list">${itemLines}</div></span></div>
+    <div class="ss-row"><span>Total</span><span>${order.totalBoxes} box${order.totalBoxes!==1?'es':''}</span></div>
+    <div class="ss-row"><span>Pickup Location</span><span>${locLabel}</span></div>
+    <div class="ss-row"><span>Name</span><span>${firstName} ${lastName}</span></div>
+    <div class="ss-row"><span>Phone</span><span>${phone}</span></div>
+    <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">💵 Cash at Pickup</span></div>`;
 
   window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function formatDate(d) {
-  if (!d) return '—';
-  return new Date(d + 'T00:00:00').toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric',year:'numeric'});
 }
 
 // ── INIT ─────────────────────────────────────────────────

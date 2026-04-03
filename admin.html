@@ -90,8 +90,8 @@
 
     <!-- PRODUCTS TAB -->
     <div id="tab-products" style="display:none">
-      <h2 style="font-family:var(--font-display);font-size:24px;color:var(--dark);margin-bottom:8px">Manage Product Availability</h2>
-      <p style="color:var(--text-light);font-size:14px;margin-bottom:28px">Toggle products on/off. Unavailable items won't appear in the order form.</p>
+      <h2 style="font-family:var(--font-display);font-size:24px;color:var(--dark);margin-bottom:8px">Manage Products</h2>
+      <p style="color:var(--text-light);font-size:14px;margin-bottom:28px">Toggle availability on/off and edit prices directly. <strong>Changes are session-only</strong> — edit <code>data.js</code> to make them permanent across all browsers.</p>
       <div class="product-manage-grid" id="productManageGrid"></div>
       <div style="margin-top:24px;padding:20px;background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow)">
         <p style="font-size:13px;color:var(--text-light)">⚠️ <strong>Note:</strong> Changes to availability here update your browser's local data. To permanently update the website for all users, edit the <code>data.js</code> file and set <code>available: true/false</code> for each product.</p>
@@ -231,29 +231,60 @@ function clearFulfilled() {
 // ── PRODUCTS ───────────────────────────────────────────────
 function renderProducts() {
   const grid = document.getElementById('productManageGrid');
-  grid.innerHTML = SHRISH_DATA.products.map(p => `
-    <div class="product-manage-card">
-      <div class="product-manage-emoji">${p.emoji}</div>
-      <div class="product-manage-info">
-        <h4>${p.name}</h4>
-        <p>${p.price} · ${p.unit}</p>
-        <p style="font-size:11px;margin-top:2px;color:${p.available ? '#2E7D32' : '#C62828'}">${p.available ? '✓ Currently Available' : '✗ Sold Out'}</p>
+  grid.innerHTML = SHRISH_DATA.products.map(p => {
+    const imgHtml = p.image
+      ? `<img src="${p.image}" alt="${p.name}" style="width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`
+      : `<div style="width:56px;height:56px;border-radius:10px;background:var(--cream-d);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">🥭</div>`;
+    return `
+    <div class="product-manage-card" style="flex-wrap:wrap;gap:12px">
+      ${imgHtml}
+      <div class="product-manage-info" style="flex:1;min-width:160px">
+        <h4 style="font-size:14px">${p.name}</h4>
+        <p style="font-size:11px;color:var(--text-light)">${p.origin || ''}</p>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <span style="font-size:12px;font-weight:600;color:var(--text-light)">Price:</span>
+          <input type="text" value="${p.price}" id="price-${p.id}"
+            style="width:90px;padding:5px 10px;border:1.5px solid #E0D0B8;border-radius:50px;font-size:13px;font-weight:700;color:var(--saffron);font-family:var(--font-body);outline:none"
+            onchange="updatePrice('${p.id}', this.value)"
+            onfocus="this.style.borderColor='var(--saffron)'"
+            onblur="this.style.borderColor='#E0D0B8'">
+          <span style="font-size:11px;color:var(--text-light)">${p.unit}</span>
+        </div>
+        <p style="font-size:11px;margin-top:6px;color:${p.available && !p.displayOnly ? '#2E7D32' : p.displayOnly ? '#B8860B' : '#C62828'}">
+          ${p.displayOnly ? '🔔 Coming Soon' : p.available ? '✓ Available' : '✗ Sold Out'}
+        </p>
       </div>
-      <label class="toggle-switch">
-        <input type="checkbox" ${p.available ? 'checked' : ''} onchange="toggleProduct('${p.id}', this.checked)">
-        <span class="toggle-slider"></span>
-      </label>
-    </div>`).join('');
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <label class="toggle-switch" title="${p.displayOnly ? 'Coming Soon — toggle not applicable' : 'Toggle availability'}">
+          <input type="checkbox" ${p.available ? 'checked' : ''} ${p.displayOnly ? 'disabled' : ''} onchange="toggleProduct('${p.id}', this.checked)">
+          <span class="toggle-slider" style="${p.displayOnly ? 'opacity:.4' : ''}"></span>
+        </label>
+        <span style="font-size:10px;color:var(--text-light)">${p.displayOnly ? 'Coming Soon' : 'Available'}</span>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function toggleProduct(productId, available) {
   const p = SHRISH_DATA.products.find(p => p.id === productId);
-  if (p) {
+  if (p && !p.displayOnly) {
     p.available = available;
     renderStats();
     renderProducts();
-    // Show reminder
-    showToast(`${p.name} marked as ${available ? 'available' : 'sold out'}. Update data.js to persist across sessions.`);
+    showToast(`${p.name} → ${available ? '✓ Available' : '✗ Sold Out'}. Edit data.js to make permanent.`);
+  }
+}
+
+function updatePrice(productId, newPrice) {
+  const p = SHRISH_DATA.products.find(p => p.id === productId);
+  if (p) {
+    const trimmed = newPrice.trim();
+    if (!trimmed) return;
+    p.price = trimmed;
+    showToast(`💰 ${p.name} price updated to ${trimmed}. Edit data.js to make permanent.`);
+    // Flash the input green
+    const input = document.getElementById('price-' + productId);
+    if (input) { input.style.borderColor='#2E7D32'; input.style.color='#2E7D32'; setTimeout(()=>{input.style.borderColor='#E0D0B8';input.style.color='var(--saffron)';},1500); }
   }
 }
 
