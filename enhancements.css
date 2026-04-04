@@ -1,0 +1,200 @@
+/* ============================================================
+   SHRISH LLC — Enhancement Styles v1.0
+   Add this AFTER styles.css in every HTML page:
+   <link rel="stylesheet" href="enhancements.css">
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1. SHARE BUTTONS IN PRODUCT MODAL
+   ---------------------------------------------------------- */
+.modal-share-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0 4px;
+  border-top: 1px solid #f0e6d2;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.share-label {
+  font-size: 13px;
+  color: #8B7355;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid #e0d5c0;
+  border-radius: 20px;
+  background: #FFFBF0;
+  color: #5a4a32;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.share-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(139, 115, 85, 0.15);
+}
+
+.share-btn.share-wa {
+  border-color: #25D366;
+  color: #128C7E;
+  background: #F0FFF4;
+}
+
+.share-btn.share-wa:hover {
+  background: #25D366;
+  color: #fff;
+}
+
+.share-btn.share-wa:hover svg {
+  fill: #fff;
+}
+
+.share-btn.share-copy:hover {
+  background: #f5f0e5;
+  border-color: #c4b49a;
+}
+
+.share-btn.share-copy:active {
+  transform: scale(0.96);
+}
+
+
+/* ----------------------------------------------------------
+   2. IMAGE FALLBACK PLACEHOLDER IMPROVEMENTS
+   ---------------------------------------------------------- */
+img[data-fallback="1"] {
+  background: linear-gradient(135deg, #FFF8E7, #FFE4B5);
+  border-radius: 8px;
+}
+
+
+/* ----------------------------------------------------------
+   3. IMPROVED TOAST NOTIFICATIONS
+   ---------------------------------------------------------- */
+.toast {
+  animation: toastSlideIn 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+}
+
+@keyframes toastSlideIn {
+  0% {
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+
+/* ----------------------------------------------------------
+   4. MOBILE SHARE ROW RESPONSIVE
+   ---------------------------------------------------------- */
+@media (max-width: 600px) {
+  .modal-share-row {
+    padding: 10px 0 2px;
+    gap: 8px;
+  }
+
+  .share-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .share-label {
+    font-size: 12px;
+    width: 100%;
+  }
+}
+
+
+/* ----------------------------------------------------------
+   5. SKIP-TO-CONTENT ACCESSIBILITY LINK (added by enhancements.js)
+   ---------------------------------------------------------- */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 10000;
+  padding: 12px 24px;
+  background: #2d5016;
+  color: #fff;
+  border-radius: 0 0 8px 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+
+/* ----------------------------------------------------------
+   6. SMOOTH SCROLL BEHAVIOR (global)
+   ---------------------------------------------------------- */
+html {
+  scroll-behavior: smooth;
+}
+
+
+/* ----------------------------------------------------------
+   7. FOCUS VISIBLE STYLES (accessibility)
+   ---------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid #d4a017;
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #d4a017;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+
+/* ----------------------------------------------------------
+   8. PRINT STYLES
+   ---------------------------------------------------------- */
+@media print {
+  .wa-float,
+  .back-to-top,
+  .cart-fab,
+  .cart-drawer,
+  .cart-overlay,
+  .social-strip,
+  .nav-hamburger,
+  .announcement-bar,
+  .modal-overlay {
+    display: none !important;
+  }
+
+  body {
+    font-size: 12pt;
+    color: #000;
+    background: #fff;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  a[href^="tel:"]::after,
+  a[href^="mailto:"]::after {
+    content: none;
+  }
+}
