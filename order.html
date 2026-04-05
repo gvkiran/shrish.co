@@ -120,26 +120,30 @@
 
 <div class="announcement-bar"><span>🥭 Fresh Indian Mangoes — Pickup in Short Pump & Chesterfield, VA</span></div>
 
-<!-- NAV — cart button placed AFTER contact in nav links -->
 <nav class="nav" id="nav">
   <div class="nav-inner">
-    <a href="index.html" class="nav-logo"><img src="logo.png" alt="Shrish LLC" class="logo-img"></a>
+    <a href="index.html" class="nav-logo">
+      <img src="logo.png" alt="Shrish LLC" class="logo-img" loading="eager" fetchpriority="high" decoding="async">
+    </a>
+
     <ul class="nav-links">
       <li><a href="index.html" class="nav-link">Home</a></li>
       <li><a href="about.html" class="nav-link">About</a></li>
       <li><a href="shop.html" class="nav-link">Shop</a></li>
       <li><a href="recipes.html" class="nav-link">Recipes</a></li>
       <li><a href="contact.html" class="nav-link">Contact</a></li>
-      <li style="margin-left:16px">
-        <a href="shop.html" id="navCartLink"
-           style="display:inline-flex;align-items:center;gap:7px;background:var(--saffron);color:#fff;padding:8px 18px;border-radius:50px;font-size:13px;font-weight:700;white-space:nowrap;transition:all .3s">
-          🛒 <span id="navCartBadge" style="background:rgba(255,255,255,.25);border-radius:50px;padding:1px 7px;font-size:12px;font-weight:800">0</span>
-        </a>
-      </li>
     </ul>
-    <a href="shop.html" class="btn-outline" style="padding:10px 20px;font-size:13px;flex-shrink:0">← Shop</a>
-    <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+
+    <div class="nav-cart-wrap">
+      <a href="shop.html" id="navCartLink" class="nav-cart-btn" aria-label="View cart">
+        <span class="nav-cart-icon">🛒</span>
+        <span id="navCartBadge" class="nav-cart-badge">0</span>
+      </a>
+    </div>
+
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
+
   <div class="nav-mobile" id="navMobile">
     <a href="index.html">Home</a><a href="about.html">About</a>
     <a href="shop.html">Shop</a><a href="recipes.html">Recipes</a>
@@ -155,12 +159,9 @@
   <p>Review your order, choose pickup, and submit. Pay cash at pickup — no card needed.</p>
 </div>
 
-<!-- CHECKOUT LAYOUT -->
 <div class="checkout-wrap" id="checkoutWrap">
 
-  <!-- LEFT COLUMN -->
   <div>
-    <!-- Cart Review -->
     <div class="review-card">
       <div class="review-card-title">
         Your Order
@@ -169,13 +170,11 @@
       <div id="cartReviewContainer"></div>
     </div>
 
-    <!-- Error Banner — shown when validation fails -->
     <div class="error-banner" id="errorBanner">
       <div class="error-banner-title">⚠️ Please fix the following before placing your order:</div>
       <ul id="errorList"></ul>
     </div>
 
-    <!-- Form -->
     <div class="form-card">
       <div class="form-card-title">Your Details</div>
 
@@ -255,7 +254,6 @@
     </div>
   </div>
 
-  <!-- RIGHT SIDEBAR -->
   <div class="checkout-sidebar">
     <div class="info-card">
       <h4>📍 Pickup Locations</h4>
@@ -276,7 +274,6 @@
   </div>
 </div>
 
-<!-- SUCCESS SCREEN -->
 <div class="success-screen" id="successScreen">
   <div class="success-icon-big">🎉</div>
   <h2>Order Placed!</h2>
@@ -322,17 +319,11 @@
 <script src="data.js"></script>
 <script src="main.js"></script>
 <script>
-// ════════════════════════════════════════════════════════
-//  ORDER PAGE — All logic uses addEventListener (no onclick=)
-//  This avoids ALL scope issues with HTML onclick= attributes
-// ════════════════════════════════════════════════════════
 'use strict';
 
-// ── STATE ─────────────────────────────────────────────────
 let cart = JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
 let selectedLoc = '';
 
-// ── UPDATE NAV CART BADGE ─────────────────────────────────
 function updateNavCart() {
   const total = cart.reduce((s, i) => s + i.qty, 0);
   const badge = document.getElementById('navCartBadge');
@@ -342,7 +333,6 @@ function updateNavCart() {
 }
 updateNavCart();
 
-// ── RENDER CART REVIEW ────────────────────────────────────
 function renderCartReview() {
   const container = document.getElementById('cartReviewContainer');
   const submitBtn = document.getElementById('submitBtn');
@@ -385,7 +375,6 @@ function renderCartReview() {
       <span>${totalQty} box${totalQty !== 1 ? 'es' : ''}</span>
     </div>`;
 
-  // Attach qty button listeners
   container.querySelectorAll('.ri-qty-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.id;
@@ -409,27 +398,21 @@ function renderCartReview() {
   });
 }
 
-// ── LOCATION SELECTION — addEventListener only ────────────
 document.querySelectorAll('.loc-card').forEach(card => {
   card.addEventListener('click', () => {
     selectedLoc = card.dataset.loc;
-    // Visual update
     document.querySelectorAll('.loc-card').forEach(c => c.classList.remove('selected'));
     card.classList.add('selected');
-    // Hide error
     const errEl = document.getElementById('err-location');
     if (errEl) errEl.style.display = 'none';
-    // Hide from error banner too
     rebuildErrorBanner();
   });
-  // Also make keyboard accessible
   card.setAttribute('tabindex', '0');
   card.addEventListener('keydown', e => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
   });
 });
 
-// ── PHONE — real-time digit counter ──────────────────────
 const phoneInput = document.getElementById('phone');
 const phoneCounter = document.getElementById('phoneCounter');
 if (phoneInput) {
@@ -443,7 +426,6 @@ if (phoneInput) {
     } else {
       phoneCounter.textContent = `✓ ${digits.length} digits`;
       phoneCounter.className = 'phone-counter ok';
-      // Clear error if valid
       document.getElementById('err-phone').style.display = 'none';
       phoneInput.classList.remove('error');
     }
@@ -463,7 +445,6 @@ if (phoneInput) {
   });
 }
 
-// ── EMAIL — blur validation ───────────────────────────────
 const emailInput = document.getElementById('email');
 if (emailInput) {
   emailInput.addEventListener('blur', () => {
@@ -482,12 +463,10 @@ if (emailInput) {
   });
 }
 
-// ── ERROR BANNER ──────────────────────────────────────────
 function rebuildErrorBanner() {
   const banner = document.getElementById('errorBanner');
   const list = document.getElementById('errorList');
   if (!banner || !list) return;
-  // Count visible field errors
   const errors = [];
   if (document.getElementById('err-firstName')?.style.display === 'block') errors.push('First name is required');
   if (document.getElementById('err-lastName')?.style.display === 'block') errors.push('Last name is required');
@@ -505,7 +484,6 @@ function rebuildErrorBanner() {
   }
 }
 
-// ── VALIDATION ────────────────────────────────────────────
 function validateField(id, condition, message) {
   const el = document.getElementById(id);
   const err = document.getElementById('err-' + id);
@@ -520,7 +498,6 @@ function validateField(id, condition, message) {
   return true;
 }
 
-// ── DUPLICATE CHECK ───────────────────────────────────────
 const ORDERS_KEY = 'shrish_orders';
 function getOrders() { try { return JSON.parse(localStorage.getItem(ORDERS_KEY)) || []; } catch { return []; } }
 function isDuplicate(phone) {
@@ -528,7 +505,6 @@ function isDuplicate(phone) {
   return getOrders().some(o => o.phone.replace(/\D/g, '') === clean && o.status === 'pending');
 }
 
-// ── SUBMIT — via addEventListener ─────────────────────────
 document.getElementById('submitBtn').addEventListener('click', () => {
   const firstName = document.getElementById('firstName').value.trim();
   const lastName  = document.getElementById('lastName').value.trim();
@@ -572,7 +548,6 @@ document.getElementById('submitBtn').addEventListener('click', () => {
     return;
   }
 
-  // ── Duplicate check ───────────────────────────────────
   if (isDuplicate(phone)) {
     const banner = document.getElementById('errorBanner');
     const list = document.getElementById('errorList');
@@ -582,7 +557,6 @@ document.getElementById('submitBtn').addEventListener('click', () => {
     return;
   }
 
-  // ── Build & save order ────────────────────────────────
   const orderNum = 'SHR-' + Date.now().toString().slice(-6);
   const locLabel  = selectedLoc === 'shortpump' ? 'Short Pump, VA' : 'Chesterfield, VA';
   const order = {
@@ -605,7 +579,6 @@ document.getElementById('submitBtn').addEventListener('click', () => {
   localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
   sessionStorage.removeItem('shrish_cart');
 
-  // ── Show success ──────────────────────────────────────
   document.getElementById('checkoutWrap').style.display = 'none';
   document.getElementById('successScreen').style.display = 'block';
   document.getElementById('successOrderNum').textContent = `Order #${orderNum}`;
@@ -622,10 +595,11 @@ document.getElementById('submitBtn').addEventListener('click', () => {
     <div class="ss-row"><span>Phone</span><span>${phone}</span></div>
     <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">💵 Cash at Pickup</span></div>`;
 
+  cart = [];
+  updateNavCart();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-// ── INIT ─────────────────────────────────────────────────
 renderCartReview();
 </script>
 </body>

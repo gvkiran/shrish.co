@@ -24,25 +24,33 @@
 
 <nav class="nav" id="nav">
   <div class="nav-inner">
-    <a href="index.html" class="nav-logo"><img src="logo.png" alt="Shrish LLC" class="logo-img"></a>
+    <a href="index.html" class="nav-logo">
+      <img src="logo.png" alt="Shrish LLC" class="logo-img" loading="eager" fetchpriority="high" decoding="async">
+    </a>
+
     <ul class="nav-links">
       <li><a href="index.html" class="nav-link">Home</a></li>
       <li><a href="about.html" class="nav-link">About</a></li>
       <li><a href="shop.html" class="nav-link">Shop</a></li>
       <li><a href="recipes.html" class="nav-link">Recipes</a></li>
       <li><a href="contact.html" class="nav-link active">Contact</a></li>
-          <li style="margin-left:16px">
-        <a href="shop.html" id="navCartLink"
-           style="display:inline-flex;align-items:center;gap:7px;background:var(--saffron);color:#fff;padding:8px 18px;border-radius:50px;font-size:13px;font-weight:700;white-space:nowrap;transition:all .3s">
-          🛒 <span id="navCartBadge" style="background:rgba(255,255,255,.25);border-radius:50px;padding:1px 7px;font-size:12px;font-weight:800">0</span>
-        </a>
-      </li>
-    </ul>    <a href="shop.html" class="nav-cta btn-primary">Order Now</a>
-    <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    </ul>
+
+    <div class="nav-cart-wrap">
+      <a href="shop.html" id="navCartLink" class="nav-cart-btn" aria-label="View cart">
+        <span class="nav-cart-icon">🛒</span>
+        <span id="navCartBadge" class="nav-cart-badge">0</span>
+      </a>
+    </div>
+
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
+
   <div class="nav-mobile" id="navMobile">
-    <a href="index.html">Home</a><a href="about.html">About</a>
-    <a href="shop.html">Shop</a><a href="recipes.html">Recipes</a>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="shop.html">Shop</a>
+    <a href="recipes.html">Recipes</a>
     <a href="contact.html">Contact</a>
   </div>
 </nav>
@@ -65,7 +73,7 @@
     </div>
     <div class="contact-detail">
       <span class="cd-icon">📧</span>
-      <div><strong>Email</strong><span><a href="mailto:contact@shrishllc.com" style="color:var(--saffron)"><span class="__cf_email__" data-cfemail="ef8c80819b8e8c9baf9c879d869c8783838cc18c8082">[email&#160;protected]</span></a></span></div>
+      <div><strong>Email</strong><span><a href="mailto:contact@shrishllc.com" style="color:var(--saffron)"><span class="__cf_email__" data-cfemail="afccc0c1dbceccdbefdcc7ddc6dcc7c3c3cc81ccc0c2">[email&#160;protected]</span></a></span></div>
     </div>
     <div class="contact-detail">
       <span class="cd-icon">💬</span>
@@ -83,7 +91,6 @@
       <div><strong>Hours</strong><span>Mon – Fri: 9am – 5pm</span></div>
     </div>
 
-    <!-- Quick WhatsApp button -->
     <a href="https://wa.me/17653255577?text=Hi%20Shrish!%20I%20have%20a%20question%20about%20your%20mangoes%20%F0%9F%A5%AD"
        target="_blank" rel="noopener"
        style="display:inline-flex;align-items:center;gap:8px;margin-top:24px;background:#25D366;color:#fff;padding:13px 24px;border-radius:50px;font-family:var(--font-body);font-size:14px;font-weight:700;text-decoration:none;transition:all .3s">
@@ -111,7 +118,6 @@
     <h2>Send a Message</h2>
     <p class="subtitle">Fill in the form below and we'll reply within a few hours.</p>
 
-    <!-- Formspree form — sign up free at formspree.io, replace YOUR_FORM_ID -->
     <form id="contactForm" action="https://formspree.io/f/mzdkjrnw" method="POST" onsubmit="handleSubmit(event)" novalidate>
       <div class="form-group">
         <label class="form-label">Full Name <span class="req">*</span></label>
@@ -139,7 +145,6 @@
       </p>
     </form>
 
-    <!-- Success state -->
     <div id="contactSuccess" style="display:none;text-align:center;padding:40px 0">
       <div style="font-size:56px;margin-bottom:16px">✅</div>
       <h3 style="font-family:var(--font-display);font-size:26px;color:var(--dark);margin-bottom:10px">Message Sent!</h3>
@@ -153,7 +158,6 @@
   </div>
 </div>
 
-
 <!-- PICKUP LOCATIONS MAP -->
 <div style="max-width:1000px;margin:0 auto;padding:0 24px 64px">
   <div style="text-align:center;margin-bottom:32px">
@@ -161,7 +165,7 @@
     <h2 class="section-title">Pickup <em>Locations</em></h2>
     <p style="color:var(--text-light);font-size:15px">Two convenient locations in the Richmond area. Exact address confirmed when we call you.</p>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+  <div id="maps-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
     <div style="background:var(--white);border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(26,18,8,.08)">
       <iframe
         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3162.5!2d-77.6367!3d37.6509!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89b1680ae3b10001%3A0x1!2sShort+Pump%2C+VA!5e0!3m2!1sen!2sus!4v1"
@@ -188,6 +192,7 @@
     </div>
   </div>
 </div>
+
 <style>
 @media(max-width:600px){
   #maps-grid{grid-template-columns:1fr !important}
@@ -205,49 +210,76 @@
   </div>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="main.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+<script src="main.js"></script>
 <script>
 async function handleSubmit(e) {
   e.preventDefault();
-  const name  = document.getElementById('cName').value.trim();
+
+  const name = document.getElementById('cName').value.trim();
   const email = document.getElementById('cEmail').value.trim();
-  const msg   = document.getElementById('cMessage').value.trim();
+  const msg = document.getElementById('cMessage').value.trim();
   let ok = true;
 
-  if (!name)  { document.getElementById('err-name').style.display='block';  document.getElementById('cName').classList.add('error');  ok=false; } else { document.getElementById('err-name').style.display='none';  document.getElementById('cName').classList.remove('error'); }
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById('err-email').style.display='block'; document.getElementById('cEmail').classList.add('error'); ok=false; } else { document.getElementById('err-email').style.display='none'; document.getElementById('cEmail').classList.remove('error'); }
-  if (!msg)   { document.getElementById('err-msg').style.display='block';   document.getElementById('cMessage').classList.add('error'); ok=false; } else { document.getElementById('err-msg').style.display='none';  document.getElementById('cMessage').classList.remove('error'); }
+  if (!name) {
+    document.getElementById('err-name').style.display = 'block';
+    document.getElementById('cName').classList.add('error');
+    ok = false;
+  } else {
+    document.getElementById('err-name').style.display = 'none';
+    document.getElementById('cName').classList.remove('error');
+  }
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.getElementById('err-email').style.display = 'block';
+    document.getElementById('cEmail').classList.add('error');
+    ok = false;
+  } else {
+    document.getElementById('err-email').style.display = 'none';
+    document.getElementById('cEmail').classList.remove('error');
+  }
+
+  if (!msg) {
+    document.getElementById('err-msg').style.display = 'block';
+    document.getElementById('cMessage').classList.add('error');
+    ok = false;
+  } else {
+    document.getElementById('err-msg').style.display = 'none';
+    document.getElementById('cMessage').classList.remove('error');
+  }
+
   if (!ok) return;
 
   const btn = document.getElementById('cSubmitBtn');
-  btn.textContent = 'Sending…';
+  btn.textContent = 'Sending...';
   btn.disabled = true;
 
   try {
     const form = document.getElementById('contactForm');
-    // Only use Formspree if a real form ID is set
+
     if (form.action.includes('YOUR_FORM_ID')) {
-      // Fallback: open email client
       window.location.href = `mailto:contact@shrishllc.com?subject=Message from ${encodeURIComponent(name)}&body=${encodeURIComponent(msg + '\n\nFrom: ' + email)}`;
       document.getElementById('contactForm').style.display = 'none';
       document.getElementById('contactSuccess').style.display = 'block';
       return;
     }
+
     const res = await fetch(form.action, {
       method: 'POST',
       body: new FormData(form),
       headers: { 'Accept': 'application/json' }
     });
+
     if (res.ok) {
       document.getElementById('contactForm').style.display = 'none';
       document.getElementById('contactSuccess').style.display = 'block';
     } else {
-      throw new Erro
-    } else {
-      btn.textContent = 'Send Message';
-      btn.disabled = false;
-      alert('Could not send. Please WhatsApp us at +1 (765) 325-5577 or email contact@shrishllc.com');
+      throw new Error('Form submission failed');
     }
+  } catch (err) {
+    btn.textContent = 'Send Message';
+    btn.disabled = false;
+    alert('Could not send. Please WhatsApp us at +1 (765) 325-5577 or email contact@shrishllc.com');
   }
 }
 </script>

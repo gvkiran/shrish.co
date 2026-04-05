@@ -21,28 +21,37 @@
 </head>
 <body>
 <div class="announcement-bar"><span>🥭 Fresh Indian Mangoes Now Available — Pickup in Short Pump & Chesterfield</span></div>
+
 <nav class="nav" id="nav">
   <div class="nav-inner">
-    <a href="index.html" class="nav-logo"><img src="logo.png" alt="Shrish LLC" class="logo-img"></a>
+    <a href="index.html" class="nav-logo">
+      <img src="logo.png" alt="Shrish LLC" class="logo-img" loading="eager" fetchpriority="high" decoding="async">
+    </a>
+
     <ul class="nav-links">
       <li><a href="index.html" class="nav-link">Home</a></li>
       <li><a href="about.html" class="nav-link">About</a></li>
       <li><a href="shop.html" class="nav-link">Shop</a></li>
       <li><a href="recipes.html" class="nav-link active">Recipes</a></li>
       <li><a href="contact.html" class="nav-link">Contact</a></li>
-          <li style="margin-left:16px">
-        <a href="shop.html" id="navCartLink"
-           style="display:inline-flex;align-items:center;gap:7px;background:var(--saffron);color:#fff;padding:8px 18px;border-radius:50px;font-size:13px;font-weight:700;white-space:nowrap;transition:all .3s">
-          🛒 <span id="navCartBadge" style="background:rgba(255,255,255,.25);border-radius:50px;padding:1px 7px;font-size:12px;font-weight:800">0</span>
-        </a>
-      </li>
-    </ul>    <a href="order.html" class="nav-cta btn-primary">Order Now</a>
-    <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    </ul>
+
+    <div class="nav-cart-wrap">
+      <a href="shop.html" id="navCartLink" class="nav-cart-btn" aria-label="View cart">
+        <span class="nav-cart-icon">🛒</span>
+        <span id="navCartBadge" class="nav-cart-badge">0</span>
+      </a>
+    </div>
+
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
+
   <div class="nav-mobile" id="navMobile">
-    <a href="index.html">Home</a><a href="about.html">About</a>
-    <a href="shop.html">Shop</a><a href="recipes.html">Recipes</a>
-    <a href="contact.html">Contact</a><a href="order.html" class="mobile-cta">Order Now</a>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="shop.html">Shop</a>
+    <a href="recipes.html">Recipes</a>
+    <a href="contact.html">Contact</a>
   </div>
 </nav>
 
