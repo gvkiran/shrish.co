@@ -280,10 +280,11 @@
   <div class="admin-login-card">
     <img src="logo.png" alt="Shrish LLC" />
     <h2>Admin Access</h2>
-    <p>Enter your password to manage orders and products</p>
-    <input type="password" id="adminPw" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()" />
+    <p>Enter your admin email and password to manage orders and products</p>
+    <input type="email" id="adminEmail" placeholder="Admin email" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()" />
+    <input type="password" id="adminPw" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
     <button onclick="doLogin()">Login →</button>
-    <p class="login-error" id="loginErr">Incorrect password. Try again.</p>
+    <p class="login-error" id="loginErr">Login failed. Check your Firebase Auth admin user.</p>
   </div>
 </div>
 
