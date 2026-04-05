@@ -1,333 +1,730 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard – SHRISH LLC</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
-</head>
-<body style="background:var(--cream)">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard – SHRISH LLC</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="icon" href="logo.png" type="image/png" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── ADMIN OVERRIDES ── */
+    body { background: #f5f0e8; }
 
-<!-- LOGIN SCREEN -->
-<div id="loginScreen" class="admin-login">
-  <div style="text-align:center;margin-bottom:32px">
-    <img src="logo.png" alt="Shrish LLC" style="height:70px;margin:0 auto 16px">
-    <h2 style="font-family:var(--font-display);font-size:28px;color:var(--dark)">Admin Login</h2>
-    <p style="color:var(--text-light);font-size:14px">Shrish LLC — Order Management</p>
+    .admin-topbar {
+      background: var(--dark); color: var(--white);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 32px; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+    .admin-topbar-left { display: flex; align-items: center; gap: 14px; }
+    .admin-topbar img { height: 36px; border-radius: 50%; }
+    .admin-topbar h1 { font-family: var(--font-display); font-size: 1.5rem; color: var(--gold-l); margin: 0; }
+    .admin-logout-btn {
+      padding: 8px 20px; background: transparent;
+      border: 1.5px solid rgba(255,255,255,0.3); border-radius: 50px;
+      color: rgba(255,255,255,0.7); font-family: var(--font-body);
+      font-size: 13px; cursor: pointer; transition: var(--transition);
+    }
+    .admin-logout-btn:hover { border-color: #e55; color: #e55; }
+
+    /* Login */
+    .admin-login-wrap {
+      min-height: 100vh; display: flex; align-items: center;
+      justify-content: center; padding: 24px;
+    }
+    .admin-login-card {
+      background: var(--white); border-radius: var(--radius-lg);
+      padding: 48px 40px; box-shadow: var(--shadow-lg);
+      width: 100%; max-width: 400px; text-align: center;
+    }
+    .admin-login-card img { height: 72px; margin: 0 auto 20px; }
+    .admin-login-card h2 { font-family: var(--font-display); font-size: 28px; color: var(--dark); margin-bottom: 8px; }
+    .admin-login-card p { color: var(--text-light); font-size: 14px; margin-bottom: 28px; }
+    .admin-login-card input {
+      width: 100%; padding: 13px 16px; border-radius: var(--radius);
+      border: 1.5px solid #E0D0B8; background: var(--cream);
+      font-size: 15px; font-family: var(--font-body); color: var(--text);
+      outline: none; margin-bottom: 12px;
+      transition: border-color var(--transition);
+    }
+    .admin-login-card input:focus { border-color: var(--saffron); }
+    .admin-login-card button {
+      width: 100%; padding: 14px; background: var(--saffron); color: white;
+      border: none; border-radius: 50px; font-family: var(--font-body);
+      font-size: 15px; font-weight: 700; cursor: pointer; transition: var(--transition);
+    }
+    .admin-login-card button:hover { background: var(--saffron-d); }
+    .login-error { color: #c62828; font-size: 13px; margin-top: 10px; display: none; }
+
+    /* Dashboard */
+    .admin-wrap { max-width: 1200px; margin: 0 auto; padding: 36px 24px 80px; }
+
+    /* Stats */
+    .admin-stats {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--white); border-radius: var(--radius-lg);
+      padding: 22px 20px; box-shadow: var(--shadow);
+    }
+    .stat-card .s-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-light); margin-bottom: 8px; }
+    .stat-card .s-value { font-family: var(--font-display); font-size: 2rem; font-weight: 700; color: var(--dark); line-height: 1; }
+    .stat-card .s-value.gold { color: var(--saffron); }
+
+    /* Tabs */
+    .admin-tabs { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
+    .admin-tab {
+      padding: 9px 22px; border-radius: 50px;
+      border: 1.5px solid var(--cream-d); background: var(--white);
+      font-family: var(--font-body); font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: var(--transition); color: var(--text-light);
+    }
+    .admin-tab.active { background: var(--saffron); color: white; border-color: var(--saffron); }
+
+    /* Toolbar */
+    .orders-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+    }
+    .orders-toolbar h2 { font-family: var(--font-display); font-size: 24px; color: var(--dark); }
+    .toolbar-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .toolbar-btn {
+      padding: 8px 18px; border-radius: 50px; border: 1.5px solid var(--cream-d);
+      background: var(--white); font-family: var(--font-body); font-size: 13px;
+      font-weight: 600; cursor: pointer; transition: var(--transition); color: var(--text-light);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .toolbar-btn:hover { border-color: var(--saffron); color: var(--saffron); }
+    .toolbar-btn.danger:hover { border-color: #c62828; color: #c62828; }
+
+    /* Filter */
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-pill {
+      padding: 6px 16px; border-radius: 50px; border: 1.5px solid var(--cream-d);
+      background: var(--white); font-size: 13px; cursor: pointer;
+      transition: var(--transition); color: var(--text-light); font-family: var(--font-body);
+    }
+    .filter-pill.active { background: var(--dark); color: white; border-color: var(--dark); }
+
+    /* Orders table */
+    .orders-table-wrap { overflow-x: auto; border-radius: var(--radius-lg); box-shadow: var(--shadow); }
+    .orders-table { width: 100%; border-collapse: collapse; background: var(--white); min-width: 900px; }
+    .orders-table th {
+      padding: 13px 14px; text-align: left; font-size: 11px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase; color: var(--text-light);
+      background: var(--cream-d); white-space: nowrap;
+    }
+    .orders-table td {
+      padding: 14px; font-size: 13px; color: var(--text);
+      border-top: 1px solid rgba(0,0,0,0.04); vertical-align: top;
+    }
+    .orders-table tr:hover td { background: rgba(200,121,26,0.025); }
+
+    .order-id { font-weight: 700; color: var(--saffron); font-size: 12px; }
+    .customer-name { font-weight: 600; color: var(--dark); }
+    .customer-phone { color: var(--saffron); font-size: 12px; }
+    .customer-email { font-size: 11px; color: var(--text-light); }
+
+    /* Items list in table */
+    .items-list { display: flex; flex-direction: column; gap: 4px; }
+    .item-row { font-size: 12px; background: var(--cream-d); border-radius: 6px; padding: 4px 8px; }
+    .item-row strong { color: var(--dark); }
+    .item-row span { color: var(--text-light); }
+
+    /* Total amount */
+    .total-amount { font-weight: 700; color: var(--saffron); font-size: 15px; }
+
+    /* Status badges */
+    .status-badge {
+      display: inline-block; padding: 4px 12px; border-radius: 50px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .status-pending   { background: #FFF8E1; color: #F57F17; }
+    .status-fulfilled { background: #E8F5E9; color: #2E7D32; }
+    .status-cancelled { background: #FFEBEE; color: #C62828; }
+
+    /* Payment badge */
+    .payment-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 50px;
+      font-size: 11px; font-weight: 600;
+    }
+    .payment-paid     { background: #E8F5E9; color: #2E7D32; }
+    .payment-pending  { background: #FFF3E0; color: #E65100; }
+
+    /* Pickup date input */
+    .pickup-date-input {
+      border: 1.5px solid #E0D0B8; border-radius: 8px;
+      padding: 5px 8px; font-size: 12px; font-family: var(--font-body);
+      color: var(--text); background: var(--cream); outline: none;
+      width: 130px; transition: border-color var(--transition);
+    }
+    .pickup-date-input:focus { border-color: var(--saffron); }
+
+    /* Payment select */
+    .payment-select {
+      border: 1.5px solid #E0D0B8; border-radius: 8px;
+      padding: 5px 8px; font-size: 12px; font-family: var(--font-body);
+      color: var(--text); background: var(--cream); outline: none;
+      cursor: pointer; transition: border-color var(--transition);
+    }
+    .payment-select:focus { border-color: var(--saffron); }
+
+    /* Action buttons */
+    .action-btns { display: flex; flex-direction: column; gap: 6px; }
+    .action-btn {
+      padding: 5px 12px; border-radius: 50px; border: 1.5px solid;
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      font-family: var(--font-body); transition: var(--transition);
+      white-space: nowrap;
+    }
+    .btn-fulfill { border-color: #2E7D32; color: #2E7D32; background: transparent; }
+    .btn-fulfill:hover { background: #2E7D32; color: white; }
+    .btn-cancel  { border-color: #C62828; color: #C62828; background: transparent; }
+    .btn-cancel:hover  { background: #C62828; color: white; }
+    .btn-reset   { border-color: var(--text-light); color: var(--text-light); background: transparent; }
+    .btn-reset:hover   { background: var(--text-light); color: white; }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 60px 24px; color: var(--text-light); }
+    .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { font-size: 15px; }
+
+    /* Products tab */
+    .products-manage-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;
+    }
+    .pm-card {
+      background: var(--white); border-radius: var(--radius-lg);
+      padding: 20px 22px; box-shadow: var(--shadow);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .pm-emoji { font-size: 32px; flex-shrink: 0; }
+    .pm-info { flex: 1; min-width: 0; }
+    .pm-info h4 { font-size: 14px; font-weight: 600; color: var(--dark); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pm-price-wrap { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+    .pm-price-input {
+      width: 72px; padding: 4px 8px; border: 1.5px solid #E0D0B8;
+      border-radius: 8px; font-size: 13px; font-weight: 600;
+      color: var(--saffron); background: var(--cream);
+      font-family: var(--font-body); outline: none;
+      transition: border-color var(--transition);
+    }
+    .pm-price-input:focus { border-color: var(--saffron); }
+    .pm-save-btn {
+      padding: 4px 12px; border-radius: 50px; border: none;
+      background: var(--saffron); color: white; font-size: 11px;
+      font-weight: 600; cursor: pointer; font-family: var(--font-body);
+      transition: var(--transition);
+    }
+    .pm-save-btn:hover { background: var(--saffron-d); }
+    .pm-controls { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+
+    /* Toggle */
+    .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0; background: #ccc;
+      border-radius: 50px; cursor: pointer; transition: var(--transition);
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute; width: 18px; height: 18px;
+      left: 3px; top: 3px; background: white; border-radius: 50%;
+      transition: var(--transition);
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--saffron); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    /* Export data.js banner */
+    .export-banner {
+      background: #FFF8E1; border: 1.5px solid var(--gold);
+      border-radius: var(--radius); padding: 14px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+    }
+    .export-banner p { font-size: 13px; color: var(--dark); margin: 0; }
+    .export-banner strong { color: var(--saffron); }
+    .export-data-btn {
+      padding: 8px 18px; background: var(--dark); color: var(--gold-l);
+      border: none; border-radius: 50px; font-family: var(--font-body);
+      font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+      transition: var(--transition);
+    }
+    .export-data-btn:hover { background: var(--dark-m); }
+
+    /* Toast */
+    .admin-toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--dark); color: white;
+      padding: 12px 20px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 500; z-index: 9999;
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.3s ease; pointer-events: none;
+    }
+    .admin-toast.show { transform: none; opacity: 1; }
+
+    @media (max-width: 900px) {
+      .admin-stats { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .admin-stats { grid-template-columns: repeat(2, 1fr); }
+      .admin-topbar { padding: 12px 16px; }
+      .admin-wrap { padding: 20px 12px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="loginScreen" class="admin-login-wrap">
+  <div class="admin-login-card">
+    <img src="logo.png" alt="Shrish LLC" />
+    <h2>Admin Access</h2>
+    <p>Enter your password to manage orders and products</p>
+    <input type="password" id="adminPw" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()" />
+    <button onclick="doLogin()">Login →</button>
+    <p class="login-error" id="loginErr">Incorrect password. Try again.</p>
   </div>
-  <div class="order-card">
-    <div class="form-group">
-      <label class="form-label">Password</label>
-      <input type="password" class="form-control" id="adminPassword" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')login()">
-    </div>
-    <button class="submit-btn" onclick="login()">Login</button>
-    <div id="loginError" style="color:#C62828;font-size:13px;text-align:center;margin-top:12px;display:none">Incorrect password. Try again.</div>
-  </div>
-  <p style="text-align:center;font-size:12px;color:var(--text-light);margin-top:16px">Default password: <strong>shrish2025</strong> — change in data.js</p>
 </div>
 
-<!-- ADMIN DASHBOARD -->
-<div id="adminDashboard" style="display:none">
-  <nav style="background:var(--dark);padding:16px 24px;display:flex;align-items:center;justify-content:space-between">
-    <div style="display:flex;align-items:center;gap:16px">
-      <img src="logo.png" alt="Shrish" style="height:44px">
-      <span style="color:var(--gold-l);font-family:var(--font-display);font-size:20px">Admin Dashboard</span>
-    </div>
-    <button class="admin-logout" onclick="logout()">Logout</button>
-  </nav>
+<!-- ── DASHBOARD ── -->
+<div id="dashboard" style="display:none;">
 
-  <div class="admin-page">
-    <!-- STATS -->
+  <!-- Top bar -->
+  <div class="admin-topbar">
+    <div class="admin-topbar-left">
+      <img src="logo.png" alt="Shrish" />
+      <h1>Admin Dashboard</h1>
+    </div>
+    <button class="admin-logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+
+  <div class="admin-wrap">
+
+    <!-- Stats -->
     <div class="admin-stats" id="adminStats"></div>
 
-    <!-- TABS -->
+    <!-- Tabs -->
     <div class="admin-tabs">
       <button class="admin-tab active" onclick="switchTab('orders',this)">📋 Orders</button>
-      <button class="admin-tab" onclick="switchTab('products',this)">🥭 Manage Products</button>
+      <button class="admin-tab" onclick="switchTab('products',this)">🛒 Manage Products</button>
     </div>
 
-    <!-- ORDERS TAB -->
+    <!-- ── ORDERS TAB ── -->
     <div id="tab-orders">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
-        <h2 style="font-family:var(--font-display);font-size:24px;color:var(--dark)">Customer Orders</h2>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <select id="statusFilter" class="form-control" style="width:auto;padding:8px 14px;font-size:13px" onchange="renderOrders()">
+      <div class="orders-toolbar">
+        <h2>Customer Orders</h2>
+        <div class="toolbar-actions">
+          <select id="filterStatus" class="filter-pill active" style="border-radius:50px;padding:6px 16px;border:1.5px solid #e0d0b8;background:#fff;font-size:13px;cursor:pointer;" onchange="renderOrders()">
             <option value="all">All Orders</option>
             <option value="pending">Pending</option>
             <option value="fulfilled">Fulfilled</option>
             <option value="cancelled">Cancelled</option>
           </select>
-          <button class="btn-outline" style="padding:8px 16px;font-size:13px" onclick="exportCSV()">⬇ Export CSV</button>
-          <button class="btn-outline" style="padding:8px 16px;font-size:13px;color:#C62828;border-color:#C62828" onclick="clearFulfilled()">🗑 Clear Fulfilled</button>
+          <button class="toolbar-btn" onclick="exportCSV()">⬇ Export CSV</button>
+          <button class="toolbar-btn danger" onclick="clearFulfilled()">✕ Clear Fulfilled</button>
         </div>
       </div>
-      <div style="overflow-x:auto">
-        <table class="orders-table" id="ordersTable">
+
+      <div class="orders-table-wrap">
+        <table class="orders-table">
           <thead>
             <tr>
               <th>Order #</th>
-              <th>Name</th>
-              <th>Phone</th>
-              <th>Email</th>
-              <th>Product</th>
-              <th>Qty</th>
+              <th>Customer</th>
+              <th>Products &amp; Qty</th>
+              <th>Total</th>
               <th>Location</th>
               <th>Pickup Date</th>
+              <th>Payment</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="ordersBody"></tbody>
         </table>
-        <div id="noOrders" style="text-align:center;padding:48px;color:var(--text-light);display:none">
-          <div style="font-size:48px;margin-bottom:12px">📋</div>
-          <p>No orders yet. They'll appear here when customers place orders.</p>
-        </div>
       </div>
     </div>
 
-    <!-- PRODUCTS TAB -->
-    <div id="tab-products" style="display:none">
-      <h2 style="font-family:var(--font-display);font-size:24px;color:var(--dark);margin-bottom:8px">Manage Products</h2>
-      <p style="color:var(--text-light);font-size:14px;margin-bottom:28px">Toggle availability on/off and edit prices directly. <strong>Changes are session-only</strong> — edit <code>data.js</code> to make them permanent across all browsers.</p>
-      <div class="product-manage-grid" id="productManageGrid"></div>
-      <div style="margin-top:24px;padding:20px;background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow)">
-        <p style="font-size:13px;color:var(--text-light)">⚠️ <strong>Note:</strong> Changes to availability here update your browser's local data. To permanently update the website for all users, edit the <code>data.js</code> file and set <code>available: true/false</code> for each product.</p>
+    <!-- ── PRODUCTS TAB ── -->
+    <div id="tab-products" style="display:none;">
+      <div class="export-banner">
+        <p>💡 Price and availability changes are <strong>live immediately</strong> on the shop. To make them permanent, click <strong>Export data.js</strong> and replace your file in GitHub.</p>
+        <button class="export-data-btn" onclick="exportDataJs()">⬇ Export data.js</button>
       </div>
+      <div class="products-manage-grid" id="productsGrid"></div>
     </div>
+
   </div>
 </div>
 
-<script src="data.js"></script>
+<!-- Toast -->
+<div class="admin-toast" id="adminToast"></div>
+
+<script src="data.js">
+  const GITHUB_TOKEN = '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'; // paste your token
+  const GITHUB_REPO  = 'gvkiran/shrish.co';
+  const GITHUB_FILE  = 'data.js';
+
+  async function pushDataJsToGitHub() {
+    // Get current file SHA (required by GitHub API)
+    const meta = await fetch(
+      `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`,
+      { headers: { Authorization: `token ${GITHUB_TOKEN}` } }
+    ).then(r => r.json());
+
+    // Build updated data.js content
+    const overrides = JSON.parse(localStorage.getItem(PRICES_KEY) || '{}');
+    const data = JSON.parse(JSON.stringify(SHRISH_DATA));
+    data.products.forEach(p => {
+      if (overrides[p.id]) {
+        p.price     = overrides[p.id].price;
+        p.available = overrides[p.id].available;
+      }
+    });
+    const content = '// SHRISH LLC — Product Data\nconst SHRISH_DATA = '
+      + JSON.stringify(data, null, 2) + ';\n';
+
+    // Push to GitHub
+    const res = await fetch(
+      `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `token ${GITHUB_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: 'Admin: update prices',
+          content: btoa(unescape(encodeURIComponent(content))),
+          sha: meta.sha
+        })
+      }
+    );
+    if (res.ok) {
+      showToast('✅ Prices live on site in ~60 seconds');
+    } else {
+      showToast('❌ GitHub push failed — use Export instead');
+    }
+  }
+</script>
 <script>
-// ── CONFIG ─────────────────────────────────────────────────
-const ADMIN_PASS = 'shrish2025'; // change this!
-const ORDERS_KEY = 'shrish_orders';
+  const PASSWORD = 'shrish2025';
+  const ORDERS_KEY = 'shrish_orders';
+  const PRICES_KEY = 'shrish_price_overrides';
 
-// ── AUTH ───────────────────────────────────────────────────
-function login() {
-  const pw = document.getElementById('adminPassword').value;
-  if (pw === ADMIN_PASS) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('adminDashboard').style.display = 'block';
-    loadDashboard();
-  } else {
-    document.getElementById('loginError').style.display = 'block';
+  // ── AUTH ──
+  function doLogin() {
+    const pw = document.getElementById('adminPw').value;
+    if (pw === PASSWORD) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      applyPriceOverrides();
+      renderStats();
+      renderOrders();
+    } else {
+      document.getElementById('loginErr').style.display = 'block';
+    }
   }
-}
 
-function logout() {
-  document.getElementById('loginScreen').style.display = 'block';
-  document.getElementById('adminDashboard').style.display = 'none';
-  document.getElementById('adminPassword').value = '';
-}
-
-// ── DATA ───────────────────────────────────────────────────
-function getOrders() {
-  try { return JSON.parse(localStorage.getItem(ORDERS_KEY)) || []; }
-  catch { return []; }
-}
-function saveOrders(orders) {
-  localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-}
-
-// ── STATS ──────────────────────────────────────────────────
-function renderStats() {
-  const orders = getOrders();
-  const pending   = orders.filter(o => o.status === 'pending').length;
-  const fulfilled = orders.filter(o => o.status === 'fulfilled').length;
-  const available = SHRISH_DATA.products.filter(p => p.available).length;
-  document.getElementById('adminStats').innerHTML = `
-    <div class="admin-stat-card">
-      <div class="stat-label">Total Orders</div>
-      <div class="stat-value">${orders.length}</div>
-    </div>
-    <div class="admin-stat-card">
-      <div class="stat-label">Pending Pickup</div>
-      <div class="stat-value accent">${pending}</div>
-    </div>
-    <div class="admin-stat-card">
-      <div class="stat-label">Fulfilled</div>
-      <div class="stat-value">${fulfilled}</div>
-    </div>
-    <div class="admin-stat-card">
-      <div class="stat-label">Products Available</div>
-      <div class="stat-value">${available} / ${SHRISH_DATA.products.length}</div>
-    </div>`;
-}
-
-// ── ORDERS ─────────────────────────────────────────────────
-function renderOrders() {
-  const filter = document.getElementById('statusFilter').value;
-  let orders = getOrders();
-  if (filter !== 'all') orders = orders.filter(o => o.status === filter);
-  orders = orders.slice().reverse();
-
-  const tbody = document.getElementById('ordersBody');
-  const noOrders = document.getElementById('noOrders');
-
-  if (!orders.length) {
-    tbody.innerHTML = '';
-    noOrders.style.display = 'block';
-    return;
+  function doLogout() {
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('adminPw').value = '';
   }
-  noOrders.style.display = 'none';
 
-  tbody.innerHTML = orders.map(o => `
-    <tr>
-      <td><strong style="color:var(--saffron)">${o.id}</strong></td>
-      <td>${o.firstName} ${o.lastName}</td>
-      <td><a href="tel:${o.phone}" style="color:var(--saffron)">${o.phone}</a></td>
-      <td style="font-size:13px">${o.email}</td>
-      <td>${o.productName || o.product}</td>
-      <td>${o.quantity}</td>
-      <td>${o.location === 'shortpump' ? 'Short Pump' : 'Chesterfield'}</td>
-      <td>${formatDate(o.pickupDate)}</td>
-      <td><span class="order-status status-${o.status}">${o.status}</span></td>
-      <td>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${o.status === 'pending' ? `<button class="action-btn btn-fulfill" onclick="updateStatus('${o.id}','fulfilled')">✓ Fulfill</button>` : ''}
-          ${o.status === 'pending' ? `<button class="action-btn btn-cancel"  onclick="updateStatus('${o.id}','cancelled')">✗ Cancel</button>` : ''}
-          ${o.status !== 'pending' ? `<button class="action-btn btn-fulfill" onclick="updateStatus('${o.id}','pending')" style="border-color:var(--saffron);color:var(--saffron)">↩ Reopen</button>` : ''}
-          <button class="action-btn" style="border-color:#666;color:#666" onclick="resetPhone('${o.phone}','${o.id}')">🔓 Reset</button>
-        </div>
-        ${o.notes ? `<div style="font-size:12px;color:var(--text-light);margin-top:4px">📝 ${o.notes}</div>` : ''}
-      </td>
-    </tr>`).join('');
-}
+  // ── PRICE OVERRIDES ── apply saved prices on top of data.js
+  function applyPriceOverrides() {
+    const overrides = JSON.parse(localStorage.getItem(PRICES_KEY) || '{}');
+    if (!window.SHRISH_DATA) return;
+    SHRISH_DATA.products.forEach(p => {
+      if (overrides[p.id] !== undefined) {
+        p.price = overrides[p.id].price;
+        p.available = overrides[p.id].available;
+      }
+    });
+  }
 
-function formatDate(d) {
-  if (!d) return '—';
-  const date = new Date(d + 'T00:00:00');
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
+  function saveOverride(id, price, available) {
+    const overrides = JSON.parse(localStorage.getItem(PRICES_KEY) || '{}');
+    overrides[id] = { price, available };
+    localStorage.setItem(PRICES_KEY, JSON.stringify(overrides));
+    // Also update SHRISH_DATA in memory
+    const p = SHRISH_DATA.products.find(x => x.id === id);
+    if (p) { p.price = price; p.available = available; }
+  }
 
-function updateStatus(orderId, newStatus) {
-  const orders = getOrders();
-  const idx = orders.findIndex(o => o.id === orderId);
-  if (idx !== -1) { orders[idx].status = newStatus; saveOrders(orders); }
-  renderStats(); renderOrders();
-}
+  // ── ORDERS ──
+  function getOrders() {
+    return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
+  }
 
-function resetPhone(phone, excludeId) {
-  if (!confirm(`Reset the duplicate-order lock for phone ${phone}? This allows them to place a new order.`)) return;
-  const orders = getOrders();
-  orders.forEach(o => { if (o.phone === phone && o.id !== excludeId && o.status === 'pending') o.status = 'reset'; });
-  saveOrders(orders); renderStats(); renderOrders();
-  alert('Phone number reset. Customer can now place a new order.');
-}
+  function saveOrders(orders) {
+    localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+  }
 
-function clearFulfilled() {
-  if (!confirm('Remove all fulfilled and cancelled orders from view? (They stay in storage but status is archived)')) return;
-  const orders = getOrders().map(o => {
-    if (o.status === 'fulfilled') o.status = 'archived';
-    return o;
-  });
-  saveOrders(orders); renderStats(); renderOrders();
-}
+  function calcTotal(order) {
+    if (!order.items || !order.items.length) return '—';
+    let total = 0;
+    let allPriced = true;
+    order.items.forEach(item => {
+      const priceNum = parseFloat((item.price || '').replace(/[^0-9.]/g, ''));
+      if (!isNaN(priceNum)) {
+        total += priceNum * item.qty;
+      } else {
+        allPriced = false;
+      }
+    });
+    return allPriced ? '$' + total.toFixed(0) : '~$' + total.toFixed(0) + '+';
+  }
 
-// ── PRODUCTS ───────────────────────────────────────────────
-function renderProducts() {
-  const grid = document.getElementById('productManageGrid');
-  grid.innerHTML = SHRISH_DATA.products.map(p => {
-    const imgHtml = p.image
-      ? `<img src="${p.image}" alt="${p.name}" style="width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`
-      : `<div style="width:56px;height:56px;border-radius:10px;background:var(--cream-d);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">🥭</div>`;
-    return `
-    <div class="product-manage-card" style="flex-wrap:wrap;gap:12px">
-      ${imgHtml}
-      <div class="product-manage-info" style="flex:1;min-width:160px">
-        <h4 style="font-size:14px">${p.name}</h4>
-        <p style="font-size:11px;color:var(--text-light)">${p.origin || ''}</p>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
-          <span style="font-size:12px;font-weight:600;color:var(--text-light)">Price:</span>
-          <input type="text" value="${p.price}" id="price-${p.id}"
-            style="width:90px;padding:5px 10px;border:1.5px solid #E0D0B8;border-radius:50px;font-size:13px;font-weight:700;color:var(--saffron);font-family:var(--font-body);outline:none"
-            onchange="updatePrice('${p.id}', this.value)"
-            onfocus="this.style.borderColor='var(--saffron)'"
-            onblur="this.style.borderColor='#E0D0B8'">
-          <span style="font-size:11px;color:var(--text-light)">${p.unit}</span>
-        </div>
-        <p style="font-size:11px;margin-top:6px;color:${p.available && !p.displayOnly ? '#2E7D32' : p.displayOnly ? '#B8860B' : '#C62828'}">
-          ${p.displayOnly ? '🔔 Coming Soon' : p.available ? '✓ Available' : '✗ Sold Out'}
-        </p>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
-        <label class="toggle-switch" title="${p.displayOnly ? 'Coming Soon — toggle not applicable' : 'Toggle availability'}">
-          <input type="checkbox" ${p.available ? 'checked' : ''} ${p.displayOnly ? 'disabled' : ''} onchange="toggleProduct('${p.id}', this.checked)">
-          <span class="toggle-slider" style="${p.displayOnly ? 'opacity:.4' : ''}"></span>
-        </label>
-        <span style="font-size:10px;color:var(--text-light)">${p.displayOnly ? 'Coming Soon' : 'Available'}</span>
-      </div>
-    </div>`;
-  }).join('');
-}
+  function renderOrders() {
+    const filter = document.getElementById('filterStatus').value;
+    let orders = getOrders();
+    if (filter !== 'all') orders = orders.filter(o => o.status === filter);
 
-function toggleProduct(productId, available) {
-  const p = SHRISH_DATA.products.find(p => p.id === productId);
-  if (p && !p.displayOnly) {
-    p.available = available;
+    const tbody = document.getElementById('ordersBody');
+    if (!orders.length) {
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📭</div><p>No orders found.</p></div></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = orders.map(o => {
+      // Items display
+      const itemsHtml = o.items && o.items.length
+        ? '<div class="items-list">' + o.items.map(item =>
+            `<div class="item-row"><strong>${item.name}</strong> <span>× ${item.qty} &nbsp;·&nbsp; ${item.price}</span></div>`
+          ).join('') + '</div>'
+        : '<span style="color:#ccc">—</span>';
+
+      // Total
+      const total = calcTotal(o);
+
+      // Pickup date
+      const pickupVal = o.pickupDate || '';
+
+      // Payment
+      const paymentVal = o.payment || 'pending';
+
+      // Status
+      const statusClass = 'status-' + (o.status || 'pending');
+      const statusLabel = (o.status || 'pending').charAt(0).toUpperCase() + (o.status || 'pending').slice(1);
+
+      // Date placed
+      const placed = o.timestamp ? new Date(o.timestamp).toLocaleDateString('en-US', {month:'short',day:'numeric'}) : '—';
+
+      return `<tr id="row-${o.id}">
+        <td>
+          <div class="order-id">${o.id}</div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:3px">${placed}</div>
+        </td>
+        <td>
+          <div class="customer-name">${o.firstName} ${o.lastName}</div>
+          <div class="customer-phone">${o.phone}</div>
+          <div class="customer-email">${o.email}</div>
+        </td>
+        <td>${itemsHtml}</td>
+        <td><div class="total-amount">${total}</div></td>
+        <td style="font-size:13px">${o.locationLabel || o.location || '—'}</td>
+        <td>
+          <input type="date" class="pickup-date-input" value="${pickupVal}"
+            onchange="updatePickupDate('${o.id}', this.value)"
+            title="Set pickup date" />
+        </td>
+        <td>
+          <select class="payment-select" onchange="updatePayment('${o.id}', this.value)">
+            <option value="pending" ${paymentVal==='pending'?'selected':''}>💰 Pending</option>
+            <option value="paid" ${paymentVal==='paid'?'selected':''}>✅ Paid</option>
+          </select>
+        </td>
+        <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+        <td>
+          <div class="action-btns">
+            <button class="action-btn btn-fulfill" onclick="setStatus('${o.id}','fulfilled')">✓ Fulfill</button>
+            <button class="action-btn btn-cancel"  onclick="setStatus('${o.id}','cancelled')">✕ Cancel</button>
+            <button class="action-btn btn-reset"   onclick="setStatus('${o.id}','pending')">↺ Reset</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
     renderStats();
-    renderProducts();
-    showToast(`${p.name} → ${available ? '✓ Available' : '✗ Sold Out'}. Edit data.js to make permanent.`);
   }
-}
 
-function updatePrice(productId, newPrice) {
-  const p = SHRISH_DATA.products.find(p => p.id === productId);
-  if (p) {
-    const trimmed = newPrice.trim();
-    if (!trimmed) return;
-    p.price = trimmed;
-    showToast(`💰 ${p.name} price updated to ${trimmed}. Edit data.js to make permanent.`);
-    // Flash the input green
-    const input = document.getElementById('price-' + productId);
-    if (input) { input.style.borderColor='#2E7D32'; input.style.color='#2E7D32'; setTimeout(()=>{input.style.borderColor='#E0D0B8';input.style.color='var(--saffron)';},1500); }
+  function setStatus(id, status) {
+    const orders = getOrders();
+    const o = orders.find(x => x.id === id);
+    if (o) { o.status = status; saveOrders(orders); renderOrders(); showToast('Order ' + id + ' → ' + status); }
   }
-}
 
-function showToast(msg) {
-  const t = document.createElement('div');
-  t.textContent = msg;
-  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--dark);color:white;padding:12px 24px;border-radius:50px;font-size:14px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);max-width:90vw;text-align:center';
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3500);
-}
+  function updatePickupDate(id, date) {
+    const orders = getOrders();
+    const o = orders.find(x => x.id === id);
+    if (o) { o.pickupDate = date; saveOrders(orders); showToast('Pickup date saved'); }
+  }
 
-// ── EXPORT ─────────────────────────────────────────────────
-function exportCSV() {
-  const orders = getOrders();
-  if (!orders.length) { alert('No orders to export.'); return; }
-  const headers = ['Order #','First Name','Last Name','Phone','Email','Product','Quantity','Location','Pickup Date','Status','Notes','Referral','Timestamp'];
-  const rows = orders.map(o => [
-    o.id, o.firstName, o.lastName, o.phone, o.email,
-    o.productName || o.product, o.quantity,
-    o.location === 'shortpump' ? 'Short Pump VA' : 'Chesterfield VA',
-    o.pickupDate, o.status, `"${(o.notes||'').replace(/"/g,'""')}"`,
-    o.referral || '', o.timestamp
-  ]);
-  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url;
-  a.download = `shrish-orders-${new Date().toISOString().split('T')[0]}.csv`;
-  a.click();
-}
+  function updatePayment(id, payment) {
+    const orders = getOrders();
+    const o = orders.find(x => x.id === id);
+    if (o) { o.payment = payment; saveOrders(orders); showToast('Payment status updated'); }
+  }
 
-// ── TABS ───────────────────────────────────────────────────
-function switchTab(tab, btn) {
-  document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('tab-orders').style.display   = tab === 'orders'   ? 'block' : 'none';
-  document.getElementById('tab-products').style.display = tab === 'products' ? 'block' : 'none';
-}
+  function clearFulfilled() {
+    if (!confirm('Remove all fulfilled orders from view? They will be deleted.')) return;
+    const orders = getOrders().filter(o => o.status !== 'fulfilled');
+    saveOrders(orders);
+    renderOrders();
+    showToast('Fulfilled orders cleared');
+  }
 
-function loadDashboard() { renderStats(); renderOrders(); renderProducts(); }
+  function exportCSV() {
+    const orders = getOrders();
+    const rows = [['Order ID','Name','Phone','Email','Products','Qty','Total','Location','Pickup Date','Payment','Status','Placed']];
+    orders.forEach(o => {
+      const products = (o.items||[]).map(i => i.name).join(' + ');
+      const qty = (o.items||[]).map(i => i.qty).join('+');
+      rows.push([
+        o.id, o.firstName+' '+o.lastName, o.phone, o.email,
+        products, qty, calcTotal(o),
+        o.locationLabel||o.location, o.pickupDate||'', o.payment||'pending',
+        o.status, o.timestamp ? new Date(o.timestamp).toLocaleDateString() : ''
+      ]);
+    });
+    const csv = rows.map(r => r.map(c => '"'+(c||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'shrish_orders_' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+    showToast('CSV downloaded');
+  }
 
-// Auto-refresh every 30s
-setInterval(() => { if (document.getElementById('adminDashboard').style.display !== 'none') { renderStats(); renderOrders(); } }, 30000);
+  // ── STATS ──
+  function renderStats() {
+    const orders = getOrders();
+    const total = orders.length;
+    const pending = orders.filter(o => o.status === 'pending').length;
+    const fulfilled = orders.filter(o => o.status === 'fulfilled').length;
+    const totalBoxes = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + (o.totalBoxes || 0), 0);
+    const totalRevenue = orders
+      .filter(o => o.status !== 'cancelled')
+      .reduce((s, o) => {
+        const t = parseFloat(calcTotal(o).replace(/[^0-9.]/g,''));
+        return s + (isNaN(t) ? 0 : t);
+      }, 0);
+    const available = SHRISH_DATA ? SHRISH_DATA.products.filter(p => p.available && !p.displayOnly).length : 0;
+    const total_products = SHRISH_DATA ? SHRISH_DATA.products.filter(p => !p.displayOnly).length : 0;
+
+    document.getElementById('adminStats').innerHTML = `
+      <div class="stat-card"><div class="s-label">Total Orders</div><div class="s-value">${total}</div></div>
+      <div class="stat-card"><div class="s-label">Pending Pickup</div><div class="s-value gold">${pending}</div></div>
+      <div class="stat-card"><div class="s-label">Fulfilled</div><div class="s-value">${fulfilled}</div></div>
+      <div class="stat-card"><div class="s-label">Total Revenue</div><div class="s-value gold">$${totalRevenue.toFixed(0)}</div></div>
+      <div class="stat-card"><div class="s-label">Products Active</div><div class="s-value">${available} / ${total_products}</div></div>
+    `;
+  }
+
+  // ── PRODUCTS ──
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-orders').style.display = tab === 'orders' ? 'block' : 'none';
+    document.getElementById('tab-products').style.display = tab === 'products' ? 'block' : 'none';
+    if (tab === 'products') renderProducts();
+  }
+
+  function renderProducts() {
+    if (!window.SHRISH_DATA) return;
+    const grid = document.getElementById('productsGrid');
+    const products = SHRISH_DATA.products;
+
+    grid.innerHTML = products.map(p => {
+      const isComingSoon = p.displayOnly;
+      const priceDisplay = isComingSoon ? '' : (p.price || '');
+      const priceNum = priceDisplay.replace(/[^0-9.]/g, '');
+
+      return `<div class="pm-card" id="pmc-${p.id}">
+        <div class="pm-emoji">🥭</div>
+        <div class="pm-info">
+          <h4 title="${p.name}">${p.name}</h4>
+          ${isComingSoon
+            ? '<span style="font-size:11px;color:#aaa">Coming Soon — no price</span>'
+            : `<div class="pm-price-wrap">
+                <span style="font-size:12px;color:var(--text-light)">$</span>
+                <input type="number" class="pm-price-input" id="price-${p.id}"
+                  value="${priceNum}" min="1" max="999" step="1"
+                  title="Edit price" />
+                <button class="pm-save-btn" onclick="saveProductPrice('${p.id}')">Save</button>
+              </div>`
+          }
+        </div>
+        <div class="pm-controls">
+          <label class="toggle-switch" title="${p.available ? 'Available' : 'Unavailable'}">
+            <input type="checkbox" ${p.available ? 'checked' : ''} ${isComingSoon ? 'disabled' : ''}
+              onchange="toggleAvailable('${p.id}', this.checked)" />
+            <span class="toggle-slider"></span>
+          </label>
+          <span style="font-size:10px;color:var(--text-light)">${isComingSoon ? 'Soon' : (p.available ? 'Live' : 'Off')}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function saveProductPrice(id) {
+    const input = document.getElementById('price-' + id);
+    if (!input) return;
+    const val = parseFloat(input.value);
+    if (isNaN(val) || val < 1) { showToast('Enter a valid price'); return; }
+    const p = SHRISH_DATA.products.find(x => x.id === id);
+    const newPrice = '$' + val;
+    const available = p ? p.available : false;
+    saveOverride(id, newPrice, available);
+    showToast(p.name + ' price → ' + newPrice + ' ✓');
+  }
+
+  function toggleAvailable(id, available) {
+    const p = SHRISH_DATA.products.find(x => x.id === id);
+    if (!p) return;
+    saveOverride(id, p.price, available);
+    p.available = available;
+    // Update label
+    const card = document.getElementById('pmc-' + id);
+    if (card) {
+      const lbl = card.querySelector('.pm-controls span');
+      if (lbl) lbl.textContent = available ? 'Live' : 'Off';
+    }
+    renderStats();
+    showToast(p.name + ' → ' + (available ? 'Available ✓' : 'Hidden'));
+  }
+
+  // ── EXPORT data.js ──
+  function exportDataJs() {
+    if (!window.SHRISH_DATA) return;
+    const overrides = JSON.parse(localStorage.getItem(PRICES_KEY) || '{}');
+    // Apply overrides to a copy
+    const data = JSON.parse(JSON.stringify(SHRISH_DATA));
+    data.products.forEach(p => {
+      if (overrides[p.id]) {
+        p.price = overrides[p.id].price;
+        p.available = overrides[p.id].available;
+      }
+    });
+    const js = '// SHRISH LLC — Product Data\n// Generated: ' + new Date().toISOString() + '\nconst SHRISH_DATA = ' + JSON.stringify(data, null, 2) + ';\n';
+    const blob = new Blob([js], {type: 'text/javascript'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'data.js';
+    a.click();
+    showToast('data.js downloaded — upload to GitHub to make permanent');
+  }
+
+  // ── TOAST ──
+  function showToast(msg) {
+    const t = document.getElementById('adminToast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
 </script>
 </body>
 </html>

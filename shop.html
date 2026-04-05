@@ -213,21 +213,28 @@
 
 <nav class="nav" id="nav">
   <div class="nav-inner">
-    <a href="index.html" class="nav-logo"><img src="logo.png" alt="Shrish LLC" class="logo-img"></a>
+    <a href="index.html" class="nav-logo">
+      <img src="logo.png" alt="Shrish LLC" class="logo-img" loading="eager" fetchpriority="high" decoding="async">
+    </a>
+
     <ul class="nav-links">
       <li><a href="index.html" class="nav-link">Home</a></li>
       <li><a href="about.html" class="nav-link">About</a></li>
       <li><a href="shop.html" class="nav-link active">Shop</a></li>
       <li><a href="recipes.html" class="nav-link">Recipes</a></li>
       <li><a href="contact.html" class="nav-link">Contact</a></li>
-          <li style="margin-left:16px">
-        <a href="shop.html" id="navCartLink"
-           style="display:inline-flex;align-items:center;gap:7px;background:var(--saffron);color:#fff;padding:8px 18px;border-radius:50px;font-size:13px;font-weight:700;white-space:nowrap">
-          🛒 <span id="navCartBadge" style="background:rgba(255,255,255,.25);border-radius:50px;padding:1px 7px;font-size:12px;font-weight:800">0</span>
-        </a>
-      </li>
-    </ul>    <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    </ul>
+
+    <div class="nav-cart-wrap">
+      <a href="shop.html" id="navCartLink" class="nav-cart-btn" aria-label="View cart">
+        <span class="nav-cart-icon">🛒</span>
+        <span id="navCartBadge" class="nav-cart-badge">0</span>
+      </a>
+    </div>
+
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
+
   <div class="nav-mobile" id="navMobile">
     <a href="index.html">Home</a><a href="about.html">About</a><a href="shop.html">Shop</a>
     <a href="recipes.html">Recipes</a><a href="contact.html">Contact</a>
@@ -325,10 +332,10 @@ function saveCart() { sessionStorage.setItem('shrish_cart', JSON.stringify(cart)
 function updateCartUI() {
   const total = cart.reduce((s,i) => s+i.qty, 0);
   document.getElementById('cartFabCount').textContent = total;
-  // Cart FAB always visible; show count badge
+  const navBadge = document.getElementById('navCartBadge');
+  if (navBadge) navBadge.textContent = total;
   const fab = document.getElementById('cartFab');
   if (fab) fab.style.display = 'flex';
-  // Order CTA strip only shows when cart has items
   const cta = document.getElementById('orderCta');
   if (cta) cta.style.display = total > 0 ? 'block' : 'none';
   renderCartDrawer();
@@ -396,7 +403,6 @@ function addToCart(productId, qty) {
   else cart.push({ id:p.id, name:p.name, price:p.price, unit:p.unit, image:p.image||null, qty });
   saveCart(); updateCartUI();
   showToast(`✓ ${p.name} added!`);
-  // Refresh card qty display if visible
   if (typeof renderCardQty === 'function') renderCardQty(productId);
 }
 function openCart()  { document.getElementById('cartDrawer').classList.add('open'); document.getElementById('cartOverlay').classList.add('open'); document.body.style.overflow='hidden'; }
@@ -436,10 +442,8 @@ function openModal(productId) {
   const isAvail = p.available && !p.displayOnly;
   const isSoon  = p.displayOnly;
 
-  // Images
   const imgs = PRODUCT_IMAGES[productId] || (p.image ? [p.image] : []);
 
-  // Main image
   const mainWrap = document.getElementById('modalMainImgWrap');
   if (imgs.length) {
     mainWrap.innerHTML = `<img class="modal-main-img" id="modalMainImg" src="${imgs[0]}" alt="${p.name}" onerror="this.style.display='none'">`;
@@ -447,7 +451,6 @@ function openModal(productId) {
     mainWrap.innerHTML = `<div class="modal-img-placeholder">🥭</div>`;
   }
 
-  // Thumbnails (only if multiple images)
   const thumbs = document.getElementById('modalThumbs');
   if (imgs.length > 1) {
     thumbs.innerHTML = imgs.map((src,i) =>
@@ -461,15 +464,12 @@ function openModal(productId) {
     thumbs.style.display = 'none';
   }
 
-  // Status
   const statusCls  = isSoon ? 'soon'  : isAvail ? 'avail' : 'sold';
   const statusText = isSoon ? '🔔 Coming Soon' : isAvail ? '✓ Available Now' : '✗ Currently Sold Out';
 
-  // Chips
   const chips = [p.season && `📅 ${p.season}`, p.taste && `👅 ${p.taste}`]
     .filter(Boolean).map(c => `<span class="modal-chip">${c}</span>`).join('');
 
-  // Badges
   const badges = (p.badges||[]).map(b => {
     let cls = '';
     if (/gi|iso/i.test(b)) cls='blue';
@@ -478,7 +478,6 @@ function openModal(productId) {
     return `<span class="modal-badge ${cls}">${b}</span>`;
   }).join('');
 
-  // Action
   let actionHtml = '';
   if (isSoon) {
     actionHtml = `<button class="modal-notify-btn" onclick="notifyMe('${p.id}','${p.name.replace(/'/g,"\\'")}')">🔔 Notify When Available</button>`;
@@ -497,7 +496,6 @@ function openModal(productId) {
     actionHtml = `<button class="modal-add-btn" style="background:#ccc;cursor:not-allowed" disabled>Currently Sold Out</button>`;
   }
 
-  // Info panel
   document.getElementById('modalInfo').innerHTML = `
     <div class="modal-origin">${p.origin}</div>
     <div class="modal-name">${p.name}</div>
@@ -552,10 +550,8 @@ function modalAddToCart() {
   }
 }
 
-// Keyboard close
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeCart(); } });
 
-// Copy product link to clipboard
 function copyProductLink(productName) {
   const url = window.location.href.split('?')[0];
   const text = `🥭 ${productName} from Shrish LLC – Fresh Indian Mangoes in Richmond, VA
@@ -605,10 +601,8 @@ function renderCard(p) {
     : '';
   const emojiStyle = imgSrc ? 'style="display:none"' : '';
 
-  // Short description (2 lines)
   const shortDesc = p.description.length > 90 ? p.description.slice(0, 90) + '…' : p.description;
 
-  // Action button
   let actionHtml = '';
   if (isSoon) {
     actionHtml = `<button class="pc-notify-btn" onclick="notifyMe('${p.id}','${p.name.replace(/'/g,"\\'")}')">🔔 Notify Me</button>`;
@@ -651,26 +645,22 @@ function renderCard(p) {
     </div>`;
 }
 
-// Quick add — first click adds 1 box, then shows inline qty control
 function quickAdd(productId) {
   addToCart(productId, 1);
   renderCardQty(productId);
 }
 
-// Render the inline qty control on the card
 function renderCardQty(productId) {
   const wrap = document.getElementById('card-actions-' + productId);
   if (!wrap) return;
   const item = cart.find(x => x.id === productId);
   const qty = item ? item.qty : 0;
   if (qty === 0) {
-    // Cart item removed — revert to original Add to Cart button
     wrap.innerHTML = `
       <button class="pc-details-btn" onclick="openModal('${productId}')">Details</button>
       <button class="pc-add-btn" onclick="quickAdd('${productId}')">+ Add to Cart</button>`;
     return;
   }
-  // Show inline qty control
   wrap.innerHTML = `
     <button class="pc-details-btn" onclick="openModal('${productId}')">Details</button>
     <div class="card-qty-wrap">
@@ -722,7 +712,6 @@ function renderShop() {
   if (!container) return;
   container.innerHTML = '';
 
-  // Sort: available first, then sold out, then coming soon
   const sort = arr => [
     ...arr.filter(p => p.available && !p.displayOnly),
     ...arr.filter(p => !p.available && !p.displayOnly),
@@ -768,7 +757,6 @@ function init() {
   updateCartUI();
 }
 
-// Expose all functions used in HTML onclick= attributes to global window scope
 window.openCart        = openCart;
 window.closeCart       = closeCart;
 window.openModal       = openModal;
