@@ -366,6 +366,6 @@ const SHRISH_DATA = {
   ],
   "orderForm": {
     "duplicateCheckField": "phone",
-    "confirmationMessage": "🥭 Thank you! Your order has been placed. We'll contact you to confirm pickup details. Payment collected at pickup — no card needed."
+    "confirmationMessage": "🥭 Thank you! Your order has been placed. We'll contact you to confirm pickup details. Payment collected at pickup"
   }
 };
