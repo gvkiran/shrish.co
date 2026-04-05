@@ -10,6 +10,7 @@
 <title>Checkout – SHRISH LLC</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="logo.png" type="image/png">
 <link rel="stylesheet" href="styles.css">
 <style>
 /* ── LAYOUT ── */
@@ -132,7 +133,7 @@
       <li style="margin-left:16px">
         <a href="shop.html" id="navCartLink"
            style="display:inline-flex;align-items:center;gap:7px;background:var(--saffron);color:#fff;padding:8px 18px;border-radius:50px;font-size:13px;font-weight:700;white-space:nowrap;transition:all .3s">
-          🛒 Cart <span id="navCartBadge" style="background:rgba(255,255,255,.25);border-radius:50px;padding:1px 7px;font-size:12px;font-weight:800">0</span>
+          🛒 <span id="navCartBadge" style="background:rgba(255,255,255,.25);border-radius:50px;padding:1px 7px;font-size:12px;font-weight:800">0</span>
         </a>
       </li>
     </ul>
@@ -310,7 +311,7 @@
 
 <footer class="footer">
   <div class="footer-bottom">
-    <span>© 2025 Shrish LLC. All rights reserved.</span>
+    <span>© <span class="copy-year">2025</span> Shrish LLC. All rights reserved.</span>
     <div class="footer-legal">
       <a href="privacy.html">Privacy Policy</a>
       <a href="refund.html">Refund Policy</a>
@@ -591,6 +592,10 @@ document.getElementById('submitBtn').addEventListener('click', () => {
     notes: notes || '',
     items: cart.map(i => ({ id: i.id, name: i.name || 'Unknown', price: i.price || 'TBD', unit: i.unit || '', qty: i.qty || 1 })),
     totalBoxes: cart.reduce((s, i) => s + (i.qty || 1), 0),
+    totalPrice: cart.reduce((s, i) => {
+      const num = parseFloat((i.price || '0').replace(/[^0-9.]/g, ''));
+      return s + (isNaN(num) ? 0 : num * (i.qty || 1));
+    }, 0),
     status: 'pending',
     timestamp: new Date().toISOString()
   };
@@ -611,7 +616,7 @@ document.getElementById('submitBtn').addEventListener('click', () => {
 
   document.getElementById('successSummary').innerHTML = `
     <div class="ss-row"><span>Items</span><span style="display:flex;flex-direction:column;gap:3px">${itemLines}</span></div>
-    <div class="ss-row"><span>Total</span><span>${order.totalBoxes} box${order.totalBoxes !== 1 ? 'es' : ''}</span></div>
+    <div class="ss-row"><span>Total</span><span style="color:var(--saffron);font-weight:700">${order.totalPrice > 0 ? '$' + order.totalPrice.toFixed(2) : order.totalBoxes + ' box' + (order.totalBoxes !== 1 ? 'es' : '')}</span></div>
     <div class="ss-row"><span>Pickup</span><span>${locLabel}</span></div>
     <div class="ss-row"><span>Name</span><span>${firstName} ${lastName}</span></div>
     <div class="ss-row"><span>Phone</span><span>${phone}</span></div>

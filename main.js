@@ -237,3 +237,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// ── Dynamic copyright year ─────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.copy-year').forEach(function(el) {
+    el.textContent = new Date().getFullYear();
+  });
+});
