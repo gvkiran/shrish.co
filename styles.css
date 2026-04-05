@@ -100,6 +100,7 @@ a  { color: inherit; text-decoration: none; }
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(212,160,23,0.2);
   transition: box-shadow var(--transition);
+  min-height: 175px;
 }
 .nav.scrolled { box-shadow: var(--shadow); }
 .nav-inner {
@@ -107,7 +108,7 @@ a  { color: inherit; text-decoration: none; }
   display: flex; align-items: center; gap: 40px; height: 80px;
 }
 .nav-logo { flex-shrink: 0; display: flex; align-items: center; }
-.logo-img { height: 64px; width: auto; object-fit: contain; }
+.logo-img { height: 155px; width: auto; object-fit: contain; }
 .nav-links { display: flex; list-style: none; gap: 32px; margin: 0 auto; }
 .nav-link  { font-size: 14px; font-weight: 500; color: var(--text-light); transition: color var(--transition); letter-spacing: 0.3px; }
 .nav-link:hover, .nav-link.active { color: var(--saffron); }
