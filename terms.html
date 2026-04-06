@@ -25,8 +25,27 @@
     .policy-body li { margin-bottom: 6px; }
     .policy-body a { color: var(--gold, #c8902a); }
     .policy-updated { font-size: 0.85rem; color: #888; margin-bottom: 32px; }
-    .policy-back { display: inline-block; margin-top: 40px; padding: 12px 28px; background: var(--gold, #c8902a); color: #fff; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
-    .policy-back:hover { opacity: 0.88; }
+    .policy-back,
+    .policy-back:link,
+    .policy-back:visited {
+      display: inline-block;
+      margin-top: 40px;
+      padding: 12px 28px;
+      background: var(--gold, #c8902a);
+      color: #fff !important;
+      border-radius: 999px;
+      text-decoration: none !important;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .policy-back:hover,
+    .policy-back:focus,
+    .policy-back:active {
+      opacity: 0.88;
+      color: #fff !important;
+      text-decoration: none !important;
+    }
   </style>
 </head>
 <body>
@@ -37,10 +56,11 @@
   </div>
 
   <!-- Nav -->
-  <nav>
-    <a href="index.html" class="nav-logo">
-      <img src="logo.png" alt="Shrish LLC" />
-    </a>
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="logo.png" alt="Shrish LLC" class="logo-img" loading="eager" fetchpriority="high" decoding="async" />
+      </a>
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="about.html">About</a></li>
@@ -49,9 +69,10 @@
       <li><a href="contact.html">Contact</a></li>
       <li><a href="shop.html" class="nav-cart" id="navCartBtn">🛒 <span id="cartCount">0</span></a></li>
     </ul>
-    <a href="order.html" class="btn btn-primary nav-order">Order Now</a>
+        <a href="order.html" class="btn btn-primary nav-order">Order Now</a>
     <button class="nav-hamburger" id="hamburger" aria-label="Menu">&#9776;</button>
-  </nav>
+  </div>
+</nav>
   <div class="mobile-menu" id="mobileMenu">
     <a href="index.html">Home</a>
     <a href="about.html">About</a>
