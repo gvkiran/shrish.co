@@ -21,6 +21,10 @@ function renderCartReview() {
     return;
   }
   const totalQty = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
+  const totalPrice = cart.reduce((sum, item) => {
+    const num = parseFloat(String(item.price || '0').replace(/[^0-9.]/g, ''));
+    return sum + (isNaN(num) ? 0 : num * (item.qty || 1));
+  }, 0);
   container.innerHTML =
     cart
       .map((item) => {
@@ -42,7 +46,13 @@ function renderCartReview() {
 </div>`;
       })
       .join('') +
-    `<div class="review-total"><span>Total</span><span>${totalQty} box${totalQty !== 1 ? 'es' : ''}</span></div>`;
+    `<div class="review-total">
+      <span>Total</span>
+      <div style="text-align:right;line-height:1.4">
+        <div style="font-size:13px;color:var(--text-light,#888)">${totalQty} box${totalQty !== 1 ? 'es' : ''}</div>
+        <div style="font-size:17px;font-weight:700;color:var(--saffron,#C8791A)">${formatCurrency(totalPrice)}</div>
+      </div>
+    </div>`;
 
   container.querySelectorAll('.ri-qty-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -106,16 +116,25 @@ function validateField(id, condition, message) {
 }
 
 async function hasDuplicatePendingOrder(phone) {
-  const phoneDigits = normalizePhone(phone);
-  const ordersRef = collection(db, 'orders');
-  const duplicateQuery = query(
-    ordersRef,
-    where('phoneDigits', '==', phoneDigits),
-    where('status', '==', 'pending'),
-    limit(1)
-  );
-  const snapshot = await getDocs(duplicateQuery);
-  return !snapshot.empty;
+  // Customers only have CREATE permission on orders (not READ).
+  // If the read is blocked by Firestore rules, skip the check silently
+  // rather than crashing the entire order submission.
+  try {
+    const phoneDigits = normalizePhone(phone);
+    const ordersRef = collection(db, 'orders');
+    const duplicateQuery = query(
+      ordersRef,
+      where('phoneDigits', '==', phoneDigits),
+      where('status', '==', 'pending'),
+      limit(1)
+    );
+    const snapshot = await getDocs(duplicateQuery);
+    return !snapshot.empty;
+  } catch (e) {
+    // Permission denied — can't check, assume no duplicate and let order proceed
+    console.warn('Duplicate check skipped (permissions):', e.message);
+    return false;
+  }
 }
 
 function bindFormUi() {
