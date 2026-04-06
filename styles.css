@@ -133,13 +133,13 @@ button.btn-primary:active {
 
 .nav-inner {
   display: grid;
-  grid-template-columns: 320px 1fr 220px;
+  grid-template-columns: 220px 1fr 220px;
   align-items: center;
   width: 100%;
   max-width: 1520px;
   margin: 0 auto;
-  padding: 0 26px 0 10px;
-  min-height: 122px;
+  padding: 0 26px 0 6px;
+  min-height: 88px;
   column-gap: 10px;
 }
 
@@ -148,14 +148,13 @@ button.btn-primary:active {
   align-items: center;
   justify-self: start;
   flex-shrink: 0;
-  margin-left: 0;
+  margin-left: -8px;
 }
 
 .logo-img {
-  height: 140px;
+  height: 80px;
   width: auto;
   object-fit: contain;
-  display: block;
 }
 
 .nav-links {
@@ -286,18 +285,17 @@ button.btn-primary:active {
 
 @media (max-width: 1100px) {
   .nav-inner {
-    grid-template-columns: 240px 1fr 170px;
-    padding: 0 18px 0 10px;
+    grid-template-columns: 170px 1fr 170px;
+    padding: 0 18px 0 8px;
     column-gap: 12px;
-    min-height: 108px;
   }
 
   .nav-logo {
-    margin-left: 0;
+    margin-left: -10px;
   }
 
   .logo-img {
-    height: 118px;
+    height: 80px;
   }
 
   .nav-links {
@@ -325,7 +323,7 @@ button.btn-primary:active {
   }
 
   .logo-img {
-    height: 92px;
+    height: 72px;
   }
 
   .nav-links,
@@ -345,15 +343,11 @@ button.btn-primary:active {
 
 /* ── HERO ── */
 .hero {
-  min-height: 76vh;
+  min-height: 90vh;
   background: linear-gradient(135deg, var(--dark) 0%, var(--dark-m) 60%, #3D2005 100%);
-  display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: 8px;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
-  padding: 42px 8% 48px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0; align-items: center;
+  position: relative; overflow: hidden;
+  padding: 80px 8% 80px;
 }
 .hero-bg { position: absolute; inset: 0; pointer-events: none; }
 .hero-orb {
@@ -375,11 +369,7 @@ button.btn-primary:active {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
   opacity: 0.4;
 }
-.hero-content {
-  position: relative;
-  z-index: 2;
-  max-width: 620px;
-}
+.hero-content { position: relative; z-index: 2; max-width: 620px; padding-left: 42px; }
 .hero-badge {
   display: inline-block;
   background: rgba(212,160,23,0.15);
@@ -405,10 +395,8 @@ button.btn-primary:active {
   animation: fadeUp 0.8s 0.15s ease both;
 }
 .hero-actions {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 34px;
+  display: flex; gap: 16px; flex-wrap: wrap;
+  margin-bottom: 56px;
   animation: fadeUp 0.8s 0.25s ease both;
 }
 .hero-stats {
@@ -420,18 +408,10 @@ button.btn-primary:active {
 .stat-label { font-size: 12px; color: rgba(255,255,255,0.55); letter-spacing: 0.5px; margin-top: 4px; }
 .stat-divider { width: 1px; height: 40px; background: rgba(255,255,255,0.15); }
 
-.hero-visual {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  justify-content: flex-start;
-}
+.hero-visual { position: relative; z-index: 2; display: flex; justify-content: center; }
 .hero-img-frame {
-  position: relative;
-  border-radius: var(--radius-lg);
-  overflow: visible;
-  max-width: 500px;
-  width: 100%;
+  position: relative; border-radius: var(--radius-lg);
+  overflow: visible; max-width: 520px; width: 100%;
 }
 .hero-img {
   width: 100%; border-radius: var(--radius-lg);
@@ -439,6 +419,15 @@ button.btn-primary:active {
   box-shadow: 0 32px 64px rgba(0,0,0,0.5);
   animation: scaleIn 1s 0.2s ease both;
 }
+.hero-img-badge {
+  position: absolute; bottom: 24px; left: -24px;
+  background: var(--white); border-radius: var(--radius);
+  padding: 14px 20px; box-shadow: var(--shadow-lg);
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; font-weight: 600; color: var(--dark);
+  animation: fadeLeft 0.8s 0.5s ease both;
+}
+.badge-icon { font-size: 22px; }
 
 @keyframes fadeUp   { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
 @keyframes fadeLeft { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
@@ -455,25 +444,14 @@ button.btn-primary:active {
 
   .hero-content {
     max-width: 100%;
+    padding-left: 0;
   }
 
-  .hero-sub {
-    margin: 0 auto 28px;
-  }
-
-  .hero-actions {
-    justify-content: center;
-    margin-bottom: 26px;
-  }
-
-  .hero-stats {
-    justify-content: center;
-  }
-
-  .hero-visual {
-    margin-top: 8px;
-    justify-content: center;
-  }
+  .hero-sub { margin: 0 auto 28px; }
+  .hero-actions { justify-content: center; margin-bottom: 26px; }
+  .hero-stats   { justify-content: center; }
+  .hero-visual  { margin-top: 8px; }
+  .hero-img-badge { left: 12px; }
 }
 
 /* ── MARQUEE ── */
