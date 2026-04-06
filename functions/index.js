@@ -13,6 +13,7 @@ const SHRISH_SUPPORT_PHONE = "+1 (765) 325-5577";
 const SHRISH_INSTAGRAM_URL = "https://www.instagram.com/richmond_mangos/";
 const SHRISH_WHATSAPP_URL = "https://wa.me/17653255577";
 const SHRISH_LOGO_URL = "https://gvkiran.github.io/shrish.co/logo.png";
+const ORDER_COUNTER_START = 671499;
 
 function currency(value) {
   const num = Number(value || 0);
@@ -88,6 +89,47 @@ function getOrderTotals(order) {
     estimatedTotal: totalPriceFromOrder > 0 ? totalPriceFromOrder : totalPriceFromItems,
   };
 }
+
+async function assignSequentialOrderNumber(orderRef, existingOrderNumber) {
+  const alreadyValid =
+    typeof existingOrderNumber === "string" &&
+    /^SHR-\d+$/.test(existingOrderNumber);
+
+  if (alreadyValid) return existingOrderNumber;
+
+  const counterRef = admin.firestore().collection("meta").doc("orderCounter");
+
+  const nextNumber = await admin.firestore().runTransaction(async (tx) => {
+    const snap = await tx.get(counterRef);
+
+    let lastNumber = ORDER_COUNTER_START;
+    if (snap.exists) {
+      const data = snap.data() || {};
+      lastNumber = Number(data.lastNumber || ORDER_COUNTER_START);
+    }
+
+    const newNumber = lastNumber + 1;
+
+    tx.set(
+      counterRef,
+      {
+        lastNumber: newNumber,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    tx.update(orderRef, {
+      orderNumber: `SHR-${newNumber}`,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return newNumber;
+  });
+
+  return `SHR-${nextNumber}`;
+}
+
 
 function buildCustomerEmail(order) {
   const items = Array.isArray(order.items) ? order.items : [];
@@ -314,26 +356,37 @@ exports.sendOrderEmails = onDocumentCreated(
     const snapshot = event.data;
     if (!snapshot) return;
 
+    const orderRef = snapshot.ref;
     const order = snapshot.data();
     if (!order || !order.email) return;
 
+    const finalOrderNumber = await assignSequentialOrderNumber(
+      orderRef,
+      order.orderNumber
+    );
+
+    const finalOrder = {
+      ...order,
+      orderNumber: finalOrderNumber,
+    };
+
     const resend = new Resend(RESEND_API_KEY.value());
 
-    const customerSubject = `Shrish order confirmation — ${order.orderNumber || "Order received"}`;
-    const adminSubject = `New Shrish order — ${order.orderNumber || "Order received"}`;
+    const customerSubject = `Shrish order confirmation — ${finalOrder.orderNumber || "Order received"}`;
+    const adminSubject = `New Shrish order — ${finalOrder.orderNumber || "Order received"}`;
 
     await resend.emails.send({
       from: SHRISH_FROM_EMAIL,
-      to: [order.email],
+      to: [finalOrder.email],
       subject: customerSubject,
-      html: buildCustomerEmail(order),
+      html: buildCustomerEmail(finalOrder),
     });
 
     await resend.emails.send({
       from: SHRISH_FROM_EMAIL,
       to: [SHRISH_ADMIN_EMAIL],
       subject: adminSubject,
-      html: buildAdminEmail(order),
+      html: buildAdminEmail(finalOrder),
     });
   }
 );

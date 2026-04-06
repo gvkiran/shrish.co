@@ -271,10 +271,9 @@ async function submitOrder() {
       return;
     }
 
-    const orderNumber = `SHR-${Date.now().toString().slice(-6)}`;
+
     const locLabel = selectedLoc === 'shortpump' ? 'Short Pump, VA' : 'Chesterfield, VA';
     const order = {
-      orderNumber,
       firstName,
       lastName,
       fullName: `${firstName} ${lastName}`,
@@ -313,7 +312,7 @@ async function submitOrder() {
 
     document.getElementById('checkoutWrap').style.display = 'none';
     document.getElementById('successScreen').style.display = 'block';
-    document.getElementById('successOrderNum').textContent = `Order #${orderNumber}`;
+    document.getElementById('successOrderNum').textContent = 'Order submitted successfully';
 
     const itemLines = order.items
       .map((item) => `<div style="font-size:13px">• ${escapeHtml(item.name)} × ${item.qty} box${item.qty !== 1 ? 'es' : ''}</div>`)
