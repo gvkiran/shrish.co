@@ -73,7 +73,7 @@
     </div>
     <div class="contact-detail">
       <span class="cd-icon">📧</span>
-      <div><strong>Email</strong><span><a href="mailto:contact@shrishllc.com" style="color:var(--saffron)"><span class="__cf_email__" data-cfemail="afccc0c1dbceccdbefdcc7ddc6dcc7c3c3cc81ccc0c2">[email&#160;protected]</span></a></span></div>
+      <div><strong>Email</strong><span><a href="mailto:contact@shrish.com" style="color:var(--saffron)"><span class="__cf_email__" data-cfemail="afccc0c1dbceccdbefdcc7ddc6dcc7c3c3cc81ccc0c2">[email&#160;protected]</span></a></span></div>
     </div>
     <div class="contact-detail">
       <span class="cd-icon">💬</span>
@@ -258,7 +258,7 @@ async function handleSubmit(e) {
     const form = document.getElementById('contactForm');
 
     if (form.action.includes('YOUR_FORM_ID')) {
-      window.location.href = `mailto:contact@shrishllc.com?subject=Message from ${encodeURIComponent(name)}&body=${encodeURIComponent(msg + '\n\nFrom: ' + email)}`;
+      window.location.href = `mailto:contact@shrish.co?subject=Message from ${encodeURIComponent(name)}&body=${encodeURIComponent(msg + '\n\nFrom: ' + email)}`;
       document.getElementById('contactForm').style.display = 'none';
       document.getElementById('contactSuccess').style.display = 'block';
       return;
@@ -279,7 +279,7 @@ async function handleSubmit(e) {
   } catch (err) {
     btn.textContent = 'Send Message';
     btn.disabled = false;
-    alert('Could not send. Please WhatsApp us at +1 (765) 325-5577 or email contact@shrishllc.com');
+    alert('Could not send. Please WhatsApp us at +1 (765) 325-5577 or email contact@shrish.co');
   }
 }
 </script>

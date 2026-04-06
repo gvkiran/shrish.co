@@ -143,19 +143,19 @@
   function fixEmailLinks() {
     // Fix any Cloudflare-protected email links
     document.querySelectorAll('a[href*="cdn-cgi/l/email-protection"]').forEach(function (a) {
-      a.setAttribute('href', 'mailto:contact@shrishllc.com');
+      a.setAttribute('href', 'mailto:contact@shrish.co');
       // Also fix the visible text if it shows encoded
       if (a.textContent.indexOf('[email') > -1 || a.textContent.indexOf('email-protection') > -1) {
-        a.textContent = 'contact@shrishllc.com';
+        a.textContent = 'contact@shrish.co';
       }
     });
 
     // Also fix any span with data-cfemail
     document.querySelectorAll('[data-cfemail]').forEach(function (el) {
-      el.textContent = 'contact@shrishllc.com';
+      el.textContent = 'contact@shrish.co';
       // If parent is a link, fix the href too
       var parent = el.closest('a');
-      if (parent) parent.setAttribute('href', 'mailto:contact@shrishllc.com');
+      if (parent) parent.setAttribute('href', 'mailto:contact@shrish.co');
     });
   }
 
@@ -175,7 +175,7 @@
       description: 'Fresh Indian mangoes and authentic sweets — Alphonso, Kesar, Putharekulu — available for pickup in Richmond, Virginia.',
       url: 'https://shrish.co',
       telephone: '+1-765-325-5577',
-      email: 'contact@shrishllc.com',
+      email: 'contact@shrish.co',
       image: 'https://gvkiran.github.io/shrish.co/logo.png',
       address: [
         {
