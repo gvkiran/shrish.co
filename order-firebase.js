@@ -324,7 +324,7 @@ async function submitOrder() {
       <div class="ss-row"><span>Pickup</span><span>${escapeHtml(locLabel)}</span></div>
       <div class="ss-row"><span>Name</span><span>${escapeHtml(firstName)} ${escapeHtml(lastName)}</span></div>
       <div class="ss-row"><span>Phone</span><span>${escapeHtml(phone)}</span></div>
-      <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">💵 Cash at Pickup</span></div>
+      <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">💵 Pay at Pickup</span></div>
       <div class="ss-row"><span>Reference</span><span>${escapeHtml(docRef.id)}</span></div>`;
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
