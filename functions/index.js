@@ -1,137 +1,305 @@
-import { onDocumentCreated } from 'firebase-functions/v2/firestore';
-import { defineSecret } from 'firebase-functions/params';
-import { initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
-import { Resend } from 'resend';
+const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { defineSecret } = require("firebase-functions/params");
+const admin = require("firebase-admin");
+const { Resend } = require("resend");
 
-initializeApp();
-const db = getFirestore();
-const resendApiKey = defineSecret('RESEND_API_KEY');
+admin.initializeApp();
 
-const FROM_EMAIL = process.env.SHRISH_FROM_EMAIL || 'Shrish Orders <contact@shrish.co>';
-const ADMIN_EMAIL = process.env.SHRISH_ADMIN_EMAIL || 'contact@shrish.co';
-const BUSINESS_PHONE = process.env.SHRISH_SUPPORT_PHONE || '+1 (765) 325-5577';
-const INSTAGRAM_URL = process.env.SHRISH_INSTAGRAM_URL || 'https://www.instagram.com/richmond_mangos/';
-const WHATSAPP_URL = process.env.SHRISH_WHATSAPP_URL || 'https://wa.me/17653255577';
+const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
 
-function formatCurrency(value = 0) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
+const SHRISH_FROM_EMAIL = "Shrish Orders <contact@shrish.co>";
+const SHRISH_ADMIN_EMAIL = "contact@shrish.co";
+const SHRISH_SUPPORT_PHONE = "+1 (765) 325-5577";
+const SHRISH_INSTAGRAM_URL = "https://www.instagram.com/richmond_mangos/";
+const SHRISH_WHATSAPP_URL = "https://wa.me/17653255577";
+const SHRISH_LOGO_URL = "https://gvkiran.github.io/shrish.co/logo.png";
+
+function currency(value) {
+  const num = Number(value || 0);
+  return `$${num.toFixed(2)}`;
 }
 
-function escapeHtml(value = '') {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
-function itemRows(items = []) {
-  return items.map((item) => `
-    <tr>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;">${escapeHtml(item.name)}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;text-align:center;">${item.qty}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid #eee;text-align:right;">${escapeHtml(item.price)}</td>
-    </tr>`).join('');
+function buildItemsRows(items = []) {
+  return items
+    .map((item) => {
+      const name = escapeHtml(item.name || "Item");
+      const qty = Number(item.quantity || 0);
+      const price = Number(item.price || 0);
+
+      return `
+        <tr>
+          <td style="padding: 12px 0; border-bottom: 1px solid #e7dfd3; font-size: 14px; color: #2b2218;">
+            ${name}
+          </td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #e7dfd3; font-size: 14px; color: #2b2218; text-align: center;">
+            ${qty}
+          </td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #e7dfd3; font-size: 14px; color: #2b2218; text-align: right;">
+            ${currency(price)}
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
 }
 
-function customerEmailHtml(order) {
+function buildCustomerEmail(order) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  const firstName = escapeHtml(order.firstName || "Customer");
+  const orderNumber = escapeHtml(order.orderNumber || "");
+  const pickupLocation = escapeHtml(order.pickupLocation || "Chesterfield, VA");
+  const totalBoxes = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const estimatedTotal = items.reduce(
+    (sum, item) => sum + Number(item.quantity || 0) * Number(item.price || 0),
+    0
+  );
+
+  const itemRows = buildItemsRows(items);
+
   return `
-  <div style="font-family:Arial,sans-serif;background:#f7f3ec;padding:32px;color:#1a1208;">
-    <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #eadfcf;">
-      <div style="background:linear-gradient(135deg,#c8791a,#8d5a10);padding:28px 32px;color:#fff;">
-        <div style="font-size:13px;letter-spacing:1.5px;text-transform:uppercase;opacity:0.9;">Shrish LLC</div>
-        <h1 style="margin:10px 0 6px;font-size:28px;line-height:1.2;">Your order is confirmed</h1>
-        <p style="margin:0;font-size:15px;opacity:0.95;">Thanks for ordering with Shrish. We received your request and will contact you soon with pickup details.</p>
+  <!doctype html>
+  <html>
+    <body style="margin:0; padding:0; background:#ece7df; font-family: Arial, Helvetica, sans-serif; color:#2b2218;">
+      <div style="padding:32px 12px;">
+        <div style="max-width:680px; margin:0 auto; background:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.08);">
+          
+          <div style="background:#b87512; padding:28px 24px 24px; text-align:left;">
+            <img
+              src="${SHRISH_LOGO_URL}"
+              alt="Shrish"
+              style="display:block; width:68px; height:68px; object-fit:contain; margin:0 0 16px 0;"
+            />
+            <div style="font-size:12px; letter-spacing:1.6px; font-weight:700; color:#f8ebd4; text-transform:uppercase;">
+              SHRISH LLC
+            </div>
+            <div style="margin-top:10px; font-size:20px; line-height:1.3; font-weight:700; color:#ffffff;">
+              Your order is confirmed
+            </div>
+            <div style="margin-top:10px; font-size:14px; line-height:1.5; color:#fff3df;">
+              Thanks for ordering with Shrish. We received your request and will contact you soon with pickup details.
+            </div>
+          </div>
+
+          <div style="padding:24px;">
+            <p style="margin:0 0 18px; font-size:15px; line-height:1.6;">Hi ${firstName},</p>
+
+            <p style="margin:0 0 22px; font-size:15px; line-height:1.7;">
+              We have your order <strong>${orderNumber}</strong> for pickup in <strong>${pickupLocation}</strong>.
+              Payment is collected at pickup.
+            </p>
+
+            <table style="width:100%; border-collapse:collapse; margin:0 0 24px;">
+              <thead>
+                <tr style="background:#efe8dd;">
+                  <th style="text-align:left; padding:10px 12px; font-size:13px; color:#4d3c22;">Item</th>
+                  <th style="text-align:center; padding:10px 12px; font-size:13px; color:#4d3c22;">Qty</th>
+                  <th style="text-align:right; padding:10px 12px; font-size:13px; color:#4d3c22;">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemRows}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td style="padding-top:16px; font-size:14px; font-weight:700; color:#2b2218;">
+                    Total
+                  </td>
+                  <td style="padding-top:16px; text-align:center; font-size:14px; font-weight:700; color:#2b2218;">
+                    ${totalBoxes}
+                  </td>
+                  <td style="padding-top:16px; text-align:right; font-size:14px; font-weight:700; color:#2b2218;">
+                    ${currency(estimatedTotal)}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top:4px; font-size:12px; color:#7a6853;">&nbsp;</td>
+                  <td style="padding-top:4px; text-align:center; font-size:12px; color:#7a6853;">
+                    Total boxes
+                  </td>
+                  <td style="padding-top:4px; text-align:right; font-size:12px; color:#7a6853;">
+                    Estimated total
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+
+            <div style="background:#f6f1e8; border-radius:14px; padding:16px 18px; margin-bottom:18px;">
+              <div style="font-size:13px; font-weight:700; margin-bottom:8px; color:#2b2218;">
+                What happens next
+              </div>
+              <div style="font-size:14px; line-height:1.7; color:#3d3225;">
+                We will review your order and contact you with exact pickup timing and address details.
+                If you need to change the order, reply to this email or reach us on WhatsApp.
+              </div>
+            </div>
+
+            <div style="font-size:14px; line-height:1.8; color:#2b2218;">
+              <div><strong>Phone:</strong> ${escapeHtml(SHRISH_SUPPORT_PHONE)}</div>
+              <div>
+                <strong>WhatsApp:</strong>
+                <a href="${SHRISH_WHATSAPP_URL}" style="color:#1e63c6; text-decoration:none;">${SHRISH_WHATSAPP_URL}</a>
+              </div>
+              <div>
+                <strong>Instagram:</strong>
+                <a href="${SHRISH_INSTAGRAM_URL}" style="color:#1e63c6; text-decoration:none;">${SHRISH_INSTAGRAM_URL}</a>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div style="padding:28px 32px;">
-        <p style="margin:0 0 18px;font-size:15px;">Hi ${escapeHtml(order.firstName)},</p>
-        <p style="margin:0 0 18px;font-size:15px;line-height:1.7;">We have your order <strong>${escapeHtml(order.orderNumber)}</strong> for pickup in <strong>${escapeHtml(order.locationLabel)}</strong>. Payment is collected at pickup.</p>
-        <table style="width:100%;border-collapse:collapse;margin:22px 0 16px;">
-          <thead>
-            <tr>
-              <th style="padding:10px 12px;text-align:left;background:#faf5ec;border-bottom:1px solid #eee;">Item</th>
-              <th style="padding:10px 12px;text-align:center;background:#faf5ec;border-bottom:1px solid #eee;">Qty</th>
-              <th style="padding:10px 12px;text-align:right;background:#faf5ec;border-bottom:1px solid #eee;">Price</th>
-            </tr>
-          </thead>
-          <tbody>${itemRows(order.items)}</tbody>
-        </table>
-        <div style="display:flex;justify-content:space-between;gap:16px;margin:10px 0 22px;font-size:15px;">
-          <div><strong>Total boxes:</strong> ${order.totalBoxes}</div>
-          <div><strong>Estimated total:</strong> ${formatCurrency(order.totalPrice)}</div>
-        </div>
-        <div style="background:#faf5ec;border-radius:14px;padding:18px 20px;margin:20px 0;">
-          <div style="font-weight:700;margin-bottom:8px;">What happens next</div>
-          <div style="font-size:14px;line-height:1.7;">We will review your order and contact you with exact pickup timing and address details. If you need to change the order, reply to this email or reach us on WhatsApp.</div>
-        </div>
-        <div style="font-size:14px;line-height:1.8;">
-          <div><strong>Phone:</strong> ${escapeHtml(BUSINESS_PHONE)}</div>
-          <div><strong>WhatsApp:</strong> <a href="${WHATSAPP_URL}">${WHATSAPP_URL}</a></div>
-          <div><strong>Instagram:</strong> <a href="${INSTAGRAM_URL}">${INSTAGRAM_URL}</a></div>
-        </div>
-      </div>
-    </div>
-  </div>`;
+    </body>
+  </html>
+  `;
 }
 
-function adminEmailHtml(order) {
+function buildAdminEmail(order) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  const orderNumber = escapeHtml(order.orderNumber || "");
+  const fullName = escapeHtml(`${order.firstName || ""} ${order.lastName || ""}`.trim());
+  const email = escapeHtml(order.email || "");
+  const phone = escapeHtml(order.phone || "");
+  const pickupLocation = escapeHtml(order.pickupLocation || "Chesterfield, VA");
+  const notes = escapeHtml(order.notes || "");
+  const totalBoxes = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const estimatedTotal = items.reduce(
+    (sum, item) => sum + Number(item.quantity || 0) * Number(item.price || 0),
+    0
+  );
+
+  const itemRows = buildItemsRows(items);
+
   return `
-  <div style="font-family:Arial,sans-serif;background:#fff;padding:24px;color:#1a1208;">
-    <h2 style="margin:0 0 12px;">New Shrish order: ${escapeHtml(order.orderNumber)}</h2>
-    <p style="margin:0 0 16px;">${escapeHtml(order.fullName)} placed an order for ${order.totalBoxes} boxes.</p>
-    <ul style="line-height:1.8;">
-      <li><strong>Phone:</strong> ${escapeHtml(order.phone)}</li>
-      <li><strong>Email:</strong> ${escapeHtml(order.email)}</li>
-      <li><strong>Pickup:</strong> ${escapeHtml(order.locationLabel)}</li>
-      <li><strong>Total:</strong> ${formatCurrency(order.totalPrice)}</li>
-      <li><strong>Referral:</strong> ${escapeHtml(order.referral || 'Not specified')}</li>
-      <li><strong>Notes:</strong> ${escapeHtml(order.notes || 'None')}</li>
-    </ul>
-    <h3>Items</h3>
-    <table style="width:100%;border-collapse:collapse;">
-      <tbody>${itemRows(order.items)}</tbody>
-    </table>
-  </div>`;
+  <!doctype html>
+  <html>
+    <body style="margin:0; padding:0; background:#ece7df; font-family: Arial, Helvetica, sans-serif; color:#2b2218;">
+      <div style="padding:32px 12px;">
+        <div style="max-width:680px; margin:0 auto; background:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.08);">
+          
+          <div style="background:#2f2a23; padding:24px;">
+            <img
+              src="${SHRISH_LOGO_URL}"
+              alt="Shrish"
+              style="display:block; width:64px; height:64px; object-fit:contain; margin:0 0 14px 0;"
+            />
+            <div style="font-size:12px; letter-spacing:1.6px; font-weight:700; color:#d8c9b2; text-transform:uppercase;">
+              New Shrish Order
+            </div>
+            <div style="margin-top:10px; font-size:20px; line-height:1.3; font-weight:700; color:#ffffff;">
+              ${orderNumber}
+            </div>
+          </div>
+
+          <div style="padding:24px;">
+            <table style="width:100%; border-collapse:collapse; margin-bottom:22px;">
+              <tr>
+                <td style="padding:8px 0; font-size:14px;"><strong>Customer:</strong></td>
+                <td style="padding:8px 0; font-size:14px;">${fullName}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0; font-size:14px;"><strong>Email:</strong></td>
+                <td style="padding:8px 0; font-size:14px;">${email}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0; font-size:14px;"><strong>Phone:</strong></td>
+                <td style="padding:8px 0; font-size:14px;">${phone}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0; font-size:14px;"><strong>Pickup:</strong></td>
+                <td style="padding:8px 0; font-size:14px;">${pickupLocation}</td>
+              </tr>
+            </table>
+
+            <table style="width:100%; border-collapse:collapse; margin:0 0 20px;">
+              <thead>
+                <tr style="background:#efe8dd;">
+                  <th style="text-align:left; padding:10px 12px; font-size:13px; color:#4d3c22;">Item</th>
+                  <th style="text-align:center; padding:10px 12px; font-size:13px; color:#4d3c22;">Qty</th>
+                  <th style="text-align:right; padding:10px 12px; font-size:13px; color:#4d3c22;">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemRows}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td style="padding-top:16px; font-size:14px; font-weight:700; color:#2b2218;">
+                    Total
+                  </td>
+                  <td style="padding-top:16px; text-align:center; font-size:14px; font-weight:700; color:#2b2218;">
+                    ${totalBoxes}
+                  </td>
+                  <td style="padding-top:16px; text-align:right; font-size:14px; font-weight:700; color:#2b2218;">
+                    ${currency(estimatedTotal)}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top:4px; font-size:12px; color:#7a6853;">&nbsp;</td>
+                  <td style="padding-top:4px; text-align:center; font-size:12px; color:#7a6853;">
+                    Total boxes
+                  </td>
+                  <td style="padding-top:4px; text-align:right; font-size:12px; color:#7a6853;">
+                    Estimated total
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+
+            ${
+              notes
+                ? `
+              <div style="background:#f6f1e8; border-radius:14px; padding:16px 18px;">
+                <div style="font-size:13px; font-weight:700; margin-bottom:8px; color:#2b2218;">Customer notes</div>
+                <div style="font-size:14px; line-height:1.7; color:#3d3225;">${notes}</div>
+              </div>
+            `
+                : ""
+            }
+          </div>
+        </div>
+      </div>
+    </body>
+  </html>
+  `;
 }
 
-export const sendOrderEmails = onDocumentCreated(
+exports.sendOrderEmails = onDocumentCreated(
   {
-    document: 'orders/{orderId}',
-    region: 'us-central1',
-    secrets: [resendApiKey]
+    document: "orders/{orderId}",
+    region: "us-central1",
+    secrets: [RESEND_API_KEY],
   },
   async (event) => {
     const snapshot = event.data;
     if (!snapshot) return;
 
     const order = snapshot.data();
-    if (!order?.email || !order?.orderNumber) return;
+    if (!order || !order.email) return;
 
-    const resend = new Resend(resendApiKey.value());
+    const resend = new Resend(RESEND_API_KEY.value());
 
-    const customerResponse = await resend.emails.send({
-      from: FROM_EMAIL,
+    const customerSubject = `Shrish order confirmation — ${order.orderNumber || "Order received"}`;
+    const adminSubject = `New Shrish order — ${order.orderNumber || "Order received"}`;
+
+    await resend.emails.send({
+      from: SHRISH_FROM_EMAIL,
       to: [order.email],
-      subject: `Shrish order confirmation — ${order.orderNumber}`,
-      html: customerEmailHtml(order),
-      replyTo: ADMIN_EMAIL
+      subject: customerSubject,
+      html: buildCustomerEmail(order),
     });
 
-    const adminResponse = await resend.emails.send({
-      from: FROM_EMAIL,
-      to: [ADMIN_EMAIL],
-      subject: `New Shrish order — ${order.orderNumber}`,
-      html: adminEmailHtml(order),
-      replyTo: order.email
+    await resend.emails.send({
+      from: SHRISH_FROM_EMAIL,
+      to: [SHRISH_ADMIN_EMAIL],
+      subject: adminSubject,
+      html: buildAdminEmail(order),
     });
-
-    await db.collection('orders').doc(snapshot.id).set({
-      emailStatus: 'sent',
-      customerEmailId: customerResponse.data?.id || null,
-      adminEmailId: adminResponse.data?.id || null,
-      emailedAt: new Date().toISOString()
-    }, { merge: true });
   }
 );
