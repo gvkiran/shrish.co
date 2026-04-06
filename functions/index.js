@@ -31,8 +31,14 @@ function buildItemsRows(items = []) {
   return items
     .map((item) => {
       const name = escapeHtml(item.name || "Item");
-      const qty = Number(item.quantity || 0);
-      const price = Number(item.price || 0);
+      const qty = Number(item.qty ?? item.quantity ?? 0);
+
+      const unitPrice = parseFloat(
+        String(item.price ?? item.unitPrice ?? "0").replace(/[^0-9.]/g, "")
+      );
+
+      const lineTotal =
+        Number.isNaN(unitPrice) ? Number(item.lineTotal || 0) : unitPrice * qty;
 
       return `
         <tr>
@@ -43,7 +49,7 @@ function buildItemsRows(items = []) {
             ${qty}
           </td>
           <td style="padding: 12px 0; border-bottom: 1px solid #e7dfd3; font-size: 14px; color: #2b2218; text-align: right;">
-            ${currency(price)}
+            ${currency(lineTotal)}
           </td>
         </tr>
       `;
@@ -56,11 +62,21 @@ function buildCustomerEmail(order) {
   const firstName = escapeHtml(order.firstName || "Customer");
   const orderNumber = escapeHtml(order.orderNumber || "");
   const pickupLocation = escapeHtml(order.pickupLocation || "Chesterfield, VA");
-  const totalBoxes = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
-  const estimatedTotal = items.reduce(
-    (sum, item) => sum + Number(item.quantity || 0) * Number(item.price || 0),
-    0
-  );
+  const totalBoxes = items.reduce(
+      (sum, item) => sum + Number(item.qty ?? item.quantity ?? 0),
+      0
+    );
+
+    const estimatedTotal = items.reduce((sum, item) => {
+      const qty = Number(item.qty ?? item.quantity ?? 0);
+      const unitPrice = parseFloat(
+        String(item.price ?? item.unitPrice ?? "0").replace(/[^0-9.]/g, "")
+      );
+      const lineTotal =
+        Number.isNaN(unitPrice) ? Number(item.lineTotal || 0) : unitPrice * qty;
+
+      return sum + lineTotal;
+    }, 0);
 
   const itemRows = buildItemsRows(items);
 
@@ -75,7 +91,7 @@ function buildCustomerEmail(order) {
             <img
               src="${SHRISH_LOGO_URL}"
               alt="Shrish"
-              style="display:block; width:110px; height:110px; object-fit:contain; margin:0 auto 16px auto;"
+              style="display:block; width:120px; height:120px; object-fit:contain; margin:0 auto 16px auto;"
             />
             <div style="font-size:12px; letter-spacing:1.6px; font-weight:700; color:#f8ebd4; text-transform:uppercase;">
               SHRISH LLC
@@ -168,11 +184,21 @@ function buildAdminEmail(order) {
   const phone = escapeHtml(order.phone || "");
   const pickupLocation = escapeHtml(order.pickupLocation || "Chesterfield, VA");
   const notes = escapeHtml(order.notes || "");
-  const totalBoxes = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
-  const estimatedTotal = items.reduce(
-    (sum, item) => sum + Number(item.quantity || 0) * Number(item.price || 0),
-    0
-  );
+  const totalBoxes = items.reduce(
+      (sum, item) => sum + Number(item.qty ?? item.quantity ?? 0),
+      0
+    );
+
+    const estimatedTotal = items.reduce((sum, item) => {
+      const qty = Number(item.qty ?? item.quantity ?? 0);
+      const unitPrice = parseFloat(
+        String(item.price ?? item.unitPrice ?? "0").replace(/[^0-9.]/g, "")
+      );
+      const lineTotal =
+        Number.isNaN(unitPrice) ? Number(item.lineTotal || 0) : unitPrice * qty;
+
+      return sum + lineTotal;
+    }, 0);
 
   const itemRows = buildItemsRows(items);
 
@@ -187,7 +213,7 @@ function buildAdminEmail(order) {
             <img
               src="${SHRISH_LOGO_URL}"
               alt="Shrish"
-              style="display:block; width:100px; height:100px; object-fit:contain; margin:0 auto 14px auto;"
+              style="display:block; width:110px; height:110px; object-fit:contain; margin:0 auto 14px auto;"
             />
             <div style="font-size:12px; letter-spacing:1.6px; font-weight:700; color:#d8c9b2; text-transform:uppercase;">
               New Shrish Order
@@ -285,7 +311,7 @@ exports.sendOrderEmails = onDocumentCreated(
 
     const resend = new Resend(RESEND_API_KEY.value());
 
-    const customerSubject = `Shrish order confirmation — ${order.orderNumber || "Order received"}`;
+    const customerSubject = `Shrish Mango order confirmation — ${order.orderNumber || "Order received"}`;
     const adminSubject = `New Shrish order — ${order.orderNumber || "Order received"}`;
 
     await resend.emails.send({
