@@ -1,18 +1,16 @@
 // ============================================================
-//  SHRISH LLC — Main JavaScript  v3.0
-//  Update SHRISH_CONFIG below with your real links
+// SHRISH LLC — Main JavaScript v3.1
+// Update SHRISH_CONFIG below with your real links
 // ============================================================
-
 const SHRISH_CONFIG = {
-  whatsappNumber:   '17653255577',
-  whatsappGroup:    'https://chat.whatsapp.com/EHk3KbL03s4J9zfFIeEOi9', // ✅ WhatsApp group link
-  instagram:        'https://www.instagram.com/richmond_mangos/', // ✅ Instagram
-  whatsappMessage:  "Hi Shrish! I'd like to know more about your mangoes 🥭"
+  whatsappNumber: '17653255577',
+  whatsappGroup: 'https://chat.whatsapp.com/EHk3KbL03s4J9zfFIeEOi9', // ✅ WhatsApp group link
+  instagram: 'https://www.instagram.com/richmond_mangos/',            // ✅ Instagram
+  whatsappMessage: "Hi Shrish! I'd like to know more about your mangoes 🥭"
 };
 
 // ── INJECT GLOBAL UI (runs on every page) ─────────────────
 function injectGlobalUI() {
-
   // 1. WhatsApp Floating Button
   const waBtn = document.createElement('a');
   waBtn.id = 'waFloat';
@@ -40,7 +38,7 @@ function injectGlobalUI() {
     topBtn.classList.toggle('visible', window.scrollY > 400);
   }, { passive: true });
 
-  // 3. Inject global styles for WA button + back-to-top
+  // 3. Inject global styles for WA button + back-to-top + TOAST FIX
   const style = document.createElement('style');
   style.textContent = `
     /* WhatsApp Float */
@@ -50,7 +48,8 @@ function injectGlobalUI() {
       display: flex; align-items: center; gap: 8px;
       padding: 12px 18px; border-radius: 50px;
       font-family: 'Jost', sans-serif; font-size: 14px; font-weight: 700;
-      text-decoration: none; box-shadow: 0 4px 20px rgba(37,211,102,.45);
+      text-decoration: none;
+      box-shadow: 0 4px 20px rgba(37,211,102,.45);
       transition: all .3s; white-space: nowrap;
     }
     #waFloat:hover { background: #1da851; transform: translateY(-3px); box-shadow: 0 8px 28px rgba(37,211,102,.5); }
@@ -64,8 +63,8 @@ function injectGlobalUI() {
     #backToTop {
       position: fixed; bottom: 24px; right: 24px; z-index: 998;
       width: 44px; height: 44px; border-radius: 50%;
-      background: var(--saffron, #C8791A); color: white; border: none;
-      font-size: 20px; font-weight: 700; cursor: pointer;
+      background: var(--saffron, #C8791A); color: white;
+      border: none; font-size: 20px; font-weight: 700; cursor: pointer;
       box-shadow: 0 4px 16px rgba(200,121,26,.35);
       transition: all .3s; opacity: 0; pointer-events: none;
     }
@@ -77,29 +76,56 @@ function injectGlobalUI() {
     .nav-mobile .mobile-order-btn {
       display: block; text-align: center; margin-top: 8px;
       background: var(--saffron, #C8791A); color: white !important;
-      padding: 13px; border-radius: 50px; font-weight: 700;
-      font-size: 15px;
+      padding: 13px; border-radius: 50px; font-weight: 700; font-size: 15px;
     }
 
     /* Social footer strip */
     .social-footer-strip {
-      background: var(--dark, #1A1208);
-      padding: 20px 24px;
+      background: var(--dark, #1A1208); padding: 20px 24px;
       display: flex; align-items: center; justify-content: center;
       gap: 16px; flex-wrap: wrap;
     }
     .social-footer-strip span { color: rgba(255,255,255,.5); font-size: 13px; }
     .sfs-link {
       display: inline-flex; align-items: center; gap: 6px;
-      padding: 8px 16px; border-radius: 50px; font-size: 13px;
-      font-weight: 600; text-decoration: none; transition: all .25s;
-      font-family: 'Jost', sans-serif;
+      padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 600;
+      text-decoration: none; transition: all .25s; font-family: 'Jost', sans-serif;
     }
     .sfs-wa { background: rgba(37,211,102,.15); color: #25D366; border: 1px solid rgba(37,211,102,.3); }
     .sfs-wa:hover { background: #25D366; color: white; }
     .sfs-ig { background: rgba(220,39,67,.12); color: #e1306c; border: 1px solid rgba(220,39,67,.25); }
     .sfs-ig:hover { background: linear-gradient(135deg,#f09433,#dc2743,#bc1888); color: white; border-color: transparent; }
     .sfs-wa svg, .sfs-ig svg { width:16px; height:16px; flex-shrink:0; }
+
+    /* ── TOAST FIX (Issue 6) ──────────────────────────────── */
+    /* The .toast base style exists in shop.html but .show rule was missing */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      right: 28px;
+      z-index: 3000;
+      background: #1A1208;
+      color: #fff;
+      padding: 12px 22px;
+      border-radius: 50px;
+      font-family: 'Jost', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: .01em;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      pointer-events: none;
+      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0,0,0,.25);
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @media (max-width: 480px) {
+      .toast { right: 16px; bottom: 80px; }
+    }
   `;
   document.head.appendChild(style);
 
@@ -126,6 +152,7 @@ function injectGlobalUI() {
   const navBadgeCount = sessionCart.reduce((s, i) => s + (i.qty || 1), 0);
   const navBadgeEl = document.getElementById('navCartBadge');
   if (navBadgeEl) navBadgeEl.textContent = navBadgeCount;
+
   // Make cart link go to order.html if cart has items, else shop.html
   const navCartLinkEl = document.getElementById('navCartLink');
   if (navCartLinkEl && navBadgeCount > 0) navCartLinkEl.href = 'order.html';
@@ -141,9 +168,8 @@ function injectGlobalUI() {
   }
 }
 
-// ── DOM READY ─────────────────────────────────────────────
+// ── DOM READY ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-
   // Inject global UI
   injectGlobalUI();
 
@@ -157,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Hamburger toggle
   const hamburger = document.getElementById('hamburger');
-  const navMobile  = document.getElementById('navMobile');
+  const navMobile = document.getElementById('navMobile');
   if (hamburger && navMobile) {
     hamburger.addEventListener('click', () => {
       navMobile.classList.toggle('open');
@@ -176,21 +202,17 @@ document.addEventListener('DOMContentLoaded', () => {
     link.classList.toggle('active', href === currentPage || (currentPage === '' && href === 'index.html'));
   });
 
-  // ── Homepage product grid (with real images) ─────────────
+  // ── Homepage product grid (with real images) ───────────────
   const productsGrid = document.getElementById('productsGrid');
   if (productsGrid && window.SHRISH_DATA) {
-    const mangoes   = SHRISH_DATA.products.filter(p => p.category === 'mangoes');
+    const mangoes = SHRISH_DATA.products.filter(p => p.category === 'mangoes');
     const available = mangoes.filter(p => p.available);
-    const toShow    = (available.length ? available : mangoes).slice(0, 3);
-
+    const toShow = (available.length ? available : mangoes).slice(0, 3);
     toShow.forEach(p => {
       const imgHtml = p.image
-        ? `<img src="${p.image}" alt="${p.name}"
-             style="width:100%;height:100%;object-fit:cover"
-             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        ? `<img src="${p.image}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
         : '';
       const fallbackStyle = p.image ? 'style="display:none"' : '';
-
       productsGrid.innerHTML += `
         <div class="product-card ${p.available ? '' : 'product-card-unavailable'}">
           ${p.tag ? `<div class="product-card-badge">${p.tag}</div>` : ''}
@@ -215,12 +237,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ── Scroll reveal animations ──────────────────────────────
+  // ── Scroll reveal animations (FIXED: skip already-visible elements) ──
+  // Issue 5 fix: only hide elements that are BELOW the fold.
+  // Elements already on screen when the page loads stay visible immediately.
   if ('IntersectionObserver' in window) {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          entry.target.style.opacity  = '1';
+          entry.target.style.opacity = '1';
           entry.target.style.transform = 'translateY(0)';
           observer.unobserve(entry.target);
         }
@@ -230,15 +254,20 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll(
       '.section-header, .product-card, .how-step, .recipe-card, .testimonial-card'
     ).forEach(el => {
-      el.style.opacity   = '0';
-      el.style.transform = 'translateY(20px)';
-      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-      observer.observe(el);
+      const rect = el.getBoundingClientRect();
+      const alreadyVisible = rect.top < window.innerHeight && rect.bottom > 0;
+      if (!alreadyVisible) {
+        // Only animate elements that start below the fold
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(el);
+      }
     });
   }
 });
 
-// ── Dynamic copyright year ─────────────────────────────────
+// ── Dynamic copyright year ────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.copy-year').forEach(function(el) {
     el.textContent = new Date().getFullYear();

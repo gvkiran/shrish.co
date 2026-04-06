@@ -71,11 +71,11 @@ function buildCustomerEmail(order) {
       <div style="padding:32px 12px;">
         <div style="max-width:680px; margin:0 auto; background:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.08);">
           
-          <div style="background:#b87512; padding:28px 24px 24px; text-align:left;">
+          <div style="background:#b87512; padding:28px 24px 24px; text-align:center;">
             <img
               src="${SHRISH_LOGO_URL}"
               alt="Shrish"
-              style="display:block; width:68px; height:68px; object-fit:contain; margin:0 0 16px 0;"
+              style="display:block; width:110px; height:110px; object-fit:contain; margin:0 auto 16px auto;"
             />
             <div style="font-size:12px; letter-spacing:1.6px; font-weight:700; color:#f8ebd4; text-transform:uppercase;">
               SHRISH LLC
@@ -183,11 +183,11 @@ function buildAdminEmail(order) {
       <div style="padding:32px 12px;">
         <div style="max-width:680px; margin:0 auto; background:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.08);">
           
-          <div style="background:#2f2a23; padding:24px;">
+          <div style="background:#2f2a23; padding:24px; text-align:center;">
             <img
               src="${SHRISH_LOGO_URL}"
               alt="Shrish"
-              style="display:block; width:64px; height:64px; object-fit:contain; margin:0 0 14px 0;"
+              style="display:block; width:100px; height:100px; object-fit:contain; margin:0 auto 14px auto;"
             />
             <div style="font-size:12px; letter-spacing:1.6px; font-weight:700; color:#d8c9b2; text-transform:uppercase;">
               New Shrish Order
