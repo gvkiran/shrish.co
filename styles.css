@@ -54,16 +54,35 @@ a  { color: inherit; text-decoration: none; }
 .section-cta    { text-align: center; margin-top: 48px; }
 
 /* ── BUTTONS ── */
-.btn-primary {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: var(--saffron); color: var(--white);
-  padding: 14px 32px; border-radius: 50px; font-family: var(--font-body);
-  font-size: 15px; font-weight: 600; letter-spacing: 0.5px;
-  border: 2px solid var(--saffron); cursor: pointer;
+.btn-primary,
+.btn-primary:link,
+.btn-primary:visited {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--saffron);
+  color: var(--white);
+  padding: 14px 32px;
+  border-radius: 50px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border: 2px solid var(--saffron);
+  cursor: pointer;
   transition: var(--transition);
+  text-decoration: none;
 }
-.btn-primary:hover { background: var(--saffron-d); border-color: var(--saffron-d); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(200,121,26,0.35); }
 
+.btn-primary:hover,
+.btn-primary:focus {
+  background: var(--saffron-d);
+  border-color: var(--saffron-d);
+  color: var(--white);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(200,121,26,0.35);
+  text-decoration: none;
+}
 .btn-ghost {
   display: inline-flex; align-items: center; gap: 8px;
   background: rgba(255,255,255,0.15); color: var(--white);
