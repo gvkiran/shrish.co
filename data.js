@@ -224,7 +224,7 @@ const SHRISH_DATA = {
 
   orderForm: {
     duplicateCheckField: "phone",
-    confirmationMessage: "🥭 Thank you! Your order has been placed. We'll contact you to confirm pickup details. Payment collected at pickup — no card needed."
+    confirmationMessage: "🥭 Thank you! Your order has been placed. Please watch for my updates on the WhatsApp group for pickup details. If you’re not part of the group yet, please join using the link below. Payment collected at pickup"
   }
 };
 
