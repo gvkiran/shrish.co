@@ -152,7 +152,7 @@ button.btn-primary:active {
 }
 
 .logo-img {
-  height: 155px;
+  height: 80px;
   width: auto;
   object-fit: contain;
 }
@@ -187,6 +187,31 @@ button.btn-primary:active {
   justify-content: flex-end;
   min-width: 220px;
   margin-right: 0;
+}
+
+/* ── NAV CART BUTTON ── */
+.nav-cart-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(200,121,26,0.1);
+  border-radius: 50px;
+  transition: var(--transition);
+  text-decoration: none;
+}
+.nav-cart-btn:hover { background: rgba(200,121,26,0.2); }
+.nav-cart-icon { font-size: 20px; line-height: 1; }
+.nav-cart-badge {
+  background: var(--saffron);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 50px;
+  min-width: 20px;
+  text-align: center;
+  line-height: 1.4;
 }
 
 /* move cart to far right */
@@ -270,7 +295,7 @@ button.btn-primary:active {
   }
 
   .logo-img {
-    height: 128px;
+    height: 80px;
   }
 
   .nav-links {

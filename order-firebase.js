@@ -1,4 +1,4 @@
-import { db, collection, addDoc, query, where, getDocs, limit, serverTimestamp, normalizePhone, escapeHtml, formatCurrency } from './firebase-app.js';
+import { db, collection, doc, addDoc, query, where, getDocs, limit, runTransaction, serverTimestamp, normalizePhone, escapeHtml, formatCurrency } from './firebase-app.js';
 
 let cart = JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
 let selectedLoc = '';
@@ -17,7 +17,7 @@ function renderCartReview() {
   const container = document.getElementById('cartReviewContainer');
   if (!container) return;
   if (!cart.length) {
-    container.innerHTML = `<div class="cart-empty-note"><div class="en-icon">🛒</div><p>Your cart is empty. <a href="shop.html" style="color:var(--saffron);font-weight:700">Go back to shop</a></p></div>`;
+    container.innerHTML = `<div class="cart-empty-note"><div class="en-icon">ð</div><p>Your cart is empty. <a href="shop.html" style="color:var(--saffron);font-weight:700">Go back to shop</a></p></div>`;
     return;
   }
   const totalQty = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
@@ -29,19 +29,19 @@ function renderCartReview() {
     cart
       .map((item) => {
         const imgHtml = item.image
-          ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" onerror="this.parentElement.textContent='🥭'">`
-          : '🥭';
+          ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" onerror="this.parentElement.textContent='ð¥­'">`
+          : 'ð¥­';
         return `<div class="review-item">
   <div class="ri-thumb">${imgHtml}</div>
   <div class="ri-info">
     <div class="ri-name">${escapeHtml(item.name)}</div>
-    <div class="ri-price">${escapeHtml(item.price)} · ${escapeHtml(item.unit)}</div>
+    <div class="ri-price">${escapeHtml(item.price)} Â· ${escapeHtml(item.unit)}</div>
   </div>
   <div class="ri-qty-ctrl">
-    <button class="ri-qty-btn" data-id="${escapeHtml(item.id)}" data-delta="-1">−</button>
+    <button class="ri-qty-btn" data-id="${escapeHtml(item.id)}" data-delta="-1">â</button>
     <span>${item.qty}</span>
     <button class="ri-qty-btn" data-id="${escapeHtml(item.id)}" data-delta="1">+</button>
-    <button class="ri-remove" data-id="${escapeHtml(item.id)}" title="Remove">✕</button>
+    <button class="ri-remove" data-id="${escapeHtml(item.id)}" title="Remove">â</button>
   </div>
 </div>`;
       })
@@ -88,7 +88,7 @@ function rebuildErrorBanner() {
   if (document.getElementById('err-email')?.style.display === 'block')
     errors.push(document.getElementById('err-email').textContent || 'Valid email required');
   if (!selectedLoc) errors.push('Please select a pickup location (Short Pump or Chesterfield)');
-  if (!cart.length) errors.push('Your cart is empty — go back to shop and add items');
+  if (!cart.length) errors.push('Your cart is empty â go back to shop and add items');
   if (!errors.length) {
     banner.className = 'error-banner';
     return;
@@ -131,7 +131,7 @@ async function hasDuplicatePendingOrder(phone) {
     const snapshot = await getDocs(duplicateQuery);
     return !snapshot.empty;
   } catch (e) {
-    // Permission denied — can't check, assume no duplicate and let order proceed
+    // Permission denied â can't check, assume no duplicate and let order proceed
     console.warn('Duplicate check skipped (permissions):', e.message);
     return false;
   }
@@ -166,7 +166,7 @@ function bindFormUi() {
         phoneCounter.textContent = `${digits.length}/10 digits`;
         phoneCounter.className = 'phone-counter bad';
       } else {
-        phoneCounter.textContent = `✓ ${digits.length} digits`;
+        phoneCounter.textContent = `â ${digits.length} digits`;
         phoneCounter.className = 'phone-counter ok';
         document.getElementById('err-phone').style.display = 'none';
         phoneInput.classList.remove('error');
@@ -177,7 +177,7 @@ function bindFormUi() {
       if (!phoneInput.value.trim()) return;
       const errEl = document.getElementById('err-phone');
       if (digits.length < 10) {
-        errEl.textContent = `Too short — need 10 digits, you entered ${digits.length}`;
+        errEl.textContent = `Too short â need 10 digits, you entered ${digits.length}`;
         errEl.style.display = 'block';
         phoneInput.classList.add('error');
       } else {
@@ -196,8 +196,8 @@ function bindFormUi() {
       const valid = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(val);
       if (!valid) {
         errEl.textContent = val.includes('@')
-          ? 'Invalid format — check after the @ (e.g. name@gmail.com)'
-          : 'Missing @ symbol — try name@gmail.com';
+          ? 'Invalid format â check after the @ (e.g. name@gmail.com)'
+          : 'Missing @ symbol â try name@gmail.com';
         errEl.style.display = 'block';
         emailInput.classList.add('error');
       } else {
@@ -230,20 +230,20 @@ async function submitOrder() {
       'phone',
       phoneDigits.length >= 10 && phoneDigits.length <= 15,
       phoneDigits.length < 10
-        ? `Phone too short — need 10 digits, you entered ${phoneDigits.length}`
+        ? `Phone too short â need 10 digits, you entered ${phoneDigits.length}`
         : 'Invalid phone number'
     ) && ok;
   ok =
     validateField(
       'email',
       emailValid,
-      email.includes('@') ? 'Invalid email format — e.g. name@gmail.com' : 'Missing @ — e.g. name@gmail.com'
+      email.includes('@') ? 'Invalid email format â e.g. name@gmail.com' : 'Missing @ â e.g. name@gmail.com'
     ) && ok;
 
   if (!cart.length) {
     const banner = document.getElementById('errorBanner');
     const list = document.getElementById('errorList');
-    list.innerHTML = '<li>Your cart is empty — go back to shop and add items first</li>';
+    list.innerHTML = '<li>Your cart is empty â go back to shop and add items first</li>';
     banner.className = 'error-banner show hard-error';
     banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
@@ -271,9 +271,19 @@ async function submitOrder() {
       return;
     }
 
+    // Sequential order ID using a Firestore atomic counter
+    // Starts at 671500 on first ever order; increments by 1 each time
+    const counterRef = doc(db, 'counters', 'orders');
+    const orderNumber = await runTransaction(db, async (transaction) => {
+      const counterSnap = await transaction.get(counterRef);
+      const nextId = (counterSnap.exists() ? counterSnap.data().lastId : 671499) + 1;
+      transaction.set(counterRef, { lastId: nextId }, { merge: true });
+      return `SHR-${nextId}`;
+    });
 
     const locLabel = selectedLoc === 'shortpump' ? 'Short Pump, VA' : 'Chesterfield, VA';
     const order = {
+      orderNumber,
       firstName,
       lastName,
       fullName: `${firstName} ${lastName}`,
@@ -312,10 +322,10 @@ async function submitOrder() {
 
     document.getElementById('checkoutWrap').style.display = 'none';
     document.getElementById('successScreen').style.display = 'block';
-    document.getElementById('successOrderNum').textContent = 'Order submitted successfully';
+    document.getElementById('successOrderNum').textContent = `Order #${orderNumber}`;
 
     const itemLines = order.items
-      .map((item) => `<div style="font-size:13px">• ${escapeHtml(item.name)} × ${item.qty} box${item.qty !== 1 ? 'es' : ''}</div>`)
+      .map((item) => `<div style="font-size:13px">â¢ ${escapeHtml(item.name)} Ã ${item.qty} box${item.qty !== 1 ? 'es' : ''}</div>`)
       .join('');
     document.getElementById('successSummary').innerHTML = `
       <div class="ss-row"><span>Items</span><span style="display:flex;flex-direction:column;gap:3px">${itemLines}</span></div>
@@ -323,7 +333,7 @@ async function submitOrder() {
       <div class="ss-row"><span>Pickup</span><span>${escapeHtml(locLabel)}</span></div>
       <div class="ss-row"><span>Name</span><span>${escapeHtml(firstName)} ${escapeHtml(lastName)}</span></div>
       <div class="ss-row"><span>Phone</span><span>${escapeHtml(phone)}</span></div>
-      <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">💵 Pay at Pickup</span></div>
+      <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">ðµ Cash at Pickup</span></div>
       <div class="ss-row"><span>Reference</span><span>${escapeHtml(docRef.id)}</span></div>`;
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -338,7 +348,7 @@ async function submitOrder() {
     isSubmitting = false;
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = '🥭 Place Order — Pay at Pickup';
+      submitBtn.textContent = 'ð¥­ Place Order â Pay at Pickup';
     }
   }
 }

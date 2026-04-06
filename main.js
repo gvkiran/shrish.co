@@ -1,15 +1,15 @@
 // ============================================================
-// SHRISH LLC — Main JavaScript v3.1
+// SHRISH LLC â Main JavaScript v3.1
 // Update SHRISH_CONFIG below with your real links
 // ============================================================
 const SHRISH_CONFIG = {
   whatsappNumber: '17653255577',
-  whatsappGroup: 'https://chat.whatsapp.com/EHk3KbL03s4J9zfFIeEOi9', // ✅ WhatsApp group link
-  instagram: 'https://www.instagram.com/richmond_mangos/',            // ✅ Instagram
-  whatsappMessage: "Hi Shrish! I'd like to know more about your mangoes 🥭"
+  whatsappGroup: 'https://chat.whatsapp.com/EHk3KbL03s4J9zfFIeEOi9', // â WhatsApp group link
+  instagram: 'https://www.instagram.com/richmond_mangos/',            // â Instagram
+  whatsappMessage: "Hi Shrish! I'd like to know more about your mangoes ð¥­"
 };
 
-// ── INJECT GLOBAL UI (runs on every page) ─────────────────
+// ââ INJECT GLOBAL UI (runs on every page) âââââââââââââââââ
 function injectGlobalUI() {
   // 1. WhatsApp Floating Button
   const waBtn = document.createElement('a');
@@ -29,7 +29,7 @@ function injectGlobalUI() {
   const topBtn = document.createElement('button');
   topBtn.id = 'backToTop';
   topBtn.setAttribute('aria-label', 'Back to top');
-  topBtn.innerHTML = '↑';
+  topBtn.innerHTML = 'â';
   topBtn.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
   document.body.appendChild(topBtn);
 
@@ -97,7 +97,7 @@ function injectGlobalUI() {
     .sfs-ig:hover { background: linear-gradient(135deg,#f09433,#dc2743,#bc1888); color: white; border-color: transparent; }
     .sfs-wa svg, .sfs-ig svg { width:16px; height:16px; flex-shrink:0; }
 
-    /* ── TOAST FIX (Issue 6) ──────────────────────────────── */
+    /* ââ TOAST FIX (Issue 6) ââââââââââââââââââââââââââââââââ */
     /* The .toast base style exists in shop.html but .show rule was missing */
     .toast {
       position: fixed;
@@ -163,12 +163,12 @@ function injectGlobalUI() {
     const orderLink = document.createElement('a');
     orderLink.href = 'shop.html';
     orderLink.className = 'mobile-order-btn';
-    orderLink.textContent = '🥭 Order Now';
+    orderLink.textContent = 'ð¥­ Order Now';
     navMobile.appendChild(orderLink);
   }
 }
 
-// ── DOM READY ───────────────────────────────────────────────
+// ââ DOM READY âââââââââââââââââââââââââââââââââââââââââââââââ
 document.addEventListener('DOMContentLoaded', () => {
   // Inject global UI
   injectGlobalUI();
@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     link.classList.toggle('active', href === currentPage || (currentPage === '' && href === 'index.html'));
   });
 
-  // ── Homepage product grid (with real images) ───────────────
+  // ââ Homepage product grid (with real images) âââââââââââââââ
   const productsGrid = document.getElementById('productsGrid');
   if (productsGrid && window.SHRISH_DATA) {
     const mangoes = SHRISH_DATA.products.filter(p => p.category === 'mangoes');
@@ -218,18 +218,18 @@ document.addEventListener('DOMContentLoaded', () => {
           ${p.tag ? `<div class="product-card-badge">${p.tag}</div>` : ''}
           <div class="product-card-img" style="padding:0;overflow:hidden;${p.image ? '' : 'display:flex;align-items:center;justify-content:center'}">
             ${imgHtml}
-            <span ${fallbackStyle} style="font-size:56px;display:flex;align-items:center;justify-content:center;width:100%;height:100%">🥭</span>
+            <span ${fallbackStyle} style="font-size:56px;display:flex;align-items:center;justify-content:center;width:100%;height:100%">ð¥­</span>
           </div>
           <div class="product-card-body">
             <h3>${p.name}</h3>
-            <p>${p.description.slice(0, 80)}…</p>
+            <p>${p.description.slice(0, 80)}â¦</p>
             <div class="product-card-footer">
               <div>
                 <div class="product-price">${p.price}</div>
                 <div class="product-unit">${p.unit}</div>
               </div>
               <span class="product-status-badge ${p.available ? 'available' : 'unavailable'}">
-                ${p.available ? '✓ Available' : 'Sold Out'}
+                ${p.available ? 'â Available' : 'Sold Out'}
               </span>
             </div>
           </div>
@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ── Scroll reveal animations (FIXED: skip already-visible elements) ──
+  // ââ Scroll reveal animations (FIXED: skip already-visible elements) ââ
   // Issue 5 fix: only hide elements that are BELOW the fold.
   // Elements already on screen when the page loads stay visible immediately.
   if ('IntersectionObserver' in window) {
@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// ── Dynamic copyright year ────────────────────────────────────
+// ââ Dynamic copyright year ââââââââââââââââââââââââââââââââââââ
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.copy-year').forEach(function(el) {
     el.textContent = new Date().getFullYear();
