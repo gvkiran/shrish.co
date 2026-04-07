@@ -1,4 +1,4 @@
-import { db, collection, onSnapshot, escapeHtml } from './firebase-app.js';
+import { db, collection, doc, getDoc, onSnapshot, setDoc, serverTimestamp, escapeHtml } from './firebase-app.js';
 
 let homeModalProductId = null;
 let homeModalQty = 1;
@@ -36,6 +36,75 @@ function showToast(message) {
   showToast.timeoutId = window.setTimeout(() => {
     toast.classList.remove('show');
   }, 2200);
+}
+
+function setSubscribeMessage(type, message) {
+  const el = document.getElementById('footerSubscribeMessage');
+  if (!el) return;
+  el.className = `subscribe-message ${type}`;
+  el.textContent = message;
+}
+
+function normalizeEmail(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(value));
+}
+
+async function subscribeFooterEmail(event) {
+  event.preventDefault();
+
+  const emailInput = document.getElementById('footerSubscribeEmail');
+  const submitButton = document.getElementById('footerSubscribeButton');
+  if (!emailInput || !submitButton) return;
+
+  const email = normalizeEmail(emailInput.value);
+  if (!isValidEmail(email)) {
+    setSubscribeMessage('error', 'Please enter a valid email address.');
+    emailInput.focus();
+    return;
+  }
+
+  submitButton.disabled = true;
+  setSubscribeMessage('info', 'Saving your subscription...');
+
+  try {
+    const subscriberRef = doc(db, 'email_subscribers', email);
+    const existing = await getDoc(subscriberRef);
+
+    if (existing.exists()) {
+      setSubscribeMessage('info', 'This email is already subscribed for updates.');
+      return;
+    }
+
+    await setDoc(subscriberRef, {
+      email,
+      status: 'subscribed',
+      subscriptionType: 'general',
+      subscriptionLabel: 'General',
+      marketingConsent: true,
+      consentText: 'Subscriber agreed to receive marketing and promotional emails from Shrish via the homepage footer form.',
+      source: 'homepage_footer',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    emailInput.value = '';
+    setSubscribeMessage('success', 'Thanks. You are subscribed for new product updates and promotions.');
+  } catch (error) {
+    console.error('Footer subscribe failed', error);
+    setSubscribeMessage('error', 'We could not save your subscription right now. Please try again in a minute.');
+  } finally {
+    submitButton.disabled = false;
+  }
+}
+
+function initFooterSubscribe() {
+  const form = document.getElementById('footerSubscribeForm');
+  if (!form) return;
+  form.addEventListener('submit', subscribeFooterEmail);
 }
 
 function addToCart(productId, qty = 1) {
@@ -215,6 +284,7 @@ function mergeProducts(baseProducts, docs) {
 }
 
 function init() {
+  initFooterSubscribe();
   if (!window.SHRISH_DATA?.products) return;
   const baseProducts = JSON.parse(JSON.stringify(window.SHRISH_DATA.products));
   updateNavCartState();

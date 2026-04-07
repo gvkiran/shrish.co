@@ -393,10 +393,21 @@ function toggleFaq(el){
     <div class="footer-subscribe">
       <h4>Stay Updated</h4>
       <p>Get notified when new mango varieties arrive.</p>
-      <div class="subscribe-form">
-        <input type="email" placeholder="Your email address">
-        <button>Subscribe</button>
-      </div>
+      <form class="subscribe-form" id="footerSubscribeForm" novalidate>
+        <input
+          type="email"
+          id="footerSubscribeEmail"
+          placeholder="Your email address"
+          autocomplete="email"
+          aria-label="Email address for marketing updates"
+          required
+        >
+        <button type="submit" id="footerSubscribeButton">Subscribe</button>
+      </form>
+      <p class="subscribe-consent" id="footerSubscribeConsent">
+        By subscribing, you agree to receive marketing and promotional emails from Shrish. You can unsubscribe anytime by contacting us.
+      </p>
+      <div class="subscribe-message" id="footerSubscribeMessage" aria-live="polite"></div>
     </div>
   </div>
     <div class="footer-bottom">

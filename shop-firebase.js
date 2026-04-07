@@ -1,4 +1,4 @@
-import { db, collection, onSnapshot, addDoc, serverTimestamp, escapeHtml } from './firebase-app.js';
+import { db, collection, doc, getDoc, onSnapshot, setDoc, serverTimestamp, escapeHtml } from './firebase-app.js';
 
 'use strict';
 
@@ -7,6 +7,7 @@ let activeFilter = 'all';
 let baseProducts = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || []));
 let modalQty = 1;
 let modalProductId = null;
+let notifyTarget = null;
 
 const PRODUCT_IMAGES = {
   alphonso: ['img_alphonso.jpeg'],
@@ -253,20 +254,108 @@ function modalAddToCart() {
 }
 
 async function notifyMe(productId, productName) {
-  const email = window.prompt(`Get notified when "${productName}" is available:\nEnter your email:`);
-  if (!email || !email.includes('@')) return;
+  notifyTarget = { productId, productName };
+  const title = document.getElementById('notifyModalTitle');
+  const text = document.getElementById('notifyModalText');
+  const email = document.getElementById('notifyEmail');
+  const msg = document.getElementById('notifyMessage');
+  const modal = document.getElementById('notifyModal');
+
+  if (title) title.textContent = 'Get Notified';
+  if (text) text.textContent = `Enter your email and we’ll let you know when "${productName}" is available.`;
+  if (email) email.value = '';
+  if (msg) {
+    msg.className = 'notify-message';
+    msg.textContent = '';
+  }
+  if (modal) modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeNotifyModal() {
+  const modal = document.getElementById('notifyModal');
+  const msg = document.getElementById('notifyMessage');
+  if (modal) modal.classList.remove('open');
+  if (msg) {
+    msg.className = 'notify-message';
+    msg.textContent = '';
+  }
+  const productModalOpen = document.getElementById('productModal')?.classList.contains('open');
+  const cartOpen = document.getElementById('cartDrawer')?.classList.contains('open');
+  document.body.style.overflow = productModalOpen || cartOpen ? 'hidden' : '';
+}
+
+function handleNotifyOverlayClick(event) {
+  if (event.target?.id === 'notifyModal') closeNotifyModal();
+}
+
+function setNotifyMessage(type, message) {
+  const el = document.getElementById('notifyMessage');
+  if (!el) return;
+  el.className = `notify-message ${type}`;
+  el.textContent = message;
+}
+
+function normalizeEmail(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(value));
+}
+
+async function submitNotifyRequest(event) {
+  event.preventDefault();
+
+  const emailInput = document.getElementById('notifyEmail');
+  const submitButton = document.getElementById('notifySubmitButton');
+  if (!emailInput || !submitButton || !notifyTarget) return;
+
+  const email = normalizeEmail(emailInput.value);
+  if (!isValidEmail(email)) {
+    setNotifyMessage('error', 'Please enter a valid email address.');
+    emailInput.focus();
+    return;
+  }
+
+  submitButton.disabled = true;
+  setNotifyMessage('info', 'Saving your notification request...');
 
   try {
-    await addDoc(collection(db, 'notify_requests'), {
-      productId,
-      productName,
-      email: email.trim().toLowerCase(),
-      createdAt: serverTimestamp()
+    const docId = `${notifyTarget.productId}__${email.replace(/[^a-z0-9@._-]/gi, '_')}`;
+    const requestRef = doc(db, 'notify_requests', docId);
+    const existing = await getDoc(requestRef);
+
+    if (existing.exists()) {
+      setNotifyMessage('info', 'This email is already subscribed for this product.');
+      return;
+    }
+
+    await setDoc(requestRef, {
+      email,
+      productId: notifyTarget.productId,
+      productName: notifyTarget.productName,
+      subscriptionType: 'product',
+      subscriptionLabel: notifyTarget.productName,
+      status: 'subscribed',
+      marketingConsent: true,
+      consentText: 'Subscriber agreed to receive product availability notifications and related promotional emails from Shrish via the shop notify form.',
+      source: 'shop_notify_modal',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     });
-    showToast(`✓ We'll email ${email} when available!`);
+
+    setNotifyMessage('success', `Thanks. We’ll notify you when "${notifyTarget.productName}" is available.`);
+    emailInput.value = '';
+    showToast(`Saved notification for ${notifyTarget.productName}`);
+    window.setTimeout(() => {
+      closeNotifyModal();
+    }, 1200);
   } catch (error) {
     console.error(error);
-    showToast('Could not save request. Please try again.');
+    setNotifyMessage('error', 'Could not save request right now. Please try again in a minute.');
+  } finally {
+    submitButton.disabled = false;
   }
 }
 
@@ -418,6 +507,12 @@ function subscribeCatalog() {
   });
 }
 
+function bindNotifyForm() {
+  const form = document.getElementById('notifyForm');
+  if (!form) return;
+  form.addEventListener('submit', submitNotifyRequest);
+}
+
 function init() {
   if (!window.SHRISH_DATA?.products) {
     const shopContent = document.getElementById('shopContent');
@@ -427,7 +522,8 @@ function init() {
     return;
   }
 
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeCart(); } });
+  bindNotifyForm();
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeCart(); closeNotifyModal(); } });
   subscribeCatalog();
 }
 
@@ -445,6 +541,8 @@ window.renderCardQty = renderCardQty;
 window.cartQty = cartQty;
 window.cartRemove = cartRemove;
 window.notifyMe = notifyMe;
+window.closeNotifyModal = closeNotifyModal;
+window.handleNotifyOverlayClick = handleNotifyOverlayClick;
 window.goCheckout = goCheckout;
 
 init();

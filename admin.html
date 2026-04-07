@@ -309,6 +309,7 @@
     <div class="admin-tabs">
       <button class="admin-tab active" onclick="switchTab('orders',this)">📋 Orders</button>
       <button class="admin-tab" onclick="switchTab('products',this)">🛒 Manage Products</button>
+      <button class="admin-tab" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
     </div>
 
     <!-- ── ORDERS TAB ── -->
@@ -354,6 +355,31 @@
         <button class="export-data-btn" onclick="exportDataJs()">⬇ Export data.js</button>
       </div>
       <div class="products-manage-grid" id="productsGrid"></div>
+    </div>
+
+    <div id="tab-subscribers" style="display:none;">
+      <div class="orders-toolbar">
+        <h2>Email Subscribers</h2>
+        <div class="toolbar-actions">
+          <button class="toolbar-btn" onclick="exportSubscribersCSV()">⬇ Export CSV</button>
+        </div>
+      </div>
+
+      <div class="orders-table-wrap">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Subscription</th>
+              <th>Source</th>
+              <th>Status</th>
+              <th>Consent</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody id="subscribersBody"></tbody>
+        </table>
+      </div>
     </div>
 
   </div>

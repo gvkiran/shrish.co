@@ -24,8 +24,11 @@ import {
 const state = {
   orders: [],
   products: JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || [])),
+  subscribers: [],
   unsubOrders: null,
-  unsubProducts: null
+  unsubProducts: null,
+  unsubSubscribersGeneral: null,
+  unsubSubscribersProduct: null
 };
 
 function showToast(msg) {
@@ -92,6 +95,7 @@ function renderStats() {
   const totalRevenue = orders.filter((o) => o.status !== 'cancelled').reduce((sum, order) => sum + (order.totalPrice || 0), 0);
   const available = state.products.filter((product) => product.available && !product.displayOnly).length;
   const totalProducts = state.products.filter((product) => !product.displayOnly).length;
+  const totalSubscribers = state.subscribers.length;
 
   document.getElementById('adminStats').innerHTML = `
     <div class="stat-card"><div class="s-label">Total Orders</div><div class="s-value">${total}</div></div>
@@ -99,7 +103,8 @@ function renderStats() {
     <div class="stat-card"><div class="s-label">Fulfilled</div><div class="s-value">${fulfilled}</div></div>
     <div class="stat-card"><div class="s-label">Revenue</div><div class="s-value gold">${formatCurrency(totalRevenue)}</div></div>
     <div class="stat-card"><div class="s-label">Boxes</div><div class="s-value">${totalBoxes}</div></div>
-    <div class="stat-card"><div class="s-label">Products Live</div><div class="s-value">${available} / ${totalProducts}</div></div>`;
+    <div class="stat-card"><div class="s-label">Products Live</div><div class="s-value">${available} / ${totalProducts}</div></div>
+    <div class="stat-card"><div class="s-label">Subscribers</div><div class="s-value">${totalSubscribers}</div></div>`;
 }
 
 function renderOrders() {
@@ -157,6 +162,33 @@ function renderProducts() {
       </div>
       <div class="pm-controls"><label class="toggle-switch"><input type="checkbox" ${product.available ? 'checked' : ''} ${isComingSoon ? 'disabled' : ''} onchange="toggleAvailable('${escapeHtml(product.id)}', this.checked)"><span class="toggle-slider"></span></label><span style="font-size:10px;color:var(--text-light)">${isComingSoon ? 'Soon' : (product.available ? 'Live' : 'Off')}</span></div>
     </div>`;
+  }).join('');
+}
+
+function renderSubscribers() {
+  const tbody = document.getElementById('subscribersBody');
+  if (!tbody) return;
+
+  if (!state.subscribers.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">✉</div><p>No subscribers found.</p></div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = state.subscribers.map((entry) => {
+    const statusLabel = entry.status || 'subscribed';
+    const statusClass = statusLabel === 'subscribed' ? 'status-fulfilled' : 'status-pending';
+    const consent = entry.marketingConsent ? 'Yes' : 'No';
+    const subscription = entry.subscriptionLabel || entry.productName || 'General';
+    const source = entry.source || 'website';
+
+    return `<tr>
+      <td><div class="customer-name">${escapeHtml(entry.email || '—')}</div></td>
+      <td>${escapeHtml(subscription)}</td>
+      <td>${escapeHtml(source)}</td>
+      <td><span class="status-badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
+      <td>${consent}</td>
+      <td>${formatDate(entry.createdAt)}</td>
+    </tr>`;
   }).join('');
 }
 
@@ -249,17 +281,44 @@ function exportCSV() {
   showToast('CSV downloaded');
 }
 
+function exportSubscribersCSV() {
+  const rows = [['Email', 'Subscription Type', 'Subscribed For', 'Source', 'Status', 'Marketing Consent', 'Created']];
+  state.subscribers.forEach((entry) => {
+    rows.push([
+      entry.email || '',
+      entry.subscriptionType || '',
+      entry.subscriptionLabel || entry.productName || 'General',
+      entry.source || '',
+      entry.status || 'subscribed',
+      entry.marketingConsent ? 'Yes' : 'No',
+      formatDate(entry.createdAt)
+    ]);
+  });
+
+  const csv = rows.map((row) => row.map((value) => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `shrish_subscribers_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  showToast('Subscribers CSV downloaded');
+}
+
 function switchTab(tab, btn) {
   document.querySelectorAll('.admin-tab').forEach((button) => button.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('tab-orders').style.display = tab === 'orders' ? 'block' : 'none';
   document.getElementById('tab-products').style.display = tab === 'products' ? 'block' : 'none';
+  document.getElementById('tab-subscribers').style.display = tab === 'subscribers' ? 'block' : 'none';
   if (tab === 'products') renderProducts();
+  if (tab === 'subscribers') renderSubscribers();
 }
 
 function subscribeData() {
   state.unsubOrders?.();
   state.unsubProducts?.();
+  state.unsubSubscribersGeneral?.();
+  state.unsubSubscribersProduct?.();
 
   state.unsubOrders = onSnapshot(query(collection(db, 'orders'), orderBy('createdAt', 'desc')), (snapshot) => {
     state.orders = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
@@ -278,6 +337,34 @@ function subscribeData() {
     console.error(error);
     showToast('Products sync failed');
   });
+
+  const syncSubscribers = () => {
+    const merged = [...state._generalSubscribers || [], ...state._productSubscribers || []]
+      .sort((a, b) => {
+        const aTime = a?.createdAt?.toDate ? a.createdAt.toDate().getTime() : new Date(a?.createdAt || 0).getTime();
+        const bTime = b?.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b?.createdAt || 0).getTime();
+        return bTime - aTime;
+      });
+    state.subscribers = merged;
+    renderSubscribers();
+    renderStats();
+  };
+
+  state.unsubSubscribersGeneral = onSnapshot(collection(db, 'email_subscribers'), (snapshot) => {
+    state._generalSubscribers = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
+    syncSubscribers();
+  }, (error) => {
+    console.error(error);
+    showToast('General subscribers sync failed');
+  });
+
+  state.unsubSubscribersProduct = onSnapshot(collection(db, 'notify_requests'), (snapshot) => {
+    state._productSubscribers = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
+    syncSubscribers();
+  }, (error) => {
+    console.error(error);
+    showToast('Product notifications sync failed');
+  });
 }
 
 function bindUi() {
@@ -290,6 +377,8 @@ function initAuthWatch() {
     if (!user) {
       state.unsubOrders?.();
       state.unsubProducts?.();
+      state.unsubSubscribersGeneral?.();
+      state.unsubSubscribersProduct?.();
       setLoggedInUi(false);
       return;
     }
@@ -310,6 +399,7 @@ window.updatePickupDate = updatePickupDate;
 window.updatePayment = updatePayment;
 window.clearFulfilled = clearFulfilled;
 window.exportCSV = exportCSV;
+window.exportSubscribersCSV = exportSubscribersCSV;
 
 bindUi();
 initAuthWatch();
