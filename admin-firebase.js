@@ -114,6 +114,32 @@ function orderDateKey(order) {
   return raw.toISOString().slice(0, 10);
 }
 
+function batchNameFromDate(dateString) {
+  if (!dateString) return '';
+  return `SHR-BATCH-${dateString}`;
+}
+
+function todayDateInputValue() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function formatDateTime(value) {
+  if (!value) return '--';
+  const date = value?.toDate ? value.toDate() : new Date(value);
+  if (Number.isNaN(date.getTime())) return '--';
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  });
+}
+
+function moneyValue(value) {
+  return Number(value || 0);
+}
+
 function getOrdersForSheet(sheet = state.orderSheet) {
   if (sheet === 'active') return state.orders.filter((order) => (order.status || 'pending') === 'pending');
   if (sheet === 'processed') return state.orders.filter((order) => ['fulfilled', 'cancelled'].includes(order.status || 'pending'));
@@ -160,10 +186,14 @@ function updateOrdersSheetUi() {
   const help = document.getElementById('ordersHelpText');
   const bulkButton = document.getElementById('bulkFulfillBtn');
   const sheetSwitcher = document.getElementById('ordersSheetSwitcher');
+  const filterStatus = document.getElementById('filterStatus');
   if (title) title.textContent = config[state.orderSheet].title;
   if (help) help.textContent = config[state.orderSheet].help;
   if (bulkButton) bulkButton.style.display = state.orderSheet === 'active' ? 'inline-flex' : 'none';
   if (sheetSwitcher) sheetSwitcher.style.display = document.getElementById('tab-orders')?.style.display === 'none' ? 'none' : 'flex';
+  if (filterStatus && state.orderSheet === 'active' && filterStatus.value === 'all') {
+    filterStatus.value = 'pending';
+  }
 }
 
 function renderOrders() {
@@ -186,6 +216,25 @@ function renderOrders() {
 
     const statusClass = `status-${order.status || 'pending'}`;
     const statusLabel = (order.status || 'pending').charAt(0).toUpperCase() + (order.status || 'pending').slice(1);
+    const paymentMethod = order.paymentMethod || '';
+    const paymentCollected = Boolean(order.paymentCollected);
+    const fallbackBatch = batchNameFromDate(todayDateInputValue());
+    const paymentCellHtml = state.orderSheet === 'active'
+      ? `<div class="payment-note">Collect at pickup. Add method after processing.</div>`
+      : `<div class="payment-cell">
+          <select class="payment-select" onchange="updatePaymentMethod('${escapeHtml(order.id)}', this.value)">
+            <option value="" ${paymentMethod === '' ? 'selected' : ''}>Select method</option>
+            <option value="cash" ${paymentMethod === 'cash' ? 'selected' : ''}>Cash</option>
+            <option value="zelle" ${paymentMethod === 'zelle' ? 'selected' : ''}>Zelle</option>
+            <option value="card" ${paymentMethod === 'card' ? 'selected' : ''}>Card</option>
+          </select>
+          <label class="payment-collected">
+            <input type="checkbox" ${paymentCollected ? 'checked' : ''} onchange="togglePaymentCollected('${escapeHtml(order.id)}', this.checked)">
+            Collected
+          </label>
+          <div class="payment-note">${escapeHtml(order.accountingBatch || fallbackBatch)}</div>
+          <div class="payment-note">${escapeHtml(order.paymentCollectedAt ? formatDateTime(order.paymentCollectedAt) : '--')}</div>
+        </div>`;
 
     return `<tr id="row-${escapeHtml(order.id)}">
       <td><div class="order-id">${escapeHtml(order.orderNumber || order.id)}</div></td>
@@ -195,7 +244,7 @@ function renderOrders() {
       <td><div class="total-amount">${formatCurrency(order.totalPrice || 0)}</div></td>
       <td style="font-size:13px">${escapeHtml(order.locationLabel || order.location || '—')}</td>
       <td><input type="date" class="pickup-date-input" value="${formatDateInput(order.pickupDate)}" onchange="updatePickupDate('${escapeHtml(order.id)}', this.value)"></td>
-      <td><select class="payment-select" onchange="updatePayment('${escapeHtml(order.id)}', this.value)"><option value="pending" ${order.payment === 'pending' ? 'selected' : ''}>💰 Pending</option><option value="paid" ${order.payment === 'paid' ? 'selected' : ''}>✅ Paid</option></select></td>
+      <td>${paymentCellHtml}</td>
       <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
       <td><div class="action-btns"><button class="action-btn btn-fulfill" onclick="setStatus('${escapeHtml(order.id)}','fulfilled')">✓ Fulfill</button><button class="action-btn btn-cancel" onclick="setStatus('${escapeHtml(order.id)}','cancelled')">✕ Cancel</button><button class="action-btn btn-reset" onclick="setStatus('${escapeHtml(order.id)}','pending')">↺ Reset</button></div></td>
     </tr>`;
@@ -307,9 +356,41 @@ async function updatePickupDate(id, pickupDate) {
   showToast('Pickup date saved');
 }
 
-async function updatePayment(id, payment) {
-  await updateDoc(doc(db, 'orders', id), { payment, updatedAt: new Date().toISOString() });
-  showToast('Payment status updated');
+async function updatePaymentMethod(id, paymentMethod) {
+  const order = state.orders.find((item) => item.id === id);
+  if (!order) return;
+
+  const payload = {
+    paymentMethod: paymentMethod || '',
+    payment: paymentMethod ? 'paid' : 'pending',
+    accountingBatch: paymentMethod ? (order.accountingBatch || batchNameFromDate(todayDateInputValue())) : '',
+    updatedAt: new Date().toISOString()
+  };
+
+  if (!paymentMethod) {
+    payload.paymentCollected = false;
+    payload.paymentCollectedAt = null;
+  }
+
+  await updateDoc(doc(db, 'orders', id), payload);
+  showToast(paymentMethod ? 'Payment method updated' : 'Payment method cleared');
+}
+
+async function togglePaymentCollected(id, collected) {
+  const order = state.orders.find((item) => item.id === id);
+  if (!order) return;
+
+  const hasMethod = Boolean(order.paymentMethod);
+  const payload = {
+    paymentCollected: collected && hasMethod,
+    paymentCollectedAt: collected && hasMethod ? new Date().toISOString() : null,
+    accountingBatch: collected && hasMethod ? (order.accountingBatch || batchNameFromDate(todayDateInputValue())) : (order.accountingBatch || ''),
+    payment: collected && hasMethod ? 'paid' : (order.paymentMethod ? 'paid' : 'pending'),
+    updatedAt: new Date().toISOString()
+  };
+
+  await updateDoc(doc(db, 'orders', id), payload);
+  showToast(collected && hasMethod ? 'Payment marked collected' : 'Payment marked uncollected');
 }
 
 async function clearFulfilled() {
@@ -452,6 +533,70 @@ function printActiveOrders() {
   printWindow.document.close();
 }
 
+function renderAccounting() {
+  const dateInput = document.getElementById('accountingDate');
+  const statsEl = document.getElementById('accountingStats');
+  const bodyEl = document.getElementById('accountingBody');
+  const batchNameEl = document.getElementById('accountingBatchName');
+
+  if (!dateInput || !statsEl || !bodyEl || !batchNameEl) return;
+
+  if (!dateInput.value) dateInput.value = todayDateInputValue();
+  const batchName = batchNameFromDate(dateInput.value);
+  batchNameEl.textContent = batchName;
+
+  const batchOrders = state.orders
+    .filter((order) => (order.accountingBatch || '') === batchName)
+    .sort((a, b) => {
+      const aTime = a?.paymentCollectedAt ? new Date(a.paymentCollectedAt).getTime() : 0;
+      const bTime = b?.paymentCollectedAt ? new Date(b.paymentCollectedAt).getTime() : 0;
+      return bTime - aTime;
+    });
+
+  const expectedTotal = batchOrders.reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
+  const collectedOrders = batchOrders.filter((order) => order.paymentCollected && order.paymentMethod);
+  const collectedTotal = collectedOrders.reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
+  const cashTotal = collectedOrders.filter((order) => order.paymentMethod === 'cash').reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
+  const zelleTotal = collectedOrders.filter((order) => order.paymentMethod === 'zelle').reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
+  const cardTotal = collectedOrders.filter((order) => order.paymentMethod === 'card').reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
+  const unpaidCount = batchOrders.filter((order) => !order.paymentCollected).length;
+
+  const actualCash = moneyValue(document.getElementById('actualCash')?.value);
+  const actualZelle = moneyValue(document.getElementById('actualZelle')?.value);
+  const actualCard = moneyValue(document.getElementById('actualCard')?.value);
+  const actualTotal = actualCash + actualZelle + actualCard;
+  const mismatch = actualTotal - collectedTotal;
+
+  statsEl.innerHTML = `
+    <div class="accounting-card"><div class="a-label">Batch Orders</div><div class="a-value">${batchOrders.length}</div></div>
+    <div class="accounting-card"><div class="a-label">Expected Total</div><div class="a-value accent">${formatCurrency(expectedTotal)}</div></div>
+    <div class="accounting-card"><div class="a-label">Collected Total</div><div class="a-value good">${formatCurrency(collectedTotal)}</div></div>
+    <div class="accounting-card"><div class="a-label">Cash Total</div><div class="a-value">${formatCurrency(cashTotal)}</div></div>
+    <div class="accounting-card"><div class="a-label">Zelle Total</div><div class="a-value">${formatCurrency(zelleTotal)}</div></div>
+    <div class="accounting-card"><div class="a-label">Card Total</div><div class="a-value">${formatCurrency(cardTotal)}</div></div>
+    <div class="accounting-card"><div class="a-label">Unpaid Orders</div><div class="a-value warn">${unpaidCount}</div></div>
+    <div class="accounting-card"><div class="a-label">Actual Counted</div><div class="a-value">${formatCurrency(actualTotal)}</div></div>
+    <div class="accounting-card"><div class="a-label">Difference</div><div class="a-value ${Math.abs(mismatch) < 0.005 ? 'good' : 'warn'}">${formatCurrency(mismatch)}</div></div>
+  `;
+
+  if (!batchOrders.length) {
+    bodyEl.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📒</div><p>No orders are assigned to this batch yet.</p></div></td></tr>';
+    return;
+  }
+
+  bodyEl.innerHTML = batchOrders.map((order) => `
+    <tr>
+      <td><div class="order-id">${escapeHtml(order.orderNumber || order.id)}</div></td>
+      <td><div class="customer-name">${escapeHtml(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim())}</div><div class="customer-phone">${escapeHtml(order.phone || '')}</div></td>
+      <td><div class="total-amount">${formatCurrency(order.totalPrice || 0)}</div></td>
+      <td>${escapeHtml(order.paymentMethod || '--')}</td>
+      <td>${order.paymentCollected ? '<span class="status-badge status-fulfilled">Collected</span>' : '<span class="status-badge status-pending">Pending</span>'}</td>
+      <td>${escapeHtml(formatDateTime(order.paymentCollectedAt))}</td>
+      <td>${escapeHtml(order.accountingBatch || batchName)}</td>
+    </tr>
+  `).join('');
+}
+
 function exportSubscribersCSV() {
   const rows = [['Email', 'Subscription Type', 'Subscribed For', 'Source', 'Status', 'Marketing Consent', 'Created']];
   state.subscribers.forEach((entry) => {
@@ -485,6 +630,7 @@ function switchTab(tab, btn) {
   if (tab === 'products') renderProducts();
   if (tab === 'orders') renderOrders();
   if (tab === 'subscribers') renderSubscribers();
+  if (tab === 'accounting') renderAccounting();
   updateOrdersSheetUi();
 }
 
@@ -497,6 +643,7 @@ function subscribeData() {
   state.unsubOrders = onSnapshot(query(collection(db, 'orders'), orderBy('createdAt', 'desc')), (snapshot) => {
     state.orders = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
     renderOrders();
+    renderAccounting();
   }, (error) => {
     console.error(error);
     showToast('Orders sync failed');
@@ -543,6 +690,7 @@ function subscribeData() {
 
 function bindUi() {
   document.getElementById('filterStatus')?.addEventListener('change', renderOrders);
+  document.getElementById('accountingDate')?.addEventListener('change', renderAccounting);
   document.getElementById('adminPw')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
 }
 
@@ -570,13 +718,16 @@ window.saveProductPrice = saveProductPrice;
 window.toggleAvailable = toggleAvailable;
 window.setStatus = setStatus;
 window.updatePickupDate = updatePickupDate;
-window.updatePayment = updatePayment;
+window.updatePaymentMethod = updatePaymentMethod;
+window.togglePaymentCollected = togglePaymentCollected;
 window.clearFulfilled = clearFulfilled;
 window.setOrderSheet = setOrderSheet;
 window.markFilteredActiveFulfilled = markFilteredActiveFulfilled;
 window.printActiveOrders = printActiveOrders;
 window.exportCSV = exportCSV;
 window.exportSubscribersCSV = exportSubscribersCSV;
+window.renderAccounting = renderAccounting;
 
 bindUi();
 initAuthWatch();
+

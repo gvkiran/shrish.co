@@ -219,6 +219,13 @@
       cursor: pointer; transition: border-color var(--transition);
     }
     .payment-select:focus { border-color: var(--saffron); }
+    .payment-cell { display: flex; flex-direction: column; gap: 6px; min-width: 138px; }
+    .payment-collected {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--text-light);
+    }
+    .payment-collected input { accent-color: var(--saffron); }
+    .payment-note { font-size: 10px; color: var(--text-light); line-height: 1.4; }
 
     /* Action buttons */
     .action-btns { display: flex; flex-direction: column; gap: 6px; }
@@ -312,10 +319,47 @@
       transition: all 0.3s ease; pointer-events: none;
     }
     .admin-toast.show { transform: none; opacity: 1; }
+    .accounting-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .accounting-batch {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--white); border: 1.5px solid rgba(200,121,26,0.14);
+      border-radius: 999px; padding: 10px 16px; font-size: 13px; font-weight: 700; color: var(--saffron);
+      box-shadow: 0 8px 18px rgba(26,18,8,0.05);
+    }
+    .accounting-grid {
+      display: grid; grid-template-columns: repeat(6, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px;
+    }
+    .accounting-card {
+      background: var(--white); border-radius: 20px; padding: 18px 18px; box-shadow: var(--shadow); border: 1px solid rgba(200,121,26,0.08);
+    }
+    .accounting-card .a-label { font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text-light); margin-bottom: 8px; }
+    .accounting-card .a-value { font-family: var(--font-display); font-size: 1.9rem; color: var(--dark); line-height: 1; font-weight: 700; }
+    .accounting-card .a-value.accent { color: var(--saffron); }
+    .accounting-card .a-value.good { color: #2E7D32; }
+    .accounting-card .a-value.warn { color: #C62828; }
+    .tally-box {
+      background: linear-gradient(180deg, #fff, #fbf5eb);
+      border: 1.5px solid rgba(200,121,26,0.14);
+      border-radius: 20px; padding: 18px 20px; margin-bottom: 20px;
+    }
+    .tally-box h3 { font-family: var(--font-display); font-size: 22px; color: var(--dark); margin-bottom: 12px; }
+    .tally-grid {
+      display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 14px;
+    }
+    .tally-field label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-light); margin-bottom: 6px; }
+    .tally-field input {
+      width: 100%; padding: 11px 12px; border-radius: 14px; border: 1.5px solid #E0D0B8;
+      background: var(--white); font-size: 14px; font-family: var(--font-body); color: var(--text); outline: none;
+    }
+    .tally-field input:focus { border-color: var(--saffron); }
 
     @media (max-width: 1320px) {
       .admin-layout { grid-template-columns: 250px minmax(0, 1fr); }
       .admin-stats { grid-template-columns: repeat(4, minmax(170px, 1fr)); }
+      .accounting-grid { grid-template-columns: repeat(3, minmax(170px, 1fr)); }
     }
     @media (max-width: 1200px) {
       .admin-stats { grid-template-columns: repeat(4, minmax(170px, 1fr)); }
@@ -326,6 +370,8 @@
       .admin-tabs { flex-direction: row; flex-wrap: wrap; }
       .sheet-switcher { flex-direction: row; flex-wrap: wrap; margin-left: 0; }
       .admin-stats { grid-template-columns: repeat(3, 1fr); }
+      .accounting-grid { grid-template-columns: repeat(2, 1fr); }
+      .tally-grid { grid-template-columns: 1fr; }
       .admin-wrap { padding: 28px 18px 60px; }
     }
     @media (max-width: 600px) {
@@ -462,11 +508,51 @@
         </div>
 
         <div id="tab-accounting" style="display:none;">
-          <div class="orders-toolbar">
+          <div class="accounting-toolbar">
             <h2>Accounting</h2>
+            <div class="toolbar-actions">
+              <input type="date" id="accountingDate" class="filter-input" onchange="renderAccounting()" />
+              <div class="accounting-batch" id="accountingBatchName">SHR-BATCH-YYYY-MM-DD</div>
+            </div>
           </div>
-          <div class="export-banner">
-            <p>Accounting will live here next. We can use this section for batch totals, payment method summary, collected amount, and tally checks for each delivery day.</p>
+          <div class="accounting-grid" id="accountingStats"></div>
+
+          <div class="tally-box">
+            <h3>Tally Check</h3>
+            <div class="tally-grid">
+              <div class="tally-field">
+                <label for="actualCash">Actual Cash Counted</label>
+                <input type="number" id="actualCash" min="0" step="0.01" placeholder="0.00" oninput="renderAccounting()">
+              </div>
+              <div class="tally-field">
+                <label for="actualZelle">Actual Zelle Received</label>
+                <input type="number" id="actualZelle" min="0" step="0.01" placeholder="0.00" oninput="renderAccounting()">
+              </div>
+              <div class="tally-field">
+                <label for="actualCard">Actual Card Total</label>
+                <input type="number" id="actualCard" min="0" step="0.01" placeholder="0.00" oninput="renderAccounting()">
+              </div>
+            </div>
+          </div>
+
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Customer</th>
+                  <th>Total</th>
+                  <th>Method</th>
+                  <th>Collected</th>
+                  <th>Payment Time</th>
+                  <th>Batch</th>
+                </tr>
+              </thead>
+              <tbody id="accountingBody"></tbody>
+            </table>
+          </div>
+          <div class="export-banner" style="margin-top:18px;">
+            <p>Processed orders with payment method and collected status are included in the daily batch totals. Batch format: <strong>SHR-BATCH-YYYY-MM-DD</strong>.</p>
           </div>
         </div>
       </main>
