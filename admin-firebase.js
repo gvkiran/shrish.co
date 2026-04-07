@@ -4,6 +4,7 @@ import {
   collection,
   doc,
   getDocs,
+  deleteDoc,
   setDoc,
   updateDoc,
   query,
@@ -184,7 +185,25 @@ async function toggleAvailable(id, available) {
 }
 
 async function setStatus(id, status) {
+  const order = state.orders.find((item) => item.id === id);
+
   await updateDoc(doc(db, 'orders', id), { status, updatedAt: new Date().toISOString() });
+
+  if (order?.phoneDigits) {
+    const lockRef = doc(db, 'order_locks', order.phoneDigits);
+
+    if (status === 'pending') {
+      await setDoc(lockRef, {
+        phoneDigits: order.phoneDigits,
+        orderId: id,
+        status: 'pending',
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    } else {
+      await deleteDoc(lockRef);
+    }
+  }
+
   showToast(`Order updated to ${status}`);
 }
 

@@ -15,6 +15,13 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    match /order_locks/{phoneDigits} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
     match /notify_requests/{docId} {
       allow create: if true;
       allow read, update, delete: if isAdmin();

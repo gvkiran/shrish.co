@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta property="og:title" content="Place Your Order – SHRISH LLC | Fresh Indian Mangoes">
-<meta property="og:description" content="Order fresh Indian mangoes online. Pick up in Short Pump or Chesterfield, VA.  Pay at Pickup">
+<meta property="og:title" content="Place Your Order - SHRISH LLC | Fresh Indian Mangoes">
+<meta property="og:description" content="Order fresh Indian mangoes online. Pick up in Short Pump or Chesterfield, VA. Pay at pickup.">
 <meta property="og:image" content="https://gvkiran.github.io/shrish.co/img_alphonso.jpeg">
 <meta name="description" content="Order fresh Indian mangoes online. Pick up in Short Pump or Chesterfield, VA. Pay cash at pickup.">
-<title>Checkout – SHRISH LLC</title>
+<title>Checkout - SHRISH LLC</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="icon" href="logo.png" type="image/png">
 <link rel="stylesheet" href="styles.css">
 <style>
-/* ── LAYOUT ── */
+/* Layout */
 .checkout-wrap{max-width:1100px;margin:0 auto;padding:60px 24px 80px;display:grid;grid-template-columns:1.15fr 1fr;gap:40px}
 
-/* ── CART REVIEW ── */
+/* Cart review */
 .review-card{background:#fff;border-radius:20px;padding:28px;box-shadow:0 4px 20px rgba(26,18,8,.08);margin-bottom:24px}
 .review-card-title{font-family:var(--font-display);font-size:22px;color:var(--dark);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
 .review-card-title a{font-size:13px;color:var(--saffron);font-family:var(--font-body);font-weight:600}
@@ -37,13 +37,13 @@
 .cart-empty-note{text-align:center;padding:32px;color:var(--text-light)}
 .cart-empty-note .en-icon{font-size:40px;margin-bottom:10px}
 
-/* ── FORM ── */
+/* Form */
 .form-card{background:#fff;border-radius:20px;padding:28px 32px;box-shadow:0 4px 20px rgba(26,18,8,.08)}
 .form-card-title{font-family:var(--font-display);font-size:22px;color:var(--dark);margin-bottom:20px}
 .step-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--saffron);margin-bottom:14px}
 .form-divider{height:1px;background:var(--cream-d);margin:20px 0}
 
-/* ── LOCATION CARDS ── */
+/* Location cards */
 .loc-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px}
 .loc-card{border:2px solid #E0D0B8;border-radius:14px;padding:16px;cursor:pointer;transition:border-color .25s,background .25s;position:relative;user-select:none}
 .loc-card:hover{border-color:var(--saffron);background:rgba(200,121,26,.03)}
@@ -54,7 +54,7 @@
 .loc-name{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:3px}
 .loc-sub{font-size:12px;color:var(--text-light);line-height:1.5}
 
-/* ── ERROR BANNER ── */
+/* Error banner */
 .error-banner{display:none;background:#FFF3CD;border:1.5px solid #F0A500;border-radius:14px;padding:16px 20px;margin-bottom:20px}
 .error-banner.show{display:block}
 .error-banner-title{font-size:14px;font-weight:700;color:#856404;margin-bottom:8px;display:flex;align-items:center;gap:8px}
@@ -64,18 +64,18 @@
 .error-banner.hard-error .error-banner-title{color:#C62828}
 .error-banner.hard-error ul li{color:#C62828}
 
-/* ── PHONE COUNTER ── */
+/* Phone counter */
 .phone-counter{font-size:11px;font-weight:600;margin-left:8px;transition:color .2s}
 .phone-counter.ok{color:#2E7D32}
 .phone-counter.bad{color:#C62828}
 
-/* ── SUBMIT ── */
+/* Submit */
 .submit-btn{width:100%;padding:16px;background:var(--saffron);color:#fff;border:none;border-radius:50px;font-family:var(--font-body);font-size:16px;font-weight:700;cursor:pointer;transition:all .3s;margin-top:8px}
 .submit-btn:hover:not(:disabled){background:var(--saffron-d);transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,121,26,.35)}
 .submit-btn:disabled{background:#ccc;cursor:not-allowed;transform:none}
 .pay-note-small{font-size:12px;color:var(--text-light);text-align:center;margin-top:10px}
 
-/* ── SIDEBAR ── */
+/* Sidebar */
 .checkout-sidebar{display:flex;flex-direction:column;gap:20px}
 .info-card{background:#fff;border-radius:20px;padding:24px;box-shadow:0 4px 20px rgba(26,18,8,.08)}
 .info-card h4{font-family:var(--font-display);font-size:20px;color:var(--dark);margin-bottom:16px}
@@ -84,7 +84,7 @@
 .ir strong{display:block;font-size:13px;color:var(--dark);margin-bottom:2px}
 .ir span{font-size:13px;color:var(--text-light)}
 
-/* ── SUCCESS SCREEN ── */
+/* Success screen */
 .success-screen{display:none;max-width:640px;margin:60px auto;padding:0 24px 80px;text-align:center}
 .success-icon-big{font-size:72px;margin-bottom:20px}
 .success-screen h2{font-family:var(--font-display);font-size:36px;color:var(--dark);margin-bottom:12px}
@@ -97,7 +97,7 @@
 .ss-row span:last-child{font-weight:600;color:var(--dark);text-align:right}
 .success-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:32px}
 
-/* ── COMMUNITY SECTION ── */
+/* Community section */
 .community-section{background:linear-gradient(135deg,var(--dark) 0%,#2E1A05 100%);border-radius:24px;padding:32px 28px;text-align:center;margin-top:8px}
 .community-section h3{font-family:var(--font-display);font-size:26px;color:var(--gold-l);margin-bottom:10px}
 .community-section>p{color:rgba(255,255,255,.65);font-size:14px;line-height:1.7;max-width:460px;margin:0 auto 24px}
@@ -118,7 +118,7 @@
 </head>
 <body>
 
-<div class="announcement-bar"><span>🥭 Fresh Indian Mangoes — Pickup in Short Pump & Chesterfield, VA</span></div>
+<div class="announcement-bar"><span>Fresh Indian Mangoes - Pickup in Short Pump & Chesterfield, VA</span></div>
 
 <nav class="nav" id="nav">
   <div class="nav-inner">
@@ -136,7 +136,7 @@
 
     <div class="nav-cart-wrap">
       <a href="shop.html" id="navCartLink" class="nav-cart-btn" aria-label="View cart">
-        <span class="nav-cart-icon">🛒</span>
+        <span class="nav-cart-icon">&#128722;</span>
         <span id="navCartBadge" class="nav-cart-badge">0</span>
       </a>
     </div>
@@ -149,14 +149,14 @@
     <a href="shop.html">Shop</a><a href="recipes.html">Recipes</a>
     <a href="contact.html">Contact</a>
     <a href="shop.html" style="display:flex;align-items:center;gap:8px;margin-top:8px;background:var(--saffron);color:#fff;padding:12px 20px;border-radius:50px;font-weight:700;justify-content:center">
-      🛒 Cart (<span id="mobileCartCount">0</span>)
+      Cart (<span id="mobileCartCount">0</span>)
     </a>
   </div>
 </nav>
 
 <div class="page-hero">
-  <h1>🛒 <em>Checkout</em></h1>
-  <p>Review your order, choose pickup, and submit.  Pay at Pickup</p>
+  <h1>Cart <em>Checkout</em></h1>
+  <p>Review your order, choose pickup, and submit. Pay at pickup.</p>
 </div>
 
 <div class="checkout-wrap" id="checkoutWrap">
@@ -165,20 +165,20 @@
     <div class="review-card">
       <div class="review-card-title">
         Your Order
-        <a href="shop.html">← Edit in Shop</a>
+        <a href="shop.html">&larr; Edit in Shop</a>
       </div>
       <div id="cartReviewContainer"></div>
     </div>
 
     <div class="error-banner" id="errorBanner">
-      <div class="error-banner-title">⚠️ Please fix the following before placing your order:</div>
+      <div class="error-banner-title">Please fix the following before placing your order:</div>
       <ul id="errorList"></ul>
     </div>
 
     <div class="form-card">
       <div class="form-card-title">Your Details</div>
 
-      <div class="step-label">Step 1 — Contact Information</div>
+      <div class="step-label">Step 1 - Contact Information</div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">First Name <span class="req">*</span></label>
@@ -209,18 +209,18 @@
       </div>
 
       <div class="form-divider"></div>
-      <div class="step-label">Step 2 — Pickup Location</div>
+      <div class="step-label">Step 2 - Pickup Location</div>
 
       <div class="loc-cards" id="locCards">
         <div class="loc-card" id="loc-shortpump" data-loc="shortpump">
-          <div class="loc-check" id="check-shortpump">✓</div>
-          <div class="loc-icon">📍</div>
+          <div class="loc-check" id="check-shortpump">&#10003;</div>
+          <div class="loc-icon">&#128205;</div>
           <div class="loc-name">Short Pump, VA</div>
           <div class="loc-sub">Richmond West End<br>Address sent on confirmation</div>
         </div>
         <div class="loc-card" id="loc-chesterfield" data-loc="chesterfield">
-          <div class="loc-check" id="check-chesterfield">✓</div>
-          <div class="loc-icon">📍</div>
+          <div class="loc-check" id="check-chesterfield">&#10003;</div>
+          <div class="loc-icon">&#128205;</div>
           <div class="loc-name">Chesterfield, VA</div>
           <div class="loc-sub">South of Richmond<br>Address sent on confirmation</div>
         </div>
@@ -228,7 +228,7 @@
       <div class="form-error" id="err-location" style="margin-bottom:16px">Please select a pickup location</div>
 
       <div class="form-divider"></div>
-      <div class="step-label">Step 3 — Optional</div>
+      <div class="step-label">Step 3 - Optional</div>
 
       <div class="form-group">
         <label class="form-label">How did you hear about us?</label>
@@ -248,45 +248,45 @@
       </div>
 
       <button class="submit-btn" id="submitBtn">
-        🥭 Place Order — Pay at Pickup
+        Place Order - Pay at Pickup
       </button>
-      <p class="pay-note-small">💵 No payment needed now. Bring cash when you pick up.</p>
+      <p class="pay-note-small">No payment needed now. Bring cash when you pick up.</p>
     </div>
   </div>
 
   <div class="checkout-sidebar">
     <div class="info-card">
-      <h4>📍 Pickup Locations</h4>
-      <div class="ir"><span class="ir-icon">🏪</span><div><strong>Short Pump, VA</strong><span>Richmond West End · Address shared on confirmation</span></div></div>
-      <div class="ir"><span class="ir-icon">🏪</span><div><strong>Chesterfield, VA</strong><span>South of Richmond · Address shared on confirmation</span></div></div>
+      <h4>Pickup Locations</h4>
+      <div class="ir"><span class="ir-icon">&#128205;</span><div><strong>Short Pump, VA</strong><span>Richmond West End &middot; Address shared on confirmation</span></div></div>
+      <div class="ir"><span class="ir-icon">&#128205;</span><div><strong>Chesterfield, VA</strong><span>South of Richmond &middot; Address shared on confirmation</span></div></div>
     </div>
     <div class="info-card">
-      <h4>💳 How It Works</h4>
-      <div class="ir"><span class="ir-icon">1️⃣</span><div><strong>Place order online</strong><span>No payment needed now</span></div></div>
-      <div class="ir"><span class="ir-icon">2️⃣</span><div><strong>We call to confirm</strong><span><a href="tel:+17653255577" style="color:var(--saffron)">+1 (765) 325-5577</a></span></div></div>
-      <div class="ir"><span class="ir-icon">3️⃣</span><div><strong>Pick up &amp; pay cash</strong><span>Bring exact change or small bills</span></div></div>
+      <h4>How It Works</h4>
+      <div class="ir"><span class="ir-icon">1</span><div><strong>Place order online</strong><span>No payment needed now</span></div></div>
+      <div class="ir"><span class="ir-icon">2</span><div><strong>We call to confirm</strong><span><a href="tel:+17653255577" style="color:var(--saffron)">+1 (765) 325-5577</a></span></div></div>
+      <div class="ir"><span class="ir-icon">3</span><div><strong>Pick up &amp; pay cash</strong><span>Bring exact change or small bills</span></div></div>
     </div>
     <div class="info-card" style="background:var(--dark)">
-      <h4 style="color:var(--gold-l)">💬 Need Help?</h4>
-      <div class="ir"><span class="ir-icon">📱</span><div><strong style="color:#fff">WhatsApp</strong><span><a href="https://wa.me/17653255577" target="_blank" style="color:#25D366;font-weight:600">Chat with us instantly</a></span></div></div>
-      <div class="ir"><span class="ir-icon">📧</span><div><strong style="color:#fff">Email</strong><span><a href="mailto:contact@shrish.co" style="color:var(--saffron)">contact@shrish.co</a></span></div></div>
+      <h4 style="color:var(--gold-l)">Need Help?</h4>
+      <div class="ir"><span class="ir-icon">W</span><div><strong style="color:#fff">WhatsApp</strong><span><a href="https://wa.me/17653255577" target="_blank" style="color:#25D366;font-weight:600">Chat with us instantly</a></span></div></div>
+      <div class="ir"><span class="ir-icon">@</span><div><strong style="color:#fff">Email</strong><span><a href="mailto:contact@shrish.co" style="color:var(--saffron)">contact@shrish.co</a></span></div></div>
     </div>
   </div>
 </div>
 
 <div class="success-screen" id="successScreen">
-  <div class="success-icon-big">🎉</div>
+  <div class="success-icon-big">&#127881;</div>
   <h2>Order Placed!</h2>
   <div class="order-badge" id="successOrderNum"></div>
-  <p>Thank you! Please watch for my updates on the WhatsApp group for pickup details. If you’re not part of the group yet, please join using the link below.</p>
-  <p>Payment is collected at pickup</p>
+  <p>Thank you! Please watch for updates on the WhatsApp group for pickup details. If you're not part of the group yet, please join using the link below.</p>
+  <p>Payment is collected at pickup.</p>
   <div class="success-summary" id="successSummary"></div>
   <div class="success-actions">
     <a href="shop.html" class="btn-primary">Continue Shopping</a>
     <a href="index.html" class="btn-outline">Back to Home</a>
   </div>
   <div class="community-section">
-    <h3>🥭 Join Our Community!</h3>
+    <h3>Join Our Community!</h3>
     <p>Get notified first when new mango varieties arrive, seasonal deals drop, and more. Stay connected with the Shrish family!</p>
     <div class="community-btns">
       <a href="https://chat.whatsapp.com/EHk3KbL03s4J9zfFIeEOi9" target="_blank" rel="noopener" class="comm-btn cb-wa-group">
@@ -302,13 +302,13 @@
         Follow on Instagram
       </a>
     </div>
-    <p class="comm-note">🔔 Get updates on new varieties and exclusive deals straight from our WhatsApp group 🔔</p>
+    <p class="comm-note">Get updates on new varieties and exclusive deals straight from our WhatsApp group.</p>
   </div>
 </div>
 
 <footer class="footer">
   <div class="footer-bottom">
-    <span>© <span class="copy-year">2025</span> Shrish LLC. All rights reserved.</span>
+    <span>&copy; <span class="copy-year">2025</span> Shrish LLC. All rights reserved.</span>
     <div class="footer-legal">
       <a href="privacy.html">Privacy Policy</a>
       <a href="refund.html">Refund Policy</a>

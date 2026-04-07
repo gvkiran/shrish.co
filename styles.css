@@ -133,7 +133,7 @@ button.btn-primary:active {
 
 .nav-inner {
   display: grid;
-  grid-template-columns: 330px 1fr 220px;
+  grid-template-columns: 380px 1fr 220px;
   align-items: center;
   width: 100%;
   max-width: 1520px;
@@ -148,7 +148,7 @@ button.btn-primary:active {
   align-items: center;
   justify-self: start;
   flex-shrink: 0;
-  margin-left: 10px;
+  margin-left: 32px;
 }
 
 .logo-img {
@@ -285,13 +285,13 @@ button.btn-primary:active {
 
 @media (max-width: 1100px) {
   .nav-inner {
-    grid-template-columns: 230px 1fr 170px;
+    grid-template-columns: 270px 1fr 170px;
     padding: 0 18px 0 20px;
     column-gap: 12px;
   }
 
   .nav-logo {
-    margin-left: 6px;
+    margin-left: 18px;
   }
 
   .logo-img {
