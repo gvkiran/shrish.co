@@ -58,7 +58,31 @@
     .login-error { color: #c62828; font-size: 13px; margin-top: 10px; display: none; }
 
     /* Dashboard */
-    .admin-wrap { max-width: 1580px; margin: 0 auto; padding: 36px 32px 80px; }
+    .admin-wrap { max-width: 1680px; margin: 0 auto; padding: 32px 28px 80px; }
+    .admin-layout {
+      display: grid;
+      grid-template-columns: 290px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+    .admin-sidebar {
+      position: sticky;
+      top: 86px;
+      background: linear-gradient(180deg, #fff, #fbf5eb);
+      border: 1px solid rgba(200,121,26,0.12);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 20px 16px;
+    }
+    .admin-main { min-width: 0; }
+    .sidebar-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: var(--text-light);
+      margin: 4px 8px 14px;
+    }
 
     /* Stats */
     .admin-stats {
@@ -74,13 +98,15 @@
     .stat-card .s-value.gold { color: var(--saffron); }
 
     /* Tabs */
-    .admin-tabs { display: flex; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; justify-content: flex-start; }
+    .admin-tabs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
     .admin-tab {
-      padding: 12px 24px; border-radius: 999px;
+      padding: 14px 16px; border-radius: 18px;
       border: 1.5px solid rgba(200,121,26,0.18); background: var(--white);
-      font-family: var(--font-body); font-size: 15px; font-weight: 600;
+      font-family: var(--font-body); font-size: 15px; font-weight: 700;
       cursor: pointer; transition: var(--transition); color: var(--text-light);
       box-shadow: 0 8px 18px rgba(26,18,8,0.05);
+      text-align: left;
+      justify-content: flex-start;
     }
     .admin-tab.active { background: var(--saffron); color: white; border-color: var(--saffron); box-shadow: 0 12px 24px rgba(200,121,26,0.22); }
 
@@ -108,14 +134,21 @@
       transition: var(--transition); color: var(--text-light); font-family: var(--font-body);
     }
     .filter-pill.active { background: var(--dark); color: white; border-color: var(--dark); }
-    .sheet-switcher { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; justify-content: flex-start; }
+    .sheet-switcher { display: flex; flex-direction: column; gap: 8px; margin: 6px 0 10px 20px; }
     .sheet-pill {
-      padding: 10px 18px; border-radius: 999px; border: 1.5px solid rgba(200,121,26,0.2);
+      padding: 11px 14px; border-radius: 14px; border: 1.5px solid rgba(200,121,26,0.16);
       background: linear-gradient(180deg, #fff, #fbf5eb); font-size: 14px; cursor: pointer;
       transition: var(--transition); color: var(--text-light); font-family: var(--font-body); font-weight: 700;
       box-shadow: 0 8px 18px rgba(26,18,8,0.05);
+      text-align: left;
     }
     .sheet-pill.active { background: var(--saffron); color: white; border-color: var(--saffron); box-shadow: 0 12px 24px rgba(200,121,26,0.22); }
+    .sidebar-sheet-group { margin-bottom: 8px; }
+    .sidebar-divider {
+      height: 1px;
+      background: linear-gradient(to right, rgba(200,121,26,0.22), transparent);
+      margin: 14px 6px;
+    }
     .filter-input {
       padding: 10px 14px; border-radius: 999px; border: 1.5px solid #e0d0b8;
       background: #fff; font-size: 13px; color: var(--text); font-family: var(--font-body); outline: none;
@@ -280,10 +313,18 @@
     }
     .admin-toast.show { transform: none; opacity: 1; }
 
+    @media (max-width: 1320px) {
+      .admin-layout { grid-template-columns: 250px minmax(0, 1fr); }
+      .admin-stats { grid-template-columns: repeat(4, minmax(170px, 1fr)); }
+    }
     @media (max-width: 1200px) {
       .admin-stats { grid-template-columns: repeat(4, minmax(170px, 1fr)); }
     }
     @media (max-width: 900px) {
+      .admin-layout { grid-template-columns: 1fr; }
+      .admin-sidebar { position: static; }
+      .admin-tabs { flex-direction: row; flex-wrap: wrap; }
+      .sheet-switcher { flex-direction: row; flex-wrap: wrap; margin-left: 0; }
       .admin-stats { grid-template-columns: repeat(3, 1fr); }
       .admin-wrap { padding: 28px 18px 60px; }
     }
