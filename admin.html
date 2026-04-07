@@ -253,6 +253,168 @@
     .empty-state p { font-size: 15px; }
 
     /* Products tab */
+    .products-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .products-toolbar-copy h2 {
+      font-family: var(--font-display);
+      font-size: 24px;
+      color: var(--dark);
+      margin: 0 0 6px;
+    }
+    .products-toolbar-copy p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-light);
+    }
+    .add-product-btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 999px;
+      background: var(--saffron);
+      color: white;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 12px 24px rgba(200,121,26,0.22);
+    }
+    .add-product-btn:hover { background: var(--saffron-d); }
+    .product-form-card {
+      display: none;
+      background: linear-gradient(180deg, #fff, #fbf5eb);
+      border: 1px solid rgba(200,121,26,0.14);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+    .product-form-card.open { display: block; }
+    .product-form-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .product-form-head h3 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      color: var(--dark);
+      margin: 0;
+    }
+    .product-form-head p {
+      margin: 6px 0 0;
+      font-size: 13px;
+      color: var(--text-light);
+    }
+    .product-form-close {
+      padding: 9px 14px;
+      border-radius: 999px;
+      border: 1.5px solid rgba(200,121,26,0.18);
+      background: var(--white);
+      color: var(--text-light);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .product-form-close:hover {
+      border-color: var(--saffron);
+      color: var(--saffron);
+    }
+    .product-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px 16px;
+    }
+    .product-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .product-field.full { grid-column: 1 / -1; }
+    .product-field label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-light);
+    }
+    .product-field input,
+    .product-field select,
+    .product-field textarea {
+      width: 100%;
+      border: 1.5px solid #E0D0B8;
+      border-radius: 12px;
+      background: var(--white);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 14px;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .product-field textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+    .product-field input:focus,
+    .product-field select:focus,
+    .product-field textarea:focus {
+      border-color: var(--saffron);
+      box-shadow: 0 0 0 4px rgba(200,121,26,0.08);
+    }
+    .product-field small {
+      font-size: 12px;
+      color: var(--text-light);
+    }
+    .product-form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+    .product-secondary-btn,
+    .product-primary-btn {
+      padding: 12px 18px;
+      border-radius: 999px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .product-secondary-btn {
+      border: 1.5px solid rgba(200,121,26,0.18);
+      background: var(--white);
+      color: var(--text-light);
+    }
+    .product-secondary-btn:hover {
+      border-color: var(--saffron);
+      color: var(--saffron);
+    }
+    .product-primary-btn {
+      border: none;
+      background: var(--saffron);
+      color: white;
+      box-shadow: 0 12px 24px rgba(200,121,26,0.22);
+    }
+    .product-primary-btn:hover { background: var(--saffron-d); }
+    .product-primary-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
     .products-manage-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;
     }
@@ -264,6 +426,33 @@
     .pm-emoji { font-size: 32px; flex-shrink: 0; }
     .pm-info { flex: 1; min-width: 0; }
     .pm-info h4 { font-size: 14px; font-weight: 600; color: var(--dark); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pm-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+    .pm-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(200,121,26,0.1);
+      color: var(--saffron);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .pm-sub {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-top: 2px;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
     .pm-price-wrap { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
     .pm-price-input {
       width: 72px; padding: 4px 8px; border: 1.5px solid #E0D0B8;
@@ -394,6 +583,7 @@
       .tally-grid { grid-template-columns: 1fr; }
       .accounting-toolbar .toolbar-actions { margin-left: 0; justify-content: flex-start; }
       .admin-wrap { padding: 28px 18px 60px; }
+      .product-form-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 600px) {
       .admin-stats { grid-template-columns: repeat(2, 1fr); }
@@ -495,6 +685,91 @@
 
         <!-- ── PRODUCTS TAB ── -->
         <div id="tab-products" style="display:none;">
+          <div class="products-toolbar">
+            <div class="products-toolbar-copy">
+              <h2>Manage Products</h2>
+              <p>Add new catalog items here. New products will use the same live and coming soon behavior as your existing shop cards.</p>
+            </div>
+            <button class="add-product-btn" onclick="openAddProductForm()">+ Add Product</button>
+          </div>
+          <div class="product-form-card" id="productFormCard">
+            <div class="product-form-head">
+              <div>
+                <h3>Add New Product</h3>
+                <p>Keep category within your current shop groups so the new product appears safely in the existing filters and modal.</p>
+              </div>
+              <button class="product-form-close" type="button" onclick="closeAddProductForm()">Close</button>
+            </div>
+            <form id="addProductForm">
+              <div class="product-form-grid">
+                <div class="product-field">
+                  <label for="newProductName">Product Name</label>
+                  <input id="newProductName" name="name" type="text" required maxlength="120" placeholder="Ex: Imam Pasand Special">
+                </div>
+                <div class="product-field">
+                  <label for="newProductCategory">Category</label>
+                  <select id="newProductCategory" name="category" required>
+                    <option value="mangoes">Mangoes</option>
+                    <option value="putharekulu">Putharekulu</option>
+                    <option value="jellysnacks">Jelly &amp; Snacks</option>
+                  </select>
+                </div>
+                <div class="product-field">
+                  <label for="newProductLocalName">Local Name</label>
+                  <input id="newProductLocalName" name="localName" type="text" maxlength="120" placeholder="Optional local language name">
+                </div>
+                <div class="product-field">
+                  <label for="newProductOrigin">Origin</label>
+                  <input id="newProductOrigin" name="origin" type="text" maxlength="120" required placeholder="Ex: Andhra Pradesh">
+                </div>
+                <div class="product-field">
+                  <label for="newProductStatus">Shop Status</label>
+                  <select id="newProductStatus" name="status" required>
+                    <option value="live">Live and orderable</option>
+                    <option value="off">Visible but sold out</option>
+                    <option value="soon">Coming soon / notify only</option>
+                  </select>
+                </div>
+                <div class="product-field">
+                  <label for="newProductTag">Tag</label>
+                  <input id="newProductTag" name="tag" type="text" maxlength="60" placeholder="Ex: Limited, Premium, Best Seller">
+                </div>
+                <div class="product-field">
+                  <label for="newProductPrice">Price (numbers only)</label>
+                  <input id="newProductPrice" name="price" type="number" min="0" step="0.01" placeholder="56">
+                  <small>Leave empty for coming soon products.</small>
+                </div>
+                <div class="product-field">
+                  <label for="newProductUnit">Unit</label>
+                  <input id="newProductUnit" name="unit" type="text" maxlength="80" required value="per box">
+                </div>
+                <div class="product-field">
+                  <label for="newProductImage">Image Path</label>
+                  <input id="newProductImage" name="image" type="text" maxlength="200" placeholder="Ex: img_new_product.jpg">
+                </div>
+                <div class="product-field">
+                  <label for="newProductSeason">Season</label>
+                  <input id="newProductSeason" name="season" type="text" maxlength="80" placeholder="Ex: May - July">
+                </div>
+                <div class="product-field">
+                  <label for="newProductTaste">Taste</label>
+                  <input id="newProductTaste" name="taste" type="text" maxlength="120" placeholder="Ex: Sweet - Rich - Fiberless">
+                </div>
+                <div class="product-field">
+                  <label for="newProductBestFor">Best For</label>
+                  <input id="newProductBestFor" name="bestFor" type="text" maxlength="160" placeholder="Ex: Eating fresh - Lassi - Dessert">
+                </div>
+                <div class="product-field full">
+                  <label for="newProductDescription">Description</label>
+                  <textarea id="newProductDescription" name="description" maxlength="700" required placeholder="Write the short description you want to show in the shop card and product modal."></textarea>
+                </div>
+              </div>
+              <div class="product-form-actions">
+                <button class="product-secondary-btn" type="button" onclick="resetAddProductForm()">Reset</button>
+                <button class="product-primary-btn" id="addProductSubmitBtn" type="submit">Save Product</button>
+              </div>
+            </form>
+          </div>
           <div class="export-banner">
             <button class="export-data-btn" onclick="exportDataJs()">⬇ Export data.js</button>
           </div>

@@ -33,7 +33,11 @@ function saveCart() {
 
 function mergeProducts(docs) {
   const byId = new Map(docs.map((item) => [item.id, item]));
-  window.SHRISH_DATA.products = baseProducts.map((product) => ({ ...product, ...(byId.get(product.id) || {}) }));
+  const mergedBase = baseProducts.map((product) => ({ ...product, ...(byId.get(product.id) || {}) }));
+  const extraProducts = docs
+    .filter((item) => !baseProducts.some((product) => product.id === item.id))
+    .map((item) => ({ ...item }));
+  window.SHRISH_DATA.products = [...mergedBase, ...extraProducts];
 }
 
 function updateCartUI() {

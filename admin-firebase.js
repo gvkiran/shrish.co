@@ -270,6 +270,146 @@ function renderOrders() {
   renderStats();
 }
 
+function productCategoryLabel(category) {
+  const labels = {
+    mangoes: 'Mangoes',
+    putharekulu: 'Putharekulu',
+    jellysnacks: 'Jelly & Snacks'
+  };
+  return labels[category] || category || 'Product';
+}
+
+function slugifyProductId(name) {
+  return String(name || '')
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 48) || `product_${Date.now()}`;
+}
+
+function getUniqueProductId(name) {
+  const base = slugifyProductId(name);
+  let id = base;
+  let index = 2;
+  const existing = new Set(state.products.map((product) => product.id));
+  while (existing.has(id)) {
+    id = `${base}_${index}`;
+    index += 1;
+  }
+  return id;
+}
+
+function updateProductFormForStatus() {
+  const status = document.getElementById('newProductStatus')?.value || 'live';
+  const priceInput = document.getElementById('newProductPrice');
+  if (!priceInput) return;
+
+  const isSoon = status === 'soon';
+  priceInput.disabled = isSoon;
+  priceInput.required = !isSoon;
+  if (isSoon) {
+    priceInput.value = '';
+    priceInput.placeholder = 'Coming soon';
+  } else {
+    priceInput.placeholder = '56';
+  }
+}
+
+function openAddProductForm() {
+  document.getElementById('productFormCard')?.classList.add('open');
+  updateProductFormForStatus();
+  document.getElementById('newProductName')?.focus();
+}
+
+function closeAddProductForm() {
+  document.getElementById('productFormCard')?.classList.remove('open');
+}
+
+function resetAddProductForm() {
+  const form = document.getElementById('addProductForm');
+  if (!form) return;
+  form.reset();
+  document.getElementById('newProductUnit').value = 'per box';
+  document.getElementById('newProductStatus').value = 'live';
+  updateProductFormForStatus();
+}
+
+async function submitAddProduct(event) {
+  event.preventDefault();
+
+  const form = event.currentTarget;
+  const submitButton = document.getElementById('addProductSubmitBtn');
+  if (!form || !submitButton) return;
+
+  const formData = new FormData(form);
+  const name = String(formData.get('name') || '').trim();
+  const category = String(formData.get('category') || '').trim();
+  const localName = String(formData.get('localName') || '').trim();
+  const origin = String(formData.get('origin') || '').trim();
+  const status = String(formData.get('status') || 'live').trim();
+  const tag = String(formData.get('tag') || '').trim();
+  const priceValue = String(formData.get('price') || '').trim();
+  const unit = String(formData.get('unit') || '').trim();
+  const image = String(formData.get('image') || '').trim();
+  const season = String(formData.get('season') || '').trim();
+  const taste = String(formData.get('taste') || '').trim();
+  const bestFor = String(formData.get('bestFor') || '').trim();
+  const description = String(formData.get('description') || '').trim();
+
+  if (!name || !category || !origin || !unit || !description) {
+    showToast('Fill the required product fields');
+    return;
+  }
+
+  const isSoon = status === 'soon';
+  const isLive = status === 'live';
+  const numericPrice = parseFloat(priceValue);
+
+  if (!isSoon && (!Number.isFinite(numericPrice) || numericPrice <= 0)) {
+    showToast('Enter a valid price for live or sold out products');
+    return;
+  }
+
+  const id = getUniqueProductId(name);
+  const payload = {
+    id,
+    category,
+    name,
+    localName: localName || '',
+    origin,
+    price: isSoon ? 'Coming Soon' : `$${numericPrice}`,
+    unit,
+    available: isLive,
+    displayOnly: isSoon,
+    tag: tag || '',
+    image: image || null,
+    description,
+    season: season || '',
+    taste: taste || '',
+    bestFor: bestFor || '',
+    updatedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString()
+  };
+
+  submitButton.disabled = true;
+  submitButton.textContent = 'Saving...';
+
+  try {
+    await setDoc(doc(db, 'products', id), payload);
+    showToast(`${name} added to catalog`);
+    resetAddProductForm();
+    closeAddProductForm();
+  } catch (error) {
+    console.error(error);
+    showToast('Could not save product right now');
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = 'Save Product';
+  }
+}
+
 function renderProducts() {
   const grid = document.getElementById('productsGrid');
   if (!grid) return;
@@ -278,14 +418,21 @@ function renderProducts() {
     const isComingSoon = product.displayOnly;
     const priceDisplay = isComingSoon ? '' : (product.price || '');
     const priceNum = String(priceDisplay).replace(/[^0-9.]/g, '');
+    const statusText = isComingSoon ? 'Soon' : (product.available ? 'Live' : 'Off');
+    const shortDescription = String(product.description || '').trim();
 
     return `<div class="pm-card" id="pmc-${escapeHtml(product.id)}">
       <div class="pm-emoji">🥭</div>
       <div class="pm-info">
+        <div class="pm-meta">
+          <span class="pm-chip">${escapeHtml(productCategoryLabel(product.category))}</span>
+          ${product.tag ? `<span class="pm-chip">${escapeHtml(product.tag)}</span>` : ''}
+        </div>
         <h4 title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</h4>
-        ${isComingSoon ? '<span style="font-size:11px;color:#aaa">Coming Soon — no price</span>' : `<div class="pm-price-wrap"><span style="font-size:12px;color:var(--text-light)">$</span><input type="number" class="pm-price-input" id="price-${escapeHtml(product.id)}" value="${escapeHtml(priceNum)}" min="1" max="999" step="1"><button class="pm-save-btn" onclick="saveProductPrice('${escapeHtml(product.id)}')">Save</button></div>`}
+        <div class="pm-sub">${escapeHtml(shortDescription || 'No description added yet.')}</div>
+        ${isComingSoon ? '<span style="font-size:11px;color:#aaa">Coming Soon - no price</span>' : `<div class="pm-price-wrap"><span style="font-size:12px;color:var(--text-light)">$</span><input type="number" class="pm-price-input" id="price-${escapeHtml(product.id)}" value="${escapeHtml(priceNum)}" min="1" max="999" step="1"><button class="pm-save-btn" onclick="saveProductPrice('${escapeHtml(product.id)}')">Save</button></div>`}
       </div>
-      <div class="pm-controls"><label class="toggle-switch"><input type="checkbox" ${product.available ? 'checked' : ''} ${isComingSoon ? 'disabled' : ''} onchange="toggleAvailable('${escapeHtml(product.id)}', this.checked)"><span class="toggle-slider"></span></label><span style="font-size:10px;color:var(--text-light)">${isComingSoon ? 'Soon' : (product.available ? 'Live' : 'Off')}</span></div>
+      <div class="pm-controls"><label class="toggle-switch"><input type="checkbox" ${product.available ? 'checked' : ''} ${isComingSoon ? 'disabled' : ''} onchange="toggleAvailable('${escapeHtml(product.id)}', this.checked)"><span class="toggle-slider"></span></label><span style="font-size:10px;color:var(--text-light)">${statusText}</span></div>
     </div>`;
   }).join('');
 }
@@ -716,6 +863,8 @@ function bindUi() {
     renderOrders();
   });
   document.getElementById('accountingDate')?.addEventListener('change', renderAccounting);
+  document.getElementById('newProductStatus')?.addEventListener('change', updateProductFormForStatus);
+  document.getElementById('addProductForm')?.addEventListener('submit', submitAddProduct);
   document.getElementById('adminPw')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
 }
 
@@ -752,7 +901,11 @@ window.printActiveOrders = printActiveOrders;
 window.exportCSV = exportCSV;
 window.exportSubscribersCSV = exportSubscribersCSV;
 window.renderAccounting = renderAccounting;
+window.openAddProductForm = openAddProductForm;
+window.closeAddProductForm = closeAddProductForm;
+window.resetAddProductForm = resetAddProductForm;
 
 bindUi();
 initAuthWatch();
+
 
