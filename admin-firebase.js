@@ -344,8 +344,8 @@ function setOrderSheet(sheet) {
 
 function printableItems(order) {
   return (order.items || [])
-    .map((item) => `${item.name || 'Item'} x ${item.qty || 1}`)
-    .join(', ');
+    .map((item) => `${escapeHtml(item.name || 'Item')} x ${escapeHtml(String(item.qty || 1))}`)
+    .join('<br>');
 }
 
 function printableQty(order) {
@@ -364,11 +364,11 @@ function printActiveOrders() {
       <td>${escapeHtml(order.orderNumber || order.id)}</td>
       <td>${escapeHtml(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim())}</td>
       <td>${escapeHtml(order.phone || '')}</td>
-      <td>${escapeHtml(printableItems(order))}</td>
+      <td>${printableItems(order)}</td>
       <td>${escapeHtml(String(printableQty(order)))}</td>
       <td>${escapeHtml(formatCurrency(order.totalPrice || 0))}</td>
       <td>${escapeHtml(order.locationLabel || order.location || '—')}</td>
-      <td>${escapeHtml(order.payment || 'pending')}</td>
+      <td></td>
     </tr>
   `).join('');
 
@@ -387,9 +387,17 @@ function printActiveOrders() {
         body { font-family: Arial, sans-serif; padding: 24px; color: #1A1208; }
         h1 { margin: 0 0 8px; font-size: 26px; }
         p { margin: 0 0 18px; color: #6B4A20; font-size: 14px; }
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th, td { border: 1px solid #d9c8ab; padding: 10px 8px; vertical-align: top; font-size: 12px; text-align: left; word-wrap: break-word; }
+        table { width: 100%; border-collapse: collapse; table-layout: auto; }
+        th, td { border: 1px solid #d9c8ab; padding: 10px 8px; vertical-align: top; font-size: 12px; text-align: left; }
         th { background: #f5e9d4; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; }
+        th:nth-child(1), td:nth-child(1) { width: 11%; white-space: nowrap; }
+        th:nth-child(2), td:nth-child(2) { width: 13%; white-space: nowrap; }
+        th:nth-child(3), td:nth-child(3) { width: 11%; white-space: nowrap; }
+        th:nth-child(4), td:nth-child(4) { width: 30%; }
+        th:nth-child(5), td:nth-child(5) { width: 6%; white-space: nowrap; text-align: center; }
+        th:nth-child(6), td:nth-child(6) { width: 10%; white-space: nowrap; }
+        th:nth-child(7), td:nth-child(7) { width: 12%; white-space: nowrap; }
+        th:nth-child(8), td:nth-child(8) { width: 7%; }
         .meta { margin-bottom: 16px; font-size: 13px; }
         @media print {
           body { padding: 0; }
