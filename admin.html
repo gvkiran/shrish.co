@@ -363,99 +363,114 @@
   </div>
 
   <div class="admin-wrap">
-
-    <!-- Stats -->
-    <div class="admin-stats" id="adminStats"></div>
-
-    <!-- Tabs -->
-    <div class="admin-tabs">
-      <button class="admin-tab active" onclick="switchTab('orders',this)">📋 Orders</button>
-      <button class="admin-tab" onclick="switchTab('products',this)">🛒 Manage Products</button>
-      <button class="admin-tab" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
-    </div>
-
-    <!-- ── ORDERS TAB ── -->
-    <div id="tab-orders">
-      <div class="orders-toolbar">
-        <h2 id="ordersSectionTitle">Active Orders</h2>
-        <div class="toolbar-actions">
-          <input type="date" id="filterDate" class="filter-input" onchange="renderOrders()">
-          <select id="filterStatus" class="filter-input" onchange="renderOrders()">
-            <option value="all">All Orders</option>
-            <option value="pending">Pending</option>
-            <option value="fulfilled">Fulfilled</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <button class="toolbar-btn" id="bulkFulfillBtn" onclick="markFilteredActiveFulfilled()">✓ Mark Filtered Fulfilled</button>
-          <button class="toolbar-btn" onclick="printActiveOrders()">🖨 Print Active</button>
-          <button class="toolbar-btn" onclick="exportCSV()">⬇ Export CSV</button>
+    <div class="admin-layout">
+      <aside class="admin-sidebar">
+        <div class="sidebar-title">Navigation</div>
+        <div class="admin-tabs">
+          <button class="admin-tab active" onclick="switchTab('orders',this)">📋 Orders</button>
+          <div class="sidebar-sheet-group">
+            <div class="sheet-switcher" id="ordersSheetSwitcher">
+              <button class="sheet-pill active" id="ordersSheetActive" onclick="setOrderSheet('active', this)">Active Orders</button>
+              <button class="sheet-pill" id="ordersSheetProcessed" onclick="setOrderSheet('processed', this)">Processed Orders</button>
+              <button class="sheet-pill" id="ordersSheetAll" onclick="setOrderSheet('all', this)">All Orders</button>
+            </div>
+          </div>
+          <div class="sidebar-divider"></div>
+          <button class="admin-tab" onclick="switchTab('products',this)">🛒 Manage Products</button>
+          <button class="admin-tab" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
+          <button class="admin-tab" onclick="switchTab('accounting',this)">📒 Accounting</button>
         </div>
-      </div>
+      </aside>
 
-      <div class="sheet-switcher">
-        <button class="sheet-pill active" id="ordersSheetActive" onclick="setOrderSheet('active', this)">Active Orders</button>
-        <button class="sheet-pill" id="ordersSheetProcessed" onclick="setOrderSheet('processed', this)">Processed Orders</button>
-        <button class="sheet-pill" id="ordersSheetAll" onclick="setOrderSheet('all', this)">All Orders</button>
-      </div>
+      <main class="admin-main">
+        <div class="admin-stats" id="adminStats"></div>
 
-      <div class="orders-help" id="ordersHelpText">
-        Active Orders shows your current pending pickup list. Processed Orders shows fulfilled and cancelled records. All Orders is the permanent master history.
-      </div>
+        <!-- ── ORDERS TAB ── -->
+        <div id="tab-orders">
+          <div class="orders-toolbar">
+            <h2 id="ordersSectionTitle">Active Orders</h2>
+            <div class="toolbar-actions">
+              <input type="date" id="filterDate" class="filter-input" onchange="renderOrders()">
+              <select id="filterStatus" class="filter-input" onchange="renderOrders()">
+                <option value="all">All Orders</option>
+                <option value="pending">Pending</option>
+                <option value="fulfilled">Fulfilled</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <button class="toolbar-btn" id="bulkFulfillBtn" onclick="markFilteredActiveFulfilled()">✓ Mark Filtered Fulfilled</button>
+              <button class="toolbar-btn" onclick="printActiveOrders()">🖨 Print Active</button>
+              <button class="toolbar-btn" onclick="exportCSV()">⬇ Export CSV</button>
+            </div>
+          </div>
 
-      <div class="orders-table-wrap">
-        <table class="orders-table">
-          <thead>
-            <tr>
-              <th>Order #</th>
-              <th>Received Date</th>
-              <th>Customer</th>
-              <th>Products &amp; Qty</th>
-              <th>Total</th>
-              <th>Location</th>
-              <th>Pickup Date</th>
-              <th>Payment</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="ordersBody"></tbody>
-        </table>
-      </div>
-    </div>
+          <div class="orders-help" id="ordersHelpText">
+            Active Orders shows your current pending pickup list. Processed Orders shows fulfilled and cancelled records. All Orders is the permanent master history.
+          </div>
 
-    <!-- ── PRODUCTS TAB ── -->
-    <div id="tab-products" style="display:none;">
-      <div class="export-banner">
-        <button class="export-data-btn" onclick="exportDataJs()">⬇ Export data.js</button>
-      </div>
-      <div class="products-manage-grid" id="productsGrid"></div>
-    </div>
-
-    <div id="tab-subscribers" style="display:none;">
-      <div class="orders-toolbar">
-        <h2>Email Subscribers</h2>
-        <div class="toolbar-actions">
-          <button class="toolbar-btn" onclick="exportSubscribersCSV()">⬇ Export CSV</button>
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Received Date</th>
+                  <th>Customer</th>
+                  <th>Products &amp; Qty</th>
+                  <th>Total</th>
+                  <th>Location</th>
+                  <th>Pickup Date</th>
+                  <th>Payment</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ordersBody"></tbody>
+            </table>
+          </div>
         </div>
-      </div>
 
-      <div class="orders-table-wrap">
-        <table class="orders-table">
-          <thead>
-            <tr>
-              <th>Email</th>
-              <th>Subscription</th>
-              <th>Source</th>
-              <th>Status</th>
-              <th>Consent</th>
-              <th>Created</th>
-            </tr>
-          </thead>
-          <tbody id="subscribersBody"></tbody>
-        </table>
-      </div>
+        <!-- ── PRODUCTS TAB ── -->
+        <div id="tab-products" style="display:none;">
+          <div class="export-banner">
+            <button class="export-data-btn" onclick="exportDataJs()">⬇ Export data.js</button>
+          </div>
+          <div class="products-manage-grid" id="productsGrid"></div>
+        </div>
+
+        <div id="tab-subscribers" style="display:none;">
+          <div class="orders-toolbar">
+            <h2>Email Subscribers</h2>
+            <div class="toolbar-actions">
+              <button class="toolbar-btn" onclick="exportSubscribersCSV()">⬇ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Subscription</th>
+                  <th>Source</th>
+                  <th>Status</th>
+                  <th>Consent</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody id="subscribersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="tab-accounting" style="display:none;">
+          <div class="orders-toolbar">
+            <h2>Accounting</h2>
+          </div>
+          <div class="export-banner">
+            <p>Accounting will live here next. We can use this section for batch totals, payment method summary, collected amount, and tally checks for each delivery day.</p>
+          </div>
+        </div>
+      </main>
     </div>
-
   </div>
 </div>
 

@@ -159,9 +159,11 @@ function updateOrdersSheetUi() {
   const title = document.getElementById('ordersSectionTitle');
   const help = document.getElementById('ordersHelpText');
   const bulkButton = document.getElementById('bulkFulfillBtn');
+  const sheetSwitcher = document.getElementById('ordersSheetSwitcher');
   if (title) title.textContent = config[state.orderSheet].title;
   if (help) help.textContent = config[state.orderSheet].help;
   if (bulkButton) bulkButton.style.display = state.orderSheet === 'active' ? 'inline-flex' : 'none';
+  if (sheetSwitcher) sheetSwitcher.style.display = document.getElementById('tab-orders')?.style.display === 'none' ? 'none' : 'flex';
 }
 
 function renderOrders() {
@@ -479,9 +481,11 @@ function switchTab(tab, btn) {
   document.getElementById('tab-orders').style.display = tab === 'orders' ? 'block' : 'none';
   document.getElementById('tab-products').style.display = tab === 'products' ? 'block' : 'none';
   document.getElementById('tab-subscribers').style.display = tab === 'subscribers' ? 'block' : 'none';
+  document.getElementById('tab-accounting').style.display = tab === 'accounting' ? 'block' : 'none';
   if (tab === 'products') renderProducts();
   if (tab === 'orders') renderOrders();
   if (tab === 'subscribers') renderSubscribers();
+  updateOrdersSheetUi();
 }
 
 function subscribeData() {
