@@ -29,7 +29,7 @@ function injectGlobalUI() {
   const topBtn = document.createElement('button');
   topBtn.id = 'backToTop';
   topBtn.setAttribute('aria-label', 'Back to top');
-  topBtn.innerHTML = 'â';
+  topBtn.textContent = '↑';
   topBtn.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
   document.body.appendChild(topBtn);
 
@@ -163,7 +163,7 @@ function injectGlobalUI() {
     const orderLink = document.createElement('a');
     orderLink.href = 'shop.html';
     orderLink.className = 'mobile-order-btn';
-    orderLink.textContent = 'ð¥­ Order Now';
+    orderLink.textContent = 'Order Now';
     navMobile.appendChild(orderLink);
   }
 }
