@@ -484,8 +484,16 @@ function renderShop() {
     const items = sort(window.SHRISH_DATA.products.filter((p) => p.category === catId));
     if (!items.length) return;
     const m = catMeta[catId] || { title: catId, em: '', sub: '', banner: false };
-    let html = `<div class="shop-section"><div class="shop-section-title">${m.title} <em>${m.em}</em></div><div class="section-divider"></div><p style="color:var(--text-light);font-size:14px;margin-bottom:24px">${m.sub}</p>`;
-    if (m.banner) {
+    const hasLiveItems = items.some((product) => product.available && !product.displayOnly);
+    let sectionSub = m.sub;
+    if (catId === 'putharekulu' && hasLiveItems) {
+      sectionSub = 'Hand-crafted in Atreyapuram, Andhra Pradesh. Available items are shown first.';
+    }
+    if (catId === 'jellysnacks' && hasLiveItems) {
+      sectionSub = 'Traditional Mamidi Thandra & Thati Thandra from Atreyapuram. Available items are shown first.';
+    }
+    let html = `<div class="shop-section"><div class="shop-section-title">${m.title} <em>${m.em}</em></div><div class="section-divider"></div><p style="color:var(--text-light);font-size:14px;margin-bottom:24px">${sectionSub}</p>`;
+    if (m.banner && !hasLiveItems) {
       html += `<div class="coming-banner"><div class="cb-icon">🍬</div><div><h3>Coming Soon to Shrish!</h3><p>Authentic GI-tagged Putharekulu from Atreyapuram. Hit "Notify Me" to be first in line when we launch.</p></div></div>`;
     }
     html += `<div class="products-grid-v2">${items.map(renderCard).join('')}</div></div>`;
@@ -550,3 +558,4 @@ window.handleNotifyOverlayClick = handleNotifyOverlayClick;
 window.goCheckout = goCheckout;
 
 init();
+

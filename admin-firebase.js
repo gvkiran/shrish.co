@@ -317,6 +317,20 @@ function updateProductFormForStatus() {
   }
 }
 
+function applyCategoryDefaults() {
+  const category = document.getElementById('newProductCategory')?.value || 'mangoes';
+  const unitInput = document.getElementById('newProductUnit');
+  if (!unitInput) return;
+
+  const defaults = {
+    mangoes: 'per box',
+    putharekulu: '5 count or 10 count',
+    jellysnacks: '250g or 500g'
+  };
+
+  unitInput.value = defaults[category] || 'per box';
+}
+
 function openAddProductForm() {
   document.getElementById('productFormCard')?.classList.add('open');
   updateProductFormForStatus();
@@ -331,7 +345,7 @@ function resetAddProductForm() {
   const form = document.getElementById('addProductForm');
   if (!form) return;
   form.reset();
-  document.getElementById('newProductUnit').value = 'per box';
+  applyCategoryDefaults();
   document.getElementById('newProductStatus').value = 'live';
   updateProductFormForStatus();
 }
@@ -416,7 +430,7 @@ function renderProducts() {
 
   grid.innerHTML = state.products.map((product) => {
     const isComingSoon = product.displayOnly;
-    const priceDisplay = isComingSoon ? '' : (product.price || '');
+    const priceDisplay = product.price || '';
     const priceNum = String(priceDisplay).replace(/[^0-9.]/g, '');
     const statusText = isComingSoon ? 'Soon' : (product.available ? 'Live' : 'Off');
     const shortDescription = String(product.description || '').trim();
@@ -430,9 +444,10 @@ function renderProducts() {
         </div>
         <h4 title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</h4>
         <div class="pm-sub">${escapeHtml(shortDescription || 'No description added yet.')}</div>
-        ${isComingSoon ? '<span style="font-size:11px;color:#aaa">Coming Soon - no price</span>' : `<div class="pm-price-wrap"><span style="font-size:12px;color:var(--text-light)">$</span><input type="number" class="pm-price-input" id="price-${escapeHtml(product.id)}" value="${escapeHtml(priceNum)}" min="1" max="999" step="1"><button class="pm-save-btn" onclick="saveProductPrice('${escapeHtml(product.id)}')">Save</button></div>`}
+        <div class="pm-sub">${escapeHtml(product.unit || 'per box')}</div>
+        <div class="pm-price-wrap"><span style="font-size:12px;color:var(--text-light)">$</span><input type="number" class="pm-price-input" id="price-${escapeHtml(product.id)}" value="${escapeHtml(priceNum)}" min="1" max="999" step="1" placeholder="${isComingSoon ? 'Add price to go live' : '56'}"><button class="pm-save-btn" onclick="saveProductPrice('${escapeHtml(product.id)}')">Save</button></div>
       </div>
-      <div class="pm-controls"><label class="toggle-switch"><input type="checkbox" ${product.available ? 'checked' : ''} ${isComingSoon ? 'disabled' : ''} onchange="toggleAvailable('${escapeHtml(product.id)}', this.checked)"><span class="toggle-slider"></span></label><span style="font-size:10px;color:var(--text-light)">${statusText}</span></div>
+      <div class="pm-controls"><label class="toggle-switch"><input type="checkbox" ${product.available ? 'checked' : ''} onchange="toggleAvailable('${escapeHtml(product.id)}', this.checked)"><span class="toggle-slider"></span></label><span style="font-size:10px;color:var(--text-light)">${statusText}</span></div>
     </div>`;
   }).join('');
 }
@@ -484,7 +499,12 @@ async function saveProductPrice(id) {
 async function toggleAvailable(id, available) {
   const product = state.products.find((item) => item.id === id);
   if (!product) return;
-  await updateDoc(doc(db, 'products', id), { available, updatedAt: new Date().toISOString() });
+  const payload = {
+    available,
+    displayOnly: available ? false : Boolean(product.displayOnly),
+    updatedAt: new Date().toISOString()
+  };
+  await updateDoc(doc(db, 'products', id), payload);
   showToast(`${product.name} ${available ? 'is live' : 'hidden'}`);
 }
 
@@ -863,6 +883,7 @@ function bindUi() {
     renderOrders();
   });
   document.getElementById('accountingDate')?.addEventListener('change', renderAccounting);
+  document.getElementById('newProductCategory')?.addEventListener('change', applyCategoryDefaults);
   document.getElementById('newProductStatus')?.addEventListener('change', updateProductFormForStatus);
   document.getElementById('addProductForm')?.addEventListener('submit', submitAddProduct);
   document.getElementById('adminPw')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
