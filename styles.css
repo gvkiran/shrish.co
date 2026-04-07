@@ -585,6 +585,20 @@ button.btn-primary:active {
 .product-card-btn-primary { background: var(--saffron); color: var(--white); box-shadow: 0 8px 18px rgba(200, 121, 26, 0.2); }
 .product-card-btn-primary:hover { background: var(--saffron-d); }
 .product-card-btn:disabled { background: #d7d1c8; color: #6f6658; border-color: transparent; cursor: not-allowed; box-shadow: none; transform: none; }
+.home-card-qty-wrap {
+  display: flex; align-items: center; flex: 1; gap: 0; background: var(--saffron);
+  border-radius: 999px; overflow: hidden; height: 44px; box-shadow: 0 8px 18px rgba(200, 121, 26, 0.2);
+}
+.home-card-qty-btn {
+  width: 42px; height: 44px; border: none; background: transparent; color: var(--white);
+  font-size: 22px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.home-card-qty-btn:hover { background: rgba(0, 0, 0, 0.14); }
+.home-card-qty-btn.remove-btn { background: rgba(0, 0, 0, 0.12); }
+.home-card-qty-mid {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; color: var(--white); font-size: 12px; font-weight: 600;
+}
+.home-card-qty-mid .hcqn { font-size: 16px; font-weight: 800; min-width: 18px; text-align: center; }
 .home-product-modal {
   position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
   padding: 24px; background: rgba(26, 18, 8, 0.58); z-index: 2200; backdrop-filter: blur(4px);

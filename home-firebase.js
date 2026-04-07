@@ -50,6 +50,46 @@ function addToCart(productId, qty = 1) {
   saveCart(cart);
   updateNavCartState();
   showToast(`${product.name} added to cart`);
+  renderHomeCardQty(productId);
+}
+
+function renderHomeCardQty(productId) {
+  const wrap = document.getElementById(`home-card-actions-${productId}`);
+  if (!wrap) return;
+
+  const item = getCart().find((cartItem) => cartItem.id === productId);
+  const qty = item ? item.qty : 0;
+  const safeId = escapeHtml(productId);
+
+  if (qty === 0) {
+    wrap.innerHTML = `<button type="button" class="product-card-btn product-card-btn-secondary" onclick="openHomeProductModal('${safeId}')">Details</button><button type="button" class="product-card-btn product-card-btn-primary" onclick="quickAddHomeProduct('${safeId}')">Add to Cart</button>`;
+    return;
+  }
+
+  wrap.innerHTML = `<button type="button" class="product-card-btn product-card-btn-secondary" onclick="openHomeProductModal('${safeId}')">Details</button><div class="home-card-qty-wrap"><button type="button" class="home-card-qty-btn remove-btn" onclick="homeCardQtyChange('${safeId}',-1)" title="Remove one">-</button><div class="home-card-qty-mid"><span class="hcqn">${qty}</span><span style="font-size:11px;opacity:.85">box${qty !== 1 ? 'es' : ''}</span></div><button type="button" class="home-card-qty-btn" onclick="homeCardQtyChange('${safeId}',1)" title="Add one">+</button></div>`;
+}
+
+function homeCardQtyChange(productId, delta) {
+  const cart = getCart();
+  const item = cart.find((cartItem) => cartItem.id === productId);
+  if (!item) return;
+
+  item.qty = Math.max(0, item.qty + delta);
+  const product = window.SHRISH_DATA?.products?.find((entry) => entry.id === productId);
+
+  if (item.qty === 0) {
+    const nextCart = cart.filter((cartItem) => cartItem.id !== productId);
+    saveCart(nextCart);
+    updateNavCartState();
+    renderHomeCardQty(productId);
+    showToast('Removed from cart');
+    return;
+  }
+
+  saveCart(cart);
+  updateNavCartState();
+  renderHomeCardQty(productId);
+  showToast(delta > 0 ? `${product?.name || 'Item'} quantity updated` : 'Removed one box');
 }
 
 function renderHomeModal(productId) {
@@ -137,8 +177,6 @@ function renderHomeProducts(products) {
       ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : '';
     const fallbackStyle = p.image ? 'style="display:none"' : '';
-    const actionLabel = p.available && !p.displayOnly ? 'Add to Cart' : 'Sold Out';
-
     productsGrid.innerHTML += `
       <div class="product-card ${p.available ? '' : 'product-card-unavailable'}">
         ${p.tag ? `<div class="product-card-badge">${escapeHtml(p.tag)}</div>` : ''}
@@ -158,12 +196,16 @@ function renderHomeProducts(products) {
               ${p.available ? 'Available' : 'Sold Out'}
             </span>
           </div>
-          <div class="product-card-actions">
+          <div class="product-card-actions" id="home-card-actions-${escapeHtml(p.id)}">
             <button type="button" class="product-card-btn product-card-btn-secondary" onclick="openHomeProductModal('${escapeHtml(p.id)}')">Details</button>
-            <button type="button" class="product-card-btn product-card-btn-primary" onclick="quickAddHomeProduct('${escapeHtml(p.id)}')" ${p.available && !p.displayOnly ? '' : 'disabled'}>${actionLabel}</button>
+            <button type="button" class="product-card-btn product-card-btn-primary" onclick="quickAddHomeProduct('${escapeHtml(p.id)}')" ${p.available && !p.displayOnly ? '' : 'disabled'}>${p.available && !p.displayOnly ? 'Add to Cart' : 'Sold Out'}</button>
           </div>
         </div>
       </div>`;
+
+    if (p.available && !p.displayOnly) {
+      renderHomeCardQty(p.id);
+    }
   });
 }
 
@@ -193,5 +235,6 @@ window.handleHomeProductOverlayClick = handleHomeProductOverlayClick;
 window.changeHomeProductQty = changeHomeProductQty;
 window.addHomeProductToCart = addHomeProductToCart;
 window.quickAddHomeProduct = (productId) => addToCart(productId, 1);
+window.homeCardQtyChange = homeCardQtyChange;
 
 init();
