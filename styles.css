@@ -152,7 +152,7 @@ button.btn-primary:active {
 }
 
 .logo-img {
-  height: 80px;
+  height: 140px;
   width: auto;
   object-fit: contain;
 }
@@ -295,7 +295,7 @@ button.btn-primary:active {
   }
 
   .logo-img {
-    height: 80px;
+    height: 118px;
   }
 
   .nav-links {
@@ -323,7 +323,7 @@ button.btn-primary:active {
   }
 
   .logo-img {
-    height: 72px;
+    height: 92px;
   }
 
   .nav-links,
