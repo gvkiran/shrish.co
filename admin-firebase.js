@@ -214,7 +214,6 @@ function syncCurrentOrderFilters() {
 }
 
 function renderOrders() {
-  syncCurrentOrderFilters();
   const orders = getFilteredOrders();
   updateOrdersSheetUi();
 
@@ -708,7 +707,14 @@ function subscribeData() {
 }
 
 function bindUi() {
-  document.getElementById('filterStatus')?.addEventListener('change', renderOrders);
+  document.getElementById('filterStatus')?.addEventListener('change', () => {
+    syncCurrentOrderFilters();
+    renderOrders();
+  });
+  document.getElementById('filterDate')?.addEventListener('change', () => {
+    syncCurrentOrderFilters();
+    renderOrders();
+  });
   document.getElementById('accountingDate')?.addEventListener('change', renderAccounting);
   document.getElementById('adminPw')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
 }
