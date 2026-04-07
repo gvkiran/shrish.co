@@ -106,6 +106,20 @@
       transition: var(--transition); color: var(--text-light); font-family: var(--font-body);
     }
     .filter-pill.active { background: var(--dark); color: white; border-color: var(--dark); }
+    .sheet-switcher { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .sheet-pill {
+      padding: 8px 16px; border-radius: 50px; border: 1.5px solid var(--cream-d);
+      background: var(--white); font-size: 13px; cursor: pointer;
+      transition: var(--transition); color: var(--text-light); font-family: var(--font-body); font-weight: 600;
+    }
+    .sheet-pill.active { background: var(--saffron); color: white; border-color: var(--saffron); }
+    .filter-input {
+      padding: 8px 14px; border-radius: 50px; border: 1.5px solid #e0d0b8;
+      background: #fff; font-size: 13px; color: var(--text); font-family: var(--font-body); outline: none;
+    }
+    .orders-help {
+      margin-bottom: 14px; font-size: 13px; color: var(--text-light);
+    }
 
     /* Orders table */
     .orders-table-wrap { overflow-x: auto; border-radius: var(--radius-lg); box-shadow: var(--shadow); }
@@ -315,17 +329,28 @@
     <!-- ── ORDERS TAB ── -->
     <div id="tab-orders">
       <div class="orders-toolbar">
-        <h2>Customer Orders</h2>
+        <h2 id="ordersSectionTitle">Active Orders</h2>
         <div class="toolbar-actions">
-          <select id="filterStatus" class="filter-pill active" style="border-radius:50px;padding:6px 16px;border:1.5px solid #e0d0b8;background:#fff;font-size:13px;cursor:pointer;" onchange="renderOrders()">
+          <input type="date" id="filterDate" class="filter-input" onchange="renderOrders()">
+          <select id="filterStatus" class="filter-input" onchange="renderOrders()">
             <option value="all">All Orders</option>
             <option value="pending">Pending</option>
             <option value="fulfilled">Fulfilled</option>
             <option value="cancelled">Cancelled</option>
           </select>
+          <button class="toolbar-btn" onclick="printActiveOrders()">🖨 Print Active</button>
           <button class="toolbar-btn" onclick="exportCSV()">⬇ Export CSV</button>
-          <button class="toolbar-btn danger" onclick="clearFulfilled()">✕ Clear Fulfilled</button>
         </div>
+      </div>
+
+      <div class="sheet-switcher">
+        <button class="sheet-pill active" id="ordersSheetActive" onclick="setOrderSheet('active', this)">Active Orders</button>
+        <button class="sheet-pill" id="ordersSheetProcessed" onclick="setOrderSheet('processed', this)">Processed Orders</button>
+        <button class="sheet-pill" id="ordersSheetAll" onclick="setOrderSheet('all', this)">All Orders</button>
+      </div>
+
+      <div class="orders-help" id="ordersHelpText">
+        Active Orders shows your current pending pickup list. Processed Orders shows fulfilled and cancelled records. All Orders is the permanent master history.
       </div>
 
       <div class="orders-table-wrap">

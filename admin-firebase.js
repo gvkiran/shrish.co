@@ -25,6 +25,7 @@ const state = {
   orders: [],
   products: JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || [])),
   subscribers: [],
+  orderSheet: 'active',
   unsubOrders: null,
   unsubProducts: null,
   unsubSubscribersGeneral: null,
@@ -107,10 +108,63 @@ function renderStats() {
     <div class="stat-card"><div class="s-label">Subscribers</div><div class="s-value">${totalSubscribers}</div></div>`;
 }
 
+function orderDateKey(order) {
+  const raw = order?.createdAt?.toDate ? order.createdAt.toDate() : new Date(order?.createdAt || 0);
+  if (Number.isNaN(raw.getTime())) return '';
+  return raw.toISOString().slice(0, 10);
+}
+
+function getOrdersForSheet(sheet = state.orderSheet) {
+  if (sheet === 'active') return state.orders.filter((order) => (order.status || 'pending') === 'pending');
+  if (sheet === 'processed') return state.orders.filter((order) => ['fulfilled', 'cancelled'].includes(order.status || 'pending'));
+  return [...state.orders];
+}
+
+function getFilteredOrders(sheet = state.orderSheet) {
+  const filterStatus = document.getElementById('filterStatus')?.value || 'all';
+  const filterDate = document.getElementById('filterDate')?.value || '';
+
+  let orders = getOrdersForSheet(sheet);
+
+  if (filterStatus !== 'all') {
+    orders = orders.filter((order) => (order.status || 'pending') === filterStatus);
+  }
+
+  if (filterDate) {
+    orders = orders.filter((order) => orderDateKey(order) === filterDate);
+  }
+
+  return orders;
+}
+
+function updateOrdersSheetUi() {
+  const config = {
+    active: {
+      title: 'Active Orders',
+      help: 'Active Orders shows your current pending pickup list.',
+    },
+    processed: {
+      title: 'Processed Orders',
+      help: 'Processed Orders shows fulfilled and cancelled records. You can reset one back to pending if needed.',
+    },
+    all: {
+      title: 'All Orders',
+      help: 'All Orders is the permanent master history in date order. Status can still be updated, but nothing is deleted here.',
+    }
+  };
+
+  document.querySelectorAll('.sheet-pill').forEach((button) => button.classList.remove('active'));
+  document.getElementById(`ordersSheet${state.orderSheet.charAt(0).toUpperCase()}${state.orderSheet.slice(1)}`)?.classList.add('active');
+
+  const title = document.getElementById('ordersSectionTitle');
+  const help = document.getElementById('ordersHelpText');
+  if (title) title.textContent = config[state.orderSheet].title;
+  if (help) help.textContent = config[state.orderSheet].help;
+}
+
 function renderOrders() {
-  const filter = document.getElementById('filterStatus')?.value || 'all';
-  let orders = [...state.orders];
-  if (filter !== 'all') orders = orders.filter((o) => o.status === filter);
+  const orders = getFilteredOrders();
+  updateOrdersSheetUi();
 
   const tbody = document.getElementById('ordersBody');
   if (!tbody) return;
@@ -250,7 +304,9 @@ async function updatePayment(id, payment) {
 }
 
 async function clearFulfilled() {
-  showToast('For safety, clear fulfilled manually in Firestore if needed.');
+  state.orderSheet = 'processed';
+  renderOrders();
+  showToast('Fulfilled and cancelled orders are shown in Processed Orders.');
 }
 
 function exportCSV() {
@@ -279,6 +335,90 @@ function exportCSV() {
   a.download = `shrish_orders_${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   showToast('CSV downloaded');
+}
+
+function setOrderSheet(sheet) {
+  state.orderSheet = sheet;
+  renderOrders();
+}
+
+function printableItems(order) {
+  return (order.items || [])
+    .map((item) => `${item.name || 'Item'} x ${item.qty || 1}`)
+    .join(', ');
+}
+
+function printableQty(order) {
+  return order.totalBoxes || (order.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0);
+}
+
+function printActiveOrders() {
+  const orders = getFilteredOrders('active');
+  if (!orders.length) {
+    showToast('No active orders to print.');
+    return;
+  }
+
+  const rows = orders.map((order) => `
+    <tr>
+      <td>${escapeHtml(order.orderNumber || order.id)}</td>
+      <td>${escapeHtml(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim())}</td>
+      <td>${escapeHtml(order.phone || '')}</td>
+      <td>${escapeHtml(printableItems(order))}</td>
+      <td>${escapeHtml(String(printableQty(order)))}</td>
+      <td>${escapeHtml(formatCurrency(order.totalPrice || 0))}</td>
+      <td>${escapeHtml(order.locationLabel || order.location || '—')}</td>
+      <td>${escapeHtml(order.payment || 'pending')}</td>
+    </tr>
+  `).join('');
+
+  const selectedDate = document.getElementById('filterDate')?.value || 'All dates';
+  const printWindow = window.open('', '_blank', 'width=1200,height=900');
+  if (!printWindow) {
+    showToast('Allow popups to print orders.');
+    return;
+  }
+
+  printWindow.document.write(`<!DOCTYPE html>
+  <html>
+    <head>
+      <title>Shrish Active Orders Print</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 24px; color: #1A1208; }
+        h1 { margin: 0 0 8px; font-size: 26px; }
+        p { margin: 0 0 18px; color: #6B4A20; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { border: 1px solid #d9c8ab; padding: 10px 8px; vertical-align: top; font-size: 12px; text-align: left; word-wrap: break-word; }
+        th { background: #f5e9d4; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; }
+        .meta { margin-bottom: 16px; font-size: 13px; }
+        @media print {
+          body { padding: 0; }
+          .no-print { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Shrish Active Orders</h1>
+      <p class="meta">Pending pickup orders only. Filter date: ${escapeHtml(selectedDate)}. Printed on ${escapeHtml(new Date().toLocaleString())}.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Order No</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Total</th>
+            <th>Location</th>
+            <th>Payment</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <script>window.onload = () => { window.print(); };</script>
+    </body>
+  </html>`);
+  printWindow.document.close();
 }
 
 function exportSubscribersCSV() {
@@ -311,6 +451,7 @@ function switchTab(tab, btn) {
   document.getElementById('tab-products').style.display = tab === 'products' ? 'block' : 'none';
   document.getElementById('tab-subscribers').style.display = tab === 'subscribers' ? 'block' : 'none';
   if (tab === 'products') renderProducts();
+  if (tab === 'orders') renderOrders();
   if (tab === 'subscribers') renderSubscribers();
 }
 
@@ -398,6 +539,8 @@ window.setStatus = setStatus;
 window.updatePickupDate = updatePickupDate;
 window.updatePayment = updatePayment;
 window.clearFulfilled = clearFulfilled;
+window.setOrderSheet = setOrderSheet;
+window.printActiveOrders = printActiveOrders;
 window.exportCSV = exportCSV;
 window.exportSubscribersCSV = exportSubscribersCSV;
 
