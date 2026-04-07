@@ -133,13 +133,13 @@ button.btn-primary:active {
 
 .nav-inner {
   display: grid;
-  grid-template-columns: 220px 1fr 220px;
+  grid-template-columns: 260px 1fr 220px;
   align-items: center;
   width: 100%;
   max-width: 1520px;
   margin: 0 auto;
-  padding: 0 26px 0 6px;
-  min-height: 88px;
+  padding: 0 26px 0 34px;
+  min-height: 122px;
   column-gap: 10px;
 }
 
@@ -148,7 +148,7 @@ button.btn-primary:active {
   align-items: center;
   justify-self: start;
   flex-shrink: 0;
-  margin-left: -8px;
+  margin-left: 18px;
 }
 
 .logo-img {
@@ -161,10 +161,8 @@ button.btn-primary:active {
   display: flex;
   align-items: center;
   justify-content: center;
-  list-style: none;
-  gap: 46px;
-  margin: 0;
-  padding: 0;
+  gap: 40px;
+  transform: translateX(24px);
 }
 
 .nav-link {
@@ -285,13 +283,14 @@ button.btn-primary:active {
 
 @media (max-width: 1100px) {
   .nav-inner {
-    grid-template-columns: 170px 1fr 170px;
-    padding: 0 18px 0 8px;
+    grid-template-columns: 220px 1fr 170px;
+    padding: 0 18px 0 24px;
     column-gap: 12px;
-  }
+    min-height: 108px;
+}
 
   .nav-logo {
-    margin-left: -10px;
+    margin-left: 10px;
   }
 
   .logo-img {
