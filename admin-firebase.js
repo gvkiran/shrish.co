@@ -172,7 +172,7 @@ function renderOrders() {
   if (!tbody) return;
 
   if (!orders.length) {
-    tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📭</div><p>No orders found.</p></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📭</div><p>No orders found.</p></div></td></tr>';
     renderStats();
     return;
   }
@@ -186,7 +186,8 @@ function renderOrders() {
     const statusLabel = (order.status || 'pending').charAt(0).toUpperCase() + (order.status || 'pending').slice(1);
 
     return `<tr id="row-${escapeHtml(order.id)}">
-      <td><div class="order-id">${escapeHtml(order.orderNumber || order.id)}</div><div style="font-size:11px;color:var(--text-light);margin-top:3px">${formatDate(order.createdAt)}</div></td>
+      <td><div class="order-id">${escapeHtml(order.orderNumber || order.id)}</div></td>
+      <td style="font-size:12px;color:var(--text-light)">${formatDate(order.createdAt)}</td>
       <td><div class="customer-name">${escapeHtml(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim())}</div><div class="customer-phone">${escapeHtml(order.phone)}</div><div class="customer-email">${escapeHtml(order.email)}</div></td>
       <td>${itemsHtml}</td>
       <td><div class="total-amount">${formatCurrency(order.totalPrice || 0)}</div></td>
@@ -388,7 +389,7 @@ function printActiveOrders() {
       <td>${escapeHtml(String(printableQty(order)))}</td>
       <td>${escapeHtml(formatCurrency(order.totalPrice || 0))}</td>
       <td>${escapeHtml(order.locationLabel || order.location || '—')}</td>
-      <td>Cash [ ]<br>Zelle [ ]<br>Card [ ]</td>
+      <td>Cash [&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br>Zelle [&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br>Card [&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]</td>
     </tr>
   `).join('');
 
@@ -410,14 +411,14 @@ function printActiveOrders() {
         table { width: 100%; border-collapse: collapse; table-layout: auto; }
         th, td { border: 1px solid #d9c8ab; padding: 10px 8px; vertical-align: top; font-size: 12px; text-align: left; }
         th { background: #f5e9d4; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; }
-        th:nth-child(1), td:nth-child(1) { width: 11%; white-space: nowrap; }
-        th:nth-child(2), td:nth-child(2) { width: 13%; white-space: nowrap; }
+        th:nth-child(1), td:nth-child(1) { width: 10%; white-space: nowrap; }
+        th:nth-child(2), td:nth-child(2) { width: 14%; white-space: nowrap; }
         th:nth-child(3), td:nth-child(3) { width: 11%; white-space: nowrap; }
-        th:nth-child(4), td:nth-child(4) { width: 30%; }
-        th:nth-child(5), td:nth-child(5) { width: 6%; white-space: nowrap; text-align: center; }
+        th:nth-child(4), td:nth-child(4) { width: 31%; }
+        th:nth-child(5), td:nth-child(5) { width: 5%; white-space: nowrap; text-align: center; }
         th:nth-child(6), td:nth-child(6) { width: 10%; white-space: nowrap; }
-        th:nth-child(7), td:nth-child(7) { width: 12%; white-space: nowrap; }
-        th:nth-child(8), td:nth-child(8) { width: 7%; }
+        th:nth-child(7), td:nth-child(7) { width: 11%; white-space: nowrap; }
+        th:nth-child(8), td:nth-child(8) { width: 12%; }
         .meta { margin-bottom: 16px; font-size: 13px; }
         @media print {
           body { padding: 0; }
