@@ -148,7 +148,7 @@ button.btn-primary:active {
   align-items: center;
   justify-self: start;
   flex-shrink: 0;
-  margin-left: 0;
+  margin-left: 12px;
 }
 
 .logo-img {
@@ -189,7 +189,7 @@ button.btn-primary:active {
   justify-content: flex-end;
   min-width: 170px;
   margin-right: 0;
-  padding-right: 8px;
+  padding-right: 24px;
 }
 
 /* ── NAV CART BUTTON ── */
@@ -294,7 +294,7 @@ button.btn-primary:active {
   }
 
   .nav-logo {
-    margin-left: 0;
+    margin-left: 8px;
   }
 
   .logo-img {
@@ -312,15 +312,16 @@ button.btn-primary:active {
 
   .nav-cart-wrap {
     min-width: 150px;
-    padding-right: 4px;
+    padding-right: 14px;
   }
 }
 
 @media (max-width: 768px) {
   .nav-inner {
-    grid-template-columns: auto auto;
-    padding: 0 18px;
+    grid-template-columns: 1fr auto auto;
+    padding: 0 14px 0 12px;
     min-height: 78px;
+    column-gap: 10px;
   }
 
   .nav-logo {
@@ -328,7 +329,7 @@ button.btn-primary:active {
   }
 
   .logo-img {
-    height: 92px;
+    height: 78px;
   }
 
   .nav-links,
@@ -336,9 +337,22 @@ button.btn-primary:active {
     display: none;
   }
 
+  .nav-cart-wrap {
+    min-width: 0;
+    padding-right: 0;
+    justify-self: end;
+  }
+
+  .nav-cart-btn {
+    padding: 6px 10px;
+    gap: 4px;
+  }
+
   .nav-hamburger {
     display: flex;
     justify-self: end;
+    order: 3;
+    margin-left: 2px;
   }
 
   .nav-mobile.open {
