@@ -12,7 +12,8 @@ service cloud.firestore {
 
     match /orders/{orderId} {
       allow create: if true;
-      allow read, update, delete: if isAdmin();
+      allow get: if true;
+      allow list, update, delete: if isAdmin();
     }
 
     match /order_locks/{phoneDigits} {

@@ -192,15 +192,15 @@ async function setStatus(id, status) {
   if (order?.phoneDigits) {
     const lockRef = doc(db, 'order_locks', order.phoneDigits);
 
-    if (status === 'pending') {
+    if (status === 'fulfilled') {
+      await deleteDoc(lockRef);
+    } else {
       await setDoc(lockRef, {
         phoneDigits: order.phoneDigits,
         orderId: id,
-        status: 'pending',
+        status,
         updatedAt: new Date().toISOString()
       }, { merge: true });
-    } else {
-      await deleteDoc(lockRef);
     }
   }
 

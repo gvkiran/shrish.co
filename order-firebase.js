@@ -13,6 +13,7 @@ import {
 let cart = JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
 let selectedLoc = '';
 let isSubmitting = false;
+const CONFIRMATION_WAIT_MS = 15000;
 
 function updateNavCart() {
   const total = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
@@ -147,6 +148,34 @@ function validateField(id, condition, message) {
 
 function orderLockRef(phoneDigits) {
   return doc(db, 'order_locks', phoneDigits);
+}
+
+function showDuplicateOrderMessage(phone) {
+  const banner = document.getElementById('errorBanner');
+  const list = document.getElementById('errorList');
+  if (!banner || !list) return;
+
+  list.innerHTML = `
+    <li>You already have an active order for <strong>${escapeHtml(phone)}</strong>.</li>
+    <li>If you would like to modify it, please contact us on <a href="https://wa.me/17653255577" target="_blank" rel="noopener" style="color:inherit;font-weight:700">WhatsApp</a>.</li>`;
+  banner.className = 'error-banner show hard-error';
+  banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function waitForOrderConfirmationNumber(orderRef) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < CONFIRMATION_WAIT_MS) {
+    const snap = await getDoc(orderRef);
+    const orderNumber = snap.data()?.orderNumber;
+    if (typeof orderNumber === 'string' && /^SHR-\d+$/.test(orderNumber)) {
+      return orderNumber;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+  }
+
+  return '';
 }
 
 function bindFormUi() {
@@ -290,13 +319,7 @@ async function submitOrder() {
     const lockRef = orderLockRef(phoneDigits);
     const lockSnap = await getDoc(lockRef);
     if (lockSnap.exists()) {
-      const banner = document.getElementById('errorBanner');
-      const list = document.getElementById('errorList');
-      list.innerHTML = `
-        <li>You already have a pending order for <strong>${escapeHtml(phone)}</strong>.</li>
-        <li>If you would like to modify it, please contact us on <a href="https://wa.me/17653255577" target="_blank" rel="noopener" style="color:inherit;font-weight:700">WhatsApp</a>.</li>`;
-      banner.className = 'error-banner show hard-error';
-      banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      showDuplicateOrderMessage(phone);
       return;
     }
 
@@ -355,7 +378,13 @@ async function submitOrder() {
 
     document.getElementById('checkoutWrap').style.display = 'none';
     document.getElementById('successScreen').style.display = 'block';
-    document.getElementById('successOrderNum').textContent = `Order received - Ref ${orderRef.id}`;
+    document.getElementById('successOrderNum').textContent = 'Generating confirmation number...';
+
+    const confirmationNumber = await waitForOrderConfirmationNumber(orderRef);
+    const displayNumber = confirmationNumber || orderRef.id;
+    document.getElementById('successOrderNum').textContent = confirmationNumber
+      ? `Order Confirmation No: ${confirmationNumber}`
+      : `Order received - Ref ${orderRef.id}`;
 
     const itemLines = order.items
       .map((item) => `<div style="font-size:13px">&bull; ${escapeHtml(item.name)} x ${item.qty} box${item.qty !== 1 ? 'es' : ''}</div>`)
@@ -368,7 +397,7 @@ async function submitOrder() {
       <div class="ss-row"><span>Name</span><span>${escapeHtml(firstName)} ${escapeHtml(lastName)}</span></div>
       <div class="ss-row"><span>Phone</span><span>${escapeHtml(phone)}</span></div>
       <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Cash at Pickup</span></div>
-      <div class="ss-row"><span>Reference</span><span>${escapeHtml(orderRef.id)}</span></div>`;
+      <div class="ss-row"><span>Order Confirmation No</span><span>${escapeHtml(displayNumber)}</span></div>`;
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (error) {
@@ -376,8 +405,18 @@ async function submitOrder() {
 
     const banner = document.getElementById('errorBanner');
     const list = document.getElementById('errorList');
-    if (error?.message === 'DUPLICATE_PENDING_ORDER') {
-      list.innerHTML = '<li>You already have a pending order. If you would like to modify it, please contact us on WhatsApp.</li>';
+    if (
+      error?.message === 'DUPLICATE_PENDING_ORDER' ||
+      error?.code === 'permission-denied'
+    ) {
+      const lockRef = orderLockRef(phoneDigits);
+      const existingLock = await getDoc(lockRef).catch(() => null);
+      if (existingLock?.exists()) {
+        showDuplicateOrderMessage(phone);
+        return;
+      }
+
+      list.innerHTML = '<li>You already have an active order. If you would like to modify it, please contact us on WhatsApp.</li>';
     } else {
       list.innerHTML = '<li>We could not submit your order right now. Please try again in a minute.</li>';
     }
