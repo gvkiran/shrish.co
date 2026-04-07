@@ -158,8 +158,10 @@ function updateOrdersSheetUi() {
 
   const title = document.getElementById('ordersSectionTitle');
   const help = document.getElementById('ordersHelpText');
+  const bulkButton = document.getElementById('bulkFulfillBtn');
   if (title) title.textContent = config[state.orderSheet].title;
   if (help) help.textContent = config[state.orderSheet].help;
+  if (bulkButton) bulkButton.style.display = state.orderSheet === 'active' ? 'inline-flex' : 'none';
 }
 
 function renderOrders() {
@@ -270,7 +272,7 @@ async function toggleAvailable(id, available) {
   showToast(`${product.name} ${available ? 'is live' : 'hidden'}`);
 }
 
-async function setStatus(id, status) {
+async function applyOrderStatus(id, status, silent = false) {
   const order = state.orders.find((item) => item.id === id);
 
   await updateDoc(doc(db, 'orders', id), { status, updatedAt: new Date().toISOString() });
@@ -290,7 +292,11 @@ async function setStatus(id, status) {
     }
   }
 
-  showToast(`Order updated to ${status}`);
+  if (!silent) showToast(`Order updated to ${status}`);
+}
+
+async function setStatus(id, status) {
+  await applyOrderStatus(id, status, false);
 }
 
 async function updatePickupDate(id, pickupDate) {
@@ -342,6 +348,20 @@ function setOrderSheet(sheet) {
   renderOrders();
 }
 
+async function markFilteredActiveFulfilled() {
+  const orders = getFilteredOrders('active');
+  if (!orders.length) {
+    showToast('No active orders match the current filters.');
+    return;
+  }
+
+  for (const order of orders) {
+    await applyOrderStatus(order.id, 'fulfilled', true);
+  }
+
+  showToast(`${orders.length} active order${orders.length === 1 ? '' : 's'} marked fulfilled.`);
+}
+
 function printableItems(order) {
   return (order.items || [])
     .map((item) => `${escapeHtml(item.name || 'Item')} x ${escapeHtml(String(item.qty || 1))}`)
@@ -368,7 +388,7 @@ function printActiveOrders() {
       <td>${escapeHtml(String(printableQty(order)))}</td>
       <td>${escapeHtml(formatCurrency(order.totalPrice || 0))}</td>
       <td>${escapeHtml(order.locationLabel || order.location || '—')}</td>
-      <td></td>
+      <td>Cash [ ]<br>Zelle [ ]<br>Card [ ]</td>
     </tr>
   `).join('');
 
@@ -548,6 +568,7 @@ window.updatePickupDate = updatePickupDate;
 window.updatePayment = updatePayment;
 window.clearFulfilled = clearFulfilled;
 window.setOrderSheet = setOrderSheet;
+window.markFilteredActiveFulfilled = markFilteredActiveFulfilled;
 window.printActiveOrders = printActiveOrders;
 window.exportCSV = exportCSV;
 window.exportSubscribersCSV = exportSubscribersCSV;
