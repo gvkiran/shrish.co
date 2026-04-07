@@ -48,7 +48,7 @@ function getProductVariants(product) {
       .map((variant, index) => ({
         id: variant.id || `opt${index + 1}`,
         label: variant.label,
-        price: variant.price || product.price || '',
+        price: variant.price || product.price || ',
         unit: variant.label
       }));
   }
@@ -56,8 +56,8 @@ function getProductVariants(product) {
   return [{
     id: 'default',
     label: product?.unit || 'Default',
-    price: product?.price || '',
-    unit: product?.unit || ''
+    price: product?.price || ',
+    unit: product?.unit || '
   }];
 }
 
@@ -106,7 +106,7 @@ function renderCartDrawer() {
 
   foot.style.display = 'block';
   const totalQty = cart.reduce((s, i) => s + i.qty, 0);
-  totalEl.textContent = `${totalQty} box${totalQty !== 1 ? 'es' : ''}`;
+  totalEl.textContent = `${totalQty} box${totalQty !== 1 ? 'es' : '}`;
   list.innerHTML = cart.map((item) => {
     const imgHtml = item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" onerror="this.parentElement.textContent='🥭'">` : '🥭';
     return `<div class="cart-item">
@@ -118,12 +118,12 @@ function renderCartDrawer() {
           <button class="ci-qty-btn" onclick="cartQty('${escapeHtml(item.id)}',-1)">−</button>
           <span class="ci-qty-num">${item.qty}</span>
           <button class="ci-qty-btn" onclick="cartQty('${escapeHtml(item.id)}',1)">+</button>
-          <span style="font-size:11px;color:var(--text-light);margin-left:4px">box${item.qty > 1 ? 'es' : ''}</span>
+          <span style="font-size:11px;color:var(--text-light);margin-left:4px">box${item.qty > 1 ? 'es' : '}</span>
         </div>
       </div>
       <button class="ci-remove" onclick="cartRemove('${escapeHtml(item.id)}')">✕</button>
     </div>`;
-  }).join('');
+  }).join(');
 }
 
 function cartQty(id, delta) {
@@ -176,7 +176,7 @@ function openCart() {
 function closeCart() {
   document.getElementById('cartDrawer')?.classList.remove('open');
   document.getElementById('cartOverlay')?.classList.remove('open');
-  document.body.style.overflow = '';
+  document.body.style.overflow = ';
 }
 
 function goCheckout() {
@@ -205,8 +205,8 @@ function selectedVariantDisplay(product, variantId = null) {
   const selected = getSelectedVariant(product, variantId);
   return {
     selected,
-    price: selected.price || product.price || '',
-    unit: selected.unit || product.unit || ''
+    price: selected.price || product.price || ',
+    unit: selected.unit || product.unit || '
   };
 }
 
@@ -232,10 +232,10 @@ function openModal(productId) {
   const thumbs = document.getElementById('modalThumbs');
   if (thumbs) {
     if (imgs.length > 1) {
-      thumbs.innerHTML = imgs.map((src, i) => `<img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(p.name)} ${i + 1}" onclick="switchModalImg('${escapeHtml(src)}',this)" onerror="this.style.display='none'">`).join('');
+      thumbs.innerHTML = imgs.map((src, i) => `<img class="modal-thumb ${i === 0 ? 'active' : '}" src="${escapeHtml(src)}" alt="${escapeHtml(p.name)} ${i + 1}" onclick="switchModalImg('${escapeHtml(src)}',this)" onerror="this.style.display='none'">`).join(');
       thumbs.style.display = 'flex';
     } else {
-      thumbs.innerHTML = '';
+      thumbs.innerHTML = ';
       thumbs.style.display = 'none';
     }
   }
@@ -245,24 +245,24 @@ function openModal(productId) {
   const chips = [p.season && `${p.season}`, p.taste && `${p.taste}`]
     .filter(Boolean)
     .map((chip) => `<span class="modal-chip">${escapeHtml(chip)}</span>`)
-    .join('');
+    .join(');
 
   const badges = (p.badges || []).map((badge) => {
-    let cls = '';
+    let cls = ';
     if (/gi|iso/i.test(badge)) cls = 'blue';
     else if (/free|diabetic|health/i.test(badge)) cls = 'green';
     else if (/limited|seasonal/i.test(badge)) cls = 'red';
     return `<span class="modal-badge ${cls}">${escapeHtml(badge)}</span>`;
-  }).join('');
+  }).join(');
 
-  let actionHtml = '';
+  let actionHtml = ';
   if (isSoon) {
     actionHtml = `<button class="modal-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify Me</button>`;
   } else if (isAvail) {
     const variants = getProductVariants(p);
     const variantButtons = variants.length > 1
-      ? `<div class="modal-variant-group"><div class="modal-variant-title">Choose option</div><div class="modal-variant-buttons">${variants.map((variant) => `<button type="button" class="modal-variant-btn ${variant.id === modalVariantId ? 'active' : ''}" onclick="modalSelectVariant('${escapeHtml(p.id)}','${escapeHtml(variant.id)}')"><span>${escapeHtml(variant.label)}</span><strong>${escapeHtml(variant.price)}</strong></button>`).join('')}</div></div>`
-      : '';
+      ? `<div class="modal-variant-group"><div class="modal-variant-title">Choose option</div><div class="modal-variant-buttons">${variants.map((variant) => `<button type="button" class="modal-variant-btn ${variant.id === modalVariantId ? 'active' : '}" onclick="modalSelectVariant('${escapeHtml(p.id)}','${escapeHtml(variant.id)}')"><span>${escapeHtml(variant.label)}</span><strong>${escapeHtml(variant.price)}</strong></button>`).join(')}</div></div>`
+      : ';
     actionHtml = `${variantButtons}<div class="modal-qty-row"><div class="modal-qty-ctrl"><button class="modal-qty-btn" onclick="modalChangeQty(-1)">-</button><span class="modal-qty-num" id="modalQtyNum">1</span><button class="modal-qty-btn" onclick="modalChangeQty(1)">+</button></div><span style="font-size:13px;color:var(--text-light)">${escapeHtml(selectedDisplay.unit || 'item')}</span><button class="modal-add-btn" id="modalAddBtn" onclick="modalAddToCart()">Add to Cart</button></div>`;
   } else {
     actionHtml = `<button class="modal-add-btn" style="background:#ccc;cursor:not-allowed" disabled>Currently Sold Out</button>`;
@@ -273,13 +273,13 @@ function openModal(productId) {
     info.innerHTML = `
       <div class="modal-origin">${escapeHtml(p.origin)}</div>
       <div class="modal-name">${escapeHtml(p.name)}</div>
-      ${p.localName ? `<div class="modal-local">${escapeHtml(p.localName)}</div>` : ''}
+      ${p.localName ? `<div class="modal-local">${escapeHtml(p.localName)}</div>` : '}
       <div class="modal-status ${statusCls}">${escapeHtml(statusText)}</div>
       <div class="modal-desc">${escapeHtml(p.description)}</div>
-      ${chips ? `<div class="modal-chips">${chips}</div>` : ''}
-      ${badges ? `<div class="modal-badges">${badges}</div>` : ''}
-      ${p.details ? `<div class="modal-note">Info: ${escapeHtml(p.details)}</div>` : ''}
-      ${p.bestFor ? `<div class="modal-best"><strong>Best for:</strong> ${escapeHtml(p.bestFor)}</div>` : ''}
+      ${chips ? `<div class="modal-chips">${chips}</div>` : '}
+      ${badges ? `<div class="modal-badges">${badges}</div>` : '}
+      ${p.details ? `<div class="modal-note">Info: ${escapeHtml(p.details)}</div>` : '}
+      ${p.bestFor ? `<div class="modal-best"><strong>Best for:</strong> ${escapeHtml(p.bestFor)}</div>` : '}
       <div class="modal-price-row"><div><div class="modal-price">${escapeHtml(selectedDisplay.price)}</div><div class="modal-unit">${escapeHtml(selectedDisplay.unit)}</div></div></div>
       ${actionHtml}`;
   }
@@ -297,7 +297,7 @@ function switchModalImg(src, thumb) {
 
 function closeModal() {
   document.getElementById('productModal')?.classList.remove('open');
-  document.body.style.overflow = '';
+  document.body.style.overflow = ';
 }
 
 function handleModalOverlayClick(e) {
@@ -332,10 +332,10 @@ async function notifyMe(productId, productName) {
 
   if (title) title.textContent = 'Get Notified';
   if (text) text.textContent = `Enter your email and we’ll let you know when "${productName}" is available.`;
-  if (email) email.value = '';
+  if (email) email.value = ';
   if (msg) {
     msg.className = 'notify-message';
-    msg.textContent = '';
+    msg.textContent = ';
   }
   if (modal) modal.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -347,11 +347,11 @@ function closeNotifyModal() {
   if (modal) modal.classList.remove('open');
   if (msg) {
     msg.className = 'notify-message';
-    msg.textContent = '';
+    msg.textContent = ';
   }
   const productModalOpen = document.getElementById('productModal')?.classList.contains('open');
   const cartOpen = document.getElementById('cartDrawer')?.classList.contains('open');
-  document.body.style.overflow = productModalOpen || cartOpen ? 'hidden' : '';
+  document.body.style.overflow = productModalOpen || cartOpen ? 'hidden' : ';
 }
 
 function handleNotifyOverlayClick(event) {
@@ -366,7 +366,7 @@ function setNotifyMessage(type, message) {
 }
 
 function normalizeEmail(value) {
-  return String(value || '').trim().toLowerCase();
+  return String(value || ').trim().toLowerCase();
 }
 
 function isValidEmail(value) {
@@ -412,6 +412,18 @@ async function submitNotifyRequest(event) {
       source: 'shop_notify_modal',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
+    });
+
+    setNotifyMessage('success', `You are subscribed for updates on "${notifyTarget.productName}".`);
+    emailInput.value = '';
+  } catch (error) {
+    console.error('Notify request failed', error);
+    setNotifyMessage('error', 'Could not save request right now. Please try again in a minute.');
+  } finally {
+    submitButton.disabled = false;
+  }
+}
+
 function renderCard(p) {
   const isAvail = p.available && !p.displayOnly;
   const isSoon = p.displayOnly;
@@ -494,48 +506,6 @@ function cardQtyChange(productId, delta) {
   updateCartUI();
   renderCardQty(productId);
 }
-        <div class="pc-origin-lbl">${escapeHtml(p.origin)}</div>
-        <div class="pc-name" onclick="openModal('${escapeHtml(p.id)}')">${escapeHtml(p.name)}</div>
-        ${p.localName ? `<div class="pc-local">${escapeHtml(p.localName)}</div>` : ''}
-        <div class="pc-short-desc">${escapeHtml(shortDesc)}</div>
-        <div class="pc-footer"><div class="pc-price-wrap"><div class="pc-price">${escapeHtml(p.price)}</div><div class="pc-unit">${escapeHtml(p.unit)}</div></div></div>
-        ${actionHtml}
-      </div>
-    </div>`;
-}
-
-function quickAdd(productId) {
-  addToCart(productId, 1);
-  renderCardQty(productId);
-}
-
-function renderCardQty(productId) {
-  const wrap = document.getElementById(`card-actions-${productId}`);
-  if (!wrap) return;
-  const item = cart.find((x) => x.id === productId);
-  const qty = item ? item.qty : 0;
-  if (qty === 0) {
-    wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><button class="pc-add-btn" onclick="quickAdd('${escapeHtml(productId)}')">+ Add to Cart</button>`;
-    return;
-  }
-  wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><div class="card-qty-wrap"><button class="card-qty-btn remove-btn" onclick="cardQtyChange('${escapeHtml(productId)}',-1)" title="Remove one">−</button><div class="card-qty-mid"><span class="cqn">${qty}</span><span style="font-size:11px;opacity:.85">box${qty !== 1 ? 'es' : ''}</span></div><button class="card-qty-btn" onclick="cardQtyChange('${escapeHtml(productId)}',1)" title="Add one">+</button></div>`;
-}
-
-function cardQtyChange(productId, delta) {
-  const item = cart.find((x) => x.id === productId);
-  if (!item) return;
-  item.qty = Math.max(0, item.qty + delta);
-  if (item.qty === 0) {
-    cart = cart.filter((x) => x.id !== productId);
-    showToast('Removed from cart');
-  } else {
-    showToast(delta > 0 ? '✓ Added one more box!' : 'Removed one box');
-  }
-  saveCart();
-  updateCartUI();
-  renderCardQty(productId);
-}
-
 function buildFilters() {
   const bar = document.getElementById('filterBar');
   if (!bar) return;
@@ -653,6 +623,7 @@ window.handleNotifyOverlayClick = handleNotifyOverlayClick;
 window.goCheckout = goCheckout;
 
 init();
+
 
 
 
