@@ -26,6 +26,11 @@ const state = {
   products: JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || [])),
   subscribers: [],
   orderSheet: 'active',
+  orderFilters: {
+    active: { status: 'pending', date: '' },
+    processed: { status: 'all', date: '' },
+    all: { status: 'all', date: '' }
+  },
   unsubOrders: null,
   unsubProducts: null,
   unsubSubscribersGeneral: null,
@@ -147,8 +152,9 @@ function getOrdersForSheet(sheet = state.orderSheet) {
 }
 
 function getFilteredOrders(sheet = state.orderSheet) {
-  const filterStatus = document.getElementById('filterStatus')?.value || 'all';
-  const filterDate = document.getElementById('filterDate')?.value || '';
+  const sheetFilters = state.orderFilters[sheet] || { status: 'all', date: '' };
+  const filterStatus = sheetFilters.status || 'all';
+  const filterDate = sheetFilters.date || '';
 
   let orders = getOrdersForSheet(sheet);
 
@@ -187,16 +193,28 @@ function updateOrdersSheetUi() {
   const bulkButton = document.getElementById('bulkFulfillBtn');
   const sheetSwitcher = document.getElementById('ordersSheetSwitcher');
   const filterStatus = document.getElementById('filterStatus');
+  const filterDate = document.getElementById('filterDate');
+  const currentFilters = state.orderFilters[state.orderSheet] || { status: 'all', date: '' };
   if (title) title.textContent = config[state.orderSheet].title;
   if (help) help.textContent = config[state.orderSheet].help;
   if (bulkButton) bulkButton.style.display = state.orderSheet === 'active' ? 'inline-flex' : 'none';
   if (sheetSwitcher) sheetSwitcher.style.display = document.getElementById('tab-orders')?.style.display === 'none' ? 'none' : 'flex';
-  if (filterStatus && state.orderSheet === 'active' && filterStatus.value === 'all') {
-    filterStatus.value = 'pending';
+  if (filterStatus) filterStatus.value = currentFilters.status || 'all';
+  if (filterDate) filterDate.value = currentFilters.date || '';
+}
+
+function syncCurrentOrderFilters() {
+  const filterStatus = document.getElementById('filterStatus');
+  const filterDate = document.getElementById('filterDate');
+  if (!state.orderFilters[state.orderSheet]) {
+    state.orderFilters[state.orderSheet] = { status: 'all', date: '' };
   }
+  state.orderFilters[state.orderSheet].status = filterStatus?.value || 'all';
+  state.orderFilters[state.orderSheet].date = filterDate?.value || '';
 }
 
 function renderOrders() {
+  syncCurrentOrderFilters();
   const orders = getFilteredOrders();
   updateOrdersSheetUi();
 
@@ -428,6 +446,7 @@ function exportCSV() {
 }
 
 function setOrderSheet(sheet) {
+  syncCurrentOrderFilters();
   state.orderSheet = sheet;
   renderOrders();
 }
