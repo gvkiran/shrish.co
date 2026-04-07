@@ -162,7 +162,7 @@ function buildCustomerEmail(order) {
               Your order is confirmed
             </div>
             <div style="margin-top:10px; font-size:14px; line-height:1.6; color:#fff3df; max-width:520px; margin-left:auto; margin-right:auto;">
-              Thanks for ordering with Shrish. We received your request and will contact you soon with pickup details.
+              Thank you for ordering from Shrish. Your request has been received. Please follow our WhatsApp group for pickup instructions and updates.
             </div>
           </div>
 
@@ -214,8 +214,8 @@ function buildCustomerEmail(order) {
                 What happens next
               </div>
               <div style="font-size:14px; line-height:1.7; color:#3d3225;">
-                We will review your order and contact you with exact pickup timing and address details.
-                If you need to change the order, reply to this email or reach us on WhatsApp.
+                We will review your order and share the exact pickup time and address details through our WhatsApp group. 
+                To make changes to your order, please reply to this email or contact us on WhatsApp.
               </div>
             </div>
 
