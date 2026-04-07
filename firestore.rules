@@ -24,8 +24,9 @@ service cloud.firestore {
     }
 
     match /notify_requests/{docId} {
+      allow get: if true;
       allow create: if true;
-      allow read, update, delete: if isAdmin();
+      allow list, update, delete: if isAdmin();
     }
 
     match /email_subscribers/{emailId} {
