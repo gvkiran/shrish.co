@@ -303,15 +303,19 @@ function getUniqueProductId(name) {
 
 function updateProductFormForStatus() {
   const status = document.getElementById('newProductStatus')?.value || 'live';
+  const category = document.getElementById('newProductCategory')?.value || 'mangoes';
   const priceInput = document.getElementById('newProductPrice');
   if (!priceInput) return;
 
   const isSoon = status === 'soon';
+  const usesVariants = productUsesVariants(category);
   priceInput.disabled = isSoon;
-  priceInput.required = !isSoon;
+  priceInput.required = !isSoon && !usesVariants;
   if (isSoon) {
     priceInput.value = '';
     priceInput.placeholder = 'Coming soon';
+  } else if (usesVariants) {
+    priceInput.placeholder = 'Optional main price';
   } else {
     priceInput.placeholder = '56';
   }
@@ -320,19 +324,81 @@ function updateProductFormForStatus() {
 function applyCategoryDefaults() {
   const category = document.getElementById('newProductCategory')?.value || 'mangoes';
   const unitInput = document.getElementById('newProductUnit');
-  if (!unitInput) return;
-
   const defaults = {
     mangoes: 'per box',
     putharekulu: '5 count or 10 count',
     jellysnacks: '250g or 500g'
   };
+  const nextValue = defaults[category] || 'per box';
+  if (!unitInput) return nextValue;
 
-  unitInput.value = defaults[category] || 'per box';
+  unitInput.value = nextValue;
+  return nextValue;
+}
+
+function productUsesVariants(category) {
+  return ['putharekulu', 'jellysnacks'].includes(category);
+}
+
+function toggleVariantFields() {
+  const category = document.getElementById('newProductCategory')?.value || 'mangoes';
+  const wrap = document.getElementById('variantFields');
+  if (!wrap) return;
+  wrap.classList.toggle('open', productUsesVariants(category));
+}
+
+function productVariantsFromForm(category, status) {
+  if (!productUsesVariants(category)) return [];
+
+  const rows = [
+    {
+      id: 'opt1',
+      label: String(document.getElementById('variantOneLabel')?.value || '').trim(),
+      price: String(document.getElementById('variantOnePrice')?.value || '').trim()
+    },
+    {
+      id: 'opt2',
+      label: String(document.getElementById('variantTwoLabel')?.value || '').trim(),
+      price: String(document.getElementById('variantTwoPrice')?.value || '').trim()
+    }
+  ];
+
+  const variants = rows
+    .filter((row) => row.label)
+    .map((row) => {
+      const numeric = parseFloat(row.price);
+      return {
+        id: row.id,
+        label: row.label,
+        price: Number.isFinite(numeric) && numeric > 0 ? `$${numeric}` : (status === 'soon' ? 'Coming Soon' : '')
+      };
+    });
+
+  return variants;
+}
+
+function primaryPriceFromVariants(variants = [], status = 'live') {
+  if (!variants.length) return status === 'soon' ? 'Coming Soon' : '';
+  return variants[0].price || (status === 'soon' ? 'Coming Soon' : '');
+}
+
+function galleryFromInput(value) {
+  return String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function openAddProductForm() {
+  document.getElementById('addProductForm')?.reset();
+  document.getElementById('editingProductId').value = '';
+  const title = document.querySelector('#productFormCard .product-form-head h3');
+  const submit = document.getElementById('addProductSubmitBtn');
+  if (title) title.textContent = 'Add New Product';
+  if (submit) submit.textContent = 'Save Product';
   document.getElementById('productFormCard')?.classList.add('open');
+  applyCategoryDefaults();
+  toggleVariantFields();
   updateProductFormForStatus();
   document.getElementById('newProductName')?.focus();
 }
@@ -345,9 +411,47 @@ function resetAddProductForm() {
   const form = document.getElementById('addProductForm');
   if (!form) return;
   form.reset();
+  document.getElementById('editingProductId').value = '';
   applyCategoryDefaults();
+  toggleVariantFields();
   document.getElementById('newProductStatus').value = 'live';
   updateProductFormForStatus();
+}
+
+function editProduct(id) {
+  const product = state.products.find((item) => item.id === id);
+  if (!product) return;
+
+  document.getElementById('editingProductId').value = product.id;
+  document.getElementById('newProductName').value = product.name || '';
+  document.getElementById('newProductCategory').value = product.category || 'mangoes';
+  document.getElementById('newProductLocalName').value = product.localName || '';
+  document.getElementById('newProductOrigin').value = product.origin || '';
+  document.getElementById('newProductStatus').value = product.displayOnly ? 'soon' : (product.available ? 'live' : 'off');
+  document.getElementById('newProductTag').value = product.tag || '';
+  document.getElementById('newProductPrice').value = String(product.price || '').replace(/[^0-9.]/g, '');
+  document.getElementById('newProductUnit').value = product.unit || '';
+  document.getElementById('newProductImage').value = product.image || '';
+  document.getElementById('newProductGallery').value = Array.isArray(product.gallery) ? product.gallery.join(', ') : '';
+  document.getElementById('newProductSeason').value = product.season || '';
+  document.getElementById('newProductTaste').value = product.taste || '';
+  document.getElementById('newProductBestFor').value = product.bestFor || '';
+  document.getElementById('newProductDescription').value = product.description || '';
+
+  const variants = Array.isArray(product.variants) ? product.variants : [];
+  document.getElementById('variantOneLabel').value = variants[0]?.label || '';
+  document.getElementById('variantOnePrice').value = String(variants[0]?.price || '').replace(/[^0-9.]/g, '');
+  document.getElementById('variantTwoLabel').value = variants[1]?.label || '';
+  document.getElementById('variantTwoPrice').value = String(variants[1]?.price || '').replace(/[^0-9.]/g, '');
+
+  const title = document.querySelector('#productFormCard .product-form-head h3');
+  const submit = document.getElementById('addProductSubmitBtn');
+  if (title) title.textContent = 'Edit Product';
+  if (submit) submit.textContent = 'Update Product';
+  document.getElementById('productFormCard')?.classList.add('open');
+  toggleVariantFields();
+  updateProductFormForStatus();
+  document.getElementById('newProductName')?.focus();
 }
 
 async function submitAddProduct(event) {
@@ -358,6 +462,7 @@ async function submitAddProduct(event) {
   if (!form || !submitButton) return;
 
   const formData = new FormData(form);
+  const editingProductId = String(formData.get('editingProductId') || '').trim();
   const name = String(formData.get('name') || '').trim();
   const category = String(formData.get('category') || '').trim();
   const localName = String(formData.get('localName') || '').trim();
@@ -367,6 +472,7 @@ async function submitAddProduct(event) {
   const priceValue = String(formData.get('price') || '').trim();
   const unit = String(formData.get('unit') || '').trim();
   const image = String(formData.get('image') || '').trim();
+  const gallery = galleryFromInput(formData.get('gallery'));
   const season = String(formData.get('season') || '').trim();
   const taste = String(formData.get('taste') || '').trim();
   const bestFor = String(formData.get('bestFor') || '').trim();
@@ -380,39 +486,52 @@ async function submitAddProduct(event) {
   const isSoon = status === 'soon';
   const isLive = status === 'live';
   const numericPrice = parseFloat(priceValue);
+  const variants = productVariantsFromForm(category, status);
+  const usesVariants = productUsesVariants(category);
 
-  if (!isSoon && (!Number.isFinite(numericPrice) || numericPrice <= 0)) {
+  if (!isSoon && !usesVariants && (!Number.isFinite(numericPrice) || numericPrice <= 0)) {
     showToast('Enter a valid price for live or sold out products');
     return;
   }
+  if (!isSoon && usesVariants && variants.some((variant) => !variant.price)) {
+    showToast('Enter both option prices for this category');
+    return;
+  }
+  if (usesVariants && !variants.length) {
+    showToast('Add at least one size/count option for this category');
+    return;
+  }
 
-  const id = getUniqueProductId(name);
+  const id = editingProductId || getUniqueProductId(name);
+  const baseUnit = usesVariants ? (unit || applyCategoryDefaults()) : unit;
   const payload = {
     id,
     category,
     name,
     localName: localName || '',
     origin,
-    price: isSoon ? 'Coming Soon' : `$${numericPrice}`,
-    unit,
+    price: usesVariants ? primaryPriceFromVariants(variants, status) : (isSoon ? 'Coming Soon' : `$${numericPrice}`),
+    unit: baseUnit,
     available: isLive,
     displayOnly: isSoon,
     tag: tag || '',
     image: image || null,
+    gallery,
     description,
     season: season || '',
     taste: taste || '',
     bestFor: bestFor || '',
-    updatedAt: new Date().toISOString(),
-    createdAt: new Date().toISOString()
+    variants,
+    updatedAt: new Date().toISOString()
   };
+  if (!editingProductId) payload.createdAt = new Date().toISOString();
 
   submitButton.disabled = true;
   submitButton.textContent = 'Saving...';
 
   try {
     await setDoc(doc(db, 'products', id), payload);
-    showToast(`${name} added to catalog`);
+    showToast(editingProductId ? `${name} updated` : `${name} added to catalog`);
     resetAddProductForm();
     closeAddProductForm();
   } catch (error) {
@@ -434,6 +553,10 @@ function renderProducts() {
     const priceNum = String(priceDisplay).replace(/[^0-9.]/g, '');
     const statusText = isComingSoon ? 'Soon' : (product.available ? 'Live' : 'Off');
     const shortDescription = String(product.description || '').trim();
+    const variants = Array.isArray(product.variants) ? product.variants.filter((variant) => variant?.label) : [];
+    const variantSummary = variants.length
+      ? variants.map((variant) => `${variant.label}${variant.price ? ` ${variant.price}` : ''}`).join(' | ')
+      : '';
 
     return `<div class="pm-card" id="pmc-${escapeHtml(product.id)}">
       <div class="pm-emoji">🥭</div>
@@ -445,9 +568,10 @@ function renderProducts() {
         <h4 title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</h4>
         <div class="pm-sub">${escapeHtml(shortDescription || 'No description added yet.')}</div>
         <div class="pm-sub">${escapeHtml(product.unit || 'per box')}</div>
-        <div class="pm-price-wrap"><span style="font-size:12px;color:var(--text-light)">$</span><input type="number" class="pm-price-input" id="price-${escapeHtml(product.id)}" value="${escapeHtml(priceNum)}" min="1" max="999" step="1" placeholder="${isComingSoon ? 'Add price to go live' : '56'}"><button class="pm-save-btn" onclick="saveProductPrice('${escapeHtml(product.id)}')">Save</button></div>
+        ${variantSummary ? `<div class="pm-sub">${escapeHtml(variantSummary)}</div>` : ''}
+        ${variants.length ? '<div class="pm-sub">Use Edit to update size and price options.</div>' : `<div class="pm-price-wrap"><span style="font-size:12px;color:var(--text-light)">$</span><input type="number" class="pm-price-input" id="price-${escapeHtml(product.id)}" value="${escapeHtml(priceNum)}" min="1" max="999" step="1" placeholder="${isComingSoon ? 'Add price to go live' : '56'}"><button class="pm-save-btn" onclick="saveProductPrice('${escapeHtml(product.id)}')">Save</button></div>`}
       </div>
-      <div class="pm-controls"><label class="toggle-switch"><input type="checkbox" ${product.available ? 'checked' : ''} onchange="toggleAvailable('${escapeHtml(product.id)}', this.checked)"><span class="toggle-slider"></span></label><span style="font-size:10px;color:var(--text-light)">${statusText}</span></div>
+      <div class="pm-controls"><label class="toggle-switch"><input type="checkbox" ${product.available ? 'checked' : ''} onchange="toggleAvailable('${escapeHtml(product.id)}', this.checked)"><span class="toggle-slider"></span></label><span style="font-size:10px;color:var(--text-light)">${statusText}</span><button class="pm-edit-btn" type="button" onclick="editProduct('${escapeHtml(product.id)}')">Edit</button></div>
     </div>`;
   }).join('');
 }
@@ -883,7 +1007,11 @@ function bindUi() {
     renderOrders();
   });
   document.getElementById('accountingDate')?.addEventListener('change', renderAccounting);
-  document.getElementById('newProductCategory')?.addEventListener('change', applyCategoryDefaults);
+  document.getElementById('newProductCategory')?.addEventListener('change', () => {
+    applyCategoryDefaults();
+    toggleVariantFields();
+    updateProductFormForStatus();
+  });
   document.getElementById('newProductStatus')?.addEventListener('change', updateProductFormForStatus);
   document.getElementById('addProductForm')?.addEventListener('submit', submitAddProduct);
   document.getElementById('adminPw')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
@@ -925,6 +1053,7 @@ window.renderAccounting = renderAccounting;
 window.openAddProductForm = openAddProductForm;
 window.closeAddProductForm = closeAddProductForm;
 window.resetAddProductForm = resetAddProductForm;
+window.editProduct = editProduct;
 
 bindUi();
 initAuthWatch();
