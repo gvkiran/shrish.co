@@ -323,6 +323,10 @@
       display: flex; align-items: center; justify-content: space-between;
       gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
     }
+    .accounting-toolbar .toolbar-actions {
+      margin-left: auto;
+      justify-content: flex-end;
+    }
     .accounting-batch {
       display: inline-flex; align-items: center; gap: 8px;
       background: var(--white); border: 1.5px solid rgba(200,121,26,0.14);
@@ -346,8 +350,10 @@
       border-radius: 20px; padding: 18px 20px; margin-bottom: 20px;
     }
     .tally-box h3 { font-family: var(--font-display); font-size: 22px; color: var(--dark); margin-bottom: 12px; }
+    .tally-help { font-size: 13px; color: var(--text-light); margin: -2px 0 14px; }
     .tally-grid {
-      display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 14px;
+      display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 14px;
+      justify-content: end;
     }
     .tally-field label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-light); margin-bottom: 6px; }
     .tally-field input {
@@ -372,6 +378,7 @@
       .admin-stats { grid-template-columns: repeat(3, 1fr); }
       .accounting-grid { grid-template-columns: repeat(2, 1fr); }
       .tally-grid { grid-template-columns: 1fr; }
+      .accounting-toolbar .toolbar-actions { margin-left: 0; justify-content: flex-start; }
       .admin-wrap { padding: 28px 18px 60px; }
     }
     @media (max-width: 600px) {
@@ -519,6 +526,7 @@
 
           <div class="tally-box">
             <h3>Tally Check</h3>
+            <div class="tally-help">Difference compares the actual amounts you enter below against the collected total for this batch.</div>
             <div class="tally-grid">
               <div class="tally-field">
                 <label for="actualCash">Actual Cash Counted</label>
