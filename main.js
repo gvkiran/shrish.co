@@ -70,9 +70,9 @@ function injectGlobalUI() {
     }
     #backToTop.visible { opacity: 1; pointer-events: auto; }
     #backToTop:hover { background: #A8600F; transform: translateY(-3px); }
-    body.has-cart-fab #backToTop { right: 170px; }
+    body.has-cart-fab #backToTop { right: 28px; bottom: 150px; }
     @media (max-width: 480px) { #backToTop { right: 16px; } }
-    @media (max-width: 480px) { body.has-cart-fab #backToTop { right: 132px; } }
+    @media (max-width: 480px) { body.has-cart-fab #backToTop { right: 16px; bottom: 146px; } }
 
     /* Mobile nav Order Now button */
     .nav-mobile .mobile-order-btn {

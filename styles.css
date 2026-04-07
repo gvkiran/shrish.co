@@ -133,14 +133,14 @@ button.btn-primary:active {
 
 .nav-inner {
   display: grid;
-  grid-template-columns: 380px 1fr 220px;
+  grid-template-columns: 300px 1fr 170px;
   align-items: center;
   width: 100%;
   max-width: 1520px;
   margin: 0 auto;
-  padding: 0 26px 0 28px;
+  padding: 0 34px 0 18px;
   min-height: 88px;
-  column-gap: 10px;
+  column-gap: 14px;
 }
 
 .nav-logo {
@@ -148,7 +148,7 @@ button.btn-primary:active {
   align-items: center;
   justify-self: start;
   flex-shrink: 0;
-  margin-left: 32px;
+  margin-left: 0;
 }
 
 .logo-img {
@@ -161,10 +161,12 @@ button.btn-primary:active {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 40px;
+  justify-self: center;
+  gap: 34px;
   list-style: none;
   margin: 0;
   padding: 0;
+  transform: translateX(-28px);
 }
 
 .nav-link {
@@ -185,8 +187,9 @@ button.btn-primary:active {
   align-items: center;
   justify-self: end;
   justify-content: flex-end;
-  min-width: 220px;
+  min-width: 170px;
   margin-right: 0;
+  padding-right: 8px;
 }
 
 /* ── NAV CART BUTTON ── */
@@ -285,13 +288,13 @@ button.btn-primary:active {
 
 @media (max-width: 1100px) {
   .nav-inner {
-    grid-template-columns: 270px 1fr 170px;
-    padding: 0 18px 0 20px;
+    grid-template-columns: 230px 1fr 150px;
+    padding: 0 18px 0 14px;
     column-gap: 12px;
   }
 
   .nav-logo {
-    margin-left: 18px;
+    margin-left: 0;
   }
 
   .logo-img {
@@ -299,7 +302,8 @@ button.btn-primary:active {
   }
 
   .nav-links {
-    gap: 28px;
+    gap: 24px;
+    transform: translateX(-18px);
   }
 
   .nav-link {
@@ -307,7 +311,8 @@ button.btn-primary:active {
   }
 
   .nav-cart-wrap {
-    min-width: 170px;
+    min-width: 150px;
+    padding-right: 4px;
   }
 }
 
