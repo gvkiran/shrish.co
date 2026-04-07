@@ -165,7 +165,7 @@
       <h2 class="section-title">This Season's <em>Picks</em></h2>
       <p class="section-desc">Our selection changes with the season. Order now while supplies last.</p>
     </div>
-    <div class="products-grid" id="productsGrid">
+    <div class="products-grid" id="productsGrid" data-live-products="true">
       <!-- Populated by JS from shared data -->
     </div>
     <div class="products-cta">
@@ -173,6 +173,14 @@
     </div>
   </div>
 </section>
+
+<div class="home-product-modal" id="homeProductModal" aria-hidden="true" onclick="handleHomeProductOverlayClick(event)">
+  <div class="home-product-modal-box" role="dialog" aria-modal="true" aria-labelledby="homeProductModalTitle">
+    <button class="home-product-modal-close" type="button" aria-label="Close details" onclick="closeHomeProductModal()">×</button>
+    <div class="home-product-modal-media" id="homeProductModalMedia"></div>
+    <div class="home-product-modal-content" id="homeProductModalContent"></div>
+  </div>
+</div>
 
 <!-- HOW IT WORKS -->
 <section class="how section">
@@ -204,7 +212,7 @@
       </div>
     </div>
     <div class="how-cta">
-      <a href="order.html" class="btn-primary">Order Now — Pay at Pickup</a>
+      <a href="shop.html" class="btn-primary">Order Now — Pay at Pickup</a>
     </div>
   </div>
 </section>

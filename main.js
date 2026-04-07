@@ -70,7 +70,9 @@ function injectGlobalUI() {
     }
     #backToTop.visible { opacity: 1; pointer-events: auto; }
     #backToTop:hover { background: #A8600F; transform: translateY(-3px); }
+    body.has-cart-fab #backToTop { right: 170px; }
     @media (max-width: 480px) { #backToTop { right: 16px; } }
+    @media (max-width: 480px) { body.has-cart-fab #backToTop { right: 132px; } }
 
     /* Mobile nav Order Now button */
     .nav-mobile .mobile-order-btn {
@@ -157,6 +159,10 @@ function injectGlobalUI() {
   const navCartLinkEl = document.getElementById('navCartLink');
   if (navCartLinkEl && navBadgeCount > 0) navCartLinkEl.href = 'order.html';
 
+  if (document.getElementById('cartFab')) {
+    document.body.classList.add('has-cart-fab');
+  }
+
   // 6. Add "Order Now" to mobile nav if missing
   const navMobile = document.getElementById('navMobile');
   if (navMobile && !navMobile.querySelector('.mobile-order-btn')) {
@@ -204,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ââ Homepage product grid (with real images) âââââââââââââââ
   const productsGrid = document.getElementById('productsGrid');
-  if (productsGrid && window.SHRISH_DATA) {
+  if (productsGrid && window.SHRISH_DATA && productsGrid.dataset.liveProducts !== 'true') {
     const mangoes = SHRISH_DATA.products.filter(p => p.category === 'mangoes');
     const available = mangoes.filter(p => p.available);
     const toShow = (available.length ? available : mangoes).slice(0, 3);

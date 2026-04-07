@@ -1,5 +1,125 @@
 import { db, collection, onSnapshot, escapeHtml } from './firebase-app.js';
 
+let homeModalProductId = null;
+let homeModalQty = 1;
+
+function getCart() {
+  return JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
+}
+
+function saveCart(cart) {
+  sessionStorage.setItem('shrish_cart', JSON.stringify(cart));
+}
+
+function updateNavCartState() {
+  const cart = getCart();
+  const total = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
+  const badge = document.getElementById('navCartBadge');
+  if (badge) badge.textContent = total;
+
+  const navCartLink = document.getElementById('navCartLink');
+  if (navCartLink) navCartLink.href = total > 0 ? 'order.html' : 'shop.html';
+}
+
+function showToast(message) {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    toast.className = 'toast';
+    document.body.appendChild(toast);
+  }
+
+  toast.textContent = message;
+  toast.classList.add('show');
+  clearTimeout(showToast.timeoutId);
+  showToast.timeoutId = window.setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2200);
+}
+
+function addToCart(productId, qty = 1) {
+  const product = window.SHRISH_DATA?.products?.find((item) => item.id === productId);
+  if (!product || !product.available || product.displayOnly) return;
+
+  const cart = getCart();
+  const existing = cart.find((item) => item.id === productId);
+  if (existing) existing.qty += qty;
+  else cart.push({ id: product.id, qty, price: product.price, name: product.name, unit: product.unit, image: product.image });
+
+  saveCart(cart);
+  updateNavCartState();
+  showToast(`${product.name} added to cart`);
+}
+
+function renderHomeModal(productId) {
+  const product = window.SHRISH_DATA?.products?.find((item) => item.id === productId);
+  const modal = document.getElementById('homeProductModal');
+  const media = document.getElementById('homeProductModalMedia');
+  const content = document.getElementById('homeProductModalContent');
+  if (!product || !modal || !media || !content) return;
+
+  homeModalProductId = productId;
+  homeModalQty = 1;
+  const isAvailable = product.available && !product.displayOnly;
+
+  const chips = [product.season, product.taste]
+    .filter(Boolean)
+    .map((value) => `<span class="home-product-modal-chip">${escapeHtml(value)}</span>`)
+    .join('');
+
+  media.innerHTML = product.image
+    ? `<img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}">`
+    : '<div class="home-product-modal-fallback">🥭</div>';
+
+  content.innerHTML = `
+    <div class="home-product-modal-origin">${escapeHtml(product.origin || 'Indian Mango')}</div>
+    <h3 class="home-product-modal-title" id="homeProductModalTitle">${escapeHtml(product.name)}</h3>
+    ${product.localName ? `<div class="home-product-modal-local">${escapeHtml(product.localName)}</div>` : ''}
+    <div class="home-product-modal-status ${isAvailable ? 'available' : 'unavailable'}">${isAvailable ? 'Available now' : 'Currently sold out'}</div>
+    <div class="home-product-modal-desc">${escapeHtml(product.description || '')}</div>
+    ${chips ? `<div class="home-product-modal-meta">${chips}</div>` : ''}
+    ${product.bestFor ? `<div class="home-product-modal-best"><strong>Best for:</strong> ${escapeHtml(product.bestFor)}</div>` : ''}
+    <div class="home-product-modal-price">${escapeHtml(product.price || '')}</div>
+    <div class="home-product-modal-unit">${escapeHtml(product.unit || '')}</div>
+    <div class="home-product-modal-actions">
+      <div class="home-product-qty">
+        <button type="button" onclick="changeHomeProductQty(-1)">-</button>
+        <span id="homeProductQtyValue">1</span>
+        <button type="button" onclick="changeHomeProductQty(1)">+</button>
+      </div>
+      <button type="button" class="home-product-modal-add" onclick="addHomeProductToCart()" ${isAvailable ? '' : 'disabled'}>${isAvailable ? 'Add to Cart' : 'Sold Out'}</button>
+    </div>`;
+
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeHomeProductModal() {
+  const modal = document.getElementById('homeProductModal');
+  if (!modal) return;
+
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+function handleHomeProductOverlayClick(event) {
+  if (event.target.id === 'homeProductModal') closeHomeProductModal();
+}
+
+function changeHomeProductQty(delta) {
+  homeModalQty = Math.max(1, Math.min(20, homeModalQty + delta));
+  const qty = document.getElementById('homeProductQtyValue');
+  if (qty) qty.textContent = String(homeModalQty);
+}
+
+function addHomeProductToCart() {
+  if (!homeModalProductId) return;
+  addToCart(homeModalProductId, homeModalQty);
+}
+
 function renderHomeProducts(products) {
   const productsGrid = document.getElementById('productsGrid');
   if (!productsGrid) return;
@@ -11,31 +131,36 @@ function renderHomeProducts(products) {
   productsGrid.innerHTML = '';
 
   toShow.forEach((p) => {
+    const description = (p.description || '').slice(0, 80);
+    const hasMore = (p.description || '').length > 80;
     const imgHtml = p.image
-      ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}"
-             style="width:100%;height:100%;object-fit:cover"
-             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : '';
     const fallbackStyle = p.image ? 'style="display:none"' : '';
+    const actionLabel = p.available && !p.displayOnly ? 'Add to Cart' : 'Sold Out';
 
     productsGrid.innerHTML += `
       <div class="product-card ${p.available ? '' : 'product-card-unavailable'}">
         ${p.tag ? `<div class="product-card-badge">${escapeHtml(p.tag)}</div>` : ''}
-        <div class="product-card-img" style="padding:0;overflow:hidden;${p.image ? '' : 'display:flex;align-items:center;justify-content:center'}">
+        <div class="product-card-img product-card-clickable" onclick="openHomeProductModal('${escapeHtml(p.id)}')" style="padding:0;overflow:hidden;${p.image ? '' : 'display:flex;align-items:center;justify-content:center'}">
           ${imgHtml}
           <span ${fallbackStyle} style="font-size:56px;display:flex;align-items:center;justify-content:center;width:100%;height:100%">🥭</span>
         </div>
         <div class="product-card-body">
-          <h3>${escapeHtml(p.name)}</h3>
-          <p>${escapeHtml((p.description || '').slice(0, 80))}${(p.description || '').length > 80 ? '…' : ''}</p>
+          <h3 class="product-card-clickable" onclick="openHomeProductModal('${escapeHtml(p.id)}')">${escapeHtml(p.name)}</h3>
+          <p>${escapeHtml(description)}${hasMore ? '...' : ''}</p>
           <div class="product-card-footer">
             <div>
               <div class="product-price">${escapeHtml(p.price)}</div>
               <div class="product-unit">${escapeHtml(p.unit)}</div>
             </div>
             <span class="product-status-badge ${p.available ? 'available' : 'unavailable'}">
-              ${p.available ? '✓ Available' : 'Sold Out'}
+              ${p.available ? 'Available' : 'Sold Out'}
             </span>
+          </div>
+          <div class="product-card-actions">
+            <button type="button" class="product-card-btn product-card-btn-secondary" onclick="openHomeProductModal('${escapeHtml(p.id)}')">Details</button>
+            <button type="button" class="product-card-btn product-card-btn-primary" onclick="quickAddHomeProduct('${escapeHtml(p.id)}')" ${p.available && !p.displayOnly ? '' : 'disabled'}>${actionLabel}</button>
           </div>
         </div>
       </div>`;
@@ -50,6 +175,8 @@ function mergeProducts(baseProducts, docs) {
 function init() {
   if (!window.SHRISH_DATA?.products) return;
   const baseProducts = JSON.parse(JSON.stringify(window.SHRISH_DATA.products));
+  updateNavCartState();
+  renderHomeProducts(baseProducts);
 
   onSnapshot(collection(db, 'products'), (snapshot) => {
     const docs = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
@@ -59,5 +186,12 @@ function init() {
     console.error('Homepage catalog sync failed', error);
   });
 }
+
+window.openHomeProductModal = renderHomeModal;
+window.closeHomeProductModal = closeHomeProductModal;
+window.handleHomeProductOverlayClick = handleHomeProductOverlayClick;
+window.changeHomeProductQty = changeHomeProductQty;
+window.addHomeProductToCart = addHomeProductToCart;
+window.quickAddHomeProduct = (productId) => addToCart(productId, 1);
 
 init();
