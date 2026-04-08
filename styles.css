@@ -43,7 +43,7 @@ img { max-width: 100%; display: block; }
 a  { color: inherit; text-decoration: none; }
 
 /* ── UTILITY ── */
-.container { max-width: 1360px; margin: 0 auto; padding: 0 28px; }
+.container { max-width: 1440px; margin: 0 auto; padding: 0 28px; }
 .section    { padding: 96px 0; }
 .section-alt{ background: var(--cream-d); }
 .section-header { text-align: center; max-width: 600px; margin: 0 auto 56px; }
@@ -133,14 +133,14 @@ button.btn-primary:active {
 
 .nav-inner {
   display: grid;
-  grid-template-columns: 300px 1fr 170px;
+  grid-template-columns: 280px 1fr 150px;
   align-items: center;
   width: 100%;
-  max-width: 1520px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 0 34px 0 18px;
-  min-height: 88px;
-  column-gap: 14px;
+  padding: 0 28px 0 22px;
+  min-height: 84px;
+  column-gap: 24px;
 }
 
 .nav-logo {
@@ -148,7 +148,7 @@ button.btn-primary:active {
   align-items: center;
   justify-self: start;
   flex-shrink: 0;
-  margin-left: 28px;
+  margin-left: 22px;
 }
 
 .logo-img {
@@ -162,11 +162,11 @@ button.btn-primary:active {
   align-items: center;
   justify-content: center;
   justify-self: center;
-  gap: 34px;
+  gap: 42px;
   list-style: none;
   margin: 0;
   padding: 0;
-  transform: translateX(-28px);
+  transform: translateX(-10px);
 }
 
 .nav-link {
@@ -187,9 +187,9 @@ button.btn-primary:active {
   align-items: center;
   justify-self: end;
   justify-content: flex-end;
-  min-width: 170px;
+  min-width: 150px;
   margin-right: 0;
-  padding-right: 24px;
+  padding-right: 10px;
 }
 
 /* ── NAV CART BUTTON ── */
@@ -821,7 +821,7 @@ button.btn-primary:active {
 /* ── PAGE HERO (inner pages) ── */
 .page-hero {
   background: linear-gradient(135deg, var(--dark), var(--dark-m));
-  padding: 100px 24px 80px;
+  padding: 74px 24px 56px;
   text-align: center; position: relative; overflow: hidden;
 }
 .page-hero::after {
