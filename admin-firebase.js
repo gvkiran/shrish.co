@@ -340,11 +340,38 @@ function productUsesVariants(category) {
   return ['putharekulu', 'jellysnacks'].includes(category);
 }
 
+function updateVariantFieldHints() {
+  const category = document.getElementById('newProductCategory')?.value || 'mangoes';
+  const labelOne = document.getElementById('variantOneLabel');
+  const labelTwo = document.getElementById('variantTwoLabel');
+  const skuOne = document.getElementById('variantOneSku');
+  const skuTwo = document.getElementById('variantTwoSku');
+  if (!labelOne || !labelTwo || !skuOne || !skuTwo) return;
+
+  if (category === 'putharekulu') {
+    labelOne.placeholder = '5 count';
+    labelTwo.placeholder = '10 count';
+    skuOne.placeholder = 'Ex: PSK5';
+    skuTwo.placeholder = 'Ex: PSK10';
+  } else if (category === 'jellysnacks') {
+    labelOne.placeholder = '250g';
+    labelTwo.placeholder = '500g';
+    skuOne.placeholder = 'Ex: MJS250';
+    skuTwo.placeholder = 'Ex: MJS500';
+  } else {
+    labelOne.placeholder = 'Ex: 5 count or 250g';
+    labelTwo.placeholder = 'Ex: 10 count or 500g';
+    skuOne.placeholder = 'Ex: SKU001';
+    skuTwo.placeholder = 'Ex: SKU002';
+  }
+}
+
 function toggleVariantFields() {
   const category = document.getElementById('newProductCategory')?.value || 'mangoes';
   const wrap = document.getElementById('variantFields');
   if (!wrap) return;
   wrap.classList.toggle('open', productUsesVariants(category));
+  updateVariantFieldHints();
 }
 
 function productVariantsFromForm(category, status) {
@@ -354,12 +381,14 @@ function productVariantsFromForm(category, status) {
     {
       id: 'opt1',
       label: String(document.getElementById('variantOneLabel')?.value || '').trim(),
-      price: String(document.getElementById('variantOnePrice')?.value || '').trim()
+      price: String(document.getElementById('variantOnePrice')?.value || '').trim(),
+      sku: String(document.getElementById('variantOneSku')?.value || '').trim()
     },
     {
       id: 'opt2',
       label: String(document.getElementById('variantTwoLabel')?.value || '').trim(),
-      price: String(document.getElementById('variantTwoPrice')?.value || '').trim()
+      price: String(document.getElementById('variantTwoPrice')?.value || '').trim(),
+      sku: String(document.getElementById('variantTwoSku')?.value || '').trim()
     }
   ];
 
@@ -370,7 +399,8 @@ function productVariantsFromForm(category, status) {
       return {
         id: row.id,
         label: row.label,
-        price: Number.isFinite(numeric) && numeric > 0 ? `$${numeric}` : (status === 'soon' ? 'Coming Soon' : '')
+        price: Number.isFinite(numeric) && numeric > 0 ? `$${numeric}` : (status === 'soon' ? 'Coming Soon' : ''),
+        sku: row.sku || ''
       };
     });
 
@@ -400,6 +430,7 @@ function openAddProductForm() {
   applyCategoryDefaults();
   toggleVariantFields();
   updateProductFormForStatus();
+  updateVariantFieldHints();
   document.getElementById('newProductName')?.focus();
 }
 
@@ -416,6 +447,7 @@ function resetAddProductForm() {
   toggleVariantFields();
   document.getElementById('newProductStatus').value = 'live';
   updateProductFormForStatus();
+  updateVariantFieldHints();
 }
 
 function editProduct(id) {
@@ -441,8 +473,10 @@ function editProduct(id) {
   const variants = Array.isArray(product.variants) ? product.variants : [];
   document.getElementById('variantOneLabel').value = variants[0]?.label || '';
   document.getElementById('variantOnePrice').value = String(variants[0]?.price || '').replace(/[^0-9.]/g, '');
+  document.getElementById('variantOneSku').value = variants[0]?.sku || '';
   document.getElementById('variantTwoLabel').value = variants[1]?.label || '';
   document.getElementById('variantTwoPrice').value = String(variants[1]?.price || '').replace(/[^0-9.]/g, '');
+  document.getElementById('variantTwoSku').value = variants[1]?.sku || '';
 
   const title = document.querySelector('#productFormCard .product-form-head h3');
   const submit = document.getElementById('addProductSubmitBtn');
@@ -451,6 +485,7 @@ function editProduct(id) {
   document.getElementById('productFormCard')?.classList.add('open');
   toggleVariantFields();
   updateProductFormForStatus();
+  updateVariantFieldHints();
   document.getElementById('newProductName')?.focus();
 }
 
@@ -555,7 +590,7 @@ function renderProducts() {
     const shortDescription = String(product.description || '').trim();
     const variants = Array.isArray(product.variants) ? product.variants.filter((variant) => variant?.label) : [];
     const variantSummary = variants.length
-      ? variants.map((variant) => `${variant.label}${variant.price ? ` ${variant.price}` : ''}`).join(' | ')
+      ? variants.map((variant) => `${variant.label}${variant.price ? ` ${variant.price}` : ''}${variant.sku ? ` (${variant.sku})` : ''}`).join(' | ')
       : '';
 
     return `<div class="pm-card" id="pmc-${escapeHtml(product.id)}">

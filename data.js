@@ -125,12 +125,11 @@ const SHRISH_DATA = {
       bestFor: "Eating fresh  -  Pickles  -  Late-season desserts"
     },
 
-    // ═══════════════════════════════════════════
-    //  PUTHAREKULU  (displayOnly - coming soon)
-    // ═══════════════════════════════════════════
+    //  PUTHAREKULU
+    // ===========================================
     {
       id: "puth_plain", category: "putharekulu",
-      name: "Putharekulu - Classic Plain (Sugar)", localName: "పూతరేకులు",
+      name: "Putharekulu - Classic Plain (Sugar)", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",
       price: "Coming Soon", unit: "per box",
       available: false, displayOnly: true, tag: "Coming Soon",
@@ -140,85 +139,186 @@ const SHRISH_DATA = {
       badges: ["GI Tagged", "Atreyapuram Authentic"]
     },
     {
-      id: "puth_sugar_kaju", category: "putharekulu",
-      name: "Putharekulu - Sugar, Kaju & Badam", localName: "పూతరేకులు",
+      id: "puth_sugar_kaju_only", category: "putharekulu",
+      name: "Putharekulu - Sugar - Kaju", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",
-      price: "Coming Soon", unit: "per box",
-      available: false, displayOnly: true, tag: "Coming Soon",
+      price: "$6.99", unit: "5 count or 10 count",
+      available: true, displayOnly: false, tag: "Traditional",
       image: "img_puth_sugar_kaju.jpg",
-      description: "The classic Putharekulu elevated with a generous filling of premium cashews (kaju) and almonds (badam). Each roll is layered with fine sugar, crushed dry fruits, and the signature rice paper that crackles and melts together. A favourite for festive gifting.",
-      details: "Ingredients: Rice starch, sugar, cashews, almonds, ghee. Best within 30 days.",
-      badges: ["Dry Fruit Loaded", "Festive Favourite"]
+      description: "Traditional dry fruit Putharekulu with delicate rice starch sheets layered with sugar, ghee-roasted cashews, and a clean sweet finish. A simple, classic choice from Atreyapuram for customers who want the authentic texture with a lighter dry-fruit filling.",
+      details: "Ingredients: Rice starch sheets, sugar, cashews and ghee. Store in a cool dry place and enjoy fresh.",
+      badges: ["Atreyapuram Authentic", "Traditional Sweet"],
+      variants: [
+        { id: "opt1", label: "5 count", price: "$6.99", sku: "PSK5" },
+        { id: "opt2", label: "10 count", price: "$12.99", sku: "PSK10" }
+      ]
+    },
+    {
+      id: "puth_sugar_kaju", category: "putharekulu",
+      name: "Putharekulu - Sugar - Kaju Badam", localName: "",
+      origin: "Atreyapuram, Andhra Pradesh",
+      price: "$6.99", unit: "5 count or 10 count",
+      available: true, displayOnly: false, tag: "Best Seller",
+      image: "img_puth_sugar_kaju.jpg",
+      description: "A richer sugar-based Putharekulu made with roasted cashews and almonds layered inside paper-thin rice sheets. This is one of the easiest dry-fruit variants to gift and share, with a balanced sweetness and a fuller nutty bite.",
+      details: "Ingredients: Rice starch sheets, sugar, cashews, almonds and ghee. Store in a cool dry place and serve fresh.",
+      badges: ["Best Seller", "Dry Fruit Loaded"],
+      variants: [
+        { id: "opt1", label: "5 count", price: "$6.99", sku: "PSKB5" },
+        { id: "opt2", label: "10 count", price: "$13.99", sku: "PSKB10" }
+      ]
     },
     {
       id: "puth_sugar_kaju_pista", category: "putharekulu",
-      name: "Putharekulu - Sugar, Kaju, Badam & Pista", localName: "పూతరేకులు",
+      name: "Putharekulu - Sugar - Kaju Badam Pista", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",
-      price: "Coming Soon", unit: "per box",
-      available: false, displayOnly: true, tag: "Coming Soon",
+      price: "$7.99", unit: "5 count or 10 count",
+      available: true, displayOnly: false, tag: "Premium",
       image: "img_puth_sugar_kaju_pista.png",
-      description: "The premium trio - cashews, almonds, and vibrant green pistachios layered inside delicate rice paper rolls with fine sugar. The pistachio adds a beautiful colour and slightly earthy richness to the classic sweetness. Perfect for festivals, celebrations, and gifting.",
-      details: "Ingredients: Rice starch, sugar, cashews, almonds, pistachios, ghee. Best within 30 days.",
-      badges: ["Premium Dry Fruit", "Gifting Special"]
+      description: "Traditional Atreyapuram Putharekulu finished with sugar and a premium trio of cashews, almonds, and pistachios. It delivers the delicate paper-like layers customers expect, with an extra festive dry-fruit richness in every piece.",
+      details: "Ingredients: Rice starch sheets, sugar, cashews, almonds, pistachios and ghee. A premium gifting-friendly variant.",
+      badges: ["Premium Dry Fruit", "Gifting Special"],
+      variants: [
+        { id: "opt1", label: "5 count", price: "$7.99", sku: "PSKBP5" },
+        { id: "opt2", label: "10 count", price: "$14.99", sku: "PSKBP10" }
+      ]
+    },
+    {
+      id: "puth_jaggery_kaju", category: "putharekulu",
+      name: "Putharekulu - Jaggery - Kaju", localName: "",
+      origin: "Atreyapuram, Andhra Pradesh",
+      price: "$6.99", unit: "5 count or 10 count",
+      available: true, displayOnly: false, tag: "Rustic Sweetness",
+      image: "img_puth_jaggery_kaju_pista.png",
+      description: "A jaggery-sweetened version of classic dry-fruit Putharekulu with roasted cashews folded into delicate rice starch sheets. It has a deeper, warmer sweetness than the sugar version and a more traditional village-style finish.",
+      details: "Ingredients: Rice starch sheets, jaggery, cashews and ghee. Richer jaggery flavour with a softer rustic sweetness.",
+      badges: ["Jaggery Sweetened", "Traditional Sweet"],
+      variants: [
+        { id: "opt1", label: "5 count", price: "$6.99", sku: "PJK5" },
+        { id: "opt2", label: "10 count", price: "$13.99", sku: "PJK10" }
+      ]
+    },
+    {
+      id: "puth_jaggery_kaju_badam", category: "putharekulu",
+      name: "Putharekulu - Jaggery - Kaju Badam", localName: "",
+      origin: "Atreyapuram, Andhra Pradesh",
+      price: "$7.99", unit: "5 count or 10 count",
+      available: true, displayOnly: false, tag: "Most Requested",
+      image: "img_puth_jaggery_kaju_pista.png",
+      description: "This dry-fruit Putharekulu combines the deeper sweetness of jaggery with roasted cashews and almonds for a fuller bite. It is a dependable crowd-pleaser for customers who want a traditional sweet profile without refined sugar notes.",
+      details: "Ingredients: Rice starch sheets, jaggery, cashews, almonds and ghee. Balanced dry-fruit richness with a traditional jaggery finish.",
+      badges: ["Most Requested", "Jaggery Sweetened"],
+      variants: [
+        { id: "opt1", label: "5 count", price: "$7.99", sku: "PJKB5" },
+        { id: "opt2", label: "10 count", price: "$14.99", sku: "PJKB10" }
+      ]
     },
     {
       id: "puth_jaggery_kaju_pista", category: "putharekulu",
-      name: "Putharekulu - Jaggery, Kaju, Badam & Pista", localName: "పూతరేకులు",
+      name: "Putharekulu - Jaggery - Kaju Badam Pista", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",
-      price: "Coming Soon", unit: "per box",
-      available: false, displayOnly: true, tag: "Most Requested",
+      price: "$7.99", unit: "5 count or 10 count",
+      available: true, displayOnly: false, tag: "Most Requested",
       image: "img_puth_jaggery_kaju_pista.png",
-      description: "The most requested variant - substituting refined sugar with natural jaggery for a deeper, caramel-like sweetness. Filled with cashews, almonds, and pistachios wrapped in paper-thin rice starch. A more traditional, rustic taste that is deeply comforting and healthier.",
-      details: "Ingredients: Rice starch, jaggery, cashews, almonds, pistachios, ghee. Best within 30 days.",
-      badges: ["Jaggery Sweetened", "Most Requested", "Healthier Choice"]
+      description: "A premium jaggery Putharekulu layered with cashews, almonds, and pistachios inside delicate rice flour sheets. It offers a richer, more indulgent dry-fruit profile with the darker sweetness and aroma customers expect from traditional jaggery sweets.",
+      details: "Ingredients: Rice starch sheets, jaggery, cashews, almonds, pistachios and ghee. One of the most premium dry-fruit jaggery options in the range.",
+      badges: ["Most Requested", "Premium Dry Fruit", "Jaggery Sweetened"],
+      variants: [
+        { id: "opt1", label: "5 count", price: "$7.99", sku: "PJKBP5" },
+        { id: "opt2", label: "10 count", price: "$15.99", sku: "PJKBP10" }
+      ]
     },
     {
       id: "puth_sugarfree", category: "putharekulu",
-      name: "Putharekulu - Sugar Free", localName: "పూతరేకులు",
+      name: "Putharekulu - Sugar (Diabetic) - Kaju Badam Pista", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",
-      price: "Coming Soon", unit: "per box",
-      available: false, displayOnly: true, tag: "Diabetic Friendly",
+      price: "$7.99", unit: "5 count or 10 count",
+      available: true, displayOnly: false, tag: "Diabetic Friendly",
       image: "img_puth_sugarfree.jpg",
-      description: "Specially crafted for health-conscious sweet lovers and diabetic customers - all the authentic Putharekulu experience without refined sugar. Made with natural sugar-free sweeteners and premium dry fruits. Same paper-thin rice sheets, same melt-in-mouth magic, zero guilt.",
-      details: "Ingredients: Rice starch, sugar-free sweetener, cashews, almonds, ghee. Best within 30 days.",
-      badges: ["Sugar Free", "Diabetic Friendly"]
+      description: "Crafted for health-conscious customers, this dry-fruit Putharekulu uses a diabetic-friendly sweetener profile while keeping the classic paper-thin texture and generous mix of cashews, almonds, and pistachios. It is designed to deliver the traditional experience with a lighter sweetness profile.",
+      details: "Ingredients: Rice starch sheets, diabetic-friendly sweetener, cashews, almonds, pistachios and ghee. Intended for customers who prefer a lower-sugar-style option.",
+      badges: ["Diabetic Friendly", "Premium Dry Fruit"],
+      variants: [
+        { id: "opt1", label: "5 count", price: "$7.99", sku: "PSDKBP5" },
+        { id: "opt2", label: "10 count", price: "$15.99", sku: "PSDKBP10" }
+      ]
+    },
+    {
+      id: "puth_dates_kaju_badam_pista", category: "putharekulu",
+      name: "Putharekulu - Dates - Kaju Badam Pista", localName: "",
+      origin: "Atreyapuram, Andhra Pradesh",
+      price: "$9.99", unit: "5 count or 10 count",
+      available: true, displayOnly: false, tag: "Natural Sweetness",
+      image: "img_puth_jaggery_kaju_pista.png",
+      description: "An exotic dry-fruit Putharekulu that combines dates with cashews, almonds, and pistachios for a naturally deeper sweetness and chewy, rich finish. It is a premium gifting option for customers who enjoy fruit-based sweetness with traditional Atreyapuram texture.",
+      details: "Ingredients: Rice starch sheets, dates, jaggery, cashews, almonds, pistachios and ghee. Rich and naturally sweet with a dense dry-fruit profile.",
+      badges: ["Exotic Special", "Natural Sweetness"],
+      variants: [
+        { id: "opt1", label: "5 count", price: "$9.99", sku: "PDKBP5" },
+        { id: "opt2", label: "10 count", price: "$18.99", sku: "PDKBP10" }
+      ]
+    },
+    {
+      id: "puth_organic_palm_kaju_badam_pista", category: "putharekulu",
+      name: "Putharekulu - Organic Palm Jaggery - Kaju Badam Pista", localName: "",
+      origin: "Atreyapuram, Andhra Pradesh",
+      price: "$9.99", unit: "5 count or 10 count",
+      available: true, displayOnly: false, tag: "Premium Choice",
+      image: "img_puth_jaggery_kaju_pista.png",
+      description: "A premium exotic Putharekulu made with organic palm jaggery and a rich blend of cashews, almonds, and pistachios. It offers the deepest caramel-like sweetness in the range, with luxurious dry-fruit texture layered inside the signature paper-thin sheets.",
+      details: "Ingredients: Rice starch sheets, organic palm jaggery, cashews, almonds, pistachios and ghee. Premium rich flavour with a deeper palm-jaggery finish.",
+      badges: ["Premium Choice", "Organic Palm Jaggery", "Exotic Special"],
+      variants: [
+        { id: "opt1", label: "5 count", price: "$9.99", sku: "POPJKBP5" },
+        { id: "opt2", label: "10 count", price: "$18.99", sku: "POPJKBP10" }
+      ]
     },
 
-    // ═══════════════════════════════════════════
-    //  JELLY & SNACKS  (displayOnly - coming soon)
-    // ═══════════════════════════════════════════
+    //  JELLY & SNACKS
+    // ===========================================
     {
       id: "mango_jelly_sugar", category: "jellysnacks",
-      name: "Mango Jelly - Sugar (Mamidi Thandra)", localName: "మామిడి తెన్ద్ర",
+      name: "Mango Jelly - Sugar (Mamidi Thandra)", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",
-      price: "$7.99", unit: "250g or 500g",
-      available: false, displayOnly: true, tag: "Best Seller",
+      price: "$6.99", unit: "250g or 500g",
+      available: true, displayOnly: false, tag: "Best Seller",
       image: "img_mango_jelly.webp",
-      description: "Our all-time bestseller - available year round. Pure mango fruit pulp sweetened with a small amount of sulphur-free sugar, dried into flat, chewy, intensely flavoured sheets. Made in small batches in Atreyapuram. A nostalgic South Indian snack loved by all ages.",
-      details: "Ingredients: Mango fruit pulp, sulphur-free sugar. Shelf life: 6 months. Consume within 2 months after opening. ISO 9001 & ISO 22000 Certified. Origin: Atreyapuram 533235, Andhra Pradesh.",
-      badges: ["Best Seller", "Year Round", "ISO Certified"]
+      description: "A year-round bestseller made from ripe mango pulp slowly dried into soft fruit leather sheets. This classic Mamidi Thandra has a bright mango flavour, chewy bite, and balanced sweetness that makes it an easy favourite for both gifting and snacking.",
+      details: "Ingredients: Mango pulp and sugar. Store sealed in a cool dry place. Best enjoyed fresh after opening.",
+      badges: ["Best Seller", "Year Round"],
+      variants: [
+        { id: "opt1", label: "250g", price: "$6.99", sku: "MJS250" },
+        { id: "opt2", label: "500g", price: "$13.99", sku: "MJS500" }
+      ]
     },
     {
       id: "mango_jelly_jaggery", category: "jellysnacks",
-      name: "Mango Jelly - Jaggery (Mamidi Thandra)", localName: "మామిడి తెన్ద్ర",
+      name: "Mango Jelly - Jaggery (Mamidi Thandra)", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",
-      price: "$7.99", unit: "250g or 500g",
-      available: false, displayOnly: true, tag: "Seasonal  -  Limited",
+      price: "$6.99", unit: "250g or 500g",
+      available: true, displayOnly: false, tag: "Seasonal - Limited",
       image: "img_mango_jelly.webp",
-      description: "The most demanded and rarest variant - made with mango pulp and natural jaggery instead of refined sugar. Produced in very small seasonal quantities and sells out incredibly fast. Richer, deeper sweetness with a hint of molasses. Don't miss it when it's available!",
-      details: "Ingredients: Mango fruit pulp, jaggery. Seasonal - very limited. Shelf life: 6 months. ISO Certified.",
-      badges: ["Seasonal", "Very Limited", "Most Requested"]
+      description: "A seasonal jaggery-based Mamidi Thandra with a deeper colour and warmer sweetness than the sugar version. It keeps the same chewy mango-fruit texture while adding a richer, more traditional finish that serious mango-jelly lovers usually look for first.",
+      details: "Ingredients: Mango pulp and jaggery. Seasonal and limited compared with the regular sugar variety.",
+      badges: ["Seasonal", "Very Limited", "Most Requested"],
+      variants: [
+        { id: "opt1", label: "250g", price: "$6.99", sku: "MJJ250" },
+        { id: "opt2", label: "500g", price: "$13.99", sku: "MJJ500" }
+      ]
     },
     {
       id: "palm_jelly", category: "jellysnacks",
-      name: "Palm Fruit Jelly (Thati Thandra)", localName: "తాటి తెన్ద్ర",
+      name: "Palm Fruit Jelly (Thati Thandra)", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",
-      price: "$7.99", unit: "250g or 500g",
-      available: false, displayOnly: true, tag: "Seasonal  -  Unique",
+      price: "$14.99", unit: "500g",
+      available: true, displayOnly: false, tag: "Seasonal - Unique",
       image: "img_palm_jelly.webp",
-      description: "A truly unique seasonal delicacy made from Palmyra fruit pulp and palm jaggery. Rich 3-layered, semi-wet, raw and rustic texture. Note: The palmyra fruit is naturally bitter - this is authentic and expected. A rare find outside Andhra Pradesh that true connoisseurs seek out.",
-      details: "Ingredients: Palmyra fruit pulp, palm jaggery. ⚠️ Naturally bitter in taste. Seasonal only. ISO Certified.",
-      badges: ["Seasonal", "Rare Delicacy", "Naturally Bitter"]
+      description: "A distinctive seasonal Thati Thandra made from palm fruit pulp with a richer, earthier flavour than mango jelly. It is softer, darker, and more rustic in character, making it a niche favourite for customers who want a more traditional Andhra-style fruit sweet.",
+      details: "Ingredients: Palm fruit pulp and palm jaggery. Naturally more rustic in taste than mango jelly and available seasonally.",
+      badges: ["Seasonal", "Rare Delicacy", "Naturally Bitter"],
+      variants: [
+        { id: "opt1", label: "500g", price: "$14.99", sku: "PFJ500" }
+      ]
     }
   ],
 

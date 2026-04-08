@@ -8,6 +8,7 @@ let baseProducts = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || [])
 let modalQty = 1;
 let modalProductId = null;
 let modalVariantId = null;
+let cardVariantSelections = {};
 let notifyTarget = null;
 
 const PRODUCT_IMAGES = {
@@ -19,10 +20,15 @@ const PRODUCT_IMAGES = {
   himayat: ['img_himayath_real.jpg', 'img_himayat.jpg'],
   payari: ['img_payari.jpg', 'img_payri.webp'],
   puth_plain: ['img_puth_plain.jpeg'],
+  puth_sugar_kaju_only: ['img_puth_sugar_kaju.jpg'],
   puth_sugar_kaju: ['img_puth_sugar_kaju.jpg'],
   puth_sugar_kaju_pista: ['img_puth_sugar_kaju_pista.png'],
+  puth_jaggery_kaju: ['img_puth_jaggery_kaju_pista.png'],
+  puth_jaggery_kaju_badam: ['img_puth_jaggery_kaju_pista.png'],
   puth_jaggery_kaju_pista: ['img_puth_jaggery_kaju_pista.png'],
   puth_sugarfree: ['img_puth_sugarfree.jpg'],
+  puth_dates_kaju_badam_pista: ['img_puth_jaggery_kaju_pista.png'],
+  puth_organic_palm_kaju_badam_pista: ['img_puth_jaggery_kaju_pista.png'],
   mango_jelly_sugar: ['img_mango_jelly.webp'],
   mango_jelly_jaggery: ['img_mango_jelly.webp'],
   palm_jelly: ['img_palm_jelly.webp']
@@ -72,6 +78,10 @@ function buildCartItemId(productId, variantId = 'default') {
 function getSelectedVariant(product, variantId = null) {
   const variants = getProductVariants(product);
   return variants.find((variant) => variant.id === variantId) || variants[0];
+}
+
+function getCardSelectedVariant(product) {
+  return getSelectedVariant(product, cardVariantSelections[product.id]);
 }
 
 function productImages(productId, product) {
@@ -250,10 +260,10 @@ function openModal(productId) {
     actionHtml = `<button class="modal-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify Me</button>`;
   } else if (isAvail) {
     const variants = getProductVariants(p);
-    const variantButtons = variants.length > 1
-      ? `<div class="modal-variant-group"><div class="modal-variant-title">Choose option</div><div class="modal-variant-buttons">${variants.map((variant) => `<button type="button" class="modal-variant-btn ${variant.id === modalVariantId ? 'active' : ''}" onclick="modalSelectVariant('${escapeHtml(p.id)}','${escapeHtml(variant.id)}')"><span>${escapeHtml(variant.label)}</span><strong>${escapeHtml(variant.price)}</strong></button>`).join('')}</div></div>`
+    const variantSelect = variants.length > 1
+      ? `<div class="modal-variant-group"><div class="modal-variant-title">${p.category === 'putharekulu' ? 'Choose count' : 'Choose size'}</div><select class="modal-variant-select" onchange="modalSelectVariant('${escapeHtml(p.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === modalVariantId ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select></div>`
       : '';
-    actionHtml = `${variantButtons}<div class="modal-qty-row"><div class="modal-qty-ctrl"><button class="modal-qty-btn" onclick="modalChangeQty(-1)">-</button><span class="modal-qty-num" id="modalQtyNum">1</span><button class="modal-qty-btn" onclick="modalChangeQty(1)">+</button></div><span style="font-size:13px;color:var(--text-light)">${escapeHtml(selectedVariant.unit || 'item')}</span><button class="modal-add-btn" id="modalAddBtn" onclick="modalAddToCart()">Add to Cart</button></div>`;
+    actionHtml = `${variantSelect}<div class="modal-qty-row"><div class="modal-qty-ctrl"><button class="modal-qty-btn" onclick="modalChangeQty(-1)">-</button><span class="modal-qty-num" id="modalQtyNum">1</span><button class="modal-qty-btn" onclick="modalChangeQty(1)">+</button></div><span style="font-size:13px;color:var(--text-light)">${escapeHtml(selectedVariant.unit || 'item')}</span><button class="modal-add-btn" id="modalAddBtn" onclick="modalAddToCart()">Add to Cart</button></div>`;
   } else {
     actionHtml = `<button class="modal-add-btn" style="background:#ccc;cursor:not-allowed" disabled>Currently Sold Out</button>`;
   }
@@ -445,13 +455,13 @@ function renderCard(p) {
   const shortDesc = (p.description || '').length > 90 ? `${p.description.slice(0, 90)}...` : (p.description || '');
   const variants = getProductVariants(p);
   const hasChoices = variants.length > 1;
-  const primaryVariant = variants[0];
+  const selectedCardVariant = getCardSelectedVariant(p);
 
   let actionHtml = '';
   if (isSoon) {
     actionHtml = `<button class="pc-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify Me</button>`;
   } else if (isAvail && hasChoices) {
-    actionHtml = `<div class="pc-card-actions" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><div class="pc-variant-list">${variants.map((variant) => `<button class="pc-variant-add-btn" onclick="quickAddVariant('${escapeHtml(p.id)}','${escapeHtml(variant.id)}')"><span>${escapeHtml(variant.label)}</span><strong>${escapeHtml(variant.price)}</strong></button>`).join('')}</div></div>`;
+    actionHtml = `<div class="pc-card-actions pc-card-actions-variant" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><div class="pc-variant-list"><select class="pc-variant-select" onchange="cardVariantChanged('${escapeHtml(p.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === selectedCardVariant.id ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select><button class="pc-add-btn" onclick="quickAddSelectedVariant('${escapeHtml(p.id)}')">+ Add to Cart</button></div></div>`;
   } else if (isAvail) {
     actionHtml = `<div class="pc-card-actions" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" onclick="quickAdd('${escapeHtml(p.id)}')">+ Add to Cart</button></div>`;
   } else {
@@ -471,7 +481,7 @@ function renderCard(p) {
         <div class="pc-name" onclick="openModal('${escapeHtml(p.id)}')">${escapeHtml(p.name)}</div>
         ${p.localName ? `<div class="pc-local">${escapeHtml(p.localName)}</div>` : ''}
         <div class="pc-short-desc">${escapeHtml(shortDesc)}</div>
-        <div class="pc-footer"><div class="pc-price-wrap"><div class="pc-price">${escapeHtml(primaryVariant.price || p.price)}</div><div class="pc-unit">${escapeHtml(primaryVariant.unit || p.unit)}</div></div></div>
+        <div class="pc-footer"><div class="pc-price-wrap"><div class="pc-price">${escapeHtml(selectedCardVariant.price || p.price)}</div><div class="pc-unit">${escapeHtml(selectedCardVariant.unit || p.unit)}</div></div></div>
         ${actionHtml}
       </div>
     </div>`;
@@ -484,6 +494,18 @@ function quickAdd(productId) {
 
 function quickAddVariant(productId, variantId) {
   addToCart(productId, 1, variantId);
+}
+
+function quickAddSelectedVariant(productId) {
+  const product = window.SHRISH_DATA.products.find((entry) => entry.id === productId);
+  if (!product) return;
+  const selectedVariant = getCardSelectedVariant(product);
+  addToCart(productId, 1, selectedVariant.id);
+}
+
+function cardVariantChanged(productId, variantId) {
+  cardVariantSelections[productId] = variantId;
+  renderProducts();
 }
 
 function renderCardQty(productId) {
@@ -623,6 +645,8 @@ window.modalAddToCart = modalAddToCart;
 window.modalSelectVariant = modalSelectVariant;
 window.quickAdd = quickAdd;
 window.quickAddVariant = quickAddVariant;
+window.quickAddSelectedVariant = quickAddSelectedVariant;
+window.cardVariantChanged = cardVariantChanged;
 window.cardQtyChange = cardQtyChange;
 window.renderCardQty = renderCardQty;
 window.cartQty = cartQty;
