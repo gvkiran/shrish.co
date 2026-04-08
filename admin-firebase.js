@@ -28,6 +28,8 @@ const state = {
   products: JSON.parse(JSON.stringify(BASE_PRODUCTS)),
   subscribers: [],
   accountingBatches: {},
+  accountingView: 'open',
+  selectedAccountingBatch: '',
   productFilter: 'all',
   orderSheet: 'active',
   orderFilters: {
@@ -160,6 +162,88 @@ function getAccountingBatchRecord(batchName) {
   return state.accountingBatches?.[batchName] || null;
 }
 
+function getAllAccountingBatchNames() {
+  const names = new Set(Object.keys(state.accountingBatches || {}));
+  state.orders.forEach((order) => {
+    if (order?.accountingBatch) names.add(order.accountingBatch);
+  });
+  return [...names].filter(Boolean);
+}
+
+function getAccountingBatchEntries(view = state.accountingView) {
+  return getAllAccountingBatchNames()
+    .map((batchName) => {
+      const record = getAccountingBatchRecord(batchName) || {};
+      const orders = state.orders.filter((order) => (order.accountingBatch || '') === batchName);
+      const collectedOrders = orders.filter((order) => order.paymentCollected && order.paymentMethod);
+      return {
+        batchName,
+        status: record.status || 'open',
+        orderCount: record.orderCount ?? orders.length,
+        collectedTotal: record.collectedTotal ?? collectedOrders.reduce((sum, order) => sum + moneyValue(order.totalPrice), 0),
+        lastSavedAt: record.lastSavedAt || null,
+        closedAt: record.closedAt || null
+      };
+    })
+    .filter((entry) => entry.status === view)
+    .sort((a, b) => String(b.batchName).localeCompare(String(a.batchName)));
+}
+
+function setAccountingView(view) {
+  state.accountingView = view === 'closed' ? 'closed' : 'open';
+  const entries = getAccountingBatchEntries();
+  if (!entries.some((entry) => entry.batchName === state.selectedAccountingBatch)) {
+    state.selectedAccountingBatch = entries[0]?.batchName || '';
+  }
+  renderAccounting();
+}
+
+function setSelectedAccountingBatch(batchName) {
+  state.selectedAccountingBatch = batchName || '';
+  const dateInput = document.getElementById('accountingDate');
+  if (dateInput && batchName?.startsWith('SHR-BATCH-')) {
+    dateInput.value = batchName.replace('SHR-BATCH-', '');
+  }
+  renderAccounting();
+}
+
+function renderAccountingBatchList(selectedBatchName) {
+  const openBtn = document.getElementById('accountingViewOpen');
+  const closedBtn = document.getElementById('accountingViewClosed');
+  const titleEl = document.getElementById('accountingBatchListTitle');
+  const helpEl = document.getElementById('accountingBatchListHelp');
+  const bodyEl = document.getElementById('accountingBatchListBody');
+  if (!bodyEl) return;
+
+  openBtn?.classList.toggle('active', state.accountingView === 'open');
+  closedBtn?.classList.toggle('active', state.accountingView === 'closed');
+
+  if (titleEl) titleEl.textContent = state.accountingView === 'open' ? 'Open Batches' : 'Closed Batches';
+  if (helpEl) {
+    helpEl.textContent = state.accountingView === 'open'
+      ? 'Open batches stay here until you finish tallying and close them. Closed batches move to their own tab, and reopened batches come back here.'
+      : 'Closed batches stay here for reference. Open any batch to review the breakdown, or reopen it if you need to continue collecting and tallying.';
+  }
+
+  const entries = getAccountingBatchEntries();
+  if (!entries.length) {
+    bodyEl.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📒</div><p>No ${state.accountingView} batches yet.</p></div></td></tr>`;
+    return;
+  }
+
+  bodyEl.innerHTML = entries.map((entry) => `
+    <tr>
+      <td><strong>${escapeHtml(entry.batchName)}</strong></td>
+      <td><span class="status-badge ${entry.status === 'closed' ? 'status-cancelled' : 'status-fulfilled'}">${escapeHtml(entry.status)}</span></td>
+      <td>${escapeHtml(String(entry.orderCount || 0))}</td>
+      <td>${formatCurrency(entry.collectedTotal || 0)}</td>
+      <td>${escapeHtml(formatDateTime(entry.lastSavedAt))}</td>
+      <td>${escapeHtml(formatDateTime(entry.closedAt))}</td>
+      <td><button class="toolbar-btn batch-open-btn" onclick="setSelectedAccountingBatch('${escapeHtml(entry.batchName)}')">${entry.batchName === selectedBatchName ? 'Viewing' : 'Open Breakdown'}</button></td>
+    </tr>
+  `).join('');
+}
+
 function syncAccountingInputs(batchName, batchRecord = {}) {
   const fields = [
     ['actualCash', batchRecord.actualCash],
@@ -181,7 +265,12 @@ function syncAccountingInputs(batchName, batchRecord = {}) {
 
 function getOrdersForSheet(sheet = state.orderSheet) {
   if (sheet === 'active') return state.orders.filter((order) => (order.status || 'pending') === 'pending');
-  if (sheet === 'processed') return state.orders.filter((order) => ['fulfilled', 'cancelled'].includes(order.status || 'pending'));
+  if (sheet === 'processed') {
+    return state.orders.filter((order) => {
+      const status = order.status || 'pending';
+      return ['fulfilled', 'cancelled'].includes(status) && !order.paymentCollected;
+    });
+  }
   return [...state.orders];
 }
 
@@ -209,10 +298,10 @@ function updateOrdersSheetUi() {
       title: 'Active Orders',
       help: 'Active Orders shows your current pending pickup list.',
     },
-    processed: {
-      title: 'Processed Orders',
-      help: 'Processed Orders shows fulfilled and cancelled records. You can reset one back to pending if needed.',
-    },
+      processed: {
+        title: 'Processed Orders',
+        help: 'Processed Orders shows fulfilled and cancelled records that still need payment follow-up. Once payment is collected, they move out of this list.',
+      },
     all: {
       title: 'All Orders',
       help: 'All Orders is the permanent master history in date order. Status can still be updated, but nothing is deleted here.',
@@ -936,7 +1025,7 @@ async function saveAccountingBatch(options = {}) {
   if (!dateInput) return;
 
   if (!dateInput.value) dateInput.value = todayDateInputValue();
-  const batchName = batchNameFromDate(dateInput.value);
+  const batchName = state.selectedAccountingBatch || batchNameFromDate(dateInput.value);
   const batchOrders = state.orders.filter((order) => (order.accountingBatch || '') === batchName);
 
   const expectedTotal = batchOrders.reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
@@ -967,6 +1056,7 @@ async function saveAccountingBatch(options = {}) {
   }, options);
 
   await setDoc(doc(db, 'accounting_batches', batchName), payload, { merge: true });
+  state.selectedAccountingBatch = batchName;
 
   if (options.closeBatch) {
     showToast('Batch closed');
@@ -980,26 +1070,32 @@ async function saveAccountingBatch(options = {}) {
 async function closeAccountingBatch() {
   const dateInput = document.getElementById('accountingDate');
   if (!dateInput?.value) dateInput.value = todayDateInputValue();
-  const batchName = batchNameFromDate(dateInput?.value || todayDateInputValue());
+  const batchName = state.selectedAccountingBatch || batchNameFromDate(dateInput?.value || todayDateInputValue());
   const confirmed = window.confirm(`Close ${batchName}? You can reopen it later if needed.`);
   if (!confirmed) return;
   await saveAccountingBatch({ closeBatch: true });
+  state.accountingView = 'open';
+  state.selectedAccountingBatch = '';
+  renderAccounting();
 }
 
 async function reopenAccountingBatch() {
   const dateInput = document.getElementById('accountingDate');
   if (!dateInput?.value) dateInput.value = todayDateInputValue();
-  const batchName = batchNameFromDate(dateInput?.value || todayDateInputValue());
+  const batchName = state.selectedAccountingBatch || batchNameFromDate(dateInput?.value || todayDateInputValue());
   const confirmed = window.confirm(`Reopen ${batchName}? This lets you continue editing the tally.`);
   if (!confirmed) return;
   await saveAccountingBatch({ reopenBatch: true });
+  state.accountingView = 'open';
+  state.selectedAccountingBatch = batchName;
+  renderAccounting();
 }
 
 function exportAccountingBatchCSV() {
   const dateInput = document.getElementById('accountingDate');
   if (!dateInput) return;
   if (!dateInput.value) dateInput.value = todayDateInputValue();
-  const batchName = batchNameFromDate(dateInput.value);
+  const batchName = state.selectedAccountingBatch || batchNameFromDate(dateInput.value);
   const batchOrders = state.orders.filter((order) => (order.accountingBatch || '') === batchName);
   const batchRecord = getAccountingBatchRecord(batchName) || {};
   const rows = [[
@@ -1182,8 +1278,50 @@ function renderAccounting() {
   if (!dateInput || !statsEl || !bodyEl || !batchNameEl) return;
 
   if (!dateInput.value) dateInput.value = todayDateInputValue();
-  const batchName = batchNameFromDate(dateInput.value);
-  batchNameEl.textContent = batchName;
+  const entries = getAccountingBatchEntries();
+  const fallbackBatch = state.accountingView === 'open'
+    ? (entries[0]?.batchName || batchNameFromDate(dateInput.value))
+    : (entries[0]?.batchName || '');
+  const batchName = (state.selectedAccountingBatch && entries.some((entry) => entry.batchName === state.selectedAccountingBatch))
+    ? state.selectedAccountingBatch
+    : fallbackBatch;
+  state.selectedAccountingBatch = batchName;
+  if (batchName?.startsWith('SHR-BATCH-')) {
+    dateInput.value = batchName.replace('SHR-BATCH-', '');
+  }
+  batchNameEl.textContent = batchName || 'No batch selected';
+  renderAccountingBatchList(batchName);
+
+  if (!batchName) {
+    if (batchStatusBox) {
+      batchStatusBox.innerHTML = '<strong>No batch selected.</strong> Pick a batch from the list above to review and save tally details.';
+    }
+    accountingInputIds().forEach((id) => {
+      const input = document.getElementById(id);
+      if (!input) return;
+      input.readOnly = true;
+      input.value = '';
+      input.dataset.batchName = '';
+    });
+    if (closeBatchBtn) closeBatchBtn.style.display = 'none';
+    if (reopenBatchBtn) reopenBatchBtn.style.display = 'none';
+    statsEl.innerHTML = `
+      <div class="accounting-card"><div class="a-label">Batch Status</div><div class="a-value">--</div></div>
+      <div class="accounting-card"><div class="a-label">Batch Orders</div><div class="a-value">0</div></div>
+      <div class="accounting-card"><div class="a-label">Expected Total</div><div class="a-value accent">${formatCurrency(0)}</div></div>
+      <div class="accounting-card"><div class="a-label">Collected Total</div><div class="a-value good">${formatCurrency(0)}</div></div>
+      <div class="accounting-card"><div class="a-label">Cash Total</div><div class="a-value">${formatCurrency(0)}</div></div>
+      <div class="accounting-card"><div class="a-label">Zelle Total</div><div class="a-value">${formatCurrency(0)}</div></div>
+      <div class="accounting-card"><div class="a-label">Card Total</div><div class="a-value">${formatCurrency(0)}</div></div>
+      <div class="accounting-card"><div class="a-label">Unpaid Orders</div><div class="a-value warn">0</div></div>
+      <div class="accounting-card"><div class="a-label">Actual Counted</div><div class="a-value">${formatCurrency(0)}</div></div>
+      <div class="accounting-card"><div class="a-label">Difference</div><div class="a-value good">${formatCurrency(0)}</div></div>
+      <div class="accounting-card"><div class="a-label">Closed At</div><div class="a-value" style="font-size:1.1rem">--</div></div>
+    `;
+    bodyEl.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📒</div><p>No batch selected in this view.</p></div></td></tr>';
+    return;
+  }
+
   const batchRecord = getAccountingBatchRecord(batchName) || {};
   syncAccountingInputs(batchName, batchRecord);
 
@@ -1371,7 +1509,10 @@ function bindUi() {
     syncCurrentOrderFilters();
     renderOrders();
   });
-  document.getElementById('accountingDate')?.addEventListener('change', renderAccounting);
+    document.getElementById('accountingDate')?.addEventListener('change', (event) => {
+      state.selectedAccountingBatch = batchNameFromDate(event.target.value || todayDateInputValue());
+      renderAccounting();
+    });
   document.getElementById('newProductCategory')?.addEventListener('change', () => {
     applyCategoryDefaults();
     toggleVariantFields();
@@ -1417,6 +1558,8 @@ window.exportCSV = exportCSV;
 window.exportSubscribersCSV = exportSubscribersCSV;
 window.deleteSubscriber = deleteSubscriber;
 window.renderAccounting = renderAccounting;
+window.setAccountingView = setAccountingView;
+window.setSelectedAccountingBatch = setSelectedAccountingBatch;
 window.saveAccountingBatch = saveAccountingBatch;
 window.closeAccountingBatch = closeAccountingBatch;
 window.reopenAccountingBatch = reopenAccountingBatch;
