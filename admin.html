@@ -633,6 +633,16 @@
     }
     .tally-box h3 { font-family: var(--font-display); font-size: 22px; color: var(--dark); margin-bottom: 12px; }
     .tally-help { font-size: 13px; color: var(--text-light); margin: -2px 0 14px; }
+    .tally-actions {
+      display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; margin-top: 16px;
+    }
+    .batch-status-box {
+      margin-bottom: 16px; padding: 12px 14px; border-radius: 16px;
+      background: linear-gradient(180deg, #fff, #fbf5eb);
+      border: 1.5px solid rgba(200,121,26,0.12);
+      font-size: 13px; color: var(--text-light);
+    }
+    .batch-status-box strong { color: var(--dark); }
     .tally-grid {
       display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 14px;
       justify-content: end;
@@ -931,6 +941,10 @@
             <div class="toolbar-actions">
               <input type="date" id="accountingDate" class="filter-input" onchange="renderAccounting()" />
               <div class="accounting-batch" id="accountingBatchName">SHR-BATCH-YYYY-MM-DD</div>
+              <button class="toolbar-btn" onclick="saveAccountingBatch()">Save Tally</button>
+              <button class="toolbar-btn" id="closeBatchBtn" onclick="closeAccountingBatch()">Close Batch</button>
+              <button class="toolbar-btn" id="reopenBatchBtn" onclick="reopenAccountingBatch()" style="display:none;">Reopen Batch</button>
+              <button class="toolbar-btn" onclick="exportAccountingBatchCSV()">Export Batch CSV</button>
             </div>
           </div>
           <div class="accounting-grid" id="accountingStats"></div>
@@ -938,6 +952,7 @@
           <div class="tally-box">
             <h3>Tally Check</h3>
             <div class="tally-help">Difference compares the actual amounts you enter below against the collected total for this batch.</div>
+            <div class="batch-status-box" id="batchStatusBox">Batch is open. Save the tally during pickup and close the batch once the day is finalized.</div>
             <div class="tally-grid">
               <div class="tally-field">
                 <label for="actualCash">Actual Cash Counted</label>
@@ -951,6 +966,10 @@
                 <label for="actualCard">Actual Card Total</label>
                 <input type="number" id="actualCard" min="0" step="0.01" placeholder="0.00" oninput="renderAccounting()">
               </div>
+            </div>
+            <div class="tally-actions">
+              <button class="toolbar-btn" onclick="saveAccountingBatch()">Save Tally</button>
+              <button class="toolbar-btn" onclick="exportAccountingBatchCSV()">Export Batch CSV</button>
             </div>
           </div>
 

@@ -35,5 +35,9 @@ service cloud.firestore {
       allow create: if true;
       allow update, delete: if isAdmin();
     }
+
+    match /accounting_batches/{batchId} {
+      allow get, list, create, update, delete: if isAdmin();
+    }
   }
 }

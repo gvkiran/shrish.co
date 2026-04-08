@@ -27,6 +27,7 @@ const state = {
   orders: [],
   products: JSON.parse(JSON.stringify(BASE_PRODUCTS)),
   subscribers: [],
+  accountingBatches: {},
   productFilter: 'all',
   orderSheet: 'active',
   orderFilters: {
@@ -37,7 +38,8 @@ const state = {
   unsubOrders: null,
   unsubProducts: null,
   unsubSubscribersGeneral: null,
-  unsubSubscribersProduct: null
+  unsubSubscribersProduct: null,
+  unsubAccountingBatches: null
 };
 
 function showToast(msg) {
@@ -148,6 +150,33 @@ function formatDateTime(value) {
 
 function moneyValue(value) {
   return Number(value || 0);
+}
+
+function accountingInputIds() {
+  return ['actualCash', 'actualZelle', 'actualCard'];
+}
+
+function getAccountingBatchRecord(batchName) {
+  return state.accountingBatches?.[batchName] || null;
+}
+
+function syncAccountingInputs(batchName, batchRecord = {}) {
+  const fields = [
+    ['actualCash', batchRecord.actualCash],
+    ['actualZelle', batchRecord.actualZelle],
+    ['actualCard', batchRecord.actualCard]
+  ];
+
+  fields.forEach(([id, value]) => {
+    const input = document.getElementById(id);
+    if (!input) return;
+    const currentBatch = input.dataset.batchName || '';
+    const nextValue = Number.isFinite(Number(value)) && Number(value) > 0 ? Number(value).toFixed(2) : '';
+    if (currentBatch !== batchName || document.activeElement !== input) {
+      input.value = nextValue;
+    }
+    input.dataset.batchName = batchName;
+  });
 }
 
 function getOrdersForSheet(sheet = state.orderSheet) {
@@ -873,6 +902,133 @@ async function togglePaymentCollected(id, collected) {
   showToast(collected && hasMethod ? 'Payment marked collected' : 'Payment marked uncollected');
 }
 
+function buildAccountingBatchPayload(batchName, batchOrders, metrics, options = {}) {
+  const existing = getAccountingBatchRecord(batchName) || {};
+  const isClosing = Boolean(options.closeBatch);
+  const isReopening = Boolean(options.reopenBatch);
+  const nextStatus = isClosing ? 'closed' : (isReopening ? 'open' : (existing.status || 'open'));
+  const nowIso = new Date().toISOString();
+
+  return {
+    batchName,
+    batchDate: batchName.replace('SHR-BATCH-', ''),
+    status: nextStatus,
+    orderCount: batchOrders.length,
+    expectedTotal: metrics.expectedTotal,
+    collectedTotal: metrics.collectedTotal,
+    cashTotal: metrics.cashTotal,
+    zelleTotal: metrics.zelleTotal,
+    cardTotal: metrics.cardTotal,
+    unpaidCount: metrics.unpaidCount,
+    actualCash: metrics.actualCash,
+    actualZelle: metrics.actualZelle,
+    actualCard: metrics.actualCard,
+    actualTotal: metrics.actualTotal,
+    difference: metrics.mismatch,
+    lastSavedAt: nowIso,
+    closedAt: isClosing ? nowIso : (isReopening ? null : (existing.closedAt || null)),
+    updatedAt: nowIso
+  };
+}
+
+async function saveAccountingBatch(options = {}) {
+  const dateInput = document.getElementById('accountingDate');
+  if (!dateInput) return;
+
+  if (!dateInput.value) dateInput.value = todayDateInputValue();
+  const batchName = batchNameFromDate(dateInput.value);
+  const batchOrders = state.orders.filter((order) => (order.accountingBatch || '') === batchName);
+
+  const expectedTotal = batchOrders.reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
+  const collectedOrders = batchOrders.filter((order) => order.paymentCollected && order.paymentMethod);
+  const collectedTotal = collectedOrders.reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
+  const cashTotal = collectedOrders.filter((order) => order.paymentMethod === 'cash').reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
+  const zelleTotal = collectedOrders.filter((order) => order.paymentMethod === 'zelle').reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
+  const cardTotal = collectedOrders.filter((order) => order.paymentMethod === 'card').reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
+  const unpaidCount = batchOrders.filter((order) => !order.paymentCollected).length;
+  const actualCash = moneyValue(document.getElementById('actualCash')?.value);
+  const actualZelle = moneyValue(document.getElementById('actualZelle')?.value);
+  const actualCard = moneyValue(document.getElementById('actualCard')?.value);
+  const actualTotal = actualCash + actualZelle + actualCard;
+  const mismatch = actualTotal - collectedTotal;
+
+  const payload = buildAccountingBatchPayload(batchName, batchOrders, {
+    expectedTotal,
+    collectedTotal,
+    cashTotal,
+    zelleTotal,
+    cardTotal,
+    unpaidCount,
+    actualCash,
+    actualZelle,
+    actualCard,
+    actualTotal,
+    mismatch
+  }, options);
+
+  await setDoc(doc(db, 'accounting_batches', batchName), payload, { merge: true });
+
+  if (options.closeBatch) {
+    showToast('Batch closed');
+  } else if (options.reopenBatch) {
+    showToast('Batch reopened');
+  } else {
+    showToast('Accounting tally saved');
+  }
+}
+
+async function closeAccountingBatch() {
+  const dateInput = document.getElementById('accountingDate');
+  if (!dateInput?.value) dateInput.value = todayDateInputValue();
+  const batchName = batchNameFromDate(dateInput?.value || todayDateInputValue());
+  const confirmed = window.confirm(`Close ${batchName}? You can reopen it later if needed.`);
+  if (!confirmed) return;
+  await saveAccountingBatch({ closeBatch: true });
+}
+
+async function reopenAccountingBatch() {
+  const dateInput = document.getElementById('accountingDate');
+  if (!dateInput?.value) dateInput.value = todayDateInputValue();
+  const batchName = batchNameFromDate(dateInput?.value || todayDateInputValue());
+  const confirmed = window.confirm(`Reopen ${batchName}? This lets you continue editing the tally.`);
+  if (!confirmed) return;
+  await saveAccountingBatch({ reopenBatch: true });
+}
+
+function exportAccountingBatchCSV() {
+  const dateInput = document.getElementById('accountingDate');
+  if (!dateInput) return;
+  if (!dateInput.value) dateInput.value = todayDateInputValue();
+  const batchName = batchNameFromDate(dateInput.value);
+  const batchOrders = state.orders.filter((order) => (order.accountingBatch || '') === batchName);
+  const batchRecord = getAccountingBatchRecord(batchName) || {};
+  const rows = [[
+    'Batch', 'Status', 'Order #', 'Customer', 'Phone', 'Total', 'Method', 'Collected', 'Payment Time'
+  ]];
+
+  batchOrders.forEach((order) => {
+    rows.push([
+      batchName,
+      batchRecord.status || 'open',
+      order.orderNumber || order.id,
+      order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim(),
+      order.phone || '',
+      order.totalPrice || 0,
+      order.paymentMethod || '',
+      order.paymentCollected ? 'Yes' : 'No',
+      formatDateTime(order.paymentCollectedAt)
+    ]);
+  });
+
+  const csv = rows.map((row) => row.map((value) => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${batchName.toLowerCase()}_accounting.csv`;
+  a.click();
+  showToast('Accounting batch CSV downloaded');
+}
+
 async function clearFulfilled() {
   state.orderSheet = 'processed';
   renderOrders();
@@ -1019,12 +1175,17 @@ function renderAccounting() {
   const statsEl = document.getElementById('accountingStats');
   const bodyEl = document.getElementById('accountingBody');
   const batchNameEl = document.getElementById('accountingBatchName');
+  const batchStatusBox = document.getElementById('batchStatusBox');
+  const closeBatchBtn = document.getElementById('closeBatchBtn');
+  const reopenBatchBtn = document.getElementById('reopenBatchBtn');
 
   if (!dateInput || !statsEl || !bodyEl || !batchNameEl) return;
 
   if (!dateInput.value) dateInput.value = todayDateInputValue();
   const batchName = batchNameFromDate(dateInput.value);
   batchNameEl.textContent = batchName;
+  const batchRecord = getAccountingBatchRecord(batchName) || {};
+  syncAccountingInputs(batchName, batchRecord);
 
   const batchOrders = state.orders
     .filter((order) => (order.accountingBatch || '') === batchName)
@@ -1047,8 +1208,26 @@ function renderAccounting() {
   const actualCard = moneyValue(document.getElementById('actualCard')?.value);
   const actualTotal = actualCash + actualZelle + actualCard;
   const mismatch = actualTotal - collectedTotal;
+  const batchStatus = batchRecord.status || 'open';
+  const isClosed = batchStatus === 'closed';
+
+  if (batchStatusBox) {
+    const closedLabel = batchRecord.closedAt ? ` Closed on ${formatDateTime(batchRecord.closedAt)}.` : '';
+    const savedLabel = batchRecord.lastSavedAt ? ` Last saved ${formatDateTime(batchRecord.lastSavedAt)}.` : '';
+    batchStatusBox.innerHTML = isClosed
+      ? `<strong>Batch closed.</strong>${closedLabel}${savedLabel} Reopen the batch if you need to adjust the tally.`
+      : `<strong>Batch open.</strong>${savedLabel} Save the tally during pickup and close the batch once the day is finalized.`;
+  }
+
+  accountingInputIds().forEach((id) => {
+    const input = document.getElementById(id);
+    if (input) input.readOnly = isClosed;
+  });
+  if (closeBatchBtn) closeBatchBtn.style.display = isClosed ? 'none' : 'inline-flex';
+  if (reopenBatchBtn) reopenBatchBtn.style.display = isClosed ? 'inline-flex' : 'none';
 
   statsEl.innerHTML = `
+    <div class="accounting-card"><div class="a-label">Batch Status</div><div class="a-value ${isClosed ? 'accent' : 'good'}">${escapeHtml(batchStatus)}</div></div>
     <div class="accounting-card"><div class="a-label">Batch Orders</div><div class="a-value">${batchOrders.length}</div></div>
     <div class="accounting-card"><div class="a-label">Expected Total</div><div class="a-value accent">${formatCurrency(expectedTotal)}</div></div>
     <div class="accounting-card"><div class="a-label">Collected Total</div><div class="a-value good">${formatCurrency(collectedTotal)}</div></div>
@@ -1058,6 +1237,7 @@ function renderAccounting() {
     <div class="accounting-card"><div class="a-label">Unpaid Orders</div><div class="a-value warn">${unpaidCount}</div></div>
     <div class="accounting-card"><div class="a-label">Actual Counted</div><div class="a-value">${formatCurrency(actualTotal)}</div></div>
     <div class="accounting-card"><div class="a-label">Difference</div><div class="a-value ${Math.abs(mismatch) < 0.005 ? 'good' : 'warn'}">${formatCurrency(mismatch)}</div></div>
+    <div class="accounting-card"><div class="a-label">Closed At</div><div class="a-value" style="font-size:1.1rem">${escapeHtml(batchRecord.closedAt ? formatDateTime(batchRecord.closedAt) : '--')}</div></div>
   `;
 
   if (!batchOrders.length) {
@@ -1120,6 +1300,7 @@ function subscribeData() {
   state.unsubProducts?.();
   state.unsubSubscribersGeneral?.();
   state.unsubSubscribersProduct?.();
+  state.unsubAccountingBatches?.();
 
   state.unsubOrders = onSnapshot(query(collection(db, 'orders'), orderBy('createdAt', 'desc')), (snapshot) => {
     state.orders = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
@@ -1168,6 +1349,17 @@ function subscribeData() {
     console.error(error);
     showToast('Product notifications sync failed');
   });
+
+  state.unsubAccountingBatches = onSnapshot(collection(db, 'accounting_batches'), (snapshot) => {
+    state.accountingBatches = snapshot.docs.reduce((acc, snap) => {
+      acc[snap.id] = { id: snap.id, ...snap.data() };
+      return acc;
+    }, {});
+    renderAccounting();
+  }, (error) => {
+    console.error(error);
+    showToast('Accounting batches sync failed');
+  });
 }
 
 function bindUi() {
@@ -1197,6 +1389,7 @@ function initAuthWatch() {
       state.unsubProducts?.();
       state.unsubSubscribersGeneral?.();
       state.unsubSubscribersProduct?.();
+      state.unsubAccountingBatches?.();
       setLoggedInUi(false);
       return;
     }
@@ -1224,6 +1417,10 @@ window.exportCSV = exportCSV;
 window.exportSubscribersCSV = exportSubscribersCSV;
 window.deleteSubscriber = deleteSubscriber;
 window.renderAccounting = renderAccounting;
+window.saveAccountingBatch = saveAccountingBatch;
+window.closeAccountingBatch = closeAccountingBatch;
+window.reopenAccountingBatch = reopenAccountingBatch;
+window.exportAccountingBatchCSV = exportAccountingBatchCSV;
 window.openAddProductForm = openAddProductForm;
 window.closeAddProductForm = closeAddProductForm;
 window.resetAddProductForm = resetAddProductForm;
