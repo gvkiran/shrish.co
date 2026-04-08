@@ -61,10 +61,10 @@ function renderCartDrawer() {
 
   if (!cart.length) {
     list.innerHTML = `<div class="cart-empty-state">
-      <div class="ce-icon">??</div>
+      <div class="ce-icon">Cart</div>
       <p style="font-size:16px;font-weight:600;color:var(--dark);margin-bottom:8px">Your cart is empty</p>
       <p style="font-size:14px;color:var(--text-light);margin-bottom:20px">Browse our fresh Indian mangoes and add some to your cart!</p>
-      <a href="shop.html" onclick="closeCart()" style="display:inline-flex;align-items:center;gap:8px;background:var(--saffron);color:white;padding:12px 24px;border-radius:50px;font-family:var(--font-body);font-size:14px;font-weight:700;text-decoration:none;transition:all .3s">?? Shop Mangoes</a>
+      <a href="shop.html" onclick="closeCart()" style="display:inline-flex;align-items:center;gap:8px;background:var(--saffron);color:white;padding:12px 24px;border-radius:50px;font-family:var(--font-body);font-size:14px;font-weight:700;text-decoration:none;transition:all .3s">Shop Mangoes</a>
     </div>`;
     foot.style.display = 'none';
     return;
@@ -74,7 +74,7 @@ function renderCartDrawer() {
   const totalQty = cart.reduce((s, i) => s + i.qty, 0);
   totalEl.textContent = `${totalQty} box${totalQty !== 1 ? 'es' : ''}`;
   list.innerHTML = cart.map((item) => {
-    const imgHtml = item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" onerror="this.parentElement.textContent='??'">` : '??';
+    const imgHtml = item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" onerror="this.parentElement.textContent='Image'">` : 'Image';
     return `<div class="cart-item">
       <div class="ci-img">${imgHtml}</div>
       <div class="ci-info">
@@ -87,7 +87,7 @@ function renderCartDrawer() {
           <span style="font-size:11px;color:var(--text-light);margin-left:4px">box${item.qty > 1 ? 'es' : ''}</span>
         </div>
       </div>
-      <button class="ci-remove" onclick="cartRemove('${escapeHtml(item.id)}')">?</button>
+      <button class="ci-remove" onclick="cartRemove('${escapeHtml(item.id)}')">x</button>
     </div>`;
   }).join('');
 }
@@ -117,7 +117,7 @@ function addToCart(productId, qty) {
   else cart.push({ id: p.id, name: p.name, price: p.price, unit: p.unit, image: p.image || null, qty });
   saveCart();
   updateCartUI();
-  showToast(`? ${p.name} added!`);
+  showToast(`${p.name} added!`);
   renderCardQty(productId);
 }
 
@@ -164,7 +164,7 @@ function openModal(productId) {
   if (mainWrap) {
     mainWrap.innerHTML = imgs.length
       ? `<img class="modal-main-img" id="modalMainImg" src="${escapeHtml(imgs[0])}" alt="${escapeHtml(p.name)}" onerror="this.style.display='none'">`
-      : `<div class="modal-img-placeholder">??</div>`;
+      : `<div class="modal-img-placeholder">Image</div>`;
   }
 
   const thumbs = document.getElementById('modalThumbs');
@@ -179,8 +179,8 @@ function openModal(productId) {
   }
 
   const statusCls = isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
-  const statusText = isSoon ? '?? Coming Soon' : isAvail ? '? Available Now' : '? Currently Sold Out';
-  const chips = [p.season && `?? ${p.season}`, p.taste && `?? ${p.taste}`]
+  const statusText = isSoon ? 'Coming Soon' : isAvail ? 'Available Now' : 'Currently Sold Out';
+  const chips = [p.season && `Season: ${p.season}`, p.taste && `Taste: ${p.taste}`]
     .filter(Boolean)
     .map((chip) => `<span class="modal-chip">${escapeHtml(chip)}</span>`)
     .join('');
@@ -195,7 +195,7 @@ function openModal(productId) {
 
   let actionHtml = '';
   if (isSoon) {
-    actionHtml = `<button class="modal-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">?? Notify Me</button>`;
+    actionHtml = `<button class="modal-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify Me</button>`;
   } else if (isAvail) {
     actionHtml = `<div class="modal-qty-row"><div class="modal-qty-ctrl"><button class="modal-qty-btn" onclick="modalChangeQty(-1)">-</button><span class="modal-qty-num" id="modalQtyNum">1</span><button class="modal-qty-btn" onclick="modalChangeQty(1)">+</button></div><span style="font-size:13px;color:var(--text-light)">box</span><button class="modal-add-btn" id="modalAddBtn" onclick="modalAddToCart()">Add to Cart</button></div>`;
   } else {
@@ -212,8 +212,8 @@ function openModal(productId) {
       <div class="modal-desc">${escapeHtml(p.description)}</div>
       ${chips ? `<div class="modal-chips">${chips}</div>` : ''}
       ${badges ? `<div class="modal-badges">${badges}</div>` : ''}
-      ${p.details ? `<div class="modal-note">?? ${escapeHtml(p.details)}</div>` : ''}
-      ${p.bestFor ? `<div class="modal-best">?? <strong>Best for:</strong> ${escapeHtml(p.bestFor)}</div>` : ''}
+      ${p.details ? `<div class="modal-note">Info: ${escapeHtml(p.details)}</div>` : ''}
+      ${p.bestFor ? `<div class="modal-best"><strong>Best for:</strong> ${escapeHtml(p.bestFor)}</div>` : ''}
       <div class="modal-price-row"><div><div class="modal-price">${escapeHtml(p.price)}</div><div class="modal-unit">${escapeHtml(p.unit)}</div></div></div>
       ${actionHtml}`;
   }
@@ -377,7 +377,7 @@ function renderCard(p) {
   const isAvail = p.available && !p.displayOnly;
   const isSoon = p.displayOnly;
   const stripCls = isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
-  const stripText = isSoon ? '?? Coming Soon' : isAvail ? '? Available' : '? Sold Out';
+  const stripText = isSoon ? 'Coming Soon' : isAvail ? 'Available' : 'Sold Out';
   const imgSrc = p.image || null;
   const imgHtml = imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
   const emojiStyle = imgSrc ? 'style="display:none"' : '';
@@ -385,7 +385,7 @@ function renderCard(p) {
 
   let actionHtml = '';
   if (isSoon) {
-    actionHtml = `<button class="pc-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">?? Notify Me</button>`;
+    actionHtml = `<button class="pc-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify Me</button>`;
   } else if (isAvail) {
     actionHtml = `<div class="pc-card-actions" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" onclick="quickAdd('${escapeHtml(p.id)}')">+ Add to Cart</button></div>`;
   } else {
@@ -396,9 +396,9 @@ function renderCard(p) {
       ${p.tag ? `<div class="pc-tag ${tagClass(p.tag)}">${escapeHtml(p.tag)}</div>` : ''}
       <div class="pc-img" onclick="openModal('${escapeHtml(p.id)}')">
         ${imgHtml}
-        <div class="pc-img-emoji" ${emojiStyle}>??</div>
+        <div class="pc-img-emoji" ${emojiStyle}>Image</div>
         <div class="pc-status-strip ${stripCls}">${stripText}</div>
-        <div class="pc-view-hint">?? View Details</div>
+        <div class="pc-view-hint">View Details</div>
       </div>
       <div class="pc-body">
         <div class="pc-origin-lbl">${escapeHtml(p.origin)}</div>
@@ -436,7 +436,7 @@ function cardQtyChange(productId, delta) {
     cart = cart.filter((x) => x.id !== productId);
     showToast('Removed from cart');
   } else {
-    showToast(delta > 0 ? '? Added one more box!' : 'Removed one box');
+    showToast(delta > 0 ? 'Added one more box!' : 'Removed one box');
   }
   saveCart();
   updateCartUI();
@@ -474,9 +474,9 @@ function renderShop() {
   ];
 
   const catMeta = {
-    mangoes: { title: '?? Indian Mango', em: 'Varieties', sub: 'Click any product to view full details. Available varieties shown first.', banner: false },
-    putharekulu: { title: '?? Authentic', em: 'Putharekulu', sub: 'Hand-crafted in Atreyapuram, Andhra Pradesh. Coming soon to Shrish LLC!', banner: true },
-    jellysnacks: { title: '?? Mango & Palm', em: 'Jelly Snacks', sub: 'Traditional Mamidi Thandra & Thati Thandra from Atreyapuram. Coming soon.', banner: false }
+    mangoes: { title: 'Indian Mango', em: 'Varieties', sub: 'Click any product to view full details. Available varieties shown first.', banner: false },
+    putharekulu: { title: 'Authentic', em: 'Putharekulu', sub: 'Hand-crafted in Atreyapuram, Andhra Pradesh. Coming soon to Shrish LLC!', banner: true },
+    jellysnacks: { title: 'Mango & Palm', em: 'Jelly Snacks', sub: 'Traditional Mamidi Thandra & Thati Thandra from Atreyapuram. Coming soon.', banner: false }
   };
 
   const cats = activeFilter === 'all' ? ['mangoes', 'putharekulu', 'jellysnacks'] : [activeFilter];
@@ -494,7 +494,7 @@ function renderShop() {
     }
     let html = `<div class="shop-section"><div class="shop-section-title">${m.title} <em>${m.em}</em></div><div class="section-divider"></div><p style="color:var(--text-light);font-size:14px;margin-bottom:24px">${sectionSub}</p>`;
     if (m.banner && !hasLiveItems) {
-      html += `<div class="coming-banner"><div class="cb-icon">??</div><div><h3>Coming Soon to Shrish!</h3><p>Authentic GI-tagged Putharekulu from Atreyapuram. Hit "Notify Me" to be first in line when we launch.</p></div></div>`;
+      html += `<div class="coming-banner"><div class="cb-icon">New</div><div><h3>Coming Soon to Shrish!</h3><p>Authentic GI-tagged Putharekulu from Atreyapuram. Hit "Notify Me" to be first in line when we launch.</p></div></div>`;
     }
     html += `<div class="products-grid-v2">${items.map(renderCard).join('')}</div></div>`;
     container.innerHTML += html;
@@ -529,7 +529,7 @@ function init() {
   if (!window.SHRISH_DATA?.products) {
     const shopContent = document.getElementById('shopContent');
     if (shopContent) {
-      shopContent.innerHTML = '<div class="no-results"><div class="nr-icon">??</div><p>Could not load products. Please refresh.</p></div>';
+      shopContent.innerHTML = '<div class="no-results"><div class="nr-icon">!</div><p>Could not load products. Please refresh.</p></div>';
     }
     return;
   }
@@ -558,4 +558,5 @@ window.handleNotifyOverlayClick = handleNotifyOverlayClick;
 window.goCheckout = goCheckout;
 
 init();
+
 
