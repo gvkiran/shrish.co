@@ -646,6 +646,12 @@ function renderShop() {
   if (!container) return;
   container.innerHTML = '';
 
+  const sortWithinAvailability = (arr) => [
+    ...arr.filter((p) => p.available && !p.displayOnly),
+    ...arr.filter((p) => !p.available && !p.displayOnly),
+    ...arr.filter((p) => p.displayOnly)
+  ];
+
   const catMeta = {
     mangoes: { title: 'Indian Mango', em: 'Varieties', sub: 'Click any product to view full details. Available varieties shown first.', banner: false },
     putharekulu: { title: 'Authentic', em: 'Putharekulu', sub: 'Hand-crafted in Atreyapuram, Andhra Pradesh. Coming soon to Shrish LLC!', banner: true },
@@ -654,7 +660,7 @@ function renderShop() {
 
   const cats = activeFilter === 'all' ? ['mangoes', 'putharekulu', 'jellysnacks'] : [activeFilter];
   cats.forEach((catId) => {
-    const items = window.SHRISH_DATA.products.filter((p) => p.category === catId);
+    const items = sortWithinAvailability(window.SHRISH_DATA.products.filter((p) => p.category === catId));
     if (!items.length) return;
     const m = catMeta[catId] || { title: catId, em: '', sub: '', banner: false };
     const hasLiveItems = items.some((product) => product.available && !product.displayOnly);

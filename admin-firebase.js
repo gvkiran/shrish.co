@@ -675,14 +675,15 @@ function renderProducts() {
 
   grid.innerHTML = products.map((product) => {
     const isComingSoon = product.displayOnly;
-    const priceDisplay = product.price || '';
-    const priceNum = String(priceDisplay).replace(/[^0-9.]/g, '');
     const statusText = isComingSoon ? 'Soon' : (product.available ? 'Live' : 'Off');
     const shortDescription = String(product.description || '').trim();
     const variants = Array.isArray(product.variants) ? product.variants.filter((variant) => variant?.label) : [];
     const variantSummary = variants.length
       ? variants.map((variant) => `${variant.label}${variant.price ? ` ${variant.price}` : ''}${variant.sku ? ` (${variant.sku})` : ''}`).join(' | ')
       : '';
+    const priceSummary = variants.length
+      ? variantSummary
+      : (product.price ? `${product.price} - ${product.unit || 'per box'}` : (isComingSoon ? 'Coming Soon' : `No price set - ${product.unit || 'per box'}`));
 
     return `<div class="pm-card" id="pmc-${escapeHtml(product.id)}">
       <div class="pm-emoji">🥭</div>
@@ -694,9 +695,9 @@ function renderProducts() {
         <h4 title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</h4>
         <div class="pm-sub">${escapeHtml(shortDescription || 'No description added yet.')}</div>
         <div class="pm-sub">${escapeHtml(product.unit || 'per box')}</div>
-        ${variantSummary ? `<div class="pm-sub">${escapeHtml(variantSummary)}</div>` : ''}
+        <div class="pm-sub">${escapeHtml(priceSummary)}</div>
         <div class="pm-sort-wrap"><span class="pm-sort-label">Order</span><input type="number" class="pm-sort-input" id="sort-${escapeHtml(product.id)}" value="${escapeHtml(String(product.sortOrder ?? ''))}" min="1" step="1"><button class="pm-save-btn" onclick="saveProductSortOrder('${escapeHtml(product.id)}')">Save</button></div>
-        ${variants.length ? '<div class="pm-sub">Use Edit to update size and price options.</div>' : `<div class="pm-price-wrap"><span style="font-size:12px;color:var(--text-light)">$</span><input type="number" class="pm-price-input" id="price-${escapeHtml(product.id)}" value="${escapeHtml(priceNum)}" min="1" max="999" step="1" placeholder="${isComingSoon ? 'Add price to go live' : '56'}"><button class="pm-save-btn" onclick="saveProductPrice('${escapeHtml(product.id)}')">Save</button></div>`}
+        <div class="pm-sub">Use Edit to update ${variants.length ? 'size and price options' : 'price and product details'}.</div>
       </div>
       <div class="pm-controls"><label class="toggle-switch"><input type="checkbox" ${product.available ? 'checked' : ''} onchange="toggleAvailable('${escapeHtml(product.id)}', this.checked)"><span class="toggle-slider"></span></label><span style="font-size:10px;color:var(--text-light)">${statusText}</span><button class="pm-edit-btn" type="button" onclick="editProduct('${escapeHtml(product.id)}')">Edit</button></div>
     </div>`;
