@@ -61,6 +61,15 @@ const FORCE_BASE_PRODUCT_OVERRIDES = {
   mango_jelly_sugar: ['available', 'displayOnly']
 };
 
+function sortCatalogProducts(products = []) {
+  return [...products].sort((a, b) => {
+    const aOrder = Number.isFinite(Number(a?.sortOrder)) ? Number(a.sortOrder) : Number.MAX_SAFE_INTEGER;
+    const bOrder = Number.isFinite(Number(b?.sortOrder)) ? Number(b.sortOrder) : Number.MAX_SAFE_INTEGER;
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    return String(a?.name || '').localeCompare(String(b?.name || ''));
+  });
+}
+
 function saveCart() {
   sessionStorage.setItem('shrish_cart', JSON.stringify(cart));
 }
@@ -78,8 +87,10 @@ function mergeProducts(docs) {
   const extraProducts = docs
     .filter((item) => !baseProducts.some((product) => product.id === item.id))
     .map((item) => ({ ...item }));
-  window.SHRISH_DATA.products = [...mergedBase, ...extraProducts]
-    .filter((product) => STRICT_CATALOG_IDS.has(product.id));
+  window.SHRISH_DATA.products = sortCatalogProducts(
+    [...mergedBase, ...extraProducts]
+      .filter((product) => STRICT_CATALOG_IDS.has(product.id))
+  );
 }
 
 function getProductVariants(product) {

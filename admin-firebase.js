@@ -25,6 +25,7 @@ const state = {
   orders: [],
   products: JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || [])),
   subscribers: [],
+  productFilter: 'all',
   orderSheet: 'active',
   orderFilters: {
     active: { status: 'pending', date: '' },
@@ -279,6 +280,39 @@ function productCategoryLabel(category) {
   return labels[category] || category || 'Product';
 }
 
+function getSortedProducts(products = []) {
+  return [...products].sort((a, b) => {
+    const aOrder = Number.isFinite(Number(a?.sortOrder)) ? Number(a.sortOrder) : Number.MAX_SAFE_INTEGER;
+    const bOrder = Number.isFinite(Number(b?.sortOrder)) ? Number(b.sortOrder) : Number.MAX_SAFE_INTEGER;
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    return String(a?.name || '').localeCompare(String(b?.name || ''));
+  });
+}
+
+function productMatchesFilter(product, filter = state.productFilter) {
+  if (filter === 'all') return true;
+  if (filter === 'sweets') return ['putharekulu', 'jellysnacks'].includes(product.category);
+  return product.category === filter;
+}
+
+function renderProductsFilterBar() {
+  const bar = document.getElementById('productsFilterBar');
+  if (!bar) return;
+
+  const options = [
+    { id: 'all', label: 'All', count: state.products.length },
+    { id: 'mangoes', label: 'Mangoes', count: state.products.filter((product) => product.category === 'mangoes').length },
+    { id: 'putharekulu', label: 'Putharekulu', count: state.products.filter((product) => product.category === 'putharekulu').length },
+    { id: 'jellysnacks', label: 'Jelly & Snacks', count: state.products.filter((product) => product.category === 'jellysnacks').length },
+    { id: 'sweets', label: 'Sweets', count: state.products.filter((product) => ['putharekulu', 'jellysnacks'].includes(product.category)).length }
+  ];
+
+  bar.innerHTML = `<span class="products-filter-label">Filter Products</span>${options.map((option) => `
+    <button type="button" class="product-filter-pill ${state.productFilter === option.id ? 'active' : ''}" onclick="setProductCategoryFilter('${escapeHtml(option.id)}')">
+      ${escapeHtml(option.label)} (${option.count})
+    </button>`).join('')}`;
+}
+
 function slugifyProductId(name) {
   return String(name || '')
     .toLowerCase()
@@ -299,6 +333,13 @@ function getUniqueProductId(name) {
     index += 1;
   }
   return id;
+}
+
+function getNextSortOrder() {
+  const orders = state.products
+    .map((product) => Number(product?.sortOrder))
+    .filter((value) => Number.isFinite(value));
+  return (orders.length ? Math.max(...orders) : 0) + 1;
 }
 
 function updateProductFormForStatus() {
@@ -557,6 +598,9 @@ async function submitAddProduct(event) {
     taste: taste || '',
     bestFor: bestFor || '',
     variants,
+    sortOrder: editingProductId
+      ? (state.products.find((product) => product.id === editingProductId)?.sortOrder ?? getNextSortOrder())
+      : getNextSortOrder(),
     updatedAt: new Date().toISOString()
   };
   if (!editingProductId) payload.createdAt = new Date().toISOString();
@@ -582,7 +626,16 @@ function renderProducts() {
   const grid = document.getElementById('productsGrid');
   if (!grid) return;
 
-  grid.innerHTML = state.products.map((product) => {
+  renderProductsFilterBar();
+
+  const products = getSortedProducts(state.products).filter((product) => productMatchesFilter(product));
+
+  if (!products.length) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1 / -1"><div class="empty-icon">!</div><p>No products match this filter.</p></div>';
+    return;
+  }
+
+  grid.innerHTML = products.map((product) => {
     const isComingSoon = product.displayOnly;
     const priceDisplay = product.price || '';
     const priceNum = String(priceDisplay).replace(/[^0-9.]/g, '');
@@ -604,11 +657,17 @@ function renderProducts() {
         <div class="pm-sub">${escapeHtml(shortDescription || 'No description added yet.')}</div>
         <div class="pm-sub">${escapeHtml(product.unit || 'per box')}</div>
         ${variantSummary ? `<div class="pm-sub">${escapeHtml(variantSummary)}</div>` : ''}
+        <div class="pm-sort-wrap"><span class="pm-sort-label">Order</span><input type="number" class="pm-sort-input" id="sort-${escapeHtml(product.id)}" value="${escapeHtml(String(product.sortOrder ?? ''))}" min="1" step="1"><button class="pm-save-btn" onclick="saveProductSortOrder('${escapeHtml(product.id)}')">Save</button></div>
         ${variants.length ? '<div class="pm-sub">Use Edit to update size and price options.</div>' : `<div class="pm-price-wrap"><span style="font-size:12px;color:var(--text-light)">$</span><input type="number" class="pm-price-input" id="price-${escapeHtml(product.id)}" value="${escapeHtml(priceNum)}" min="1" max="999" step="1" placeholder="${isComingSoon ? 'Add price to go live' : '56'}"><button class="pm-save-btn" onclick="saveProductPrice('${escapeHtml(product.id)}')">Save</button></div>`}
       </div>
       <div class="pm-controls"><label class="toggle-switch"><input type="checkbox" ${product.available ? 'checked' : ''} onchange="toggleAvailable('${escapeHtml(product.id)}', this.checked)"><span class="toggle-slider"></span></label><span style="font-size:10px;color:var(--text-light)">${statusText}</span><button class="pm-edit-btn" type="button" onclick="editProduct('${escapeHtml(product.id)}')">Edit</button></div>
     </div>`;
   }).join('');
+}
+
+function setProductCategoryFilter(filter) {
+  state.productFilter = filter || 'all';
+  renderProducts();
 }
 
 function renderSubscribers() {
@@ -653,6 +712,22 @@ async function saveProductPrice(id) {
   const price = `$${value}`;
   await updateDoc(doc(db, 'products', id), { price, updatedAt: new Date().toISOString() });
   showToast(`${product.name} price updated`);
+}
+
+async function saveProductSortOrder(id) {
+  const input = document.getElementById(`sort-${id}`);
+  if (!input) return;
+  const value = parseInt(input.value, 10);
+  if (!Number.isFinite(value) || value < 1) {
+    showToast('Enter a valid order number');
+    return;
+  }
+
+  const product = state.products.find((item) => item.id === id);
+  if (!product) return;
+
+  await updateDoc(doc(db, 'products', id), { sortOrder: value, updatedAt: new Date().toISOString() });
+  showToast(`${product.name} order updated`);
 }
 
 async function toggleAvailable(id, available) {
@@ -1089,6 +1164,8 @@ window.openAddProductForm = openAddProductForm;
 window.closeAddProductForm = closeAddProductForm;
 window.resetAddProductForm = resetAddProductForm;
 window.editProduct = editProduct;
+window.setProductCategoryFilter = setProductCategoryFilter;
+window.saveProductSortOrder = saveProductSortOrder;
 
 bindUi();
 initAuthWatch();

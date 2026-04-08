@@ -286,6 +286,43 @@
       box-shadow: 0 12px 24px rgba(200,121,26,0.22);
     }
     .add-product-btn:hover { background: var(--saffron-d); }
+    .products-filter-bar {
+      background: linear-gradient(180deg, #fff9ec, #fff5da);
+      border: 1.5px solid rgba(200,121,26,0.2);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .products-filter-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--text-light);
+      margin-right: 2px;
+    }
+    .product-filter-pill {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1.5px solid rgba(200,121,26,0.18);
+      background: var(--white);
+      color: var(--text-light);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .product-filter-pill.active {
+      background: var(--saffron);
+      border-color: var(--saffron);
+      color: white;
+      box-shadow: 0 10px 18px rgba(200,121,26,0.18);
+    }
     .product-form-card {
       display: none;
       background: linear-gradient(180deg, #fff, #fbf5eb);
@@ -478,6 +515,34 @@
       overflow: hidden;
     }
     .pm-price-wrap { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+    .pm-sort-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .pm-sort-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-light);
+    }
+    .pm-sort-input {
+      width: 78px;
+      padding: 4px 8px;
+      border: 1.5px solid #E0D0B8;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--saffron);
+      background: var(--cream);
+      font-family: var(--font-body);
+      outline: none;
+      transition: border-color var(--transition);
+    }
+    .pm-sort-input:focus { border-color: var(--saffron); }
     .pm-price-input {
       width: 72px; padding: 4px 8px; border: 1.5px solid #E0D0B8;
       border-radius: 8px; font-size: 13px; font-weight: 600;
@@ -525,23 +590,6 @@
     }
     .toggle-switch input:checked + .toggle-slider { background: var(--saffron); }
     .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
-
-    /* Export data.js banner */
-    .export-banner {
-      background: #FFF8E1; border: 1.5px solid var(--gold);
-      border-radius: var(--radius); padding: 14px 20px;
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
-    }
-    .export-banner p { font-size: 13px; color: var(--dark); margin: 0; }
-    .export-banner strong { color: var(--saffron); }
-    .export-data-btn {
-      padding: 8px 18px; background: var(--dark); color: var(--gold-l);
-      border: none; border-radius: 50px; font-family: var(--font-body);
-      font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
-      transition: var(--transition);
-    }
-    .export-data-btn:hover { background: var(--dark-m); }
 
     /* Toast */
     .admin-toast {
@@ -843,8 +891,8 @@
               </div>
             </form>
           </div>
-          <div class="export-banner">
-            <button class="export-data-btn" onclick="exportDataJs()">⬇ Export data.js</button>
+          <div class="products-filter-bar" id="productsFilterBar">
+            <span class="products-filter-label">Filter Products</span>
           </div>
           <div class="products-manage-grid" id="productsGrid"></div>
         </div>
