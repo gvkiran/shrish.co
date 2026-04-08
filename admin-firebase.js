@@ -714,7 +714,7 @@ function renderSubscribers() {
   if (!tbody) return;
 
   if (!state.subscribers.length) {
-    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">✉</div><p>No subscribers found.</p></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">✉</div><p>No subscribers found.</p></div></td></tr>';
     return;
   }
 
@@ -732,8 +732,31 @@ function renderSubscribers() {
       <td><span class="status-badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
       <td>${consent}</td>
       <td>${formatDate(entry.createdAt)}</td>
+      <td>
+        <div class="action-btns">
+          <button class="action-btn btn-cancel" onclick="deleteSubscriber('${escapeHtml(entry.id)}', '${escapeHtml(entry._collection || '')}', '${escapeHtml(entry.email || '')}')">Delete</button>
+        </div>
+      </td>
     </tr>`;
   }).join('');
+}
+
+async function deleteSubscriber(id, collectionName, email) {
+  if (!id || !collectionName) {
+    showToast('Could not delete this subscriber');
+    return;
+  }
+
+  const confirmed = window.confirm(`Delete subscriber${email ? ` ${email}` : ''}? This cannot be undone.`);
+  if (!confirmed) return;
+
+  try {
+    await deleteDoc(doc(db, collectionName, id));
+    showToast('Subscriber deleted');
+  } catch (error) {
+    console.error(error);
+    showToast('Could not delete subscriber');
+  }
 }
 
 async function saveProductPrice(id) {
@@ -1131,7 +1154,7 @@ function subscribeData() {
   };
 
   state.unsubSubscribersGeneral = onSnapshot(collection(db, 'email_subscribers'), (snapshot) => {
-    state._generalSubscribers = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
+    state._generalSubscribers = snapshot.docs.map((snap) => ({ id: snap.id, _collection: 'email_subscribers', ...snap.data() }));
     syncSubscribers();
   }, (error) => {
     console.error(error);
@@ -1139,7 +1162,7 @@ function subscribeData() {
   });
 
   state.unsubSubscribersProduct = onSnapshot(collection(db, 'notify_requests'), (snapshot) => {
-    state._productSubscribers = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
+    state._productSubscribers = snapshot.docs.map((snap) => ({ id: snap.id, _collection: 'notify_requests', ...snap.data() }));
     syncSubscribers();
   }, (error) => {
     console.error(error);
@@ -1199,6 +1222,7 @@ window.markFilteredActiveFulfilled = markFilteredActiveFulfilled;
 window.printActiveOrders = printActiveOrders;
 window.exportCSV = exportCSV;
 window.exportSubscribersCSV = exportSubscribersCSV;
+window.deleteSubscriber = deleteSubscriber;
 window.renderAccounting = renderAccounting;
 window.openAddProductForm = openAddProductForm;
 window.closeAddProductForm = closeAddProductForm;
