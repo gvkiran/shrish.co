@@ -1069,7 +1069,12 @@ async function saveAccountingBatch(options = {}) {
     return true;
   } catch (error) {
     console.error(error);
-    showToast('Could not save accounting batch right now');
+    const message = String(error?.code || error?.message || '');
+    if (message.includes('permission-denied')) {
+      showToast('Accounting save blocked by Firestore rules. Deploy the latest firestore.rules.');
+    } else {
+      showToast('Could not save accounting batch right now');
+    }
     return false;
   }
 }
