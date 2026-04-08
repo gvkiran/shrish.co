@@ -57,13 +57,24 @@ const STRICT_CATALOG_IDS = new Set([
   'palm_jelly'
 ]);
 
+const FORCE_BASE_PRODUCT_OVERRIDES = {
+  mango_jelly_sugar: ['available', 'displayOnly']
+};
+
 function saveCart() {
   sessionStorage.setItem('shrish_cart', JSON.stringify(cart));
 }
 
 function mergeProducts(docs) {
   const byId = new Map(docs.map((item) => [item.id, item]));
-  const mergedBase = baseProducts.map((product) => ({ ...product, ...(byId.get(product.id) || {}) }));
+  const mergedBase = baseProducts.map((product) => {
+    const merged = { ...product, ...(byId.get(product.id) || {}) };
+    const forcedFields = FORCE_BASE_PRODUCT_OVERRIDES[product.id] || [];
+    forcedFields.forEach((field) => {
+      merged[field] = product[field];
+    });
+    return merged;
+  });
   const extraProducts = docs
     .filter((item) => !baseProducts.some((product) => product.id === item.id))
     .map((item) => ({ ...item }));
@@ -123,6 +134,8 @@ function updateCartUI() {
   if (cartFabCount) cartFabCount.textContent = total;
   const navBadge = document.getElementById('navCartBadge');
   if (navBadge) navBadge.textContent = total;
+  const navCartLink = document.getElementById('navCartLink');
+  if (navCartLink) navCartLink.href = total > 0 ? 'order.html' : 'shop.html';
   const fab = document.getElementById('cartFab');
   if (fab) fab.style.display = 'flex';
   const cta = document.getElementById('orderCta');
