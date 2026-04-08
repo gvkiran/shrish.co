@@ -266,7 +266,7 @@ async function notifyMe(productId, productName) {
   const modal = document.getElementById('notifyModal');
 
   if (title) title.textContent = 'Get Notified';
-  if (text) text.textContent = `Enter your email and we’ll let you know when "${productName}" is available.`;
+  if (text) text.textContent = `Enter your email and we'll let you know when "${productName}" is available.`;
   if (email) email.value = '';
   if (msg) {
     msg.className = 'notify-message';
@@ -349,7 +349,7 @@ async function submitNotifyRequest(event) {
       updatedAt: serverTimestamp()
     });
 
-    setNotifyMessage('success', `Thanks. We’ll notify you when "${notifyTarget.productName}" is available.`);
+    setNotifyMessage('success', `Thanks. We'll notify you when "${notifyTarget.productName}" is available.`);
     emailInput.value = '';
     showToast(`Saved notification for ${notifyTarget.productName}`);
     window.setTimeout(() => {
@@ -558,5 +558,6 @@ window.handleNotifyOverlayClick = handleNotifyOverlayClick;
 window.goCheckout = goCheckout;
 
 init();
+
 
 
