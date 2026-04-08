@@ -1055,15 +1055,22 @@ async function saveAccountingBatch(options = {}) {
     mismatch
   }, options);
 
-  await setDoc(doc(db, 'accounting_batches', batchName), payload, { merge: true });
-  state.selectedAccountingBatch = batchName;
+  try {
+    await setDoc(doc(db, 'accounting_batches', batchName), payload, { merge: true });
+    state.selectedAccountingBatch = batchName;
 
-  if (options.closeBatch) {
-    showToast('Batch closed');
-  } else if (options.reopenBatch) {
-    showToast('Batch reopened');
-  } else {
-    showToast('Accounting tally saved');
+    if (options.closeBatch) {
+      showToast('Batch closed');
+    } else if (options.reopenBatch) {
+      showToast('Batch reopened');
+    } else {
+      showToast('Accounting tally saved');
+    }
+    return true;
+  } catch (error) {
+    console.error(error);
+    showToast('Could not save accounting batch right now');
+    return false;
   }
 }
 
@@ -1073,7 +1080,8 @@ async function closeAccountingBatch() {
   const batchName = state.selectedAccountingBatch || batchNameFromDate(dateInput?.value || todayDateInputValue());
   const confirmed = window.confirm(`Close ${batchName}? You can reopen it later if needed.`);
   if (!confirmed) return;
-  await saveAccountingBatch({ closeBatch: true });
+  const saved = await saveAccountingBatch({ closeBatch: true });
+  if (!saved) return;
   state.accountingView = 'open';
   state.selectedAccountingBatch = '';
   renderAccounting();
@@ -1085,7 +1093,8 @@ async function reopenAccountingBatch() {
   const batchName = state.selectedAccountingBatch || batchNameFromDate(dateInput?.value || todayDateInputValue());
   const confirmed = window.confirm(`Reopen ${batchName}? This lets you continue editing the tally.`);
   if (!confirmed) return;
-  await saveAccountingBatch({ reopenBatch: true });
+  const saved = await saveAccountingBatch({ reopenBatch: true });
+  if (!saved) return;
   state.accountingView = 'open';
   state.selectedAccountingBatch = batchName;
   renderAccounting();
