@@ -7,6 +7,7 @@ let activeFilter = 'all';
 let baseProducts = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || []));
 let modalQty = 1;
 let modalProductId = null;
+let modalVariantId = null;
 let notifyTarget = null;
 
 const PRODUCT_IMAGES = {
@@ -38,6 +39,44 @@ function mergeProducts(docs) {
     .filter((item) => !baseProducts.some((product) => product.id === item.id))
     .map((item) => ({ ...item }));
   window.SHRISH_DATA.products = [...mergedBase, ...extraProducts];
+}
+
+function getProductVariants(product) {
+  if (Array.isArray(product?.variants) && product.variants.length) {
+    return product.variants
+      .filter((variant) => variant?.label)
+      .map((variant, index) => ({
+        id: variant.id || `opt${index + 1}`,
+        label: variant.label,
+        price: variant.price || product.price || '',
+        unit: variant.label
+      }));
+  }
+
+  return [{
+    id: 'default',
+    label: product?.unit || 'Default',
+    price: product?.price || '',
+    unit: product?.unit || ''
+  }];
+}
+
+function hasVariantChoices(product) {
+  return getProductVariants(product).length > 1;
+}
+
+function buildCartItemId(productId, variantId = 'default') {
+  return variantId === 'default' ? productId : `${productId}__${variantId}`;
+}
+
+function getSelectedVariant(product, variantId = null) {
+  const variants = getProductVariants(product);
+  return variants.find((variant) => variant.id === variantId) || variants[0];
+}
+
+function productImages(productId, product) {
+  if (Array.isArray(product?.gallery) && product.gallery.length) return product.gallery;
+  return PRODUCT_IMAGES[productId] || (product?.image ? [product.image] : []);
 }
 
 function updateCartUI() {
@@ -74,12 +113,12 @@ function renderCartDrawer() {
   const totalQty = cart.reduce((s, i) => s + i.qty, 0);
   totalEl.textContent = `${totalQty} box${totalQty !== 1 ? 'es' : ''}`;
   list.innerHTML = cart.map((item) => {
-    const imgHtml = item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" onerror="this.parentElement.textContent='Image'">` : 'Image';
+    const imgHtml = item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" onerror="this.parentElement.textContent='No Image'">` : 'No Image';
     return `<div class="cart-item">
       <div class="ci-img">${imgHtml}</div>
       <div class="ci-info">
         <div class="ci-name">${escapeHtml(item.name)}</div>
-        <div class="ci-price">${escapeHtml(item.price)} · ${escapeHtml(item.unit)}</div>
+        <div class="ci-price">${escapeHtml(item.price)} - ${escapeHtml(item.unit)}</div>
         <div class="ci-qty-row">
           <button class="ci-qty-btn" onclick="cartQty('${escapeHtml(item.id)}',-1)">-</button>
           <span class="ci-qty-num">${item.qty}</span>
@@ -109,15 +148,26 @@ function cartRemove(id) {
   renderCardQty(id);
 }
 
-function addToCart(productId, qty) {
+function addToCart(productId, qty, variantId = null) {
   const p = window.SHRISH_DATA.products.find((x) => x.id === productId);
   if (!p || !p.available || p.displayOnly) return;
-  const existing = cart.find((x) => x.id === productId);
+  const selectedVariant = getSelectedVariant(p, variantId);
+  const cartItemId = buildCartItemId(productId, selectedVariant.id);
+  const existing = cart.find((x) => x.id === cartItemId);
   if (existing) existing.qty += qty;
-  else cart.push({ id: p.id, name: p.name, price: p.price, unit: p.unit, image: p.image || null, qty });
+  else cart.push({
+    id: cartItemId,
+    productId: p.id,
+    variantId: selectedVariant.id,
+    name: selectedVariant.id === 'default' ? p.name : `${p.name} (${selectedVariant.label})`,
+    price: selectedVariant.price || p.price,
+    unit: selectedVariant.unit || p.unit,
+    image: p.image || null,
+    qty
+  });
   saveCart();
   updateCartUI();
-  showToast(`${p.name} added!`);
+  showToast(`${selectedVariant.id === 'default' ? p.name : `${p.name} (${selectedVariant.label})`} added!`);
   renderCardQty(productId);
 }
 
@@ -155,16 +205,18 @@ function openModal(productId) {
   if (!p) return;
   modalProductId = productId;
   modalQty = 1;
+  modalVariantId = getSelectedVariant(p, modalVariantId).id;
 
   const isAvail = p.available && !p.displayOnly;
   const isSoon = p.displayOnly;
-  const imgs = PRODUCT_IMAGES[productId] || (p.image ? [p.image] : []);
+  const imgs = productImages(productId, p);
+  const selectedVariant = getSelectedVariant(p, modalVariantId);
 
   const mainWrap = document.getElementById('modalMainImgWrap');
   if (mainWrap) {
     mainWrap.innerHTML = imgs.length
       ? `<img class="modal-main-img" id="modalMainImg" src="${escapeHtml(imgs[0])}" alt="${escapeHtml(p.name)}" onerror="this.style.display='none'">`
-      : `<div class="modal-img-placeholder">Image</div>`;
+      : `<div class="modal-img-placeholder">No Image</div>`;
   }
 
   const thumbs = document.getElementById('modalThumbs');
@@ -197,7 +249,11 @@ function openModal(productId) {
   if (isSoon) {
     actionHtml = `<button class="modal-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify Me</button>`;
   } else if (isAvail) {
-    actionHtml = `<div class="modal-qty-row"><div class="modal-qty-ctrl"><button class="modal-qty-btn" onclick="modalChangeQty(-1)">-</button><span class="modal-qty-num" id="modalQtyNum">1</span><button class="modal-qty-btn" onclick="modalChangeQty(1)">+</button></div><span style="font-size:13px;color:var(--text-light)">box</span><button class="modal-add-btn" id="modalAddBtn" onclick="modalAddToCart()">Add to Cart</button></div>`;
+    const variants = getProductVariants(p);
+    const variantButtons = variants.length > 1
+      ? `<div class="modal-variant-group"><div class="modal-variant-title">Choose option</div><div class="modal-variant-buttons">${variants.map((variant) => `<button type="button" class="modal-variant-btn ${variant.id === modalVariantId ? 'active' : ''}" onclick="modalSelectVariant('${escapeHtml(p.id)}','${escapeHtml(variant.id)}')"><span>${escapeHtml(variant.label)}</span><strong>${escapeHtml(variant.price)}</strong></button>`).join('')}</div></div>`
+      : '';
+    actionHtml = `${variantButtons}<div class="modal-qty-row"><div class="modal-qty-ctrl"><button class="modal-qty-btn" onclick="modalChangeQty(-1)">-</button><span class="modal-qty-num" id="modalQtyNum">1</span><button class="modal-qty-btn" onclick="modalChangeQty(1)">+</button></div><span style="font-size:13px;color:var(--text-light)">${escapeHtml(selectedVariant.unit || 'item')}</span><button class="modal-add-btn" id="modalAddBtn" onclick="modalAddToCart()">Add to Cart</button></div>`;
   } else {
     actionHtml = `<button class="modal-add-btn" style="background:#ccc;cursor:not-allowed" disabled>Currently Sold Out</button>`;
   }
@@ -214,7 +270,7 @@ function openModal(productId) {
       ${badges ? `<div class="modal-badges">${badges}</div>` : ''}
       ${p.details ? `<div class="modal-note">Info: ${escapeHtml(p.details)}</div>` : ''}
       ${p.bestFor ? `<div class="modal-best"><strong>Best for:</strong> ${escapeHtml(p.bestFor)}</div>` : ''}
-      <div class="modal-price-row"><div><div class="modal-price">${escapeHtml(p.price)}</div><div class="modal-unit">${escapeHtml(p.unit)}</div></div></div>
+      <div class="modal-price-row"><div><div class="modal-price">${escapeHtml(selectedVariant.price || p.price)}</div><div class="modal-unit">${escapeHtml(selectedVariant.unit || p.unit)}</div></div></div>
       ${actionHtml}`;
   }
 
@@ -246,15 +302,20 @@ function modalChangeQty(delta) {
 
 function modalAddToCart() {
   if (!modalProductId) return;
-  addToCart(modalProductId, modalQty);
+  addToCart(modalProductId, modalQty, modalVariantId);
   const btn = document.getElementById('modalAddBtn');
   if (!btn) return;
-  btn.textContent = '? Added!';
+  btn.textContent = 'Added!';
   btn.classList.add('added');
   setTimeout(() => {
     btn.textContent = 'Add to Cart';
     btn.classList.remove('added');
   }, 1800);
+}
+
+function modalSelectVariant(productId, variantId) {
+  modalVariantId = variantId;
+  openModal(productId);
 }
 
 async function notifyMe(productId, productName) {
@@ -381,11 +442,16 @@ function renderCard(p) {
   const imgSrc = p.image || null;
   const imgHtml = imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
   const emojiStyle = imgSrc ? 'style="display:none"' : '';
-  const shortDesc = (p.description || '').length > 90 ? `${p.description.slice(0, 90)}…` : (p.description || '');
+  const shortDesc = (p.description || '').length > 90 ? `${p.description.slice(0, 90)}...` : (p.description || '');
+  const variants = getProductVariants(p);
+  const hasChoices = variants.length > 1;
+  const primaryVariant = variants[0];
 
   let actionHtml = '';
   if (isSoon) {
     actionHtml = `<button class="pc-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify Me</button>`;
+  } else if (isAvail && hasChoices) {
+    actionHtml = `<div class="pc-card-actions" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><div class="pc-variant-list">${variants.map((variant) => `<button class="pc-variant-add-btn" onclick="quickAddVariant('${escapeHtml(p.id)}','${escapeHtml(variant.id)}')"><span>${escapeHtml(variant.label)}</span><strong>${escapeHtml(variant.price)}</strong></button>`).join('')}</div></div>`;
   } else if (isAvail) {
     actionHtml = `<div class="pc-card-actions" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" onclick="quickAdd('${escapeHtml(p.id)}')">+ Add to Cart</button></div>`;
   } else {
@@ -396,7 +462,7 @@ function renderCard(p) {
       ${p.tag ? `<div class="pc-tag ${tagClass(p.tag)}">${escapeHtml(p.tag)}</div>` : ''}
       <div class="pc-img" onclick="openModal('${escapeHtml(p.id)}')">
         ${imgHtml}
-        <div class="pc-img-emoji" ${emojiStyle}>Image</div>
+        <div class="pc-img-emoji" ${emojiStyle}>No Image</div>
         <div class="pc-status-strip ${stripCls}">${stripText}</div>
         <div class="pc-view-hint">View Details</div>
       </div>
@@ -405,7 +471,7 @@ function renderCard(p) {
         <div class="pc-name" onclick="openModal('${escapeHtml(p.id)}')">${escapeHtml(p.name)}</div>
         ${p.localName ? `<div class="pc-local">${escapeHtml(p.localName)}</div>` : ''}
         <div class="pc-short-desc">${escapeHtml(shortDesc)}</div>
-        <div class="pc-footer"><div class="pc-price-wrap"><div class="pc-price">${escapeHtml(p.price)}</div><div class="pc-unit">${escapeHtml(p.unit)}</div></div></div>
+        <div class="pc-footer"><div class="pc-price-wrap"><div class="pc-price">${escapeHtml(primaryVariant.price || p.price)}</div><div class="pc-unit">${escapeHtml(primaryVariant.unit || p.unit)}</div></div></div>
         ${actionHtml}
       </div>
     </div>`;
@@ -416,9 +482,16 @@ function quickAdd(productId) {
   renderCardQty(productId);
 }
 
+function quickAddVariant(productId, variantId) {
+  addToCart(productId, 1, variantId);
+}
+
 function renderCardQty(productId) {
   const wrap = document.getElementById(`card-actions-${productId}`);
   if (!wrap) return;
+  const product = window.SHRISH_DATA.products.find((entry) => entry.id === productId);
+  if (!product) return;
+  if (hasVariantChoices(product)) return;
   const item = cart.find((x) => x.id === productId);
   const qty = item ? item.qty : 0;
   if (qty === 0) {
@@ -547,7 +620,9 @@ window.handleModalOverlayClick = handleModalOverlayClick;
 window.switchModalImg = switchModalImg;
 window.modalChangeQty = modalChangeQty;
 window.modalAddToCart = modalAddToCart;
+window.modalSelectVariant = modalSelectVariant;
 window.quickAdd = quickAdd;
+window.quickAddVariant = quickAddVariant;
 window.cardQtyChange = cardQtyChange;
 window.renderCardQty = renderCardQty;
 window.cartQty = cartQty;
@@ -558,6 +633,7 @@ window.handleNotifyOverlayClick = handleNotifyOverlayClick;
 window.goCheckout = goCheckout;
 
 init();
+
 
 
 
