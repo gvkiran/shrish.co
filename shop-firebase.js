@@ -33,29 +33,7 @@ const PRODUCT_IMAGES = {
   palm_jelly: ['img_palm_jelly.webp']
 };
 
-const STRICT_CATALOG_IDS = new Set([
-  'alphonso',
-  'kesar',
-  'banganapalli',
-  'langra',
-  'rasalu',
-  'himayat',
-  'payari',
-  'dasheri',
-  'malgova',
-  'neelam',
-  'puth_sugar_kaju',
-  'puth_sugar_kaju_pista',
-  'puth_jaggery_kaju',
-  'puth_jaggery_kaju_badam',
-  'puth_jaggery_kaju_pista',
-  'puth_sugarfree',
-  'puth_dates_kaju_badam_pista',
-  'puth_organic_palm_kaju_badam_pista',
-  'mango_jelly_sugar',
-  'mango_jelly_jaggery',
-  'palm_jelly'
-]);
+const SHOP_CATEGORY_IDS = new Set(['mangoes', 'putharekulu', 'jellysnacks']);
 
 const FORCE_BASE_PRODUCT_OVERRIDES = {
   mango_jelly_sugar: ['available', 'displayOnly']
@@ -89,7 +67,7 @@ function mergeProducts(docs) {
     .map((item) => ({ ...item }));
   window.SHRISH_DATA.products = sortCatalogProducts(
     [...mergedBase, ...extraProducts]
-      .filter((product) => STRICT_CATALOG_IDS.has(product.id))
+      .filter((product) => SHOP_CATEGORY_IDS.has(product.category))
   );
 }
 
