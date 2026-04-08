@@ -139,21 +139,6 @@ const SHRISH_DATA = {
       badges: ["GI Tagged", "Atreyapuram Authentic"]
     },
     {
-      id: "puth_sugar_kaju_only", category: "putharekulu",
-      name: "Putharekulu - Sugar - Kaju", localName: "",
-      origin: "Atreyapuram, Andhra Pradesh",
-      price: "$6.99", unit: "5 count or 10 count",
-      available: true, displayOnly: false, tag: "Traditional",
-      image: "img_puth_sugar_kaju.jpg",
-      description: "Traditional dry fruit Putharekulu with delicate rice starch sheets layered with sugar, ghee-roasted cashews, and a clean sweet finish. A simple, classic choice from Atreyapuram for customers who want the authentic texture with a lighter dry-fruit filling.",
-      details: "Ingredients: Rice starch sheets, sugar, cashews and ghee. Store in a cool dry place and enjoy fresh.",
-      badges: ["Atreyapuram Authentic", "Traditional Sweet"],
-      variants: [
-        { id: "opt1", label: "5 count", price: "$6.99", sku: "PSK5" },
-        { id: "opt2", label: "10 count", price: "$12.99", sku: "PSK10" }
-      ]
-    },
-    {
       id: "puth_sugar_kaju", category: "putharekulu",
       name: "Putharekulu - Sugar - Kaju Badam", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",

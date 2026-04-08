@@ -20,7 +20,6 @@ const PRODUCT_IMAGES = {
   himayat: ['img_himayath_real.jpg', 'img_himayat.jpg'],
   payari: ['img_payari.jpg', 'img_payri.webp'],
   puth_plain: ['img_puth_plain.jpeg'],
-  puth_sugar_kaju_only: ['img_puth_sugar_kaju.jpg'],
   puth_sugar_kaju: ['img_puth_sugar_kaju.jpg'],
   puth_sugar_kaju_pista: ['img_puth_sugar_kaju_pista.png'],
   puth_jaggery_kaju: ['img_puth_jaggery_kaju_pista.png'],
@@ -148,14 +147,15 @@ function cartQty(id, delta) {
   if (item.qty === 0) cart = cart.filter((x) => x.id !== id);
   saveCart();
   updateCartUI();
-  renderCardQty(id);
+  renderCardQty(item.productId || id);
 }
 
 function cartRemove(id) {
+  const item = cart.find((x) => x.id === id);
   cart = cart.filter((x) => x.id !== id);
   saveCart();
   updateCartUI();
-  renderCardQty(id);
+  renderCardQty(item?.productId || id);
 }
 
 function addToCart(productId, qty, variantId = null) {
@@ -501,11 +501,12 @@ function quickAddSelectedVariant(productId) {
   if (!product) return;
   const selectedVariant = getCardSelectedVariant(product);
   addToCart(productId, 1, selectedVariant.id);
+  renderCardQty(productId);
 }
 
 function cardVariantChanged(productId, variantId) {
   cardVariantSelections[productId] = variantId;
-  renderProducts();
+  renderCardQty(productId);
 }
 
 function renderCardQty(productId) {
@@ -513,7 +514,21 @@ function renderCardQty(productId) {
   if (!wrap) return;
   const product = window.SHRISH_DATA.products.find((entry) => entry.id === productId);
   if (!product) return;
-  if (hasVariantChoices(product)) return;
+  if (hasVariantChoices(product)) {
+    const variants = getProductVariants(product);
+    const selectedVariant = getCardSelectedVariant(product);
+    const cartItemId = buildCartItemId(product.id, selectedVariant.id);
+    const item = cart.find((x) => x.id === cartItemId);
+    const qty = item ? item.qty : 0;
+
+    if (qty === 0) {
+      wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><div class="pc-variant-list"><select class="pc-variant-select" onchange="cardVariantChanged('${escapeHtml(product.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === selectedVariant.id ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select><button class="pc-add-btn" onclick="quickAddSelectedVariant('${escapeHtml(product.id)}')">+ Add to Cart</button></div>`;
+      return;
+    }
+
+    wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><div class="pc-variant-list"><select class="pc-variant-select" onchange="cardVariantChanged('${escapeHtml(product.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === selectedVariant.id ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select><div class="card-qty-wrap"><button class="card-qty-btn remove-btn" onclick="cardVariantQtyChange('${escapeHtml(product.id)}','${escapeHtml(selectedVariant.id)}',-1)" title="Remove one">-</button><div class="card-qty-mid"><span class="cqn">${qty}</span><span style="font-size:11px;opacity:.85">${escapeHtml(selectedVariant.label)}</span></div><button class="card-qty-btn" onclick="cardVariantQtyChange('${escapeHtml(product.id)}','${escapeHtml(selectedVariant.id)}',1)" title="Add one">+</button></div></div>`;
+    return;
+  }
   const item = cart.find((x) => x.id === productId);
   const qty = item ? item.qty : 0;
   if (qty === 0) {
@@ -532,6 +547,22 @@ function cardQtyChange(productId, delta) {
     showToast('Removed from cart');
   } else {
     showToast(delta > 0 ? 'Added one more box!' : 'Removed one box');
+  }
+  saveCart();
+  updateCartUI();
+  renderCardQty(productId);
+}
+
+function cardVariantQtyChange(productId, variantId, delta) {
+  const itemId = buildCartItemId(productId, variantId);
+  const item = cart.find((x) => x.id === itemId);
+  if (!item) return;
+  item.qty = Math.max(0, item.qty + delta);
+  if (item.qty === 0) {
+    cart = cart.filter((x) => x.id !== itemId);
+    showToast('Removed from cart');
+  } else {
+    showToast(delta > 0 ? 'Added one more!' : 'Removed one');
   }
   saveCart();
   updateCartUI();
@@ -648,6 +679,7 @@ window.quickAddVariant = quickAddVariant;
 window.quickAddSelectedVariant = quickAddSelectedVariant;
 window.cardVariantChanged = cardVariantChanged;
 window.cardQtyChange = cardQtyChange;
+window.cardVariantQtyChange = cardVariantQtyChange;
 window.renderCardQty = renderCardQty;
 window.cartQty = cartQty;
 window.cartRemove = cartRemove;
