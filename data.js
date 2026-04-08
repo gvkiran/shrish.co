@@ -128,17 +128,6 @@ const SHRISH_DATA = {
     //  PUTHAREKULU
     // ===========================================
     {
-      id: "puth_plain", category: "putharekulu",
-      name: "Putharekulu - Classic Plain (Sugar)", localName: "",
-      origin: "Atreyapuram, Andhra Pradesh",
-      price: "Coming Soon", unit: "per box",
-      available: false, displayOnly: true, tag: "Coming Soon",
-      image: "img_puth_plain.jpeg",
-      description: "The original - paper-thin rice starch sheets layered with fine sugar and a hint of ghee. Made fresh in small batches in Atreyapuram, the birthplace of Putharekulu. Melt-in-mouth texture with a delicate, pure sweetness. A GI-tagged delicacy of Andhra Pradesh.",
-      details: "Ingredients: Rice starch, sugar, ghee. Best within 30 days. Store in cool dry place.",
-      badges: ["GI Tagged", "Atreyapuram Authentic"]
-    },
-    {
       id: "puth_sugar_kaju", category: "putharekulu",
       name: "Putharekulu - Sugar - Kaju Badam", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",

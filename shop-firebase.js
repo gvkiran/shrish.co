@@ -33,6 +33,30 @@ const PRODUCT_IMAGES = {
   palm_jelly: ['img_palm_jelly.webp']
 };
 
+const STRICT_CATALOG_IDS = new Set([
+  'alphonso',
+  'kesar',
+  'banganapalli',
+  'langra',
+  'rasalu',
+  'himayat',
+  'payari',
+  'dasheri',
+  'malgova',
+  'neelam',
+  'puth_sugar_kaju',
+  'puth_sugar_kaju_pista',
+  'puth_jaggery_kaju',
+  'puth_jaggery_kaju_badam',
+  'puth_jaggery_kaju_pista',
+  'puth_sugarfree',
+  'puth_dates_kaju_badam_pista',
+  'puth_organic_palm_kaju_badam_pista',
+  'mango_jelly_sugar',
+  'mango_jelly_jaggery',
+  'palm_jelly'
+]);
+
 function saveCart() {
   sessionStorage.setItem('shrish_cart', JSON.stringify(cart));
 }
@@ -43,7 +67,8 @@ function mergeProducts(docs) {
   const extraProducts = docs
     .filter((item) => !baseProducts.some((product) => product.id === item.id))
     .map((item) => ({ ...item }));
-  window.SHRISH_DATA.products = [...mergedBase, ...extraProducts];
+  window.SHRISH_DATA.products = [...mergedBase, ...extraProducts]
+    .filter((product) => STRICT_CATALOG_IDS.has(product.id));
 }
 
 function getProductVariants(product) {
@@ -68,6 +93,10 @@ function getProductVariants(product) {
 
 function hasVariantChoices(product) {
   return getProductVariants(product).length > 1;
+}
+
+function usesVariantUI(product) {
+  return Array.isArray(product?.variants) && product.variants.length > 0;
 }
 
 function buildCartItemId(productId, variantId = 'default') {
@@ -260,7 +289,7 @@ function openModal(productId) {
     actionHtml = `<button class="modal-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify Me</button>`;
   } else if (isAvail) {
     const variants = getProductVariants(p);
-    const variantSelect = variants.length > 1
+    const variantSelect = usesVariantUI(p)
       ? `<div class="modal-variant-group"><div class="modal-variant-title">${p.category === 'putharekulu' ? 'Choose count' : 'Choose size'}</div><select class="modal-variant-select" onchange="modalSelectVariant('${escapeHtml(p.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === modalVariantId ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select></div>`
       : '';
     actionHtml = `${variantSelect}<div class="modal-qty-row"><div class="modal-qty-ctrl"><button class="modal-qty-btn" onclick="modalChangeQty(-1)">-</button><span class="modal-qty-num" id="modalQtyNum">1</span><button class="modal-qty-btn" onclick="modalChangeQty(1)">+</button></div><span style="font-size:13px;color:var(--text-light)">${escapeHtml(selectedVariant.unit || 'item')}</span><button class="modal-add-btn" id="modalAddBtn" onclick="modalAddToCart()">Add to Cart</button></div>`;
@@ -454,7 +483,7 @@ function renderCard(p) {
   const emojiStyle = imgSrc ? 'style="display:none"' : '';
   const shortDesc = (p.description || '').length > 90 ? `${p.description.slice(0, 90)}...` : (p.description || '');
   const variants = getProductVariants(p);
-  const hasChoices = variants.length > 1;
+  const hasChoices = usesVariantUI(p);
   const selectedCardVariant = getCardSelectedVariant(p);
 
   let actionHtml = '';
@@ -514,7 +543,7 @@ function renderCardQty(productId) {
   if (!wrap) return;
   const product = window.SHRISH_DATA.products.find((entry) => entry.id === productId);
   if (!product) return;
-  if (hasVariantChoices(product)) {
+  if (usesVariantUI(product)) {
     const variants = getProductVariants(product);
     const selectedVariant = getCardSelectedVariant(product);
     const cartItemId = buildCartItemId(product.id, selectedVariant.id);
