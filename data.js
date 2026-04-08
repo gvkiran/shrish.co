@@ -219,7 +219,7 @@ const SHRISH_DATA = {
     },
     {
       id: "puth_dates_kaju_badam_pista", category: "putharekulu",
-      name: "Putharekulu - Dates - Kaju Badam Pista", localName: "",
+      name: "Putharekulu -- Dates -- Kaju Badam Pista", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",
       price: "$9.99", unit: "5 count or 10 count",
       available: true, displayOnly: false, tag: "Natural Sweetness",
