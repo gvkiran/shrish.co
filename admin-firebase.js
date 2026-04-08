@@ -128,9 +128,19 @@ function orderDateKey(order) {
   return raw.toISOString().slice(0, 10);
 }
 
-function batchNameFromDate(dateString) {
+function batchNameFromDate(dateString, sequence = 1) {
   if (!dateString) return '';
-  return `SHR-BATCH-${dateString}`;
+  const seq = Math.max(1, parseInt(sequence, 10) || 1);
+  return `SHR-BATCH-${dateString}_${seq}`;
+}
+
+function parseBatchName(batchName = '') {
+  const match = String(batchName).match(/^SHR-BATCH-(\d{4}-\d{2}-\d{2})(?:_(\d+))?$/);
+  if (!match) return { date: '', sequence: 1 };
+  return {
+    date: match[1] || '',
+    sequence: Math.max(1, parseInt(match[2] || '1', 10) || 1)
+  };
 }
 
 function todayDateInputValue() {
@@ -201,8 +211,11 @@ function setAccountingView(view) {
 function setSelectedAccountingBatch(batchName) {
   state.selectedAccountingBatch = batchName || '';
   const dateInput = document.getElementById('accountingDate');
-  if (dateInput && batchName?.startsWith('SHR-BATCH-')) {
-    dateInput.value = batchName.replace('SHR-BATCH-', '');
+  const seqInput = document.getElementById('accountingBatchSeq');
+  if (batchName?.startsWith('SHR-BATCH-')) {
+    const parsed = parseBatchName(batchName);
+    if (dateInput) dateInput.value = parsed.date;
+    if (seqInput) seqInput.value = String(parsed.sequence);
   }
   renderAccounting();
 }
@@ -244,7 +257,7 @@ function renderAccountingBatchList(selectedBatchName) {
   `).join('');
 }
 
-function syncAccountingInputs(batchName, batchRecord = {}) {
+function syncAccountingInputs(batchName, batchRecord = {}, force = false) {
   const fields = [
     ['actualCash', batchRecord.actualCash],
     ['actualZelle', batchRecord.actualZelle],
@@ -256,7 +269,7 @@ function syncAccountingInputs(batchName, batchRecord = {}) {
     if (!input) return;
     const currentBatch = input.dataset.batchName || '';
     const nextValue = Number.isFinite(Number(value)) && Number(value) > 0 ? Number(value).toFixed(2) : '';
-    if (currentBatch !== batchName || document.activeElement !== input) {
+    if (force || currentBatch !== batchName) {
       input.value = nextValue;
     }
     input.dataset.batchName = batchName;
@@ -1022,10 +1035,12 @@ function buildAccountingBatchPayload(batchName, batchOrders, metrics, options = 
 
 async function saveAccountingBatch(options = {}) {
   const dateInput = document.getElementById('accountingDate');
+  const seqInput = document.getElementById('accountingBatchSeq');
   if (!dateInput) return;
 
   if (!dateInput.value) dateInput.value = todayDateInputValue();
-  const batchName = state.selectedAccountingBatch || batchNameFromDate(dateInput.value);
+  if (seqInput && (!seqInput.value || Number(seqInput.value) < 1)) seqInput.value = '1';
+  const batchName = state.selectedAccountingBatch || batchNameFromDate(dateInput.value, seqInput?.value || 1);
   const batchOrders = state.orders.filter((order) => (order.accountingBatch || '') === batchName);
 
   const expectedTotal = batchOrders.reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
@@ -1081,8 +1096,9 @@ async function saveAccountingBatch(options = {}) {
 
 async function closeAccountingBatch() {
   const dateInput = document.getElementById('accountingDate');
+  const seqInput = document.getElementById('accountingBatchSeq');
   if (!dateInput?.value) dateInput.value = todayDateInputValue();
-  const batchName = state.selectedAccountingBatch || batchNameFromDate(dateInput?.value || todayDateInputValue());
+  const batchName = state.selectedAccountingBatch || batchNameFromDate(dateInput?.value || todayDateInputValue(), seqInput?.value || 1);
   const confirmed = window.confirm(`Close ${batchName}? You can reopen it later if needed.`);
   if (!confirmed) return;
   const saved = await saveAccountingBatch({ closeBatch: true });
@@ -1094,8 +1110,9 @@ async function closeAccountingBatch() {
 
 async function reopenAccountingBatch() {
   const dateInput = document.getElementById('accountingDate');
+  const seqInput = document.getElementById('accountingBatchSeq');
   if (!dateInput?.value) dateInput.value = todayDateInputValue();
-  const batchName = state.selectedAccountingBatch || batchNameFromDate(dateInput?.value || todayDateInputValue());
+  const batchName = state.selectedAccountingBatch || batchNameFromDate(dateInput?.value || todayDateInputValue(), seqInput?.value || 1);
   const confirmed = window.confirm(`Reopen ${batchName}? This lets you continue editing the tally.`);
   if (!confirmed) return;
   const saved = await saveAccountingBatch({ reopenBatch: true });
@@ -1107,9 +1124,10 @@ async function reopenAccountingBatch() {
 
 function exportAccountingBatchCSV() {
   const dateInput = document.getElementById('accountingDate');
+  const seqInput = document.getElementById('accountingBatchSeq');
   if (!dateInput) return;
   if (!dateInput.value) dateInput.value = todayDateInputValue();
-  const batchName = state.selectedAccountingBatch || batchNameFromDate(dateInput.value);
+  const batchName = state.selectedAccountingBatch || batchNameFromDate(dateInput.value, seqInput?.value || 1);
   const batchOrders = state.orders.filter((order) => (order.accountingBatch || '') === batchName);
   const batchRecord = getAccountingBatchRecord(batchName) || {};
   const rows = [[
@@ -1282,6 +1300,7 @@ function printActiveOrders() {
 
 function renderAccounting() {
   const dateInput = document.getElementById('accountingDate');
+  const seqInput = document.getElementById('accountingBatchSeq');
   const statsEl = document.getElementById('accountingStats');
   const bodyEl = document.getElementById('accountingBody');
   const batchNameEl = document.getElementById('accountingBatchName');
@@ -1292,16 +1311,19 @@ function renderAccounting() {
   if (!dateInput || !statsEl || !bodyEl || !batchNameEl) return;
 
   if (!dateInput.value) dateInput.value = todayDateInputValue();
+  if (seqInput && (!seqInput.value || Number(seqInput.value) < 1)) seqInput.value = '1';
   const entries = getAccountingBatchEntries();
   const fallbackBatch = state.accountingView === 'open'
-    ? (entries[0]?.batchName || batchNameFromDate(dateInput.value))
+    ? (entries[0]?.batchName || batchNameFromDate(dateInput.value, seqInput?.value || 1))
     : (entries[0]?.batchName || '');
   const batchName = (state.selectedAccountingBatch && entries.some((entry) => entry.batchName === state.selectedAccountingBatch))
     ? state.selectedAccountingBatch
     : fallbackBatch;
   state.selectedAccountingBatch = batchName;
   if (batchName?.startsWith('SHR-BATCH-')) {
-    dateInput.value = batchName.replace('SHR-BATCH-', '');
+    const parsed = parseBatchName(batchName);
+    dateInput.value = parsed.date;
+    if (seqInput) seqInput.value = String(parsed.sequence);
   }
   batchNameEl.textContent = batchName || 'No batch selected';
   renderAccountingBatchList(batchName);
@@ -1337,7 +1359,8 @@ function renderAccounting() {
   }
 
   const batchRecord = getAccountingBatchRecord(batchName) || {};
-  syncAccountingInputs(batchName, batchRecord);
+  const activeBatchOnInputs = document.getElementById('actualCash')?.dataset.batchName || '';
+  syncAccountingInputs(batchName, batchRecord, activeBatchOnInputs !== batchName);
 
   const batchOrders = state.orders
     .filter((order) => (order.accountingBatch || '') === batchName)
@@ -1523,10 +1546,17 @@ function bindUi() {
     syncCurrentOrderFilters();
     renderOrders();
   });
-    document.getElementById('accountingDate')?.addEventListener('change', (event) => {
-      state.selectedAccountingBatch = batchNameFromDate(event.target.value || todayDateInputValue());
-      renderAccounting();
-    });
+  document.getElementById('accountingDate')?.addEventListener('change', (event) => {
+    const seqValue = document.getElementById('accountingBatchSeq')?.value || 1;
+    state.selectedAccountingBatch = batchNameFromDate(event.target.value || todayDateInputValue(), seqValue);
+    renderAccounting();
+  });
+  document.getElementById('accountingBatchSeq')?.addEventListener('change', (event) => {
+    const nextSeq = Math.max(1, parseInt(event.target.value || '1', 10) || 1);
+    event.target.value = String(nextSeq);
+    state.selectedAccountingBatch = batchNameFromDate(document.getElementById('accountingDate')?.value || todayDateInputValue(), nextSeq);
+    renderAccounting();
+  });
   document.getElementById('newProductCategory')?.addEventListener('change', () => {
     applyCategoryDefaults();
     toggleVariantFields();

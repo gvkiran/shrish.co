@@ -994,6 +994,7 @@
               <h2>Accounting</h2>
               <div class="toolbar-actions">
                 <input type="date" id="accountingDate" class="filter-input" onchange="renderAccounting()" />
+                <input type="number" id="accountingBatchSeq" class="filter-input" min="1" step="1" value="1" style="width:88px" />
                 <div class="accounting-batch" id="accountingBatchName">SHR-BATCH-YYYY-MM-DD</div>
                 <button class="toolbar-btn" onclick="saveAccountingBatch()">Save Tally</button>
                 <button class="toolbar-btn" id="closeBatchBtn" onclick="closeAccountingBatch()">Close Batch</button>
