@@ -21,9 +21,11 @@ import {
   orderItemsSummary
 } from './firebase-app.js';
 
+const BASE_PRODUCTS = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || []));
+
 const state = {
   orders: [],
-  products: JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || [])),
+  products: JSON.parse(JSON.stringify(BASE_PRODUCTS)),
   subscribers: [],
   productFilter: 'all',
   orderSheet: 'active',
@@ -84,13 +86,15 @@ function setLoggedInUi(isLoggedIn, email = '') {
 
 async function seedProductsIfNeeded() {
   const snapshot = await getDocs(collection(db, 'products'));
-  if (!snapshot.empty) return;
+  const existingIds = new Set(snapshot.docs.map((snap) => snap.id));
+  const missingProducts = BASE_PRODUCTS.filter((product) => !existingIds.has(product.id));
+  if (!missingProducts.length) return;
 
-  await Promise.all(state.products.map((product) => setDoc(doc(db, 'products', product.id), {
+  await Promise.all(missingProducts.map((product) => setDoc(doc(db, 'products', product.id), {
     ...product,
     updatedAt: new Date().toISOString()
   })));
-  showToast('Products seeded to Firestore');
+  showToast(`${missingProducts.length} missing products added to Firestore`);
 }
 
 function renderStats() {
@@ -313,6 +317,16 @@ function renderProductsFilterBar() {
     </button>`).join('')}`;
 }
 
+function mergeProductsWithBase(docs = []) {
+  const byId = new Map(docs.map((product) => [product.id, product]));
+  const mergedBase = BASE_PRODUCTS.map((product) => ({ ...product, ...(byId.get(product.id) || {}) }));
+  const extraProducts = docs
+    .filter((product) => !BASE_PRODUCTS.some((baseProduct) => baseProduct.id === product.id))
+    .map((product) => ({ ...product }));
+
+  return [...mergedBase, ...extraProducts];
+}
+
 function slugifyProductId(name) {
   return String(name || '')
     .toLowerCase()
@@ -383,6 +397,12 @@ function productUsesVariants(category) {
 
 function updateVariantFieldHints() {
   const category = document.getElementById('newProductCategory')?.value || 'mangoes';
+  const labelOneText = document.getElementById('variantOneLabelText');
+  const labelTwoText = document.getElementById('variantTwoLabelText');
+  const priceOneText = document.getElementById('variantOnePriceText');
+  const priceTwoText = document.getElementById('variantTwoPriceText');
+  const skuOneText = document.getElementById('variantOneSkuText');
+  const skuTwoText = document.getElementById('variantTwoSkuText');
   const labelOne = document.getElementById('variantOneLabel');
   const labelTwo = document.getElementById('variantTwoLabel');
   const skuOne = document.getElementById('variantOneSku');
@@ -390,16 +410,34 @@ function updateVariantFieldHints() {
   if (!labelOne || !labelTwo || !skuOne || !skuTwo) return;
 
   if (category === 'putharekulu') {
+    if (labelOneText) labelOneText.textContent = '5 Count Label';
+    if (labelTwoText) labelTwoText.textContent = '10 Count Label';
+    if (priceOneText) priceOneText.textContent = '5 Count Price';
+    if (priceTwoText) priceTwoText.textContent = '10 Count Price';
+    if (skuOneText) skuOneText.textContent = '5 Count SKU';
+    if (skuTwoText) skuTwoText.textContent = '10 Count SKU';
     labelOne.placeholder = '5 count';
     labelTwo.placeholder = '10 count';
     skuOne.placeholder = 'Ex: PSK5';
     skuTwo.placeholder = 'Ex: PSK10';
   } else if (category === 'jellysnacks') {
+    if (labelOneText) labelOneText.textContent = '250g Label';
+    if (labelTwoText) labelTwoText.textContent = '500g Label';
+    if (priceOneText) priceOneText.textContent = '250g Price';
+    if (priceTwoText) priceTwoText.textContent = '500g Price';
+    if (skuOneText) skuOneText.textContent = '250g SKU';
+    if (skuTwoText) skuTwoText.textContent = '500g SKU';
     labelOne.placeholder = '250g';
     labelTwo.placeholder = '500g';
     skuOne.placeholder = 'Ex: MJS250';
     skuTwo.placeholder = 'Ex: MJS500';
   } else {
+    if (labelOneText) labelOneText.textContent = 'Option 1 Label';
+    if (labelTwoText) labelTwoText.textContent = 'Option 2 Label';
+    if (priceOneText) priceOneText.textContent = 'Option 1 Price';
+    if (priceTwoText) priceTwoText.textContent = 'Option 2 Price';
+    if (skuOneText) skuOneText.textContent = 'Option 1 SKU';
+    if (skuTwoText) skuTwoText.textContent = 'Option 2 SKU';
     labelOne.placeholder = 'Ex: 5 count or 250g';
     labelTwo.placeholder = 'Ex: 10 count or 500g';
     skuOne.placeholder = 'Ex: SKU001';
@@ -1069,7 +1107,8 @@ function subscribeData() {
   });
 
   state.unsubProducts = onSnapshot(collection(db, 'products'), (snapshot) => {
-    state.products = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
+    const docs = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
+    state.products = mergeProductsWithBase(docs);
     window.SHRISH_DATA.products = [...state.products];
     renderProducts();
     renderStats();
