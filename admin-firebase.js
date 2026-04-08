@@ -1262,11 +1262,11 @@ function printActiveOrders() {
         th:nth-child(1), td:nth-child(1) { width: 10%; white-space: nowrap; }
         th:nth-child(2), td:nth-child(2) { width: 14%; white-space: nowrap; }
         th:nth-child(3), td:nth-child(3) { width: 11%; white-space: nowrap; }
-        th:nth-child(4), td:nth-child(4) { width: 31%; }
-        th:nth-child(5), td:nth-child(5) { width: 5%; white-space: nowrap; text-align: center; }
-        th:nth-child(6), td:nth-child(6) { width: 10%; white-space: nowrap; }
-        th:nth-child(7), td:nth-child(7) { width: 11%; white-space: nowrap; }
-        th:nth-child(8), td:nth-child(8) { width: 12%; }
+          th:nth-child(4), td:nth-child(4) { width: 24%; }
+          th:nth-child(5), td:nth-child(5) { width: 5%; white-space: nowrap; text-align: center; }
+          th:nth-child(6), td:nth-child(6) { width: 10%; white-space: nowrap; }
+          th:nth-child(7), td:nth-child(7) { width: 11%; white-space: nowrap; }
+          th:nth-child(8), td:nth-child(8) { width: 19%; }
         .meta { margin-bottom: 16px; font-size: 13px; }
         @media print {
           body { padding: 0; }
