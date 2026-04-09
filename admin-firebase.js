@@ -44,6 +44,10 @@ const state = {
   unsubAccountingBatches: null
 };
 
+function normalizeProductCategory(category) {
+  return category === 'Mango Jelly' ? 'jellysnacks' : category;
+}
+
 function showToast(msg) {
   const t = document.getElementById('adminToast');
   if (!t) return;
@@ -407,12 +411,13 @@ function renderOrders() {
 }
 
 function productCategoryLabel(category) {
+  const normalizedCategory = normalizeProductCategory(category);
   const labels = {
     mangoes: 'Mangoes',
     putharekulu: 'Putharekulu',
-    jellysnacks: 'Mango Jelly'
+    jellysnacks: 'Jelly & Snacks'
   };
-  return labels[category] || category || 'Product';
+  return labels[normalizedCategory] || normalizedCategory || 'Product';
 }
 
 function getSortedProducts(products = []) {
@@ -425,9 +430,10 @@ function getSortedProducts(products = []) {
 }
 
 function productMatchesFilter(product, filter = state.productFilter) {
+  const category = normalizeProductCategory(product.category);
   if (filter === 'all') return true;
-  if (filter === 'sweets') return ['putharekulu', 'jellysnacks'].includes(product.category);
-  return product.category === filter;
+  if (filter === 'sweets') return ['putharekulu', 'jellysnacks'].includes(category);
+  return category === filter;
 }
 
 function renderProductsFilterBar() {
@@ -436,10 +442,10 @@ function renderProductsFilterBar() {
 
   const options = [
     { id: 'all', label: 'All', count: state.products.length },
-    { id: 'mangoes', label: 'Mangoes', count: state.products.filter((product) => product.category === 'mangoes').length },
-    { id: 'putharekulu', label: 'Putharekulu', count: state.products.filter((product) => product.category === 'putharekulu').length },
-    { id: 'Mango Jelly', label: 'Mango Jelly', count: state.products.filter((product) => product.category === 'Mango Jelly').length },
-    { id: 'sweets', label: 'Sweets', count: state.products.filter((product) => ['putharekulu', 'jellysnacks'].includes(product.category)).length }
+    { id: 'mangoes', label: 'Mangoes', count: state.products.filter((product) => normalizeProductCategory(product.category) === 'mangoes').length },
+    { id: 'putharekulu', label: 'Putharekulu', count: state.products.filter((product) => normalizeProductCategory(product.category) === 'putharekulu').length },
+    { id: 'jellysnacks', label: 'Jelly & Snacks', count: state.products.filter((product) => normalizeProductCategory(product.category) === 'jellysnacks').length },
+    { id: 'sweets', label: 'Sweets', count: state.products.filter((product) => ['putharekulu', 'jellysnacks'].includes(normalizeProductCategory(product.category))).length }
   ];
 
   bar.innerHTML = `<span class="products-filter-label">Filter Products</span>${options.map((option) => `
@@ -449,9 +455,10 @@ function renderProductsFilterBar() {
 }
 
 function mergeProductsWithBase(docs = []) {
-  const byId = new Map(docs.map((product) => [product.id, product]));
+  const normalizedDocs = docs.map((product) => ({ ...product, category: normalizeProductCategory(product.category) }));
+  const byId = new Map(normalizedDocs.map((product) => [product.id, product]));
   const mergedBase = BASE_PRODUCTS.map((product) => ({ ...product, ...(byId.get(product.id) || {}) }));
-  const extraProducts = docs
+  const extraProducts = normalizedDocs
     .filter((product) => !BASE_PRODUCTS.some((baseProduct) => baseProduct.id === product.id))
     .map((product) => ({ ...product }));
 
@@ -666,7 +673,7 @@ function editProduct(id) {
 
   document.getElementById('editingProductId').value = product.id;
   document.getElementById('newProductName').value = product.name || '';
-  document.getElementById('newProductCategory').value = product.category || 'mangoes';
+  document.getElementById('newProductCategory').value = normalizeProductCategory(product.category) || 'mangoes';
   document.getElementById('newProductLocalName').value = product.localName || '';
   document.getElementById('newProductOrigin').value = product.origin || '';
   document.getElementById('newProductStatus').value = product.displayOnly ? 'soon' : (product.available ? 'live' : 'off');
@@ -709,7 +716,7 @@ async function submitAddProduct(event) {
   const formData = new FormData(form);
   const editingProductId = String(formData.get('editingProductId') || '').trim();
   const name = String(formData.get('name') || '').trim();
-  const category = String(formData.get('category') || '').trim();
+  const category = normalizeProductCategory(String(formData.get('category') || '').trim());
   const localName = String(formData.get('localName') || '').trim();
   const origin = String(formData.get('origin') || '').trim();
   const status = String(formData.get('status') || 'live').trim();
@@ -1617,5 +1624,3 @@ window.saveProductSortOrder = saveProductSortOrder;
 
 bindUi();
 initAuthWatch();
-
-

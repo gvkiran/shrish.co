@@ -11,6 +11,10 @@ let modalVariantId = null;
 let cardVariantSelections = {};
 let notifyTarget = null;
 
+function normalizeProductCategory(category) {
+  return category === 'Mango Jelly' ? 'jellysnacks' : category;
+}
+
 const PRODUCT_IMAGES = {
   alphonso: ['img_alphonso.jpeg'],
   kesar: ['img_kesar.jpeg'],
@@ -53,7 +57,8 @@ function saveCart() {
 }
 
 function mergeProducts(docs) {
-  const byId = new Map(docs.map((item) => [item.id, item]));
+  const normalizedDocs = docs.map((item) => ({ ...item, category: normalizeProductCategory(item.category) }));
+  const byId = new Map(normalizedDocs.map((item) => [item.id, item]));
   const mergedBase = baseProducts.map((product) => {
     const merged = { ...product, ...(byId.get(product.id) || {}) };
     const forcedFields = FORCE_BASE_PRODUCT_OVERRIDES[product.id] || [];
@@ -62,12 +67,12 @@ function mergeProducts(docs) {
     });
     return merged;
   });
-  const extraProducts = docs
+  const extraProducts = normalizedDocs
     .filter((item) => !baseProducts.some((product) => product.id === item.id))
     .map((item) => ({ ...item }));
   window.SHRISH_DATA.products = sortCatalogProducts(
     [...mergedBase, ...extraProducts]
-      .filter((product) => SHOP_CATEGORY_IDS.has(product.category))
+      .filter((product) => SHOP_CATEGORY_IDS.has(normalizeProductCategory(product.category)))
   );
 }
 
@@ -605,14 +610,16 @@ function buildFilters() {
   if (!bar) return;
   bar.innerHTML = '';
   window.SHRISH_DATA.categories.forEach((cat) => {
-    const count = cat.id === 'all' ? window.SHRISH_DATA.products.length : window.SHRISH_DATA.products.filter((p) => p.category === cat.id).length;
+    const normalizedCatId = normalizeProductCategory(cat.id);
+    const catLabel = normalizedCatId === 'jellysnacks' ? 'Jelly & Snacks' : cat.label;
+    const count = normalizedCatId === 'all' ? window.SHRISH_DATA.products.length : window.SHRISH_DATA.products.filter((p) => normalizeProductCategory(p.category) === normalizedCatId).length;
     const btn = document.createElement('button');
-    btn.className = `filter-btn${cat.id === activeFilter ? ' active' : ''}`;
-    btn.innerHTML = `${escapeHtml(cat.label)} <span class="filter-count">${count}</span>`;
+    btn.className = `filter-btn${normalizedCatId === activeFilter ? ' active' : ''}`;
+    btn.innerHTML = `${escapeHtml(catLabel)} <span class="filter-count">${count}</span>`;
     btn.onclick = () => {
       document.querySelectorAll('.filter-btn').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
-      activeFilter = cat.id;
+      activeFilter = normalizedCatId;
       renderShop();
     };
     bar.appendChild(btn);
@@ -633,7 +640,7 @@ function renderShop() {
   const catMeta = {
     mangoes: { title: 'Indian Mango', em: 'Varieties', sub: 'Click any product to view full details. Available varieties shown first.', banner: false },
     putharekulu: { title: 'Authentic', em: 'Putharekulu', sub: 'Hand-crafted in Atreyapuram, Andhra Pradesh. Coming soon to Shrish LLC!', banner: true },
-    jellysnacks: { title: 'Mango & Palm', em: 'Mango Jelly', sub: 'Traditional Mamidi Thandra & Thati Thandra from Atreyapuram. Coming soon.', banner: false }
+    jellysnacks: { title: 'Mango & Palm', em: 'Jelly & Snacks', sub: 'Traditional Mamidi Thandra & Thati Thandra from Atreyapuram. Coming soon.', banner: false }
   };
 
   const cats = activeFilter === 'all' ? ['mangoes', 'putharekulu', 'jellysnacks'] : [activeFilter];
