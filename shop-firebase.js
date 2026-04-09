@@ -62,6 +62,28 @@ const LEGACY_VARIANT_FALLBACKS = {
   }
 };
 
+function getLegacyVariantFallback(product = {}) {
+  if (product?.id && LEGACY_VARIANT_FALLBACKS[product.id]) {
+    return LEGACY_VARIANT_FALLBACKS[product.id];
+  }
+
+  const normalizedName = String(product?.name || '')
+    .toLowerCase()
+    .replace(/—/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (normalizedName === 'putharekulu - classic plain (sugar)') {
+    return LEGACY_VARIANT_FALLBACKS.puth_plain;
+  }
+
+  if (normalizedName === 'putharekulu - sugar, kaju' || normalizedName === 'putharekulu - sugar - kaju') {
+    return LEGACY_VARIANT_FALLBACKS.puth_sugar_kaju;
+  }
+
+  return null;
+}
+
 function sortCatalogProducts(products = []) {
   return [...products].sort((a, b) => {
     const aOrder = Number.isFinite(Number(a?.sortOrder)) ? Number(a.sortOrder) : Number.MAX_SAFE_INTEGER;
@@ -89,12 +111,18 @@ function mergeProducts(docs) {
       merged.unit = product.unit;
       merged.price = product.price;
     }
+    const namedFallback = getLegacyVariantFallback(merged);
+    if ((!Array.isArray(merged.variants) || !merged.variants.length) && namedFallback) {
+      merged.variants = namedFallback.variants;
+      merged.unit = namedFallback.unit;
+      merged.price = namedFallback.price;
+    }
     return merged;
   });
   const extraProducts = normalizedDocs
     .filter((item) => !baseProducts.some((product) => product.id === item.id))
     .map((item) => {
-      const fallback = LEGACY_VARIANT_FALLBACKS[item.id];
+      const fallback = getLegacyVariantFallback(item);
       if (!fallback) return { ...item };
       const hasVariants = Array.isArray(item.variants) && item.variants.length;
       return hasVariants
