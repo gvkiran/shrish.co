@@ -167,7 +167,7 @@ button.btn-primary:active {
   margin: 0;
   padding: 0;
   width: min(100%, 500px);
-  transform: none;
+  transform: translateX(-58px);
 }
 
 .nav-link {
