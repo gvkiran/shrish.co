@@ -66,11 +66,15 @@ function renderCartReview() {
     <div class="ri-name">${escapeHtml(item.name)}</div>
     <div class="ri-unit">${escapeHtml(unitLabel)}</div>
   </div>
-  <div class="ri-qty">${qty}</div>
+  <div class="ri-qty">
+    <div class="ri-qty-ctrl">
+      <button type="button" class="ri-qty-btn" data-id="${escapeHtml(item.id)}" data-delta="-1">&minus;</button>
+      <span class="ri-qty-value">${qty}</span>
+      <button type="button" class="ri-qty-btn" data-id="${escapeHtml(item.id)}" data-delta="1">+</button>
+    </div>
+  </div>
   <div class="ri-price">${formatCurrency(lineTotal)}</div>
-  <div class="ri-qty-ctrl">
-    <button type="button" class="ri-qty-btn" data-id="${escapeHtml(item.id)}" data-delta="-1">&minus;</button>
-    <button type="button" class="ri-qty-btn" data-id="${escapeHtml(item.id)}" data-delta="1">+</button>
+  <div class="ri-actions">
     <button type="button" class="ri-remove" data-id="${escapeHtml(item.id)}" title="Remove">&times;</button>
   </div>
 </div>`;
