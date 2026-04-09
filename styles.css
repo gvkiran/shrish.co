@@ -373,9 +373,9 @@ button.btn-primary:active {
   align-items: center;
   position: relative;
   overflow: hidden;
-  width: min(100%, 1700px);
-  margin: 0 auto;
-  padding: 44px 3.5% 52px;
+  width: 100%;
+  margin: 0;
+  padding: 44px 2.5% 52px;
 }
 .hero-bg { position: absolute; inset: 0; pointer-events: none; }
 .hero-orb {
