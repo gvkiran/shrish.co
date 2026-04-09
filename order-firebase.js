@@ -388,19 +388,30 @@ async function submitOrder() {
 
     const itemLines = order.items
       .map((item) => {
-        const unitText = String(item.unit || '').trim();
-        const priceText = String(item.price || '').trim();
-        const suffixParts = [];
-        if (priceText) suffixParts.push(priceText);
-        if (unitText) suffixParts.push(unitText);
-        const suffix = suffixParts.length ? ` - ${escapeHtml(suffixParts.join(' - '))}` : '';
-        return `<div style="font-size:13px">&bull; ${escapeHtml(item.name)} x ${item.qty}${suffix}</div>`;
+        const qty = Number(item.qty || 0);
+        return `<div class="ss-item">
+          <div class="ss-item-name">${escapeHtml(item.name)}</div>
+          <div class="ss-item-qty">${qty}</div>
+          <div class="ss-item-price">${escapeHtml(item.price || '')}</div>
+        </div>`;
       })
       .join('');
+    const totalQty = order.items.reduce((sum, item) => sum + Number(item.qty || 0), 0);
 
     document.getElementById('successSummary').innerHTML = `
-      <div class="ss-row"><span>Items</span><span style="display:flex;flex-direction:column;gap:3px">${itemLines}</span></div>
-      <div class="ss-row"><span>Total</span><span style="color:var(--saffron);font-weight:700">${formatCurrency(order.totalPrice)}</span></div>
+      <div class="ss-table">
+        <div class="ss-head">
+          <div>Item</div>
+          <div class="ss-item-qty">Qty</div>
+          <div class="ss-item-price">Price</div>
+        </div>
+        ${itemLines}
+        <div class="ss-total">
+          <div>Total</div>
+          <div class="ss-total-qty">${totalQty}</div>
+          <div class="ss-total-price">${formatCurrency(order.totalPrice)}</div>
+        </div>
+      </div>
       <div class="ss-row"><span>Pickup</span><span>${escapeHtml(locLabel)}</span></div>
       <div class="ss-row"><span>Name</span><span>${escapeHtml(firstName)} ${escapeHtml(lastName)}</span></div>
       <div class="ss-row"><span>Phone</span><span>${escapeHtml(phone)}</span></div>

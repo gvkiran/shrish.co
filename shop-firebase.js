@@ -44,6 +44,14 @@ const FORCE_BASE_PRODUCT_OVERRIDES = {
 };
 
 const LEGACY_VARIANT_FALLBACKS = {
+  puth_plain: {
+    price: '$6.99',
+    unit: '5 count or 10 count',
+    variants: [
+      { id: 'opt1', label: '5 count', price: '$6.99', sku: 'POPJKBP5' },
+      { id: 'opt2', label: '10 count', price: '$12.99', sku: 'POPJKBP10' }
+    ]
+  },
   puth_sugar_kaju: {
     price: '$6.99',
     unit: '5 count or 10 count',
