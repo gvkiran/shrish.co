@@ -290,7 +290,7 @@ function openModal(productId) {
 
   const thumbs = document.getElementById('modalThumbs');
   if (thumbs) {
-    if (imgs.length > 1) {
+    if (imgs.length) {
       thumbs.innerHTML = imgs.map((src, i) => `<img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(p.name)} ${i + 1}" onclick="switchModalImg('${escapeHtml(src)}',this)" onerror="this.style.display='none'">`).join('');
       thumbs.style.display = 'flex';
     } else {
