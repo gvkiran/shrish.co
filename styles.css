@@ -1,5 +1,5 @@
 /* ============================================================
-   SHRISH LLC — Premium Stylesheet
+   SHRISH LLC � Premium Stylesheet
    Palette: Deep saffron #C8791A, Gold #D4A017, Cream #FDF6EC, Dark #1A1208
    Fonts: Cormorant Garamond (display) + Jost (body)
 ============================================================ */
@@ -42,7 +42,7 @@ body {
 img { max-width: 100%; display: block; }
 a  { color: inherit; text-decoration: none; }
 
-/* ── UTILITY ── */
+/* -- UTILITY -- */
 .container { max-width: 1600px; margin: 0 auto; padding: 0 28px; }
 .section    { padding: 96px 0; }
 .section-alt{ background: var(--cream-d); }
@@ -53,7 +53,7 @@ a  { color: inherit; text-decoration: none; }
 .section-desc   { color: var(--text-light); font-size: 18px; }
 .section-cta    { text-align: center; margin-top: 48px; }
 
-/* ── BUTTONS ── */
+/* -- BUTTONS -- */
 a.btn-primary,
 a.btn-primary:link,
 a.btn-primary:visited,
@@ -106,7 +106,7 @@ button.btn-primary:active {
 }
 .btn-outline:hover { background: var(--saffron); color: var(--white); transform: translateY(-2px); }
 
-/* ── ANNOUNCEMENT BAR ── */
+/* -- ANNOUNCEMENT BAR -- */
 .announcement-bar {
   background: var(--dark);
   color: var(--gold-l);
@@ -117,7 +117,7 @@ button.btn-primary:active {
   letter-spacing: 0.3px;
 }
 
-/* ── NAVIGATION ── */
+/* -- NAVIGATION -- */
 .nav {
   position: sticky;
   top: 0;
@@ -160,22 +160,22 @@ button.btn-primary:active {
 .nav-links {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   justify-self: center;
-  gap: 30px;
+  gap: 42px;
   list-style: none;
   margin: 0;
   padding: 0;
-  width: min(100%, 500px);
-  transform: translateX(-58px);
+  width: auto;
+  transform: translateX(-78px);
 }
 
 .nav-link {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 600;
   color: var(--text-light);
   transition: color var(--transition);
-  letter-spacing: 0.2px;
+  letter-spacing: 0.35px;
   white-space: nowrap;
 }
 
@@ -193,7 +193,7 @@ button.btn-primary:active {
   padding-right: 0;
 }
 
-/* ── NAV CART BUTTON ── */
+/* -- NAV CART BUTTON -- */
 .nav-cart-btn {
   display: flex;
   align-items: center;
@@ -362,7 +362,7 @@ button.btn-primary:active {
   }
 }
 
-/* ── HERO ── */
+/* -- HERO -- */
 .hero {
   min-height: 76vh;
   background: linear-gradient(135deg, var(--dark) 0%, var(--dark-m) 60%, #3D2005 100%);
@@ -498,7 +498,7 @@ button.btn-primary:active {
   .hero-img-badge { left: 12px; }
 }
 
-/* ── MARQUEE ── */
+/* -- MARQUEE -- */
 .marquee-wrap {
   background: var(--dark); overflow: hidden;
   padding: 16px 0; border-top: 1px solid rgba(212,160,23,0.1);
@@ -512,7 +512,7 @@ button.btn-primary:active {
 .marquee-track .dot { color: var(--saffron); font-style: normal; }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-/* ── ABOUT TEASER ── */
+/* -- ABOUT TEASER -- */
 .about-teaser-grid {
   display: grid; grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr); gap: 96px; align-items: center;
 }
@@ -542,7 +542,7 @@ button.btn-primary:active {
   .about-teaser-text { text-align: center; }
 }
 
-/* ── PRODUCTS ── */
+/* -- PRODUCTS -- */
 .products-grid {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px;
 }
@@ -685,7 +685,7 @@ button.btn-primary:active {
   .home-product-modal-add { width: 100%; }
 }
 
-/* ── HOW IT WORKS ── */
+/* -- HOW IT WORKS -- */
 .how-steps {
   display: flex; align-items: flex-start; gap: 24px; justify-content: center;
   max-width: 900px; margin: 0 auto 48px;
@@ -713,7 +713,7 @@ button.btn-primary:active {
   .how-step  { width: 100%; max-width: 400px; }
 }
 
-/* ── RECIPES TEASER ── */
+/* -- RECIPES TEASER -- */
 .recipes-grid {
   display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 24px;
   max-width: 1380px; margin: 0 auto;
@@ -739,7 +739,7 @@ button.btn-primary:active {
   .recipes-list { grid-template-columns: 1fr; }
 }
 
-/* ── TESTIMONIALS ── */
+/* -- TESTIMONIALS -- */
 .testimonials-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; max-width: 1260px; margin: 0 auto;
 }
@@ -770,7 +770,7 @@ button.btn-primary:active {
   .testimonials-grid { grid-template-columns: 1fr; }
 }
 
-/* ── FOOTER ── */
+/* -- FOOTER -- */
 .footer { background: var(--dark); color: var(--white); }
 .footer-top {
   display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; gap: 48px;
@@ -831,7 +831,7 @@ button.btn-primary:active {
   .subscribe-form button { border-radius: 16px; }
 }
 
-/* ── PAGE HERO (inner pages) ── */
+/* -- PAGE HERO (inner pages) -- */
 .page-hero {
   background: linear-gradient(135deg, var(--dark), var(--dark-m));
   padding: 56px 24px 40px;
@@ -852,7 +852,7 @@ button.btn-primary:active {
   font-size: 18px; position: relative; z-index: 1;
 }
 
-/* ── ORDER PAGE ── */
+/* -- ORDER PAGE -- */
 .order-layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 60px; max-width: 1320px; margin: 0 auto; padding: 80px 24px; }
 .order-form-wrap { }
 .order-sidebar { }
@@ -930,7 +930,7 @@ button.btn-primary:active {
   .form-row { grid-template-columns: 1fr; }
 }
 
-/* ── SHOP PAGE ── */
+/* -- SHOP PAGE -- */
 .shop-filters { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 48px; }
 .filter-btn {
   padding: 8px 20px; border-radius: 50px; border: 1.5px solid var(--cream-d);
@@ -939,7 +939,7 @@ button.btn-primary:active {
 }
 .filter-btn.active, .filter-btn:hover { background: var(--saffron); color: white; border-color: var(--saffron); }
 
-/* ── RECIPES PAGE ── */
+/* -- RECIPES PAGE -- */
 .recipes-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; max-width: 1440px; margin: 0 auto; }
 .recipe-full-card {
   background: var(--white); border-radius: var(--radius-lg); overflow: hidden;
@@ -957,7 +957,7 @@ button.btn-primary:active {
 .recipe-nutrition { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
 .nutrition-pill { background: var(--cream-d); border-radius: 50px; padding: 4px 12px; font-size: 12px; color: var(--text-light); font-weight: 500; }
 
-/* ── ABOUT PAGE ── */
+/* -- ABOUT PAGE -- */
 .about-story { max-width: 1440px; margin: 0 auto; padding: 80px 24px; }
 .about-story h2 { font-family: var(--font-display); font-size: 36px; color: var(--dark); margin-bottom: 24px; }
 .about-story p  { color: var(--text-light); font-size: 18px; line-height: 1.9; margin-bottom: 24px; }
@@ -965,7 +965,7 @@ button.btn-primary:active {
 .about-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1480px; margin: 0 auto; padding: 0 24px 80px; }
 .about-gallery img { border-radius: var(--radius-lg); width: 100%; aspect-ratio: 4/3; object-fit: cover; }
 
-/* ── CONTACT PAGE ── */
+/* -- CONTACT PAGE -- */
 .contact-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; max-width: 1480px; margin: 0 auto; padding: 80px 24px; }
 .contact-info h2 { font-family: var(--font-display); font-size: 32px; color: var(--dark); margin-bottom: 16px; }
 .contact-info p  { color: var(--text-light); margin-bottom: 32px; font-size: 17px; }
@@ -979,7 +979,7 @@ button.btn-primary:active {
   .about-gallery  { grid-template-columns: 1fr; }
 }
 
-/* ── ADMIN PAGE ── */
+/* -- ADMIN PAGE -- */
 .admin-login { max-width: 400px; margin: 80px auto; padding: 0 24px; }
 .admin-page  { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
 .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 36px; flex-wrap: wrap; gap: 16px; }
