@@ -47,26 +47,29 @@ function renderCartReview() {
   }, 0);
 
   container.innerHTML =
+    `<div class="review-table">
+      <div class="review-head">
+        <div>Item</div>
+        <div style="text-align:center">Qty</div>
+        <div style="text-align:right">Price</div>
+        <div></div>
+      </div>` +
     cart
       .map((item) => {
         const qty = Number(item.qty || 0);
         const unitPrice = parseFloat(String(item.price || '0').replace(/[^0-9.]/g, ''));
         const lineTotal = Number.isNaN(unitPrice) ? 0 : unitPrice * qty;
         const unitLabel = String(item.unit || '').trim();
-        const imgHtml = item.image
-          ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" onerror="this.parentElement.textContent='Mango'">`
-          : 'Mango';
 
         return `<div class="review-item">
-  <div class="ri-thumb">${imgHtml}</div>
   <div class="ri-info">
     <div class="ri-name">${escapeHtml(item.name)}</div>
-    <div class="ri-price">${formatCurrency(unitPrice)} x ${qty} = ${formatCurrency(lineTotal)}</div>
     <div class="ri-unit">${escapeHtml(unitLabel)}</div>
   </div>
+  <div class="ri-qty">${qty}</div>
+  <div class="ri-price">${formatCurrency(lineTotal)}</div>
   <div class="ri-qty-ctrl">
     <button type="button" class="ri-qty-btn" data-id="${escapeHtml(item.id)}" data-delta="-1">&minus;</button>
-    <span>${qty}</span>
     <button type="button" class="ri-qty-btn" data-id="${escapeHtml(item.id)}" data-delta="1">+</button>
     <button type="button" class="ri-remove" data-id="${escapeHtml(item.id)}" title="Remove">&times;</button>
   </div>
@@ -74,12 +77,15 @@ function renderCartReview() {
       })
       .join('') +
     `<div class="review-total">
-      <span>Total</span>
-      <div style="text-align:right;line-height:1.4">
-        <div style="font-size:13px;color:var(--text-light,#888)">${totalQty} box${totalQty !== 1 ? 'es' : ''}</div>
-        <div style="font-size:17px;font-weight:700;color:var(--saffron,#C8791A)">${formatCurrency(totalPrice)}</div>
+      <div class="rt-label">Total</div>
+      <div class="rt-qty">${totalQty}</div>
+      <div>
+        <div class="rt-price">${formatCurrency(totalPrice)}</div>
+        <div class="review-total-note">Estimated total</div>
       </div>
-    </div>`;
+      <div></div>
+    </div>
+  </div>`;
 
   container.querySelectorAll('.ri-qty-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
