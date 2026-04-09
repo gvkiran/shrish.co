@@ -336,7 +336,7 @@ function openModal(productId) {
   }
 
   const statusCls = isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
-  const statusText = isSoon ? 'Coming Soon' : isAvail ? 'Available Now' : 'Currently Sold Out';
+  const statusText = isSoon ? 'Coming Soon' : isAvail ? 'Available Now' : 'Currently Not Available';
   const chips = [p.season && `Season: ${p.season}`, p.taste && `Taste: ${p.taste}`]
     .filter(Boolean)
     .map((chip) => `<span class="modal-chip">${escapeHtml(chip)}</span>`)
@@ -360,7 +360,7 @@ function openModal(productId) {
       : '';
     actionHtml = `${variantSelect}<div class="modal-qty-row"><div class="modal-qty-ctrl"><button class="modal-qty-btn" onclick="modalChangeQty(-1)">-</button><span class="modal-qty-num" id="modalQtyNum">1</span><button class="modal-qty-btn" onclick="modalChangeQty(1)">+</button></div><span style="font-size:13px;color:var(--text-light)">${escapeHtml(selectedVariant.unit || 'item')}</span><button class="modal-add-btn" id="modalAddBtn" onclick="modalAddToCart()">Add to Cart</button></div>`;
   } else {
-    actionHtml = `<button class="modal-add-btn" style="background:#ccc;cursor:not-allowed" disabled>Currently Sold Out</button>`;
+    actionHtml = `<button class="modal-add-btn" style="background:#ccc;cursor:not-allowed" disabled>Currently Not Available</button>`;
   }
 
   const info = document.getElementById('modalInfo');
@@ -543,7 +543,7 @@ function renderCard(p) {
   const isAvail = p.available && !p.displayOnly;
   const isSoon = p.displayOnly;
   const stripCls = isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
-  const stripText = isSoon ? 'Coming Soon' : isAvail ? 'Available' : 'Sold Out';
+  const stripText = isSoon ? 'Coming Soon' : isAvail ? 'Available' : 'Not Available';
   const imgSrc = p.image || null;
   const imgHtml = imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
   const emojiStyle = imgSrc ? 'style="display:none"' : '';
@@ -560,7 +560,7 @@ function renderCard(p) {
   } else if (isAvail) {
     actionHtml = `<div class="pc-card-actions" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" onclick="quickAdd('${escapeHtml(p.id)}')">+ Add to Cart</button></div>`;
   } else {
-    actionHtml = `<div class="pc-card-actions"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" disabled>Sold Out</button></div>`;
+    actionHtml = `<div class="pc-card-actions"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" disabled>Not Available</button></div>`;
   }
 
   return `<div class="pc ${isSoon ? 'display-only' : ''} ${!isAvail && !isSoon ? 'sold-out' : ''}">
