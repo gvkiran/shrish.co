@@ -410,7 +410,7 @@ function productCategoryLabel(category) {
   const labels = {
     mangoes: 'Mangoes',
     putharekulu: 'Putharekulu',
-    jellysnacks: 'Jelly & Snacks'
+    jellysnacks: 'Mango Jelly'
   };
   return labels[category] || category || 'Product';
 }
@@ -438,7 +438,7 @@ function renderProductsFilterBar() {
     { id: 'all', label: 'All', count: state.products.length },
     { id: 'mangoes', label: 'Mangoes', count: state.products.filter((product) => product.category === 'mangoes').length },
     { id: 'putharekulu', label: 'Putharekulu', count: state.products.filter((product) => product.category === 'putharekulu').length },
-    { id: 'jellysnacks', label: 'Jelly & Snacks', count: state.products.filter((product) => product.category === 'jellysnacks').length },
+    { id: 'Mango Jelly', label: 'Mango Jelly', count: state.products.filter((product) => product.category === 'Mango Jelly').length },
     { id: 'sweets', label: 'Sweets', count: state.products.filter((product) => ['putharekulu', 'jellysnacks'].includes(product.category)).length }
   ];
 

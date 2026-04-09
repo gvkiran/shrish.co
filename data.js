@@ -2,7 +2,7 @@
 //  SHRISH LLC - Shared Data Store  v2.0
 //  available: false  -> Sold Out (shown in shop, blocked in order form)
 //  displayOnly: true -> Shown in shop catalog, never orderable
-//  Putharekulu & Jelly are displayOnly until ready to sell
+//  Putharekulu & Mango Jelly are displayOnly until ready to sell
 // ============================================================
 
 const SHRISH_DATA = {
@@ -16,7 +16,7 @@ const SHRISH_DATA = {
     { id: "all",         label: "All Products" },
     { id: "mangoes",     label: "🥭 Mangoes" },
     { id: "putharekulu", label: "🍬 Putharekulu" },
-    { id: "jellysnacks", label: "🍡 Jelly & Snacks" }
+    { id: "Mango Jelly", label: "🍡 Mango Jelly" }
   ],
 
   products: [
@@ -248,7 +248,7 @@ const SHRISH_DATA = {
       ]
     },
 
-    //  JELLY & SNACKS
+    //  Mango Jelly  & SNACKS
     // ===========================================
     {
       id: "mango_jelly_sugar", category: "jellysnacks",
