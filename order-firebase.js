@@ -49,6 +49,10 @@ function renderCartReview() {
   container.innerHTML =
     cart
       .map((item) => {
+        const qty = Number(item.qty || 0);
+        const unitPrice = parseFloat(String(item.price || '0').replace(/[^0-9.]/g, ''));
+        const lineTotal = Number.isNaN(unitPrice) ? 0 : unitPrice * qty;
+        const unitLabel = String(item.unit || '').trim();
         const imgHtml = item.image
           ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" onerror="this.parentElement.textContent='Mango'">`
           : 'Mango';
@@ -57,11 +61,12 @@ function renderCartReview() {
   <div class="ri-thumb">${imgHtml}</div>
   <div class="ri-info">
     <div class="ri-name">${escapeHtml(item.name)}</div>
-    <div class="ri-price">${escapeHtml(item.price)} &middot; ${escapeHtml(item.unit)}</div>
+    <div class="ri-price">${formatCurrency(unitPrice)} x ${qty} = ${formatCurrency(lineTotal)}</div>
+    <div class="ri-unit">${escapeHtml(unitLabel)}</div>
   </div>
   <div class="ri-qty-ctrl">
     <button type="button" class="ri-qty-btn" data-id="${escapeHtml(item.id)}" data-delta="-1">&minus;</button>
-    <span>${item.qty}</span>
+    <span>${qty}</span>
     <button type="button" class="ri-qty-btn" data-id="${escapeHtml(item.id)}" data-delta="1">+</button>
     <button type="button" class="ri-remove" data-id="${escapeHtml(item.id)}" title="Remove">&times;</button>
   </div>
