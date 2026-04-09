@@ -39,9 +39,7 @@ const PRODUCT_IMAGES = {
 
 const SHOP_CATEGORY_IDS = new Set(['mangoes', 'putharekulu', 'jellysnacks']);
 
-const FORCE_BASE_PRODUCT_OVERRIDES = {
-  mango_jelly_sugar: ['available', 'displayOnly']
-};
+const FORCE_BASE_PRODUCT_OVERRIDES = {};
 
 const LEGACY_VARIANT_FALLBACKS = {
   puth_plain: {
