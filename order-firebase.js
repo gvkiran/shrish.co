@@ -387,7 +387,15 @@ async function submitOrder() {
       : `Order received - Ref ${orderRef.id}`;
 
     const itemLines = order.items
-      .map((item) => `<div style="font-size:13px">&bull; ${escapeHtml(item.name)} x ${item.qty} box${item.qty !== 1 ? 'es' : ''}</div>`)
+      .map((item) => {
+        const unitText = String(item.unit || '').trim();
+        const priceText = String(item.price || '').trim();
+        const suffixParts = [];
+        if (priceText) suffixParts.push(priceText);
+        if (unitText) suffixParts.push(unitText);
+        const suffix = suffixParts.length ? ` - ${escapeHtml(suffixParts.join(' - '))}` : '';
+        return `<div style="font-size:13px">&bull; ${escapeHtml(item.name)} x ${item.qty}${suffix}</div>`;
+      })
       .join('');
 
     document.getElementById('successSummary').innerHTML = `

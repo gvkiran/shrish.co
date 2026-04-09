@@ -43,6 +43,17 @@ const FORCE_BASE_PRODUCT_OVERRIDES = {
   mango_jelly_sugar: ['available', 'displayOnly']
 };
 
+const LEGACY_VARIANT_FALLBACKS = {
+  puth_sugar_kaju: {
+    price: '$6.99',
+    unit: '5 count or 10 count',
+    variants: [
+      { id: 'opt1', label: '5 count', price: '$6.99', sku: 'PSK5' },
+      { id: 'opt2', label: '10 count', price: '$12.99', sku: 'PSK10' }
+    ]
+  }
+};
+
 function sortCatalogProducts(products = []) {
   return [...products].sort((a, b) => {
     const aOrder = Number.isFinite(Number(a?.sortOrder)) ? Number(a.sortOrder) : Number.MAX_SAFE_INTEGER;
@@ -65,11 +76,23 @@ function mergeProducts(docs) {
     forcedFields.forEach((field) => {
       merged[field] = product[field];
     });
+    if ((!Array.isArray(merged.variants) || !merged.variants.length) && Array.isArray(product.variants) && product.variants.length) {
+      merged.variants = product.variants;
+      merged.unit = product.unit;
+      merged.price = product.price;
+    }
     return merged;
   });
   const extraProducts = normalizedDocs
     .filter((item) => !baseProducts.some((product) => product.id === item.id))
-    .map((item) => ({ ...item }));
+    .map((item) => {
+      const fallback = LEGACY_VARIANT_FALLBACKS[item.id];
+      if (!fallback) return { ...item };
+      const hasVariants = Array.isArray(item.variants) && item.variants.length;
+      return hasVariants
+        ? { ...item }
+        : { ...item, ...fallback };
+    });
   window.SHRISH_DATA.products = sortCatalogProducts(
     [...mergedBase, ...extraProducts]
       .filter((product) => SHOP_CATEGORY_IDS.has(normalizeProductCategory(product.category)))
