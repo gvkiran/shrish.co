@@ -358,9 +358,49 @@ function syncCurrentOrderFilters() {
   state.orderFilters[state.orderSheet].date = filterDate?.value || '';
 }
 
+function renderActiveOrderSummary(orders = []) {
+  const summaryEl = document.getElementById('activeOrderSummary');
+  if (!summaryEl) return;
+
+  if (state.orderSheet !== 'active' || !orders.length) {
+    summaryEl.classList.remove('show');
+    summaryEl.innerHTML = '';
+    return;
+  }
+
+  const counts = new Map();
+  orders.forEach((order) => {
+    (order.items || []).forEach((item) => {
+      const name = String(item?.name || '').trim();
+      if (!name) return;
+      counts.set(name, (counts.get(name) || 0) + Number(item.qty || 0));
+    });
+  });
+
+  const summaryItems = [...counts.entries()]
+    .sort((a, b) => {
+      if (b[1] !== a[1]) return b[1] - a[1];
+      return String(a[0]).localeCompare(String(b[0]));
+    });
+
+  if (!summaryItems.length) {
+    summaryEl.classList.remove('show');
+    summaryEl.innerHTML = '';
+    return;
+  }
+
+  summaryEl.innerHTML = `
+    <div class="summary-label">Active Item Counts</div>
+    <div class="summary-items">
+      ${summaryItems.map(([name, qty]) => `<span class="summary-chip"><strong>${escapeHtml(name)}:</strong> ${escapeHtml(String(qty))}</span>`).join('')}
+    </div>`;
+  summaryEl.classList.add('show');
+}
+
 function renderOrders() {
   const orders = getFilteredOrders();
   updateOrdersSheetUi();
+  renderActiveOrderSummary(orders);
 
   const tbody = document.getElementById('ordersBody');
   if (!tbody) return;

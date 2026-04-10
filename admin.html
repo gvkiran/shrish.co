@@ -161,6 +161,40 @@
     .orders-help {
       margin-bottom: 14px; font-size: 13px; color: var(--text-light);
     }
+    .active-order-summary {
+      display: none;
+      margin-bottom: 16px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(200,121,26,0.08);
+      border: 1px solid rgba(200,121,26,0.18);
+    }
+    .active-order-summary.show { display: block; }
+    .summary-label {
+      margin-bottom: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--saffron);
+    }
+    .summary-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .summary-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--white);
+      border: 1px solid rgba(200,121,26,0.16);
+      font-size: 13px;
+      color: var(--text);
+    }
+    .summary-chip strong { color: var(--dark); }
 
     /* Orders table */
     .orders-table-wrap { overflow-x: auto; border-radius: var(--radius-lg); box-shadow: var(--shadow); }
@@ -813,6 +847,8 @@
           <div class="orders-help" id="ordersHelpText">
             Active Orders shows your current pending pickup list. Processed Orders shows fulfilled and cancelled records. All Orders is the permanent master history.
           </div>
+
+          <div class="active-order-summary" id="activeOrderSummary"></div>
 
           <div class="orders-table-wrap">
             <table class="orders-table">
