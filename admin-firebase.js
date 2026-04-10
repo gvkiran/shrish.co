@@ -22,6 +22,7 @@ import {
 } from './firebase-app.js';
 
 const BASE_PRODUCTS = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || []));
+const GO_LIVE_STATS_DATE = '2026-04-10';
 
 const state = {
   orders: [],
@@ -107,11 +108,15 @@ async function seedProductsIfNeeded() {
 
 function renderStats() {
   const orders = state.orders;
-  const total = orders.length;
+  const statsOrders = orders.filter((order) => {
+    const createdKey = orderDateKey(order);
+    return createdKey && createdKey >= GO_LIVE_STATS_DATE;
+  });
+  const total = statsOrders.length;
   const pending = orders.filter((o) => o.status === 'pending').length;
-  const fulfilled = orders.filter((o) => o.status === 'fulfilled').length;
-  const totalBoxes = orders.filter((o) => o.status !== 'cancelled').reduce((sum, order) => sum + (order.totalBoxes || 0), 0);
-  const totalRevenue = orders.filter((o) => o.status !== 'cancelled').reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+  const fulfilled = statsOrders.filter((o) => o.status === 'fulfilled').length;
+  const totalBoxes = statsOrders.filter((o) => o.status !== 'cancelled').reduce((sum, order) => sum + (order.totalBoxes || 0), 0);
+  const totalRevenue = statsOrders.filter((o) => o.status !== 'cancelled').reduce((sum, order) => sum + (order.totalPrice || 0), 0);
   const available = state.products.filter((product) => product.available && !product.displayOnly).length;
   const totalProducts = state.products.filter((product) => !product.displayOnly).length;
   const totalSubscribers = state.subscribers.length;
