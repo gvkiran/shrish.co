@@ -165,6 +165,21 @@ function orderLockRef(phoneDigits) {
   return doc(db, 'order_locks', phoneDigits);
 }
 
+function extractUsPhoneDigits(value) {
+  const digits = normalizePhone(value);
+  if (!digits) return '';
+  if (digits.startsWith('1')) return digits.slice(1, 11);
+  return digits.slice(0, 10);
+}
+
+function formatUsPhoneDisplay(value) {
+  const digits = extractUsPhoneDigits(value);
+  if (!digits.length) return '+1 ';
+  if (digits.length < 4) return `+1 (${digits}`;
+  if (digits.length < 7) return `+1 (${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `+1 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+}
+
 function showDuplicateOrderMessage(phone) {
   const banner = document.getElementById('errorBanner');
   const list = document.getElementById('errorList');
@@ -216,10 +231,15 @@ function bindFormUi() {
   const phoneInput = document.getElementById('phone');
   const phoneCounter = document.getElementById('phoneCounter');
   if (phoneInput && phoneCounter) {
+    phoneInput.value = formatUsPhoneDisplay(phoneInput.value);
+
     phoneInput.addEventListener('input', () => {
-      const digits = normalizePhone(phoneInput.value);
+      const digits = extractUsPhoneDigits(phoneInput.value);
+      phoneInput.value = formatUsPhoneDisplay(phoneInput.value);
+
       if (!digits.length) {
-        phoneCounter.textContent = '';
+        phoneCounter.textContent = '10 digits required';
+        phoneCounter.className = 'phone-counter';
         return;
       }
 
@@ -235,12 +255,14 @@ function bindFormUi() {
     });
 
     phoneInput.addEventListener('blur', () => {
-      const digits = normalizePhone(phoneInput.value);
-      if (!phoneInput.value.trim()) return;
+      const digits = extractUsPhoneDigits(phoneInput.value);
+      phoneInput.value = formatUsPhoneDisplay(phoneInput.value);
 
       const errEl = document.getElementById('err-phone');
-      if (digits.length < 10) {
-        errEl.textContent = `Too short - need 10 digits, you entered ${digits.length}`;
+      if (!digits.length || digits.length < 10) {
+        errEl.textContent = digits.length
+          ? `Too short - need 10 digits, you entered ${digits.length}`
+          : 'Please enter a valid 10-digit phone number';
         errEl.style.display = 'block';
         phoneInput.classList.add('error');
       } else {
@@ -280,22 +302,25 @@ async function submitOrder() {
   const submitBtn = document.getElementById('submitBtn');
   const firstName = document.getElementById('firstName').value.trim();
   const lastName = document.getElementById('lastName').value.trim();
-  const phone = document.getElementById('phone').value.trim();
+  const phoneInput = document.getElementById('phone');
+  const phone = formatUsPhoneDisplay(phoneInput?.value || '').trim();
   const email = document.getElementById('email').value.trim().toLowerCase();
   const referral = document.getElementById('referral').value;
   const notes = document.getElementById('notes').value.trim();
-  const phoneDigits = normalizePhone(phone);
+  const phoneDigits = extractUsPhoneDigits(phone);
   const emailValid = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email);
+
+  if (phoneInput) phoneInput.value = phone;
 
   let ok = true;
   ok = validateField('firstName', firstName.length >= 2, 'First name must be at least 2 characters') && ok;
   ok = validateField('lastName', lastName.length >= 2, 'Last name must be at least 2 characters') && ok;
   ok = validateField(
     'phone',
-    phoneDigits.length >= 10 && phoneDigits.length <= 15,
+    phoneDigits.length === 10,
     phoneDigits.length < 10
       ? `Phone too short - need 10 digits, you entered ${phoneDigits.length}`
-      : 'Invalid phone number'
+      : 'Please enter a valid 10-digit phone number'
   ) && ok;
   ok = validateField(
     'email',
