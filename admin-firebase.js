@@ -38,9 +38,9 @@ const state = {
     items: []
   },
   orderFilters: {
-    active: { status: 'pending', date: '' },
-    processed: { status: 'all', date: '' },
-    all: { status: 'all', date: '' }
+    active: { status: 'pending', dateFrom: '', dateTo: '', search: '', location: 'all' },
+    processed: { status: 'all', dateFrom: '', dateTo: '', search: '', location: 'all' },
+    all: { status: 'all', dateFrom: '', dateTo: '', search: '', location: 'all' }
   },
   unsubOrders: null,
   unsubProducts: null,
@@ -301,9 +301,12 @@ function getOrdersForSheet(sheet = state.orderSheet) {
 }
 
 function getFilteredOrders(sheet = state.orderSheet) {
-  const sheetFilters = state.orderFilters[sheet] || { status: 'all', date: '' };
+  const sheetFilters = state.orderFilters[sheet] || { status: 'all', dateFrom: '', dateTo: '', search: '', location: 'all' };
   const filterStatus = sheetFilters.status || 'all';
-  const filterDate = sheetFilters.date || '';
+  const filterDateFrom = sheetFilters.dateFrom || '';
+  const filterDateTo = sheetFilters.dateTo || '';
+  const filterSearch = String(sheetFilters.search || '').trim().toLowerCase();
+  const filterLocation = sheetFilters.location || 'all';
 
   let orders = getOrdersForSheet(sheet);
 
@@ -311,8 +314,39 @@ function getFilteredOrders(sheet = state.orderSheet) {
     orders = orders.filter((order) => (order.status || 'pending') === filterStatus);
   }
 
-  if (filterDate) {
-    orders = orders.filter((order) => orderDateKey(order) === filterDate);
+  if (filterLocation !== 'all') {
+    orders = orders.filter((order) => String(order.location || '').toLowerCase() === filterLocation);
+  }
+
+  if (filterDateFrom) {
+    orders = orders.filter((order) => {
+      const key = orderDateKey(order);
+      return key && key >= filterDateFrom;
+    });
+  }
+
+  if (filterDateTo) {
+    orders = orders.filter((order) => {
+      const key = orderDateKey(order);
+      return key && key <= filterDateTo;
+    });
+  }
+
+  if (filterSearch) {
+    orders = orders.filter((order) => {
+      const haystack = [
+        order.orderNumber || order.id || '',
+        order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim(),
+        order.firstName || '',
+        order.lastName || '',
+        order.phone || '',
+        order.email || '',
+        order.locationLabel || order.location || '',
+        ...(order.items || []).map((item) => item?.name || '')
+      ].join(' ').toLowerCase();
+
+      return haystack.includes(filterSearch);
+    });
   }
 
   return orders;
@@ -341,25 +375,46 @@ function updateOrdersSheetUi() {
   const help = document.getElementById('ordersHelpText');
   const bulkButton = document.getElementById('bulkFulfillBtn');
   const sheetSwitcher = document.getElementById('ordersSheetSwitcher');
+  const filterSearch = document.getElementById('filterSearch');
+  const filterLocation = document.getElementById('filterLocation');
   const filterStatus = document.getElementById('filterStatus');
-  const filterDate = document.getElementById('filterDate');
-  const currentFilters = state.orderFilters[state.orderSheet] || { status: 'all', date: '' };
+  const filterDateFrom = document.getElementById('filterDateFrom');
+  const filterDateTo = document.getElementById('filterDateTo');
+  const exportButton = document.querySelector('.toolbar-actions button[onclick="exportCSV()"]');
+  const currentFilters = state.orderFilters[state.orderSheet] || { status: 'all', dateFrom: '', dateTo: '', search: '', location: 'all' };
   if (title) title.textContent = config[state.orderSheet].title;
   if (help) help.textContent = config[state.orderSheet].help;
   if (bulkButton) bulkButton.style.display = state.orderSheet === 'active' ? 'inline-flex' : 'none';
   if (sheetSwitcher) sheetSwitcher.style.display = document.getElementById('tab-orders')?.style.display === 'none' ? 'none' : 'flex';
+  if (exportButton) {
+    const exportLabels = {
+      active: '⬇ Export Active Excel',
+      processed: '⬇ Export Processed Excel',
+      all: '⬇ Export All Excel'
+    };
+    exportButton.textContent = exportLabels[state.orderSheet] || '⬇ Export Excel';
+  }
+  if (filterSearch) filterSearch.value = currentFilters.search || '';
+  if (filterLocation) filterLocation.value = currentFilters.location || 'all';
   if (filterStatus) filterStatus.value = currentFilters.status || 'all';
-  if (filterDate) filterDate.value = currentFilters.date || '';
+  if (filterDateFrom) filterDateFrom.value = currentFilters.dateFrom || '';
+  if (filterDateTo) filterDateTo.value = currentFilters.dateTo || '';
 }
 
 function syncCurrentOrderFilters() {
+  const filterSearch = document.getElementById('filterSearch');
+  const filterLocation = document.getElementById('filterLocation');
   const filterStatus = document.getElementById('filterStatus');
-  const filterDate = document.getElementById('filterDate');
+  const filterDateFrom = document.getElementById('filterDateFrom');
+  const filterDateTo = document.getElementById('filterDateTo');
   if (!state.orderFilters[state.orderSheet]) {
-    state.orderFilters[state.orderSheet] = { status: 'all', date: '' };
+    state.orderFilters[state.orderSheet] = { status: 'all', dateFrom: '', dateTo: '', search: '', location: 'all' };
   }
+  state.orderFilters[state.orderSheet].search = filterSearch?.value || '';
+  state.orderFilters[state.orderSheet].location = filterLocation?.value || 'all';
   state.orderFilters[state.orderSheet].status = filterStatus?.value || 'all';
-  state.orderFilters[state.orderSheet].date = filterDate?.value || '';
+  state.orderFilters[state.orderSheet].dateFrom = filterDateFrom?.value || '';
+  state.orderFilters[state.orderSheet].dateTo = filterDateTo?.value || '';
 }
 
 function renderActiveOrderSummary(orders = []) {
@@ -1489,8 +1544,17 @@ async function clearFulfilled() {
 }
 
 function exportCSV() {
-  const rows = [['Order ID', 'Customer', 'Phone', 'Email', 'Items', 'Boxes', 'Total', 'Location', 'Pickup Date', 'Payment', 'Status', 'Created']];
-  state.orders.forEach((order) => {
+  const orders = getFilteredOrders(state.orderSheet);
+  if (!orders.length) {
+    showToast('No orders match the current view and filters.');
+    return;
+  }
+
+  const rows = [[
+    'Order ID', 'Customer', 'Phone', 'Email', 'Items', 'Boxes', 'Total',
+    'Location', 'Pickup Date', 'Payment', 'Payment Method', 'Collected', 'Status', 'Created'
+  ]];
+  orders.forEach((order) => {
     rows.push([
       order.orderNumber || order.id,
       order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim(),
@@ -1502,6 +1566,8 @@ function exportCSV() {
       order.locationLabel || order.location || '',
       order.pickupDate || '',
       order.payment || 'pending',
+      order.paymentMethod || '',
+      order.paymentCollected ? 'Yes' : 'No',
       order.status || 'pending',
       formatDate(order.createdAt)
     ]);
@@ -1511,9 +1577,10 @@ function exportCSV() {
   const blob = new Blob([csv], { type: 'text/csv' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `shrish_orders_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `shrish_${state.orderSheet}_orders_${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
-  showToast('CSV downloaded');
+  const sheetLabel = state.orderSheet.charAt(0).toUpperCase() + state.orderSheet.slice(1);
+  showToast(`${sheetLabel} orders Excel download ready`);
 }
 
 function setOrderSheet(sheet) {
@@ -1863,11 +1930,23 @@ function subscribeData() {
 }
 
 function bindUi() {
+  document.getElementById('filterSearch')?.addEventListener('input', () => {
+    syncCurrentOrderFilters();
+    renderOrders();
+  });
+  document.getElementById('filterLocation')?.addEventListener('change', () => {
+    syncCurrentOrderFilters();
+    renderOrders();
+  });
   document.getElementById('filterStatus')?.addEventListener('change', () => {
     syncCurrentOrderFilters();
     renderOrders();
   });
-  document.getElementById('filterDate')?.addEventListener('change', () => {
+  document.getElementById('filterDateFrom')?.addEventListener('change', () => {
+    syncCurrentOrderFilters();
+    renderOrders();
+  });
+  document.getElementById('filterDateTo')?.addEventListener('change', () => {
     syncCurrentOrderFilters();
     renderOrders();
   });

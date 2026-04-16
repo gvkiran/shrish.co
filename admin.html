@@ -1008,7 +1008,14 @@
           <div class="orders-toolbar">
             <h2 id="ordersSectionTitle">Active Orders</h2>
             <div class="toolbar-actions">
-              <input type="date" id="filterDate" class="filter-input" onchange="renderOrders()">
+              <input type="search" id="filterSearch" class="filter-input" placeholder="Search order #, name, phone, email" onchange="renderOrders()">
+              <select id="filterLocation" class="filter-input" onchange="renderOrders()">
+                <option value="all">All Locations</option>
+                <option value="shortpump">Short Pump</option>
+                <option value="chesterfield">Chesterfield</option>
+              </select>
+              <input type="date" id="filterDateFrom" class="filter-input" onchange="renderOrders()">
+              <input type="date" id="filterDateTo" class="filter-input" onchange="renderOrders()">
               <select id="filterStatus" class="filter-input" onchange="renderOrders()">
                 <option value="all">All Orders</option>
                 <option value="pending">Pending</option>
