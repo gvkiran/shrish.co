@@ -280,6 +280,183 @@
     .btn-cancel:hover  { background: #C62828; color: white; }
     .btn-reset   { border-color: var(--text-light); color: var(--text-light); background: transparent; }
     .btn-reset:hover   { background: var(--text-light); color: white; }
+    .btn-edit    { border-color: var(--saffron); color: var(--saffron); background: transparent; }
+    .btn-edit:hover    { background: var(--saffron); color: white; }
+
+    .order-editor-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(26,18,8,0.52);
+      z-index: 2000;
+    }
+    .order-editor-modal.open { display: flex; }
+    .order-editor-card {
+      width: min(920px, 100%);
+      max-height: calc(100vh - 48px);
+      overflow: auto;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: var(--shadow-lg);
+      padding: 24px;
+    }
+    .order-editor-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .order-editor-head h3 {
+      margin: 0 0 6px;
+      font-family: var(--font-display);
+      font-size: 28px;
+      color: var(--dark);
+    }
+    .order-editor-head p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-light);
+    }
+    .order-editor-close {
+      border: 1.5px solid rgba(200,121,26,0.2);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--text-light);
+      padding: 10px 16px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .order-editor-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .order-editor-toolbar select {
+      min-width: 320px;
+      flex: 1 1 320px;
+      border: 1.5px solid #E0D0B8;
+      border-radius: 8px;
+      padding: 11px 12px;
+      font: inherit;
+      background: var(--cream);
+      color: var(--text);
+    }
+    .order-editor-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .order-editor-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 108px 110px 86px;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid rgba(200,121,26,0.14);
+      border-radius: 12px;
+      padding: 14px;
+      background: #fffdf9;
+    }
+    .order-editor-item-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 4px;
+    }
+    .order-editor-item-meta {
+      font-size: 12px;
+      color: var(--text-light);
+    }
+    .order-editor-item-qty {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-light);
+    }
+    .order-editor-item-qty input {
+      border: 1.5px solid #E0D0B8;
+      border-radius: 8px;
+      padding: 9px 10px;
+      font: inherit;
+      font-size: 13px;
+      color: var(--text);
+      background: #fff;
+    }
+    .order-editor-item-total {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--saffron);
+      text-align: right;
+    }
+    .order-editor-remove {
+      border: 1.5px solid #C62828;
+      border-radius: 999px;
+      background: #fff;
+      color: #C62828;
+      padding: 9px 12px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .order-editor-empty {
+      border: 1px dashed rgba(200,121,26,0.2);
+      border-radius: 12px;
+      padding: 18px;
+      font-size: 13px;
+      color: var(--text-light);
+      text-align: center;
+      margin-bottom: 16px;
+      background: #fffdf9;
+    }
+    .order-editor-foot {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(200,121,26,0.12);
+    }
+    .order-editor-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .order-editor-pill {
+      border-radius: 999px;
+      border: 1px solid rgba(200,121,26,0.16);
+      background: var(--cream);
+      padding: 9px 14px;
+      font-size: 13px;
+      color: var(--text);
+    }
+    .order-editor-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    @media (max-width: 720px) {
+      .order-editor-card { padding: 18px; }
+      .order-editor-item {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+      .order-editor-item-total { text-align: left; }
+    }
 
     /* Empty state */
     .empty-state { text-align: center; padding: 60px 24px; color: var(--text-light); }
@@ -872,6 +1049,36 @@
         </div>
 
         <!-- ── PRODUCTS TAB ── -->
+        <div class="order-editor-modal" id="orderEditorModal" onclick="handleOrderEditorOverlayClick(event)">
+          <div class="order-editor-card" role="dialog" aria-modal="true" aria-labelledby="orderEditorOrderNumber">
+            <div class="order-editor-head">
+              <div>
+                <h3>Edit Order <span id="orderEditorOrderNumber"></span></h3>
+                <p id="orderEditorCustomer"></p>
+              </div>
+              <button class="order-editor-close" type="button" onclick="closeOrderEditor()">Close</button>
+            </div>
+            <div class="order-editor-toolbar">
+              <select id="orderEditorAddSelect">
+                <option value="">Add an item</option>
+              </select>
+              <button class="toolbar-btn" type="button" onclick="addOrderDraftItem()">+ Add Item</button>
+            </div>
+            <div class="order-editor-list" id="orderEditorItems"></div>
+            <div class="order-editor-empty" id="orderEditorEmpty">This order has no items yet. Add a catalog item before saving.</div>
+            <div class="order-editor-foot">
+              <div class="order-editor-summary">
+                <div class="order-editor-pill">Boxes: <strong id="orderEditorBoxes">0</strong></div>
+                <div class="order-editor-pill">Total: <strong id="orderEditorTotal">$0.00</strong></div>
+              </div>
+              <div class="order-editor-actions">
+                <button class="toolbar-btn" type="button" onclick="closeOrderEditor()">Cancel</button>
+                <button class="toolbar-btn" id="orderEditorSaveBtn" type="button" onclick="saveEditedOrder()">Save Changes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div id="tab-products" style="display:none;">
           <div class="products-toolbar">
             <div class="products-toolbar-copy">

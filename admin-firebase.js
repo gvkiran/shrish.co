@@ -33,6 +33,10 @@ const state = {
   selectedAccountingBatch: '',
   productFilter: 'all',
   orderSheet: 'active',
+  orderEditor: {
+    orderId: '',
+    items: []
+  },
   orderFilters: {
     active: { status: 'pending', date: '' },
     processed: { status: 'all', date: '' },
@@ -397,6 +401,260 @@ function renderActiveOrderSummary(orders = []) {
   summaryEl.classList.add('show');
 }
 
+function orderEditorDraftOrder() {
+  return state.orders.find((order) => order.id === state.orderEditor.orderId) || null;
+}
+
+function cloneOrderEditorItem(item = {}, index = 0) {
+  const rawId = String(item.id || item.productId || '');
+  const inferredProductId = rawId.includes('__') ? rawId.split('__')[0] : rawId;
+  const inferredVariantId = item.variantId || (rawId.includes('__') ? rawId.split('__')[1] : 'default');
+  return {
+    draftId: item.draftId || `draft_${Date.now()}_${index}`,
+    id: rawId,
+    productId: item.productId || inferredProductId,
+    variantId: inferredVariantId,
+    name: item.name || 'Item',
+    price: item.price || '',
+    unit: item.unit || '',
+    image: item.image || null,
+    qty: Math.max(1, parseInt(item.qty, 10) || 1),
+    lineTotal: Number(item.lineTotal || 0)
+  };
+}
+
+function orderEditorItemTotal(item = {}) {
+  const qty = Math.max(1, parseInt(item.qty, 10) || 1);
+  return moneyNumber(item.price) * qty;
+}
+
+function orderEditorTotals(items = []) {
+  return items.reduce((acc, item) => {
+    const qty = Math.max(1, parseInt(item.qty, 10) || 1);
+    acc.totalBoxes += qty;
+    acc.totalPrice += orderEditorItemTotal(item);
+    return acc;
+  }, { totalBoxes: 0, totalPrice: 0 });
+}
+
+function getOrderEditorCatalogOptions() {
+  return getSortedProducts(state.products)
+    .filter((product) => !product.displayOnly && product.available)
+    .flatMap((product) => {
+      const variants = Array.isArray(product.variants) && product.variants.length
+        ? product.variants.filter((variant) => variant?.label)
+        : [];
+
+      if (!variants.length) {
+        return [{
+          key: `${product.id}::default`,
+          productId: product.id,
+          variantId: 'default',
+          label: product.name,
+          name: product.name,
+          price: product.price || '',
+          unit: product.unit || '',
+          image: product.image || null,
+          available: Boolean(product.available)
+        }];
+      }
+
+      return variants.map((variant) => ({
+        key: `${product.id}::${variant.id || 'default'}`,
+        productId: product.id,
+        variantId: variant.id || 'default',
+        label: `${product.name} (${variant.label})`,
+        name: `${product.name} (${variant.label})`,
+        price: variant.price || product.price || '',
+        unit: variant.unit || product.unit || '',
+        image: product.image || null,
+        available: Boolean(product.available)
+      }));
+    });
+}
+
+function renderOrderEditor() {
+  const modal = document.getElementById('orderEditorModal');
+  const order = orderEditorDraftOrder();
+  if (!modal || !order) return;
+
+  const titleEl = document.getElementById('orderEditorOrderNumber');
+  const customerEl = document.getElementById('orderEditorCustomer');
+  const itemsEl = document.getElementById('orderEditorItems');
+  const emptyEl = document.getElementById('orderEditorEmpty');
+  const totalEl = document.getElementById('orderEditorTotal');
+  const boxesEl = document.getElementById('orderEditorBoxes');
+  const addSelect = document.getElementById('orderEditorAddSelect');
+  const options = getOrderEditorCatalogOptions();
+  const totals = orderEditorTotals(state.orderEditor.items);
+
+  if (titleEl) titleEl.textContent = order.orderNumber || order.id;
+  if (customerEl) {
+    customerEl.textContent = `${order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim()} - ${order.phone || ''}`;
+  }
+  if (totalEl) totalEl.textContent = formatCurrency(totals.totalPrice);
+  if (boxesEl) boxesEl.textContent = String(totals.totalBoxes);
+
+  if (addSelect) {
+    addSelect.innerHTML = `<option value="">Add an item</option>${options.map((option) => `
+      <option value="${escapeHtml(option.key)}">${escapeHtml(option.label)} - ${escapeHtml(option.price || 'No price')}</option>
+    `).join('')}`;
+  }
+
+  if (!state.orderEditor.items.length) {
+    if (itemsEl) itemsEl.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = 'block';
+    return;
+  }
+
+  if (emptyEl) emptyEl.style.display = 'none';
+  if (itemsEl) {
+    itemsEl.innerHTML = state.orderEditor.items.map((item, index) => `
+      <div class="order-editor-item">
+        <div class="order-editor-item-main">
+          <div class="order-editor-item-name">${escapeHtml(item.name || 'Item')}</div>
+          <div class="order-editor-item-meta">${escapeHtml(item.price || '')}${item.unit ? ` - ${escapeHtml(item.unit)}` : ''}</div>
+        </div>
+        <label class="order-editor-item-qty">
+          <span>Qty</span>
+          <input type="number" min="1" step="1" value="${escapeHtml(String(item.qty || 1))}" onchange="updateOrderDraftQty(${index}, this.value)">
+        </label>
+        <div class="order-editor-item-total">${escapeHtml(formatCurrency(orderEditorItemTotal(item)))}</div>
+        <button class="order-editor-remove" type="button" onclick="removeOrderDraftItem(${index})">Remove</button>
+      </div>
+    `).join('');
+  }
+}
+
+function openOrderEditor(id) {
+  const order = state.orders.find((item) => item.id === id);
+  const modal = document.getElementById('orderEditorModal');
+  if (!order || !modal) return;
+
+  state.orderEditor = {
+    orderId: id,
+    items: Array.isArray(order.items) ? order.items.map((item, index) => cloneOrderEditorItem(item, index)) : []
+  };
+
+  renderOrderEditor();
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeOrderEditor() {
+  const modal = document.getElementById('orderEditorModal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  state.orderEditor = { orderId: '', items: [] };
+  document.body.style.overflow = '';
+}
+
+function handleOrderEditorOverlayClick(event) {
+  if (event.target?.id === 'orderEditorModal') closeOrderEditor();
+}
+
+function updateOrderDraftQty(index, value) {
+  const item = state.orderEditor.items[index];
+  if (!item) return;
+  item.qty = Math.max(1, parseInt(value, 10) || 1);
+  renderOrderEditor();
+}
+
+function removeOrderDraftItem(index) {
+  state.orderEditor.items.splice(index, 1);
+  renderOrderEditor();
+}
+
+function addOrderDraftItem() {
+  const select = document.getElementById('orderEditorAddSelect');
+  if (!select || !select.value) {
+    showToast('Choose an item to add');
+    return;
+  }
+
+  const selected = getOrderEditorCatalogOptions().find((option) => option.key === select.value);
+  if (!selected) {
+    showToast('Could not add that item');
+    return;
+  }
+
+  const existing = state.orderEditor.items.find((item) =>
+    (item.productId || item.id) === selected.productId && (item.variantId || 'default') === selected.variantId
+  );
+
+  if (existing) {
+    existing.qty = Math.max(1, parseInt(existing.qty, 10) || 1) + 1;
+  } else {
+    state.orderEditor.items.push(cloneOrderEditorItem({
+      id: `${selected.productId}${selected.variantId === 'default' ? '' : `__${selected.variantId}`}`,
+      productId: selected.productId,
+      variantId: selected.variantId,
+      name: selected.name,
+      price: selected.price,
+      unit: selected.unit,
+      image: selected.image,
+      qty: 1
+    }, state.orderEditor.items.length));
+  }
+
+  select.value = '';
+  renderOrderEditor();
+}
+
+async function saveEditedOrder() {
+  const order = orderEditorDraftOrder();
+  if (!order) return;
+
+  const saveBtn = document.getElementById('orderEditorSaveBtn');
+  if (!state.orderEditor.items.length) {
+    showToast('Add at least one item before saving');
+    return;
+  }
+
+  const cleanedItems = state.orderEditor.items.map((item, index) => {
+    const cloned = cloneOrderEditorItem(item, index);
+    const payload = {
+      id: cloned.id,
+      name: cloned.name,
+      price: cloned.price,
+      unit: cloned.unit,
+      image: cloned.image || null,
+      qty: cloned.qty,
+      lineTotal: orderEditorItemTotal(cloned)
+    };
+
+    if (cloned.productId) payload.productId = cloned.productId;
+    if (cloned.variantId) payload.variantId = cloned.variantId;
+    return payload;
+  });
+
+  const totals = orderEditorTotals(cleanedItems);
+
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+  }
+
+  try {
+    await updateDoc(doc(db, 'orders', order.id), {
+      items: cleanedItems,
+      totalBoxes: totals.totalBoxes,
+      totalPrice: totals.totalPrice,
+      updatedAt: new Date().toISOString()
+    });
+    closeOrderEditor();
+    showToast('Order updated');
+  } catch (error) {
+    console.error(error);
+    showToast('Could not update order right now');
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Changes';
+    }
+  }
+}
+
 function renderOrders() {
   const orders = getFilteredOrders();
   updateOrdersSheetUi();
@@ -451,6 +709,21 @@ function renderOrders() {
       <td><div class="action-btns"><button class="action-btn btn-fulfill" onclick="setStatus('${escapeHtml(order.id)}','fulfilled')">✓ Fulfill</button><button class="action-btn btn-cancel" onclick="setStatus('${escapeHtml(order.id)}','cancelled')">✕ Cancel</button><button class="action-btn btn-reset" onclick="setStatus('${escapeHtml(order.id)}','pending')">↺ Reset</button></div></td>
     </tr>`;
   }).join('');
+
+  if (state.orderSheet === 'active') {
+    orders.forEach((order) => {
+      if ((order.status || 'pending') !== 'pending') return;
+      const row = document.getElementById(`row-${order.id}`);
+      const actions = row?.querySelector('.action-btns');
+      if (!actions || actions.querySelector('.btn-edit')) return;
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'action-btn btn-edit';
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', () => openOrderEditor(order.id));
+      actions.prepend(editBtn);
+    });
+  }
 
   renderStats();
 }
@@ -1617,6 +1890,9 @@ function bindUi() {
   document.getElementById('newProductStatus')?.addEventListener('change', updateProductFormForStatus);
   document.getElementById('addProductForm')?.addEventListener('submit', submitAddProduct);
   document.getElementById('adminPw')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeOrderEditor();
+  });
 }
 
 function initAuthWatch() {
@@ -1666,6 +1942,13 @@ window.resetAddProductForm = resetAddProductForm;
 window.editProduct = editProduct;
 window.setProductCategoryFilter = setProductCategoryFilter;
 window.saveProductSortOrder = saveProductSortOrder;
+window.openOrderEditor = openOrderEditor;
+window.closeOrderEditor = closeOrderEditor;
+window.handleOrderEditorOverlayClick = handleOrderEditorOverlayClick;
+window.updateOrderDraftQty = updateOrderDraftQty;
+window.removeOrderDraftItem = removeOrderDraftItem;
+window.addOrderDraftItem = addOrderDraftItem;
+window.saveEditedOrder = saveEditedOrder;
 
 bindUi();
 initAuthWatch();
