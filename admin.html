@@ -458,6 +458,142 @@
       .order-editor-item-total { text-align: left; }
     }
 
+    .excel-calc-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .excel-calc-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .excel-calc-toolbar h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 24px;
+      color: var(--dark);
+    }
+    .excel-calc-copy p {
+      margin: 6px 0 0;
+      font-size: 13px;
+      color: var(--text-light);
+    }
+    .excel-calc-toolbar .toolbar-actions {
+      align-items: center;
+    }
+    .excel-calc-batch {
+      display: inline-flex;
+      align-items: center;
+      min-height: 42px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1.5px solid rgba(200,121,26,0.18);
+      background: var(--white);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+    .excel-calc-card {
+      background: linear-gradient(180deg, #fff, #fbf5eb);
+      border: 1px solid rgba(200,121,26,0.12);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    .excel-calc-card h3 {
+      margin: 0 0 6px;
+      font-family: var(--font-display);
+      font-size: 20px;
+      color: var(--dark);
+    }
+    .excel-calc-card p {
+      margin: 0 0 14px;
+      font-size: 13px;
+      color: var(--text-light);
+    }
+    .excel-calc-table-wrap {
+      overflow-x: auto;
+    }
+    .excel-calc-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 640px;
+    }
+    .excel-calc-table th,
+    .excel-calc-table td {
+      padding: 12px 10px;
+      border-top: 1px solid rgba(200,121,26,0.12);
+      text-align: left;
+      font-size: 13px;
+      color: var(--text);
+    }
+    .excel-calc-table th {
+      border-top: 0;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-light);
+    }
+    .excel-calc-table input {
+      width: 100%;
+      max-width: 120px;
+      border: 1.5px solid #E0D0B8;
+      border-radius: 8px;
+      padding: 9px 10px;
+      font: inherit;
+      font-size: 13px;
+      color: var(--text);
+      background: #fff;
+    }
+    .excel-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .excel-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .excel-field span {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-light);
+    }
+    .excel-field input {
+      border: 1.5px solid #E0D0B8;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font: inherit;
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
+    }
+    .excel-summary-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .excel-summary-grid {
+        grid-template-columns: repeat(2, minmax(140px, 1fr));
+      }
+    }
+    @media (max-width: 560px) {
+      .excel-summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     /* Empty state */
     .empty-state { text-align: center; padding: 60px 24px; color: var(--text-light); }
     .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
@@ -999,6 +1135,7 @@
           <button class="admin-tab" onclick="switchTab('products',this)">🛒 Manage Products</button>
           <button class="admin-tab" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
           <button class="admin-tab" onclick="switchTab('accounting',this)">📒 Accounting</button>
+          <button class="admin-tab" onclick="switchTab('excel-calculations',this)">Excel Calculations</button>
         </div>
       </aside>
 
@@ -1317,10 +1454,88 @@
               <tbody id="accountingBody"></tbody>
             </table>
           </div>
-          <div class="export-banner" style="margin-top:18px;">
-            <p>Processed orders with payment method and collected status are included in the daily batch totals. Batch format: <strong>SHR-BATCH-YYYY-MM-DD</strong>.</p>
+        <div class="export-banner" style="margin-top:18px;">
+          <p>Processed orders with payment method and collected status are included in the daily batch totals. Batch format: <strong>SHR-BATCH-YYYY-MM-DD</strong>.</p>
+        </div>
+      </div>
+
+      <div id="tab-excel-calculations" style="display:none;">
+        <div class="excel-calc-toolbar">
+          <div class="excel-calc-copy">
+            <h2>Excel Calculations</h2>
+            <p>Uses batch orders for ordered boxes and lets you enter extras, invoice, cash on hand, zelle, remaining, and damaged values in your sheet style.</p>
+          </div>
+          <div class="toolbar-actions">
+            <input type="date" id="excelCalcDate" class="filter-input">
+            <input type="number" id="excelCalcBatchSeq" class="filter-input" min="1" step="1" value="1" style="width:92px">
+            <div class="excel-calc-batch" id="excelCalcBatchName">SHR-BATCH-YYYY-MM-DD_1</div>
+            <button class="toolbar-btn" id="excelCalcSaveBtn" onclick="saveExcelCalculations()">Save Excel Calculations</button>
           </div>
         </div>
+
+        <div class="accounting-grid" id="excelCalcStats"></div>
+
+        <div class="excel-calc-stack">
+          <div class="excel-calc-card">
+            <h3>Batch Box Count</h3>
+            <p>Ordered boxes come from the selected batch. Extra boxes are manual.</p>
+            <div class="excel-calc-table-wrap">
+              <table class="excel-calc-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Ordered Boxes</th>
+                    <th>Extra Boxes</th>
+                    <th>Total Boxes</th>
+                    <th>Price</th>
+                  </tr>
+                </thead>
+                <tbody id="excelCalcOrderedBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="excel-calc-card">
+            <h3>Cash Count</h3>
+            <p>Enter your denomination counts and opening cash from hand below.</p>
+            <div class="excel-calc-table-wrap">
+              <table class="excel-calc-table">
+                <thead>
+                  <tr>
+                    <th>Denomination</th>
+                    <th>Count</th>
+                    <th>Sum</th>
+                  </tr>
+                </thead>
+                <tbody id="excelCalcCashBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="excel-calc-card">
+            <h3>Remaining And Damaged</h3>
+            <p>Enter remaining quantity by product. Damaged stays as a separate dollar amount.</p>
+            <div class="excel-calc-table-wrap">
+              <table class="excel-calc-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Remaining Qty</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody id="excelCalcRemainingBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="excel-calc-card">
+            <h3>Summary</h3>
+            <p>Unknown is calculated as Invoice minus Cash Sales minus Zelle.</p>
+            <div id="excelCalcSummary"></div>
+          </div>
+        </div>
+      </div>
       </main>
 
       <aside class="admin-stats-rail">

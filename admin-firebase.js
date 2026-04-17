@@ -29,6 +29,7 @@ const state = {
   products: JSON.parse(JSON.stringify(BASE_PRODUCTS)),
   subscribers: [],
   accountingBatches: {},
+  accounting2Records: {},
   accountingView: 'open',
   selectedAccountingBatch: '',
   productFilter: 'all',
@@ -46,7 +47,8 @@ const state = {
   unsubProducts: null,
   unsubSubscribersGeneral: null,
   unsubSubscribersProduct: null,
-  unsubAccountingBatches: null
+  unsubAccountingBatches: null,
+  unsubAccounting2Records: null
 };
 
 function normalizeProductCategory(category) {
@@ -175,6 +177,130 @@ function formatDateTime(value) {
 
 function moneyValue(value) {
   return Number(value || 0);
+}
+
+function accounting2CollectionRef() {
+  return collection(db, 'accounting2_batches');
+}
+
+function accounting2Products() {
+  return getSortedProducts(state.products).filter((product) => !product.displayOnly);
+}
+
+function accounting2ProductPrice(product) {
+  return moneyNumber(product?.price || 0);
+}
+
+function accounting2DefaultDenominations() {
+  return ['1', '5', '10', '20', '50', '100'];
+}
+
+function accounting2BatchName() {
+  const dateValue = document.getElementById('excelCalcDate')?.value || todayDateInputValue();
+  const seqValue = document.getElementById('excelCalcBatchSeq')?.value || 1;
+  return batchNameFromDate(dateValue, seqValue);
+}
+
+function accounting2SavedRecord(batchName = accounting2BatchName()) {
+  return state.accounting2Records?.[batchName] || null;
+}
+
+function accounting2MutableMap(record = {}, key) {
+  return { ...(record?.[key] || {}) };
+}
+
+function accounting2SetMapValue(key, productId, value) {
+  const batchName = accounting2BatchName();
+  const existing = accounting2SavedRecord(batchName) || {};
+  const nextMap = {
+    ...accounting2MutableMap(existing, key),
+    [productId]: Math.max(0, parseInt(value, 10) || 0)
+  };
+  if (nextMap[productId] === 0) delete nextMap[productId];
+  state.accounting2Records[batchName] = { ...existing, batchName, [key]: nextMap };
+  renderExcelCalculations();
+}
+
+function accounting2SetValue(key, value) {
+  const batchName = accounting2BatchName();
+  const existing = accounting2SavedRecord(batchName) || {};
+  state.accounting2Records[batchName] = { ...existing, batchName, [key]: value };
+  renderExcelCalculations();
+}
+
+function accounting2ResolveProductIdFromItem(item = {}) {
+  if (item.productId && state.products.some((product) => product.id === item.productId)) return item.productId;
+  const itemName = String(item.name || '').trim().toLowerCase();
+  if (!itemName) return '';
+
+  const products = [...state.products]
+    .filter((product) => !product.displayOnly)
+    .sort((a, b) => String(b.name || '').length - String(a.name || '').length);
+
+  const match = products.find((product) => {
+    const productName = String(product.name || '').trim().toLowerCase();
+    return itemName === productName || itemName.startsWith(`${productName} (`) || itemName.includes(productName);
+  });
+  return match?.id || '';
+}
+
+function accounting2BatchOrders(batchName = accounting2BatchName()) {
+  return state.orders.filter((order) => (order.accountingBatch || '') === batchName);
+}
+
+function accounting2OrderedCounts(batchName = accounting2BatchName()) {
+  const counts = {};
+  accounting2BatchOrders(batchName).forEach((order) => {
+    (order.items || []).forEach((item) => {
+      const productId = accounting2ResolveProductIdFromItem(item);
+      if (!productId) return;
+      counts[productId] = (counts[productId] || 0) + Math.max(0, Number(item.qty || 0));
+    });
+  });
+  return counts;
+}
+
+function accounting2ComputedTotals(batchName = accounting2BatchName()) {
+  const record = accounting2SavedRecord(batchName) || {};
+  const products = accounting2Products();
+  const orderedCounts = accounting2OrderedCounts(batchName);
+  const extraBoxes = accounting2MutableMap(record, 'extraBoxes');
+  const remainingQty = accounting2MutableMap(record, 'remainingQty');
+  const invoiceTotal = moneyValue(record.invoiceTotal);
+  const zelleAmount = moneyValue(record.zelleAmount);
+  const cashFromHand = moneyValue(record.cashFromHand);
+  const cashCounts = accounting2MutableMap(record, 'cashCounts');
+  const cashCountTotal = accounting2DefaultDenominations().reduce((sum, denomination) => (
+    sum + (Number(denomination) * Math.max(0, parseInt(cashCounts[denomination], 10) || 0))
+  ), 0);
+  const cashSales = cashCountTotal - cashFromHand;
+  const unknownAmount = invoiceTotal - (cashSales + zelleAmount);
+  const remainingValue = products.reduce((sum, product) => (
+    sum + (accounting2ProductPrice(product) * Math.max(0, parseInt(remainingQty[product.id], 10) || 0))
+  ), 0);
+  const damagedAmount = moneyValue(record.damagedAmount);
+  const orderedBoxesTotal = Object.values(orderedCounts).reduce((sum, qty) => sum + Number(qty || 0), 0);
+  const extraBoxesTotal = Object.values(extraBoxes).reduce((sum, qty) => sum + Number(qty || 0), 0);
+
+  return {
+    products,
+    orderedCounts,
+    extraBoxes,
+    remainingQty,
+    cashCounts,
+    invoiceTotal,
+    zelleAmount,
+    cashFromHand,
+    cashCountTotal,
+    cashSales,
+    unknownAmount,
+    remainingValue,
+    damagedAmount,
+    orderedBoxesTotal,
+    extraBoxesTotal,
+    totalBoxesCount: orderedBoxesTotal + extraBoxesTotal,
+    totalLossValue: remainingValue + damagedAmount
+  };
 }
 
 function accountingInputIds() {
@@ -1633,7 +1759,11 @@ function printActiveOrders() {
     </tr>
   `).join('');
 
-  const selectedDate = document.getElementById('filterDate')?.value || 'All dates';
+  const selectedFrom = document.getElementById('filterDateFrom')?.value || '';
+  const selectedTo = document.getElementById('filterDateTo')?.value || '';
+  const selectedDate = selectedFrom || selectedTo
+    ? `${selectedFrom || 'Any'} to ${selectedTo || 'Any'}`
+    : 'All dates';
   const printWindow = window.open('', '_blank', 'width=1200,height=900');
   if (!printWindow) {
     showToast('Allow popups to print orders.');
@@ -1688,6 +1818,155 @@ function printActiveOrders() {
     </body>
   </html>`);
   printWindow.document.close();
+}
+
+function renderExcelCalculations() {
+  const tab = document.getElementById('tab-excel-calculations');
+  if (!tab) return;
+
+  const dateInput = document.getElementById('excelCalcDate');
+  const seqInput = document.getElementById('excelCalcBatchSeq');
+  const batchNameEl = document.getElementById('excelCalcBatchName');
+  const orderedBody = document.getElementById('excelCalcOrderedBody');
+  const cashBody = document.getElementById('excelCalcCashBody');
+  const remainingBody = document.getElementById('excelCalcRemainingBody');
+  const statsEl = document.getElementById('excelCalcStats');
+  const summaryEl = document.getElementById('excelCalcSummary');
+  if (!dateInput || !seqInput || !batchNameEl || !orderedBody || !cashBody || !remainingBody || !statsEl || !summaryEl) return;
+
+  if (!dateInput.value) dateInput.value = todayDateInputValue();
+  const safeSeq = Math.max(1, parseInt(seqInput.value || '1', 10) || 1);
+  if (String(safeSeq) !== seqInput.value) seqInput.value = String(safeSeq);
+
+  const batchName = accounting2BatchName();
+  const record = accounting2SavedRecord(batchName) || { batchName, batchDate: dateInput.value };
+  if (!state.accounting2Records[batchName]) state.accounting2Records[batchName] = record;
+
+  const computed = accounting2ComputedTotals(batchName);
+  batchNameEl.textContent = batchName;
+
+  statsEl.innerHTML = `
+    <div class="accounting-card"><div class="a-label">Batch Orders</div><div class="a-value">${accounting2BatchOrders(batchName).length}</div></div>
+    <div class="accounting-card"><div class="a-label">Ordered Boxes</div><div class="a-value">${computed.orderedBoxesTotal}</div></div>
+    <div class="accounting-card"><div class="a-label">Extra Boxes</div><div class="a-value">${computed.extraBoxesTotal}</div></div>
+    <div class="accounting-card"><div class="a-label">Total Box Count</div><div class="a-value">${computed.totalBoxesCount}</div></div>
+    <div class="accounting-card"><div class="a-label">Invoice</div><div class="a-value">${formatCurrency(computed.invoiceTotal)}</div></div>
+    <div class="accounting-card"><div class="a-label">Unknown</div><div class="a-value ${computed.unknownAmount < 0 ? 'warn' : ''}">${formatCurrency(computed.unknownAmount)}</div></div>
+  `;
+
+  orderedBody.innerHTML = computed.products.map((product) => {
+    const ordered = computed.orderedCounts[product.id] || 0;
+    const extra = computed.extraBoxes[product.id] || 0;
+    const total = ordered + extra;
+    return `
+      <tr>
+        <td><strong>${escapeHtml(product.name || '')}</strong></td>
+        <td>${ordered}</td>
+        <td><input type="number" min="0" step="1" value="${extra}" onchange="setExcelCalcProductMap('extraBoxes','${escapeHtml(product.id)}', this.value)"></td>
+        <td>${total}</td>
+        <td>${formatCurrency(accounting2ProductPrice(product))}</td>
+      </tr>
+    `;
+  }).join('');
+
+  cashBody.innerHTML = accounting2DefaultDenominations().map((denomination) => {
+    const count = computed.cashCounts[denomination] || 0;
+    const total = Number(denomination) * Number(count || 0);
+    return `
+      <tr>
+        <td>${formatCurrency(denomination)}</td>
+        <td><input type="number" min="0" step="1" value="${count}" onchange="setExcelCalcCashCount('${denomination}', this.value)"></td>
+        <td>${formatCurrency(total)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  remainingBody.innerHTML = computed.products.map((product) => {
+    const qty = computed.remainingQty[product.id] || 0;
+    const total = qty * accounting2ProductPrice(product);
+    return `
+      <tr>
+        <td><strong>${escapeHtml(product.name || '')}</strong></td>
+        <td><input type="number" min="0" step="1" value="${qty}" onchange="setExcelCalcProductMap('remainingQty','${escapeHtml(product.id)}', this.value)"></td>
+        <td>${formatCurrency(total)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  summaryEl.innerHTML = `
+    <div class="excel-summary-grid">
+      <label class="excel-field"><span>Invoice (manual)</span><input type="number" min="0" step="0.01" value="${computed.invoiceTotal || ''}" oninput="setExcelCalcValue('invoiceTotal', this.value)"></label>
+      <label class="excel-field"><span>Cash from hand</span><input type="number" step="0.01" value="${record.cashFromHand ?? ''}" oninput="setExcelCalcValue('cashFromHand', this.value)"></label>
+      <label class="excel-field"><span>Zelle</span><input type="number" min="0" step="0.01" value="${computed.zelleAmount || ''}" oninput="setExcelCalcValue('zelleAmount', this.value)"></label>
+      <label class="excel-field"><span>Damaged Amount</span><input type="number" min="0" step="0.01" value="${computed.damagedAmount || ''}" oninput="setExcelCalcValue('damagedAmount', this.value)"></label>
+    </div>
+    <div class="excel-summary-strip">
+      <span class="summary-chip"><strong>Cash Counted:</strong> ${formatCurrency(computed.cashCountTotal)}</span>
+      <span class="summary-chip"><strong>Cash Sales:</strong> ${formatCurrency(computed.cashSales)}</span>
+      <span class="summary-chip"><strong>Total Received:</strong> ${formatCurrency(computed.cashSales + computed.zelleAmount)}</span>
+      <span class="summary-chip"><strong>Unknown:</strong> ${formatCurrency(computed.unknownAmount)}</span>
+      <span class="summary-chip"><strong>Remaining + Damaged:</strong> ${formatCurrency(computed.totalLossValue)}</span>
+    </div>
+  `;
+}
+
+function setExcelCalcValue(key, value) {
+  accounting2SetValue(key, value === '' ? '' : Number(value));
+}
+
+function setExcelCalcCashCount(denomination, value) {
+  const batchName = accounting2BatchName();
+  const existing = accounting2SavedRecord(batchName) || {};
+  const cashCounts = {
+    ...accounting2MutableMap(existing, 'cashCounts'),
+    [denomination]: Math.max(0, parseInt(value, 10) || 0)
+  };
+  if (!cashCounts[denomination]) delete cashCounts[denomination];
+  state.accounting2Records[batchName] = { ...existing, batchName, cashCounts };
+  renderExcelCalculations();
+}
+
+function setExcelCalcProductMap(key, productId, value) {
+  accounting2SetMapValue(key, productId, value);
+}
+
+async function saveExcelCalculations() {
+  const dateInput = document.getElementById('excelCalcDate');
+  const saveBtn = document.getElementById('excelCalcSaveBtn');
+  if (!dateInput) return;
+
+  const batchName = accounting2BatchName();
+  const existing = accounting2SavedRecord(batchName) || {};
+  const payload = {
+    batchName,
+    batchDate: dateInput.value || todayDateInputValue(),
+    invoiceTotal: moneyValue(existing.invoiceTotal),
+    cashFromHand: Number(existing.cashFromHand || 0),
+    zelleAmount: moneyValue(existing.zelleAmount),
+    damagedAmount: moneyValue(existing.damagedAmount),
+    extraBoxes: accounting2MutableMap(existing, 'extraBoxes'),
+    remainingQty: accounting2MutableMap(existing, 'remainingQty'),
+    cashCounts: accounting2MutableMap(existing, 'cashCounts'),
+    updatedAt: new Date().toISOString()
+  };
+
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+  }
+
+  try {
+    await setDoc(doc(db, 'accounting2_batches', batchName), payload, { merge: true });
+    showToast('Excel calculations saved');
+  } catch (error) {
+    console.error(error);
+    showToast('Could not save Excel calculations right now');
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Excel Calculations';
+    }
+  }
 }
 
 function renderAccounting() {
@@ -1855,10 +2134,12 @@ function switchTab(tab, btn) {
   document.getElementById('tab-products').style.display = tab === 'products' ? 'block' : 'none';
   document.getElementById('tab-subscribers').style.display = tab === 'subscribers' ? 'block' : 'none';
   document.getElementById('tab-accounting').style.display = tab === 'accounting' ? 'block' : 'none';
+  document.getElementById('tab-excel-calculations').style.display = tab === 'excel-calculations' ? 'block' : 'none';
   if (tab === 'products') renderProducts();
   if (tab === 'orders') renderOrders();
   if (tab === 'subscribers') renderSubscribers();
   if (tab === 'accounting') renderAccounting();
+  if (tab === 'excel-calculations') renderExcelCalculations();
   updateOrdersSheetUi();
 }
 
@@ -1868,6 +2149,7 @@ function subscribeData() {
   state.unsubSubscribersGeneral?.();
   state.unsubSubscribersProduct?.();
   state.unsubAccountingBatches?.();
+  state.unsubAccounting2Records?.();
 
   state.unsubOrders = onSnapshot(query(collection(db, 'orders'), orderBy('createdAt', 'desc')), (snapshot) => {
     state.orders = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
@@ -1927,6 +2209,17 @@ function subscribeData() {
     console.error(error);
     showToast('Accounting batches sync failed');
   });
+
+  state.unsubAccounting2Records = onSnapshot(accounting2CollectionRef(), (snapshot) => {
+    state.accounting2Records = snapshot.docs.reduce((acc, snap) => {
+      acc[snap.id] = { id: snap.id, ...snap.data() };
+      return acc;
+    }, {});
+    renderExcelCalculations();
+  }, (error) => {
+    console.error(error);
+    showToast('Excel calculations sync failed');
+  });
 }
 
 function bindUi() {
@@ -1966,6 +2259,8 @@ function bindUi() {
     toggleVariantFields();
     updateProductFormForStatus();
   });
+  document.getElementById('excelCalcDate')?.addEventListener('change', renderExcelCalculations);
+  document.getElementById('excelCalcBatchSeq')?.addEventListener('change', renderExcelCalculations);
   document.getElementById('newProductStatus')?.addEventListener('change', updateProductFormForStatus);
   document.getElementById('addProductForm')?.addEventListener('submit', submitAddProduct);
   document.getElementById('adminPw')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
@@ -1982,6 +2277,7 @@ function initAuthWatch() {
       state.unsubSubscribersGeneral?.();
       state.unsubSubscribersProduct?.();
       state.unsubAccountingBatches?.();
+      state.unsubAccounting2Records?.();
       setLoggedInUi(false);
       return;
     }
@@ -2028,6 +2324,11 @@ window.updateOrderDraftQty = updateOrderDraftQty;
 window.removeOrderDraftItem = removeOrderDraftItem;
 window.addOrderDraftItem = addOrderDraftItem;
 window.saveEditedOrder = saveEditedOrder;
+window.renderExcelCalculations = renderExcelCalculations;
+window.setExcelCalcValue = setExcelCalcValue;
+window.setExcelCalcCashCount = setExcelCalcCashCount;
+window.setExcelCalcProductMap = setExcelCalcProductMap;
+window.saveExcelCalculations = saveExcelCalculations;
 
 bindUi();
 initAuthWatch();
