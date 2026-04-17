@@ -1552,15 +1552,13 @@
 
           <div class="excel-calc-card">
             <h3>Remaining And Damaged</h3>
-            <p>Enter remaining quantity by product. Damaged stays as a separate dollar amount.</p>
+            <p>Enter manual amounts by product here. Damaged stays in the same section and the summary auto totals it.</p>
             <div class="excel-calc-table-wrap">
               <table class="excel-calc-table">
                 <thead>
                   <tr>
                     <th>Product</th>
-                    <th>Remaining Qty</th>
-                    <th>Price</th>
-                    <th>Value</th>
+                    <th>Amount</th>
                   </tr>
                 </thead>
                 <tbody id="excelCalcRemainingBody"></tbody>
@@ -1570,7 +1568,7 @@
 
           <div class="excel-calc-card">
             <h3>Summary</h3>
-            <p>Unknown is calculated as total batch sales minus cash minus zelle, with tally reduced by remaining and damaged values.</p>
+            <p>Invoice, cash from hand, and zelle stay fully manual. Damaged amount is auto filled from the remaining and damaged section.</p>
             <div id="excelCalcSummary"></div>
           </div>
         </div>

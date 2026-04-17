@@ -179,6 +179,13 @@ function moneyValue(value) {
   return Number(value || 0);
 }
 
+function excelCalcMoneyValue(value) {
+  if (value === '' || value === null || value === undefined) return 0;
+  const cleaned = String(value).replace(/[^0-9.-]/g, '');
+  const parsed = Number(cleaned);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 function accounting2CollectionRef() {
   return collection(db, 'accounting2_batches');
 }
@@ -278,7 +285,7 @@ function accounting2ComputedTotals(batchName = accounting2BatchName()) {
   const batchOrderTotal = batchOrders.reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
   const unknownAmount = batchOrderTotal - (cashSales + zelleAmount);
   const remainingValue = products.reduce((sum, product) => (
-    sum + (accounting2ProductPrice(product) * Math.max(0, parseInt(remainingQty[product.id], 10) || 0))
+    sum + Math.max(0, excelCalcMoneyValue(remainingQty[product.id]))
   ), 0);
   const damagedAmount = moneyValue(record.damagedAmount);
   const orderedBoxesTotal = Object.values(orderedCounts).reduce((sum, qty) => sum + Number(qty || 0), 0);
@@ -1916,32 +1923,30 @@ function renderExcelCalculations() {
   `;
 
   remainingBody.innerHTML = computed.products.map((product) => {
-    const qty = computed.remainingQty[product.id] || 0;
-    const price = accounting2ProductPrice(product);
-    const total = qty * price;
+    const amount = computed.remainingQty[product.id] ?? '';
     return `
       <tr>
         <td><strong>${escapeHtml(product.name || '')}</strong></td>
-        <td><input type="number" min="0" step="1" value="${qty}" onchange="setExcelCalcProductMap('remainingQty','${escapeHtml(product.id)}', this.value)"></td>
-        <td>${formatCurrency(price)}</td>
-        <td>${formatCurrency(total)}</td>
+        <td><input type="text" inputmode="decimal" value="${amount}" onchange="setExcelCalcProductMap('remainingQty','${escapeHtml(product.id)}', this.value)"></td>
       </tr>
     `;
   }).join('') + `
+    <tr>
+      <td><strong>Damaged</strong></td>
+      <td><input type="text" inputmode="decimal" value="${record.damagedAmount ?? ''}" onchange="setExcelCalcValue('damagedAmount', this.value)"></td>
+    </tr>
     <tr class="excel-calc-total-row">
       <td><strong>Total</strong></td>
-      <td></td>
-      <td></td>
-      <td><strong>${formatCurrency(computed.remainingValue)}</strong></td>
+      <td><strong>${formatCurrency(computed.totalLossValue)}</strong></td>
     </tr>
   `;
 
   summaryEl.innerHTML = `
     <div class="excel-summary-grid">
-      <label class="excel-field"><span>Invoice (manual)</span><input type="number" min="0" step="0.01" value="${record.invoiceTotal ?? ''}" oninput="setExcelCalcValue('invoiceTotal', this.value)"></label>
-      <label class="excel-field"><span>Cash from hand</span><input type="number" step="0.01" value="${record.cashFromHand ?? ''}" oninput="setExcelCalcValue('cashFromHand', this.value)"></label>
-      <label class="excel-field"><span>Zelle</span><input type="number" min="0" step="0.01" value="${record.zelleAmount ?? ''}" oninput="setExcelCalcValue('zelleAmount', this.value)"></label>
-      <label class="excel-field"><span>Damaged Amount</span><input type="number" min="0" step="0.01" value="${record.damagedAmount ?? ''}" oninput="setExcelCalcValue('damagedAmount', this.value)"></label>
+      <label class="excel-field"><span>Invoice (manual)</span><input type="text" inputmode="decimal" value="${record.invoiceTotal ?? ''}" onchange="setExcelCalcValue('invoiceTotal', this.value)"></label>
+      <label class="excel-field"><span>Cash from hand</span><input type="text" inputmode="decimal" value="${record.cashFromHand ?? ''}" onchange="setExcelCalcValue('cashFromHand', this.value)"></label>
+      <label class="excel-field"><span>Zelle</span><input type="text" inputmode="decimal" value="${record.zelleAmount ?? ''}" onchange="setExcelCalcValue('zelleAmount', this.value)"></label>
+      <label class="excel-field"><span>Damaged Amount</span><input type="text" value="${formatCurrency(computed.totalLossValue)}" readonly></label>
     </div>
     <div class="excel-sheet-grid">
       <div class="excel-sheet-block">
@@ -1981,9 +1986,7 @@ function renderExcelCalculations() {
         <h4>Remaining And Damaged</h4>
         <table class="excel-calc-table excel-calc-summary-table">
           <tbody>
-            <tr><td>Remaining</td><td>${formatCurrency(computed.remainingValue)}</td></tr>
-            <tr><td>Damaged</td><td>${formatCurrency(computed.damagedAmount)}</td></tr>
-            <tr><td>Total</td><td>${formatCurrency(computed.totalLossValue)}</td></tr>
+            <tr><td>Damaged Amount</td><td>${formatCurrency(computed.totalLossValue)}</td></tr>
             <tr><td>Tally</td><td class="${computed.tallyValue < 0 ? 'warn' : ''}">${formatCurrency(computed.tallyValue)}</td></tr>
           </tbody>
         </table>
@@ -1993,7 +1996,7 @@ function renderExcelCalculations() {
 }
 
 function setExcelCalcValue(key, value) {
-  accounting2SetValue(key, value === '' ? '' : Number(value));
+  accounting2SetValue(key, value === '' ? '' : excelCalcMoneyValue(value));
 }
 
 function setExcelCalcCashCount(denomination, value) {
@@ -2009,7 +2012,11 @@ function setExcelCalcCashCount(denomination, value) {
 }
 
 function setExcelCalcProductMap(key, productId, value) {
-  accounting2SetMapValue(key, productId, value);
+  if (key === 'extraBoxes') {
+    accounting2SetMapValue(key, productId, Math.max(0, parseInt(value, 10) || 0));
+    return;
+  }
+  accounting2SetMapValue(key, productId, value === '' ? '' : excelCalcMoneyValue(value));
 }
 
 async function saveExcelCalculations() {
