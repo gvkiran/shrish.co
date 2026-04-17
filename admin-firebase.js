@@ -184,7 +184,7 @@ function accounting2CollectionRef() {
 }
 
 function accounting2Products() {
-  return getSortedProducts(state.products).filter((product) => !product.displayOnly);
+  return getSortedProducts(state.products).filter((product) => !product.displayOnly && normalizeProductCategory(product.category) === 'mangoes');
 }
 
 function accounting2ProductPrice(product) {
