@@ -186,10 +186,6 @@ function excelCalcMoneyValue(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function accounting2CollectionRef() {
-  return collection(db, 'accounting2_batches');
-}
-
 function accounting2Products() {
   return getSortedProducts(state.products).filter((product) => !product.displayOnly && normalizeProductCategory(product.category) === 'mangoes');
 }
@@ -209,7 +205,14 @@ function accounting2BatchName() {
 }
 
 function accounting2SavedRecord(batchName = accounting2BatchName()) {
-  return state.accounting2Records?.[batchName] || null;
+  return state.accounting2Records?.[batchName] || state.accountingBatches?.[batchName]?.excelCalculations || null;
+}
+
+function syncAccounting2RecordsFromBatches() {
+  state.accounting2Records = Object.entries(state.accountingBatches || {}).reduce((acc, [batchName, record]) => {
+    if (record?.excelCalculations) acc[batchName] = { batchName, ...record.excelCalculations };
+    return acc;
+  }, {});
 }
 
 function accounting2MutableMap(record = {}, key) {
@@ -221,9 +224,9 @@ function accounting2SetMapValue(key, productId, value) {
   const existing = accounting2SavedRecord(batchName) || {};
   const nextMap = {
     ...accounting2MutableMap(existing, key),
-    [productId]: Math.max(0, parseInt(value, 10) || 0)
+    [productId]: value
   };
-  if (nextMap[productId] === 0) delete nextMap[productId];
+  if (value === '' || value === 0 || value === '0') delete nextMap[productId];
   state.accounting2Records[batchName] = { ...existing, batchName, [key]: nextMap };
   renderExcelCalculations();
 }
@@ -2045,7 +2048,11 @@ async function saveExcelCalculations() {
   }
 
   try {
-    await setDoc(doc(db, 'accounting2_batches', batchName), payload, { merge: true });
+    await setDoc(doc(db, 'accounting_batches', batchName), {
+      batchName,
+      batchDate: payload.batchDate,
+      excelCalculations: payload
+    }, { merge: true });
     showToast('Excel calculations saved');
   } catch (error) {
     console.error(error);
@@ -2293,21 +2300,12 @@ function subscribeData() {
       acc[snap.id] = { id: snap.id, ...snap.data() };
       return acc;
     }, {});
+    syncAccounting2RecordsFromBatches();
     renderAccounting();
-  }, (error) => {
-    console.error(error);
-    showToast('Accounting batches sync failed');
-  });
-
-  state.unsubAccounting2Records = onSnapshot(accounting2CollectionRef(), (snapshot) => {
-    state.accounting2Records = snapshot.docs.reduce((acc, snap) => {
-      acc[snap.id] = { id: snap.id, ...snap.data() };
-      return acc;
-    }, {});
     renderExcelCalculations();
   }, (error) => {
     console.error(error);
-    showToast('Excel calculations sync failed');
+    showToast('Accounting batches sync failed');
   });
 }
 
