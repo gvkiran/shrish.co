@@ -263,6 +263,7 @@ function accounting2OrderedCounts(batchName = accounting2BatchName()) {
 function accounting2ComputedTotals(batchName = accounting2BatchName()) {
   const record = accounting2SavedRecord(batchName) || {};
   const products = accounting2Products();
+  const batchOrders = accounting2BatchOrders(batchName);
   const orderedCounts = accounting2OrderedCounts(batchName);
   const extraBoxes = accounting2MutableMap(record, 'extraBoxes');
   const remainingQty = accounting2MutableMap(record, 'remainingQty');
@@ -274,32 +275,45 @@ function accounting2ComputedTotals(batchName = accounting2BatchName()) {
     sum + (Number(denomination) * Math.max(0, parseInt(cashCounts[denomination], 10) || 0))
   ), 0);
   const cashSales = cashCountTotal - cashFromHand;
-  const unknownAmount = invoiceTotal - (cashSales + zelleAmount);
+  const batchOrderTotal = batchOrders.reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
+  const unknownAmount = batchOrderTotal - (cashSales + zelleAmount);
   const remainingValue = products.reduce((sum, product) => (
     sum + (accounting2ProductPrice(product) * Math.max(0, parseInt(remainingQty[product.id], 10) || 0))
   ), 0);
   const damagedAmount = moneyValue(record.damagedAmount);
   const orderedBoxesTotal = Object.values(orderedCounts).reduce((sum, qty) => sum + Number(qty || 0), 0);
   const extraBoxesTotal = Object.values(extraBoxes).reduce((sum, qty) => sum + Number(qty || 0), 0);
+  const extraBoxesValue = products.reduce((sum, product) => (
+    sum + (accounting2ProductPrice(product) * Math.max(0, parseInt(extraBoxes[product.id], 10) || 0))
+  ), 0);
+  const invoiceBalance = batchOrderTotal - invoiceTotal;
+  const receivedTotal = cashSales + zelleAmount;
+  const tallyValue = batchOrderTotal - receivedTotal - (remainingValue + damagedAmount);
 
   return {
     products,
+    batchOrders,
     orderedCounts,
     extraBoxes,
     remainingQty,
     cashCounts,
+    batchOrderTotal,
     invoiceTotal,
+    invoiceBalance,
     zelleAmount,
     cashFromHand,
     cashCountTotal,
     cashSales,
+    receivedTotal,
     unknownAmount,
     remainingValue,
     damagedAmount,
     orderedBoxesTotal,
     extraBoxesTotal,
+    extraBoxesValue,
     totalBoxesCount: orderedBoxesTotal + extraBoxesTotal,
-    totalLossValue: remainingValue + damagedAmount
+    totalLossValue: remainingValue + damagedAmount,
+    tallyValue
   };
 }
 
@@ -1844,30 +1858,44 @@ function renderExcelCalculations() {
 
   const computed = accounting2ComputedTotals(batchName);
   batchNameEl.textContent = batchName;
+  const batchOrdersCount = computed.batchOrders.length;
 
   statsEl.innerHTML = `
-    <div class="accounting-card"><div class="a-label">Batch Orders</div><div class="a-value">${accounting2BatchOrders(batchName).length}</div></div>
-    <div class="accounting-card"><div class="a-label">Ordered Boxes</div><div class="a-value">${computed.orderedBoxesTotal}</div></div>
+    <div class="accounting-card"><div class="a-label">Batch Orders</div><div class="a-value">${batchOrdersCount}</div></div>
+    <div class="accounting-card"><div class="a-label">Date</div><div class="a-value">${formatDate(dateInput.value)}</div></div>
     <div class="accounting-card"><div class="a-label">Extra Boxes</div><div class="a-value">${computed.extraBoxesTotal}</div></div>
     <div class="accounting-card"><div class="a-label">Total Box Count</div><div class="a-value">${computed.totalBoxesCount}</div></div>
-    <div class="accounting-card"><div class="a-label">Invoice</div><div class="a-value">${formatCurrency(computed.invoiceTotal)}</div></div>
-    <div class="accounting-card"><div class="a-label">Unknown</div><div class="a-value ${computed.unknownAmount < 0 ? 'warn' : ''}">${formatCurrency(computed.unknownAmount)}</div></div>
+    <div class="accounting-card"><div class="a-label">Total</div><div class="a-value">${formatCurrency(computed.batchOrderTotal)}</div></div>
+    <div class="accounting-card"><div class="a-label">Total Extra</div><div class="a-value">${formatCurrency(computed.extraBoxesValue)}</div></div>
+    <div class="accounting-card"><div class="a-label">Invoice Balance</div><div class="a-value ${computed.invoiceBalance < 0 ? 'warn' : ''}">${formatCurrency(computed.invoiceBalance)}</div></div>
+    <div class="accounting-card"><div class="a-label">Tally</div><div class="a-value ${computed.tallyValue < 0 ? 'warn' : ''}">${formatCurrency(computed.tallyValue)}</div></div>
   `;
 
   orderedBody.innerHTML = computed.products.map((product) => {
     const ordered = computed.orderedCounts[product.id] || 0;
     const extra = computed.extraBoxes[product.id] || 0;
     const total = ordered + extra;
+    const price = accounting2ProductPrice(product);
     return `
       <tr>
         <td><strong>${escapeHtml(product.name || '')}</strong></td>
         <td>${ordered}</td>
         <td><input type="number" min="0" step="1" value="${extra}" onchange="setExcelCalcProductMap('extraBoxes','${escapeHtml(product.id)}', this.value)"></td>
         <td>${total}</td>
-        <td>${formatCurrency(accounting2ProductPrice(product))}</td>
+        <td>${formatCurrency(price)}</td>
+        <td>${formatCurrency(total * price)}</td>
       </tr>
     `;
-  }).join('');
+  }).join('') + `
+    <tr class="excel-calc-total-row">
+      <td><strong>Total</strong></td>
+      <td><strong>${computed.orderedBoxesTotal}</strong></td>
+      <td><strong>${computed.extraBoxesTotal}</strong></td>
+      <td><strong>${computed.totalBoxesCount}</strong></td>
+      <td></td>
+      <td><strong>${formatCurrency(computed.batchOrderTotal + computed.extraBoxesValue)}</strong></td>
+    </tr>
+  `;
 
   cashBody.innerHTML = accounting2DefaultDenominations().map((denomination) => {
     const count = computed.cashCounts[denomination] || 0;
@@ -1879,33 +1907,87 @@ function renderExcelCalculations() {
         <td>${formatCurrency(total)}</td>
       </tr>
     `;
-  }).join('');
+  }).join('') + `
+    <tr class="excel-calc-total-row">
+      <td><strong>Total</strong></td>
+      <td></td>
+      <td><strong>${formatCurrency(computed.cashCountTotal)}</strong></td>
+    </tr>
+  `;
 
   remainingBody.innerHTML = computed.products.map((product) => {
     const qty = computed.remainingQty[product.id] || 0;
-    const total = qty * accounting2ProductPrice(product);
+    const price = accounting2ProductPrice(product);
+    const total = qty * price;
     return `
       <tr>
         <td><strong>${escapeHtml(product.name || '')}</strong></td>
         <td><input type="number" min="0" step="1" value="${qty}" onchange="setExcelCalcProductMap('remainingQty','${escapeHtml(product.id)}', this.value)"></td>
+        <td>${formatCurrency(price)}</td>
         <td>${formatCurrency(total)}</td>
       </tr>
     `;
-  }).join('');
+  }).join('') + `
+    <tr class="excel-calc-total-row">
+      <td><strong>Total</strong></td>
+      <td></td>
+      <td></td>
+      <td><strong>${formatCurrency(computed.remainingValue)}</strong></td>
+    </tr>
+  `;
 
   summaryEl.innerHTML = `
     <div class="excel-summary-grid">
-      <label class="excel-field"><span>Invoice (manual)</span><input type="number" min="0" step="0.01" value="${computed.invoiceTotal || ''}" oninput="setExcelCalcValue('invoiceTotal', this.value)"></label>
+      <label class="excel-field"><span>Invoice (manual)</span><input type="number" min="0" step="0.01" value="${record.invoiceTotal ?? ''}" oninput="setExcelCalcValue('invoiceTotal', this.value)"></label>
       <label class="excel-field"><span>Cash from hand</span><input type="number" step="0.01" value="${record.cashFromHand ?? ''}" oninput="setExcelCalcValue('cashFromHand', this.value)"></label>
-      <label class="excel-field"><span>Zelle</span><input type="number" min="0" step="0.01" value="${computed.zelleAmount || ''}" oninput="setExcelCalcValue('zelleAmount', this.value)"></label>
-      <label class="excel-field"><span>Damaged Amount</span><input type="number" min="0" step="0.01" value="${computed.damagedAmount || ''}" oninput="setExcelCalcValue('damagedAmount', this.value)"></label>
+      <label class="excel-field"><span>Zelle</span><input type="number" min="0" step="0.01" value="${record.zelleAmount ?? ''}" oninput="setExcelCalcValue('zelleAmount', this.value)"></label>
+      <label class="excel-field"><span>Damaged Amount</span><input type="number" min="0" step="0.01" value="${record.damagedAmount ?? ''}" oninput="setExcelCalcValue('damagedAmount', this.value)"></label>
     </div>
-    <div class="excel-summary-strip">
-      <span class="summary-chip"><strong>Cash Counted:</strong> ${formatCurrency(computed.cashCountTotal)}</span>
-      <span class="summary-chip"><strong>Cash Sales:</strong> ${formatCurrency(computed.cashSales)}</span>
-      <span class="summary-chip"><strong>Total Received:</strong> ${formatCurrency(computed.cashSales + computed.zelleAmount)}</span>
-      <span class="summary-chip"><strong>Unknown:</strong> ${formatCurrency(computed.unknownAmount)}</span>
-      <span class="summary-chip"><strong>Remaining + Damaged:</strong> ${formatCurrency(computed.totalLossValue)}</span>
+    <div class="excel-sheet-grid">
+      <div class="excel-sheet-block">
+        <h4>Daily Total</h4>
+        <table class="excel-calc-table excel-calc-summary-table">
+          <tbody>
+            <tr><td>Date</td><td>${formatDate(dateInput.value)}</td></tr>
+            <tr><td>Total Box Count</td><td>${computed.totalBoxesCount}</td></tr>
+            <tr><td>Total</td><td>${formatCurrency(computed.batchOrderTotal)}</td></tr>
+            <tr><td>Total Extra</td><td>${formatCurrency(computed.extraBoxesValue)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="excel-sheet-block">
+        <h4>Invoice</h4>
+        <table class="excel-calc-table excel-calc-summary-table">
+          <tbody>
+            <tr><td>Invoice</td><td>${formatCurrency(computed.invoiceTotal)}</td></tr>
+            <tr><td>Balance</td><td>${formatCurrency(computed.invoiceBalance)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="excel-sheet-block">
+        <h4>Payment Summary</h4>
+        <table class="excel-calc-table excel-calc-summary-table">
+          <tbody>
+            <tr><td>Cash Counted</td><td>${formatCurrency(computed.cashCountTotal)}</td></tr>
+            <tr><td>Cash from hand</td><td>${formatCurrency(computed.cashFromHand)}</td></tr>
+            <tr><td>Cash</td><td class="${computed.cashSales < 0 ? 'warn' : ''}">${formatCurrency(computed.cashSales)}</td></tr>
+            <tr><td>Zelle</td><td>${formatCurrency(computed.zelleAmount)}</td></tr>
+            <tr><td>Received</td><td>${formatCurrency(computed.receivedTotal)}</td></tr>
+            <tr><td>Unknown</td><td class="${computed.unknownAmount < 0 ? 'warn' : ''}">${formatCurrency(computed.unknownAmount)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="excel-sheet-block">
+        <h4>Remaining And Damaged</h4>
+        <table class="excel-calc-table excel-calc-summary-table">
+          <tbody>
+            <tr><td>Remaining</td><td>${formatCurrency(computed.remainingValue)}</td></tr>
+            <tr><td>Damaged</td><td>${formatCurrency(computed.damagedAmount)}</td></tr>
+            <tr><td>Total</td><td>${formatCurrency(computed.totalLossValue)}</td></tr>
+            <tr><td>Tally</td><td class="${computed.tallyValue < 0 ? 'warn' : ''}">${formatCurrency(computed.tallyValue)}</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   `;
 }

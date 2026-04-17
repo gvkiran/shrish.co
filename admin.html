@@ -582,10 +582,47 @@
       flex-wrap: wrap;
       gap: 10px;
     }
+    .excel-sheet-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(240px, 1fr));
+      gap: 14px;
+    }
+    .excel-sheet-block {
+      border: 1px solid rgba(200,121,26,0.12);
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px;
+    }
+    .excel-sheet-block h4 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-light);
+    }
+    .excel-calc-summary-table {
+      min-width: 0;
+    }
+    .excel-calc-summary-table td:last-child {
+      text-align: right;
+      font-weight: 700;
+      color: var(--dark);
+    }
+    .excel-calc-total-row td {
+      font-weight: 700;
+      background: rgba(246, 229, 200, 0.3);
+    }
+    .warn {
+      color: #C62828 !important;
+    }
 
     @media (max-width: 900px) {
       .excel-summary-grid {
         grid-template-columns: repeat(2, minmax(140px, 1fr));
+      }
+      .excel-sheet-grid {
+        grid-template-columns: 1fr;
       }
     }
     @media (max-width: 560px) {
@@ -1463,7 +1500,7 @@
         <div class="excel-calc-toolbar">
           <div class="excel-calc-copy">
             <h2>Excel Calculations</h2>
-            <p>Uses batch orders for ordered boxes and lets you enter extras, invoice, cash on hand, zelle, remaining, and damaged values in your sheet style.</p>
+            <p>Rebuilt from your calculation sheet logic using only mango batch orders, manual extras, invoice, cash, zelle, remaining, and damaged values.</p>
           </div>
           <div class="toolbar-actions">
             <input type="date" id="excelCalcDate" class="filter-input">
@@ -1478,7 +1515,7 @@
         <div class="excel-calc-stack">
           <div class="excel-calc-card">
             <h3>Batch Box Count</h3>
-            <p>Ordered boxes come from the selected batch. Extra boxes are manual.</p>
+            <p>Ordered boxes come from the selected batch. Extra boxes stay manual, just like your sheet.</p>
             <div class="excel-calc-table-wrap">
               <table class="excel-calc-table">
                 <thead>
@@ -1488,6 +1525,7 @@
                     <th>Extra Boxes</th>
                     <th>Total Boxes</th>
                     <th>Price</th>
+                    <th>Total Value</th>
                   </tr>
                 </thead>
                 <tbody id="excelCalcOrderedBody"></tbody>
@@ -1521,6 +1559,7 @@
                   <tr>
                     <th>Product</th>
                     <th>Remaining Qty</th>
+                    <th>Price</th>
                     <th>Value</th>
                   </tr>
                 </thead>
@@ -1531,7 +1570,7 @@
 
           <div class="excel-calc-card">
             <h3>Summary</h3>
-            <p>Unknown is calculated as Invoice minus Cash Sales minus Zelle.</p>
+            <p>Unknown is calculated as total batch sales minus cash minus zelle, with tally reduced by remaining and damaged values.</p>
             <div id="excelCalcSummary"></div>
           </div>
         </div>
