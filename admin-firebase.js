@@ -23,7 +23,7 @@ import {
 
 const BASE_PRODUCTS = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || []));
 const GO_LIVE_STATS_DATE = '2026-04-10';
-const EXCEL_CALC_STORE_DOC_ID = 'excel_calculations_store';
+const EXCEL_CALC_DOC_PREFIX = 'excel_sheet__';
 
 const state = {
   orders: [],
@@ -209,15 +209,24 @@ function accounting2SavedRecord(batchName = accounting2BatchName()) {
   return state.accounting2Records?.[batchName] || null;
 }
 
+function accounting2DocId(batchName = accounting2BatchName()) {
+  return `${EXCEL_CALC_DOC_PREFIX}${batchName}`;
+}
+
 function syncAccounting2RecordsFromBatches() {
   state.accounting2Records = {
     ...state.accounting2Records,
-    ...((state.accountingBatches?.[EXCEL_CALC_STORE_DOC_ID]?.sheets) || {})
+    ...Object.values(state.accountingBatches || {}).reduce((acc, record) => {
+      if (record?.recordType === 'excel_sheet' && record?.batchName) {
+        acc[record.batchName] = { ...record };
+      }
+      return acc;
+    }, {})
   };
 }
 
 function accounting2SavedSheetNames() {
-  return Object.keys(state.accountingBatches?.[EXCEL_CALC_STORE_DOC_ID]?.sheets || {}).filter(Boolean).sort((a, b) => String(b).localeCompare(String(a)));
+  return Object.keys(state.accounting2Records || {}).filter(Boolean).sort((a, b) => String(b).localeCompare(String(a)));
 }
 
 function accounting2NextSequence(dateValue = todayDateInputValue()) {
@@ -387,7 +396,11 @@ function getAccountingBatchRecord(batchName) {
 }
 
 function getAllAccountingBatchNames() {
-  const names = new Set(Object.keys(state.accountingBatches || {}).filter((name) => name !== EXCEL_CALC_STORE_DOC_ID));
+  const names = new Set(
+    Object.entries(state.accountingBatches || {})
+      .filter(([name, record]) => record?.recordType !== 'excel_sheet' && !String(name).startsWith(EXCEL_CALC_DOC_PREFIX) && name !== 'excel_calculations_store')
+      .map(([name]) => name)
+  );
   state.orders.forEach((order) => {
     if (order?.accountingBatch) names.add(order.accountingBatch);
   });
@@ -2193,11 +2206,10 @@ async function saveExcelCalculations() {
   }
 
   try {
-    await setDoc(doc(db, 'accounting_batches', EXCEL_CALC_STORE_DOC_ID), {
-      sheets: {
-        [batchName]: payload
-      },
-      updatedAt: payload.updatedAt
+    await setDoc(doc(db, 'accounting_batches', accounting2DocId(batchName)), {
+      ...payload,
+      recordType: 'excel_sheet',
+      sheetName: batchName
     }, { merge: true });
     state.accounting2Records[batchName] = payload;
     showToast('Excel calculations saved');
