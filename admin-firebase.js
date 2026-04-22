@@ -23,7 +23,7 @@ import {
 
 const BASE_PRODUCTS = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || []));
 const GO_LIVE_STATS_DATE = '2026-04-10';
-const EXCEL_CALC_STORE_DOC_ID = '__excel_calculations__';
+const EXCEL_CALC_STORE_DOC_ID = 'excel_calculations_store';
 
 const state = {
   orders: [],
