@@ -1500,13 +1500,17 @@
         <div class="excel-calc-toolbar">
           <div class="excel-calc-copy">
             <h2>Excel Calculations</h2>
-            <p>Rebuilt from your calculation sheet logic using only mango batch orders, manual extras, invoice, cash, zelle, remaining, and damaged values.</p>
+            <p>Manual calculation sheet. Save each sheet, open an older one to edit, or start a new sheet without affecting orders or accounting.</p>
           </div>
           <div class="toolbar-actions">
+            <select id="excelCalcSavedSheet" class="filter-input" onchange="setExcelCalcSheet(this.value)">
+              <option value="">Current Sheet</option>
+            </select>
             <input type="date" id="excelCalcDate" class="filter-input">
             <input type="number" id="excelCalcBatchSeq" class="filter-input" min="1" step="1" value="1" style="width:92px">
             <div class="excel-calc-batch" id="excelCalcBatchName">SHR-BATCH-YYYY-MM-DD_1</div>
-            <button class="toolbar-btn" id="excelCalcSaveBtn" onclick="saveExcelCalculations()">Save Excel Calculations</button>
+            <button class="toolbar-btn" type="button" onclick="newExcelCalculationsSheet()">New Sheet</button>
+            <button class="toolbar-btn" id="excelCalcSaveBtn" onclick="saveExcelCalculations()">Save Sheet</button>
           </div>
         </div>
 
@@ -1515,7 +1519,7 @@
         <div class="excel-calc-stack">
           <div class="excel-calc-card">
             <h3>Batch Box Count</h3>
-            <p>Ordered boxes come from the selected batch. Extra boxes stay manual, just like your sheet.</p>
+            <p>Everything here is manual. Enter ordered boxes, extras, and prices the way you use the spreadsheet.</p>
             <div class="excel-calc-table-wrap">
               <table class="excel-calc-table">
                 <thead>

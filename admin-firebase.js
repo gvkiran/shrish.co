@@ -23,6 +23,7 @@ import {
 
 const BASE_PRODUCTS = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || []));
 const GO_LIVE_STATS_DATE = '2026-04-10';
+const EXCEL_CALC_STORE_DOC_ID = '__excel_calculations__';
 
 const state = {
   orders: [],
@@ -205,14 +206,46 @@ function accounting2BatchName() {
 }
 
 function accounting2SavedRecord(batchName = accounting2BatchName()) {
-  return state.accounting2Records?.[batchName] || state.accountingBatches?.[batchName]?.excelCalculations || null;
+  return state.accounting2Records?.[batchName] || null;
 }
 
 function syncAccounting2RecordsFromBatches() {
-  state.accounting2Records = Object.entries(state.accountingBatches || {}).reduce((acc, [batchName, record]) => {
-    if (record?.excelCalculations) acc[batchName] = { batchName, ...record.excelCalculations };
-    return acc;
-  }, {});
+  state.accounting2Records = {
+    ...state.accounting2Records,
+    ...((state.accountingBatches?.[EXCEL_CALC_STORE_DOC_ID]?.sheets) || {})
+  };
+}
+
+function accounting2SavedSheetNames() {
+  return Object.keys(state.accountingBatches?.[EXCEL_CALC_STORE_DOC_ID]?.sheets || {}).filter(Boolean).sort((a, b) => String(b).localeCompare(String(a)));
+}
+
+function accounting2NextSequence(dateValue = todayDateInputValue()) {
+  const prefix = `SHR-BATCH-${dateValue}_`;
+  const existingSeqs = accounting2SavedSheetNames()
+    .filter((name) => name.startsWith(prefix))
+    .map((name) => Math.max(1, parseInt(name.split('_')[1] || '1', 10) || 1));
+  return existingSeqs.length ? (Math.max(...existingSeqs) + 1) : 1;
+}
+
+function setExcelCalcSheet(batchName = '') {
+  if (!batchName) return;
+  const parsed = parseBatchName(batchName);
+  const dateInput = document.getElementById('excelCalcDate');
+  const seqInput = document.getElementById('excelCalcBatchSeq');
+  if (parsed.date && dateInput) dateInput.value = parsed.date;
+  if (seqInput) seqInput.value = String(parsed.sequence || 1);
+  renderExcelCalculations();
+}
+
+function newExcelCalculationsSheet() {
+  const dateInput = document.getElementById('excelCalcDate');
+  const seqInput = document.getElementById('excelCalcBatchSeq');
+  const dateValue = dateInput?.value || todayDateInputValue();
+  const nextSeq = accounting2NextSequence(dateValue);
+  if (dateInput && !dateInput.value) dateInput.value = dateValue;
+  if (seqInput) seqInput.value = String(nextSeq);
+  renderExcelCalculations();
 }
 
 function accounting2MutableMap(record = {}, key) {
@@ -273,10 +306,10 @@ function accounting2OrderedCounts(batchName = accounting2BatchName()) {
 function accounting2ComputedTotals(batchName = accounting2BatchName()) {
   const record = accounting2SavedRecord(batchName) || {};
   const products = accounting2Products();
-  const batchOrders = accounting2BatchOrders(batchName);
-  const orderedCounts = accounting2OrderedCounts(batchName);
+  const orderedCounts = accounting2MutableMap(record, 'orderedBoxes');
   const extraBoxes = accounting2MutableMap(record, 'extraBoxes');
   const remainingQty = accounting2MutableMap(record, 'remainingQty');
+  const productPrices = accounting2MutableMap(record, 'productPrices');
   const invoiceTotal = moneyValue(record.invoiceTotal);
   const zelleAmount = moneyValue(record.zelleAmount);
   const cashFromHand = moneyValue(record.cashFromHand);
@@ -285,7 +318,9 @@ function accounting2ComputedTotals(batchName = accounting2BatchName()) {
     sum + (Number(denomination) * Math.max(0, parseInt(cashCounts[denomination], 10) || 0))
   ), 0);
   const cashSales = cashCountTotal - cashFromHand;
-  const batchOrderTotal = batchOrders.reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
+  const batchOrderTotal = products.reduce((sum, product) => (
+    sum + (Math.max(0, Number(orderedCounts[product.id] || 0)) * moneyValue(productPrices[product.id] ?? accounting2ProductPrice(product)))
+  ), 0);
   const unknownAmount = batchOrderTotal - (cashSales + zelleAmount);
   const remainingValue = products.reduce((sum, product) => (
     sum + Math.max(0, excelCalcMoneyValue(remainingQty[product.id]))
@@ -294,7 +329,7 @@ function accounting2ComputedTotals(batchName = accounting2BatchName()) {
   const orderedBoxesTotal = Object.values(orderedCounts).reduce((sum, qty) => sum + Number(qty || 0), 0);
   const extraBoxesTotal = Object.values(extraBoxes).reduce((sum, qty) => sum + Number(qty || 0), 0);
   const extraBoxesValue = products.reduce((sum, product) => (
-    sum + (accounting2ProductPrice(product) * Math.max(0, parseInt(extraBoxes[product.id], 10) || 0))
+    sum + (moneyValue(productPrices[product.id] ?? accounting2ProductPrice(product)) * Math.max(0, parseInt(extraBoxes[product.id], 10) || 0))
   ), 0);
   const invoiceBalance = batchOrderTotal - invoiceTotal;
   const receivedTotal = cashSales + zelleAmount;
@@ -302,10 +337,10 @@ function accounting2ComputedTotals(batchName = accounting2BatchName()) {
 
   return {
     products,
-    batchOrders,
     orderedCounts,
     extraBoxes,
     remainingQty,
+    productPrices,
     cashCounts,
     batchOrderTotal,
     invoiceTotal,
@@ -336,7 +371,7 @@ function getAccountingBatchRecord(batchName) {
 }
 
 function getAllAccountingBatchNames() {
-  const names = new Set(Object.keys(state.accountingBatches || {}));
+  const names = new Set(Object.keys(state.accountingBatches || {}).filter((name) => name !== EXCEL_CALC_STORE_DOC_ID));
   state.orders.forEach((order) => {
     if (order?.accountingBatch) names.add(order.accountingBatch);
   });
@@ -1851,12 +1886,13 @@ function renderExcelCalculations() {
   const dateInput = document.getElementById('excelCalcDate');
   const seqInput = document.getElementById('excelCalcBatchSeq');
   const batchNameEl = document.getElementById('excelCalcBatchName');
+  const savedSheetSelect = document.getElementById('excelCalcSavedSheet');
   const orderedBody = document.getElementById('excelCalcOrderedBody');
   const cashBody = document.getElementById('excelCalcCashBody');
   const remainingBody = document.getElementById('excelCalcRemainingBody');
   const statsEl = document.getElementById('excelCalcStats');
   const summaryEl = document.getElementById('excelCalcSummary');
-  if (!dateInput || !seqInput || !batchNameEl || !orderedBody || !cashBody || !remainingBody || !statsEl || !summaryEl) return;
+  if (!dateInput || !seqInput || !batchNameEl || !savedSheetSelect || !orderedBody || !cashBody || !remainingBody || !statsEl || !summaryEl) return;
 
   if (!dateInput.value) dateInput.value = todayDateInputValue();
   const safeSeq = Math.max(1, parseInt(seqInput.value || '1', 10) || 1);
@@ -1868,11 +1904,17 @@ function renderExcelCalculations() {
 
   const computed = accounting2ComputedTotals(batchName);
   batchNameEl.textContent = batchName;
-  const batchOrdersCount = computed.batchOrders.length;
+  const savedSheetNames = accounting2SavedSheetNames();
+
+  savedSheetSelect.innerHTML = [
+    `<option value="" ${savedSheetNames.includes(batchName) ? '' : 'selected'}>Current Sheet</option>`,
+    ...savedSheetNames.map((name) => `<option value="${escapeHtml(name)}" ${name === batchName ? 'selected' : ''}>${escapeHtml(name)}</option>`)
+  ].join('');
 
   statsEl.innerHTML = `
-    <div class="accounting-card"><div class="a-label">Batch Orders</div><div class="a-value">${batchOrdersCount}</div></div>
+    <div class="accounting-card"><div class="a-label">Saved Sheets</div><div class="a-value">${savedSheetNames.length}</div></div>
     <div class="accounting-card"><div class="a-label">Date</div><div class="a-value">${formatDate(dateInput.value)}</div></div>
+    <div class="accounting-card"><div class="a-label">Ordered Boxes</div><div class="a-value">${computed.orderedBoxesTotal}</div></div>
     <div class="accounting-card"><div class="a-label">Extra Boxes</div><div class="a-value">${computed.extraBoxesTotal}</div></div>
     <div class="accounting-card"><div class="a-label">Total Box Count</div><div class="a-value">${computed.totalBoxesCount}</div></div>
     <div class="accounting-card"><div class="a-label">Total</div><div class="a-value">${formatCurrency(computed.batchOrderTotal)}</div></div>
@@ -1882,18 +1924,18 @@ function renderExcelCalculations() {
   `;
 
   orderedBody.innerHTML = computed.products.map((product) => {
-    const ordered = computed.orderedCounts[product.id] || 0;
+    const ordered = computed.orderedCounts[product.id] ?? '';
     const extra = computed.extraBoxes[product.id] || 0;
-    const total = ordered + extra;
-    const price = accounting2ProductPrice(product);
+    const total = Number(ordered || 0) + Number(extra || 0);
+    const price = computed.productPrices[product.id] ?? accounting2ProductPrice(product);
     return `
       <tr>
         <td><strong>${escapeHtml(product.name || '')}</strong></td>
-        <td>${ordered}</td>
+        <td><input type="number" min="0" step="1" value="${ordered}" onchange="setExcelCalcProductMap('orderedBoxes','${escapeHtml(product.id)}', this.value)"></td>
         <td><input type="number" min="0" step="1" value="${extra}" onchange="setExcelCalcProductMap('extraBoxes','${escapeHtml(product.id)}', this.value)"></td>
         <td>${total}</td>
-        <td>${formatCurrency(price)}</td>
-        <td>${formatCurrency(total * price)}</td>
+        <td><input type="text" inputmode="decimal" value="${price}" onchange="setExcelCalcProductMap('productPrices','${escapeHtml(product.id)}', this.value)"></td>
+        <td>${formatCurrency(total * moneyValue(price))}</td>
       </tr>
     `;
   }).join('') + `
@@ -2015,8 +2057,12 @@ function setExcelCalcCashCount(denomination, value) {
 }
 
 function setExcelCalcProductMap(key, productId, value) {
-  if (key === 'extraBoxes') {
+  if (key === 'extraBoxes' || key === 'orderedBoxes') {
     accounting2SetMapValue(key, productId, Math.max(0, parseInt(value, 10) || 0));
+    return;
+  }
+  if (key === 'productPrices') {
+    accounting2SetMapValue(key, productId, value === '' ? '' : excelCalcMoneyValue(value));
     return;
   }
   accounting2SetMapValue(key, productId, value === '' ? '' : excelCalcMoneyValue(value));
@@ -2032,11 +2078,13 @@ async function saveExcelCalculations() {
   const payload = {
     batchName,
     batchDate: dateInput.value || todayDateInputValue(),
+    orderedBoxes: accounting2MutableMap(existing, 'orderedBoxes'),
     invoiceTotal: moneyValue(existing.invoiceTotal),
     cashFromHand: Number(existing.cashFromHand || 0),
     zelleAmount: moneyValue(existing.zelleAmount),
     damagedAmount: moneyValue(existing.damagedAmount),
     extraBoxes: accounting2MutableMap(existing, 'extraBoxes'),
+    productPrices: accounting2MutableMap(existing, 'productPrices'),
     remainingQty: accounting2MutableMap(existing, 'remainingQty'),
     cashCounts: accounting2MutableMap(existing, 'cashCounts'),
     updatedAt: new Date().toISOString()
@@ -2048,11 +2096,13 @@ async function saveExcelCalculations() {
   }
 
   try {
-    await setDoc(doc(db, 'accounting_batches', batchName), {
-      batchName,
-      batchDate: payload.batchDate,
-      excelCalculations: payload
+    await setDoc(doc(db, 'accounting_batches', EXCEL_CALC_STORE_DOC_ID), {
+      sheets: {
+        [batchName]: payload
+      },
+      updatedAt: payload.updatedAt
     }, { merge: true });
+    state.accounting2Records[batchName] = payload;
     showToast('Excel calculations saved');
   } catch (error) {
     console.error(error);
@@ -2412,6 +2462,8 @@ window.removeOrderDraftItem = removeOrderDraftItem;
 window.addOrderDraftItem = addOrderDraftItem;
 window.saveEditedOrder = saveEditedOrder;
 window.renderExcelCalculations = renderExcelCalculations;
+window.setExcelCalcSheet = setExcelCalcSheet;
+window.newExcelCalculationsSheet = newExcelCalculationsSheet;
 window.setExcelCalcValue = setExcelCalcValue;
 window.setExcelCalcCashCount = setExcelCalcCashCount;
 window.setExcelCalcProductMap = setExcelCalcProductMap;
