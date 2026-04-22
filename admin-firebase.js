@@ -248,6 +248,22 @@ function newExcelCalculationsSheet() {
   renderExcelCalculations();
 }
 
+function accounting2SheetProducts(products = []) {
+  const usedCodes = new Set();
+  return products.map((product, index) => {
+    const letters = String(product?.name || '').toUpperCase().match(/[A-Z]/g) || [];
+    const baseCode = letters[0] || String(index + 1);
+    let code = baseCode;
+    let suffix = 2;
+    while (usedCodes.has(code)) {
+      code = `${baseCode}${suffix}`;
+      suffix += 1;
+    }
+    usedCodes.add(code);
+    return { product, code };
+  });
+}
+
 function accounting2MutableMap(record = {}, key) {
   return { ...(record?.[key] || {}) };
 }
@@ -1887,12 +1903,8 @@ function renderExcelCalculations() {
   const seqInput = document.getElementById('excelCalcBatchSeq');
   const batchNameEl = document.getElementById('excelCalcBatchName');
   const savedSheetSelect = document.getElementById('excelCalcSavedSheet');
-  const orderedBody = document.getElementById('excelCalcOrderedBody');
-  const cashBody = document.getElementById('excelCalcCashBody');
-  const remainingBody = document.getElementById('excelCalcRemainingBody');
-  const statsEl = document.getElementById('excelCalcStats');
-  const summaryEl = document.getElementById('excelCalcSummary');
-  if (!dateInput || !seqInput || !batchNameEl || !savedSheetSelect || !orderedBody || !cashBody || !remainingBody || !statsEl || !summaryEl) return;
+  const sheetEl = document.getElementById('excelCalcSheet');
+  if (!dateInput || !seqInput || !batchNameEl || !savedSheetSelect || !sheetEl) return;
 
   if (!dateInput.value) dateInput.value = todayDateInputValue();
   const safeSeq = Math.max(1, parseInt(seqInput.value || '1', 10) || 1);
@@ -1905,136 +1917,221 @@ function renderExcelCalculations() {
   const computed = accounting2ComputedTotals(batchName);
   batchNameEl.textContent = batchName;
   const savedSheetNames = accounting2SavedSheetNames();
+  const sheetProducts = accounting2SheetProducts(computed.products);
+  const balanceLeft = computed.batchOrderTotal - computed.receivedTotal;
+  const countedTotal = computed.cashCountTotal + computed.zelleAmount;
 
   savedSheetSelect.innerHTML = [
     `<option value="" ${savedSheetNames.includes(batchName) ? '' : 'selected'}>Current Sheet</option>`,
     ...savedSheetNames.map((name) => `<option value="${escapeHtml(name)}" ${name === batchName ? 'selected' : ''}>${escapeHtml(name)}</option>`)
   ].join('');
 
-  statsEl.innerHTML = `
-    <div class="accounting-card"><div class="a-label">Saved Sheets</div><div class="a-value">${savedSheetNames.length}</div></div>
-    <div class="accounting-card"><div class="a-label">Date</div><div class="a-value">${formatDate(dateInput.value)}</div></div>
-    <div class="accounting-card"><div class="a-label">Ordered Boxes</div><div class="a-value">${computed.orderedBoxesTotal}</div></div>
-    <div class="accounting-card"><div class="a-label">Extra Boxes</div><div class="a-value">${computed.extraBoxesTotal}</div></div>
-    <div class="accounting-card"><div class="a-label">Total Box Count</div><div class="a-value">${computed.totalBoxesCount}</div></div>
-    <div class="accounting-card"><div class="a-label">Total</div><div class="a-value">${formatCurrency(computed.batchOrderTotal)}</div></div>
-    <div class="accounting-card"><div class="a-label">Total Extra</div><div class="a-value">${formatCurrency(computed.extraBoxesValue)}</div></div>
-    <div class="accounting-card"><div class="a-label">Invoice Balance</div><div class="a-value ${computed.invoiceBalance < 0 ? 'warn' : ''}">${formatCurrency(computed.invoiceBalance)}</div></div>
-    <div class="accounting-card"><div class="a-label">Tally</div><div class="a-value ${computed.tallyValue < 0 ? 'warn' : ''}">${formatCurrency(computed.tallyValue)}</div></div>
-  `;
+  const columnHeaders = sheetProducts.map(({ product, code }) => `
+    <th title="${escapeHtml(product.name || '')}">${escapeHtml(code)}</th>
+  `).join('');
 
-  orderedBody.innerHTML = computed.products.map((product) => {
-    const ordered = computed.orderedCounts[product.id] ?? '';
-    const extra = computed.extraBoxes[product.id] || 0;
-    const total = Number(ordered || 0) + Number(extra || 0);
-    const price = computed.productPrices[product.id] ?? accounting2ProductPrice(product);
-    return `
-      <tr>
-        <td><strong>${escapeHtml(product.name || '')}</strong></td>
-        <td><input type="number" min="0" step="1" value="${ordered}" onchange="setExcelCalcProductMap('orderedBoxes','${escapeHtml(product.id)}', this.value)"></td>
-        <td><input type="number" min="0" step="1" value="${extra}" onchange="setExcelCalcProductMap('extraBoxes','${escapeHtml(product.id)}', this.value)"></td>
-        <td>${total}</td>
-        <td><input type="text" inputmode="decimal" value="${price}" onchange="setExcelCalcProductMap('productPrices','${escapeHtml(product.id)}', this.value)"></td>
-        <td>${formatCurrency(total * moneyValue(price))}</td>
-      </tr>
-    `;
-  }).join('') + `
-    <tr class="excel-calc-total-row">
-      <td><strong>Total</strong></td>
-      <td><strong>${computed.orderedBoxesTotal}</strong></td>
-      <td><strong>${computed.extraBoxesTotal}</strong></td>
-      <td><strong>${computed.totalBoxesCount}</strong></td>
-      <td></td>
-      <td><strong>${formatCurrency(computed.batchOrderTotal + computed.extraBoxesValue)}</strong></td>
+  const extraValueCells = sheetProducts.map(({ product }) => `
+    <td><input type="number" min="0" step="1" value="${computed.extraBoxes[product.id] || ''}" onchange="setExcelCalcProductMap('extraBoxes','${escapeHtml(product.id)}', this.value)"></td>
+  `).join('');
+
+  const orderedValueCells = sheetProducts.map(({ product }) => `
+    <td><input type="number" min="0" step="1" value="${computed.orderedCounts[product.id] ?? ''}" onchange="setExcelCalcProductMap('orderedBoxes','${escapeHtml(product.id)}', this.value)"></td>
+  `).join('');
+
+  const priceRows = sheetProducts.map(({ product, code }) => `
+    <tr>
+      <td title="${escapeHtml(product.name || '')}">${escapeHtml(code)}</td>
+      <td><input type="text" inputmode="decimal" value="${computed.productPrices[product.id] ?? accounting2ProductPrice(product)}" onchange="setExcelCalcProductMap('productPrices','${escapeHtml(product.id)}', this.value)"></td>
     </tr>
-  `;
+  `).join('');
 
-  cashBody.innerHTML = accounting2DefaultDenominations().map((denomination) => {
-    const count = computed.cashCounts[denomination] || 0;
-    const total = Number(denomination) * Number(count || 0);
+  const cashRows = accounting2DefaultDenominations().map((denomination) => {
+    const count = computed.cashCounts[denomination] || '';
     return `
       <tr>
         <td>${formatCurrency(denomination)}</td>
         <td><input type="number" min="0" step="1" value="${count}" onchange="setExcelCalcCashCount('${denomination}', this.value)"></td>
-        <td>${formatCurrency(total)}</td>
+        <td>${formatCurrency(Number(denomination) * Number(count || 0))}</td>
       </tr>
     `;
-  }).join('') + `
-    <tr class="excel-calc-total-row">
-      <td><strong>Total</strong></td>
-      <td></td>
-      <td><strong>${formatCurrency(computed.cashCountTotal)}</strong></td>
-    </tr>
-  `;
+  }).join('');
 
-  remainingBody.innerHTML = computed.products.map((product) => {
-    const amount = computed.remainingQty[product.id] ?? '';
-    return `
-      <tr>
-        <td><strong>${escapeHtml(product.name || '')}</strong></td>
-        <td><input type="text" inputmode="decimal" value="${amount}" onchange="setExcelCalcProductMap('remainingQty','${escapeHtml(product.id)}', this.value)"></td>
-      </tr>
-    `;
-  }).join('') + `
+  const remainingRows = sheetProducts.map(({ product }) => `
     <tr>
-      <td><strong>Damaged</strong></td>
-      <td><input type="text" inputmode="decimal" value="${record.damagedAmount ?? ''}" onchange="setExcelCalcValue('damagedAmount', this.value)"></td>
+      <td>${escapeHtml(product.name || '')}</td>
+      <td><input type="text" inputmode="decimal" value="${computed.remainingQty[product.id] ?? ''}" onchange="setExcelCalcProductMap('remainingQty','${escapeHtml(product.id)}', this.value)"></td>
     </tr>
-    <tr class="excel-calc-total-row">
-      <td><strong>Total</strong></td>
-      <td><strong>${formatCurrency(computed.totalLossValue)}</strong></td>
-    </tr>
-  `;
+  `).join('');
 
-  summaryEl.innerHTML = `
-    <div class="excel-summary-grid">
-      <label class="excel-field"><span>Invoice (manual)</span><input type="text" inputmode="decimal" value="${record.invoiceTotal ?? ''}" onchange="setExcelCalcValue('invoiceTotal', this.value)"></label>
-      <label class="excel-field"><span>Cash from hand</span><input type="text" inputmode="decimal" value="${record.cashFromHand ?? ''}" onchange="setExcelCalcValue('cashFromHand', this.value)"></label>
-      <label class="excel-field"><span>Zelle</span><input type="text" inputmode="decimal" value="${record.zelleAmount ?? ''}" onchange="setExcelCalcValue('zelleAmount', this.value)"></label>
-      <label class="excel-field"><span>Damaged Amount</span><input type="text" value="${formatCurrency(computed.totalLossValue)}" readonly></label>
-    </div>
-    <div class="excel-sheet-grid">
-      <div class="excel-sheet-block">
-        <h4>Daily Total</h4>
-        <table class="excel-calc-table excel-calc-summary-table">
+  sheetEl.innerHTML = `
+    <div class="excel-spreadsheet">
+      <div class="excel-sheet-meta">
+        <span>Saved Sheets: <strong>${savedSheetNames.length}</strong></span>
+        <span>Sheet: <strong>${escapeHtml(batchName)}</strong></span>
+      </div>
+
+      <table class="excel-sheet-table excel-sheet-table-top">
+        <tbody>
+          <tr>
+            <th class="excel-sheet-label">Extra Box's</th>
+            ${columnHeaders}
+            <th class="excel-sheet-money-head">Total Extra</th>
+          </tr>
+          <tr>
+            <td></td>
+            ${extraValueCells}
+            <td class="excel-sheet-money">${formatCurrency(computed.extraBoxesValue)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table class="excel-sheet-table excel-sheet-table-top">
+        <tbody>
+          <tr>
+            <th class="excel-sheet-label">Box Count</th>
+            ${columnHeaders}
+          </tr>
+          <tr>
+            <td></td>
+            ${orderedValueCells}
+          </tr>
+        </tbody>
+      </table>
+
+      <table class="excel-sheet-table excel-sheet-summary-head">
+        <tbody>
+          <tr>
+            <th>Date</th>
+            <th>Total Box count</th>
+            <th>Total</th>
+          </tr>
+          <tr>
+            <td>${formatDate(dateInput.value)}</td>
+            <td>${computed.totalBoxesCount}</td>
+            <td>${formatCurrency(computed.batchOrderTotal)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="excel-sheet-workarea">
+        <div class="excel-sheet-left">
+          <div class="excel-sheet-panel">
+            <div class="excel-sheet-panel-title">Cash</div>
+            <table class="excel-sheet-table">
+              <tbody>
+                <tr>
+                  <th></th>
+                  <th>Count</th>
+                  <th>Sum</th>
+                </tr>
+                ${cashRows}
+                <tr class="excel-calc-total-row">
+                  <td>Total</td>
+                  <td></td>
+                  <td>${formatCurrency(computed.cashCountTotal)}</td>
+                </tr>
+                <tr>
+                  <td>Cash from hand</td>
+                  <td colspan="2"><input type="text" inputmode="decimal" value="${record.cashFromHand ?? ''}" onchange="setExcelCalcValue('cashFromHand', this.value)"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="excel-sheet-panel">
+            <div class="excel-sheet-panel-title">Zelle</div>
+            <table class="excel-sheet-table">
+              <tbody>
+                <tr>
+                  <td>Amount</td>
+                  <td><input type="text" inputmode="decimal" value="${record.zelleAmount ?? ''}" onchange="setExcelCalcValue('zelleAmount', this.value)"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="excel-sheet-panel">
+            <table class="excel-sheet-table">
+              <tbody>
+                <tr>
+                  <th></th>
+                  <th>Cash</th>
+                  <th>Zelle</th>
+                  <th>Unknown</th>
+                  <th>Total</th>
+                </tr>
+                <tr>
+                  <td>Total</td>
+                  <td>${formatCurrency(computed.cashSales)}</td>
+                  <td>${formatCurrency(computed.zelleAmount)}</td>
+                  <td>${formatCurrency(computed.unknownAmount)}</td>
+                  <td>${formatCurrency(computed.batchOrderTotal)}</td>
+                </tr>
+                <tr>
+                  <td>Received</td>
+                  <td>${formatCurrency(computed.cashCountTotal)}</td>
+                  <td>${formatCurrency(computed.zelleAmount)}</td>
+                  <td></td>
+                  <td>${formatCurrency(countedTotal)}</td>
+                </tr>
+                <tr>
+                  <td>Balance left</td>
+                  <td>${formatCurrency(computed.cashFromHand)}</td>
+                  <td></td>
+                  <td>${formatCurrency(computed.unknownAmount)}</td>
+                  <td class="${balanceLeft < 0 ? 'warn' : ''}">${formatCurrency(balanceLeft)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="excel-sheet-right">
+          <div class="excel-sheet-panel excel-sheet-panel-narrow">
+            <table class="excel-sheet-table">
+              <tbody>
+                <tr>
+                  <td>Invoice</td>
+                  <td><input type="text" inputmode="decimal" value="${record.invoiceTotal ?? ''}" onchange="setExcelCalcValue('invoiceTotal', this.value)"></td>
+                </tr>
+                <tr>
+                  <td>Balance</td>
+                  <td class="${computed.invoiceBalance < 0 ? 'warn' : ''}">${formatCurrency(computed.invoiceBalance)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="excel-sheet-panel excel-sheet-panel-narrow">
+            <table class="excel-sheet-table">
+              <tbody>
+                ${priceRows}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="excel-sheet-panel excel-sheet-panel-bottom">
+        <div class="excel-sheet-panel-title">Remaining and Damaged:</div>
+        <table class="excel-sheet-table excel-sheet-table-remaining">
           <tbody>
-            <tr><td>Date</td><td>${formatDate(dateInput.value)}</td></tr>
-            <tr><td>Total Box Count</td><td>${computed.totalBoxesCount}</td></tr>
-            <tr><td>Total</td><td>${formatCurrency(computed.batchOrderTotal)}</td></tr>
-            <tr><td>Total Extra</td><td>${formatCurrency(computed.extraBoxesValue)}</td></tr>
+            ${remainingRows}
+            <tr>
+              <td>Damaged</td>
+              <td><input type="text" inputmode="decimal" value="${record.damagedAmount ?? ''}" onchange="setExcelCalcValue('damagedAmount', this.value)"></td>
+            </tr>
+            <tr class="excel-calc-total-row">
+              <td>Total</td>
+              <td>${formatCurrency(computed.totalLossValue)}</td>
+            </tr>
           </tbody>
         </table>
       </div>
-      <div class="excel-sheet-block">
-        <h4>Invoice</h4>
-        <table class="excel-calc-table excel-calc-summary-table">
-          <tbody>
-            <tr><td>Invoice</td><td>${formatCurrency(computed.invoiceTotal)}</td></tr>
-            <tr><td>Balance</td><td>${formatCurrency(computed.invoiceBalance)}</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="excel-sheet-block">
-        <h4>Payment Summary</h4>
-        <table class="excel-calc-table excel-calc-summary-table">
-          <tbody>
-            <tr><td>Cash Counted</td><td>${formatCurrency(computed.cashCountTotal)}</td></tr>
-            <tr><td>Cash from hand</td><td>${formatCurrency(computed.cashFromHand)}</td></tr>
-            <tr><td>Cash</td><td class="${computed.cashSales < 0 ? 'warn' : ''}">${formatCurrency(computed.cashSales)}</td></tr>
-            <tr><td>Zelle</td><td>${formatCurrency(computed.zelleAmount)}</td></tr>
-            <tr><td>Received</td><td>${formatCurrency(computed.receivedTotal)}</td></tr>
-            <tr><td>Unknown</td><td class="${computed.unknownAmount < 0 ? 'warn' : ''}">${formatCurrency(computed.unknownAmount)}</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="excel-sheet-block">
-        <h4>Remaining And Damaged</h4>
-        <table class="excel-calc-table excel-calc-summary-table">
-          <tbody>
-            <tr><td>Damaged Amount</td><td>${formatCurrency(computed.totalLossValue)}</td></tr>
-            <tr><td>Tally</td><td class="${computed.tallyValue < 0 ? 'warn' : ''}">${formatCurrency(computed.tallyValue)}</td></tr>
-          </tbody>
-        </table>
+
+      <div class="excel-sheet-tally">
+        <span>Tally</span>
+        <strong class="${computed.tallyValue < 0 ? 'warn' : ''}">${formatCurrency(computed.tallyValue)}</strong>
       </div>
     </div>
   `;

@@ -497,136 +497,133 @@
       font-weight: 700;
       color: var(--dark);
     }
-    .excel-calc-card {
-      background: linear-gradient(180deg, #fff, #fbf5eb);
-      border: 1px solid rgba(200,121,26,0.12);
-      border-radius: 18px;
-      box-shadow: var(--shadow);
-      padding: 18px;
-    }
-    .excel-calc-card h3 {
-      margin: 0 0 6px;
-      font-family: var(--font-display);
-      font-size: 20px;
-      color: var(--dark);
-    }
-    .excel-calc-card p {
-      margin: 0 0 14px;
-      font-size: 13px;
-      color: var(--text-light);
-    }
-    .excel-calc-table-wrap {
+    .excel-sheet-frame {
       overflow-x: auto;
-    }
-    .excel-calc-table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 640px;
-    }
-    .excel-calc-table th,
-    .excel-calc-table td {
-      padding: 12px 10px;
-      border-top: 1px solid rgba(200,121,26,0.12);
-      text-align: left;
-      font-size: 13px;
-      color: var(--text);
-    }
-    .excel-calc-table th {
-      border-top: 0;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      color: var(--text-light);
-    }
-    .excel-calc-table input {
-      width: 100%;
-      max-width: 120px;
-      border: 1.5px solid #E0D0B8;
-      border-radius: 8px;
-      padding: 9px 10px;
-      font: inherit;
-      font-size: 13px;
-      color: var(--text);
       background: #fff;
+      border: 1px solid rgba(27, 18, 8, 0.08);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 20px;
     }
-    .excel-summary-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(160px, 1fr));
-      gap: 14px;
-      margin-bottom: 16px;
+    .excel-spreadsheet {
+      min-width: 980px;
+      color: #18120f;
     }
-    .excel-field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .excel-field span {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      color: var(--text-light);
-    }
-    .excel-field input {
-      border: 1.5px solid #E0D0B8;
-      border-radius: 10px;
-      padding: 12px 14px;
-      font: inherit;
-      font-size: 14px;
-      color: var(--text);
-      background: #fff;
-    }
-    .excel-summary-strip {
+    .excel-sheet-meta {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-    }
-    .excel-sheet-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(240px, 1fr));
-      gap: 14px;
-    }
-    .excel-sheet-block {
-      border: 1px solid rgba(200,121,26,0.12);
-      border-radius: 12px;
-      background: #fff;
-      padding: 12px;
-    }
-    .excel-sheet-block h4 {
-      margin: 0 0 10px;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
+      gap: 18px;
+      margin-bottom: 12px;
+      font-size: 12px;
       color: var(--text-light);
     }
-    .excel-calc-summary-table {
-      min-width: 0;
+    .excel-sheet-table {
+      width: auto;
+      border-collapse: collapse;
+      background: #fff;
+      margin-bottom: 14px;
     }
-    .excel-calc-summary-table td:last-child {
-      text-align: right;
+    .excel-sheet-table th,
+    .excel-sheet-table td {
+      min-width: 82px;
+      border: 1px solid #2d2418;
+      padding: 7px 8px;
+      font-size: 13px;
+      line-height: 1.25;
+      vertical-align: middle;
+      text-align: center;
+      color: #18120f;
+      background: #fff;
+    }
+    .excel-sheet-table th {
       font-weight: 700;
-      color: var(--dark);
+    }
+    .excel-sheet-table .excel-sheet-label {
+      min-width: 120px;
+      text-align: left;
+    }
+    .excel-sheet-table .excel-sheet-money-head,
+    .excel-sheet-table .excel-sheet-money {
+      min-width: 110px;
+    }
+    .excel-sheet-table input {
+      width: 100%;
+      min-width: 0;
+      border: 0;
+      padding: 0;
+      background: transparent;
+      font: inherit;
+      font-size: 13px;
+      text-align: center;
+      color: #18120f;
+    }
+    .excel-sheet-summary-head th,
+    .excel-sheet-summary-head td {
+      min-width: 140px;
+      text-align: left;
+    }
+    .excel-sheet-summary-head td:last-child,
+    .excel-sheet-summary-head th:last-child {
+      text-align: center;
+    }
+    .excel-sheet-workarea {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+      gap: 20px;
+      align-items: start;
+      margin-bottom: 14px;
+    }
+    .excel-sheet-left,
+    .excel-sheet-right {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .excel-sheet-panel {
+      width: fit-content;
+      max-width: 100%;
+    }
+    .excel-sheet-panel-title {
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #18120f;
+    }
+    .excel-sheet-panel .excel-sheet-table td:first-child,
+    .excel-sheet-panel .excel-sheet-table th:first-child {
+      text-align: left;
+      min-width: 110px;
+    }
+    .excel-sheet-panel-narrow .excel-sheet-table td:last-child {
+      min-width: 120px;
+    }
+    .excel-sheet-panel-bottom {
+      margin-bottom: 14px;
+    }
+    .excel-sheet-table-remaining td:first-child {
+      min-width: 180px;
+      text-align: left;
+    }
+    .excel-sheet-tally {
+      display: inline-flex;
+      align-items: center;
+      gap: 18px;
+      border: 1px solid #2d2418;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      background: #fff;
     }
     .excel-calc-total-row td {
       font-weight: 700;
-      background: rgba(246, 229, 200, 0.3);
+      background: #f7efe0;
     }
     .warn {
       color: #C62828 !important;
     }
 
     @media (max-width: 900px) {
-      .excel-summary-grid {
-        grid-template-columns: repeat(2, minmax(140px, 1fr));
-      }
-      .excel-sheet-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-    @media (max-width: 560px) {
-      .excel-summary-grid {
+      .excel-sheet-workarea {
         grid-template-columns: 1fr;
       }
     }
@@ -1500,7 +1497,7 @@
         <div class="excel-calc-toolbar">
           <div class="excel-calc-copy">
             <h2>Excel Calculations</h2>
-            <p>Manual calculation sheet. Save each sheet, open an older one to edit, or start a new sheet without affecting orders or accounting.</p>
+            <p>Worksheet view based on your spreadsheet. Save a sheet, open it later, and keep Excel Calculations separate from everything else.</p>
           </div>
           <div class="toolbar-actions">
             <select id="excelCalcSavedSheet" class="filter-input" onchange="setExcelCalcSheet(this.value)">
@@ -1514,67 +1511,8 @@
           </div>
         </div>
 
-        <div class="accounting-grid" id="excelCalcStats"></div>
-
-        <div class="excel-calc-stack">
-          <div class="excel-calc-card">
-            <h3>Batch Box Count</h3>
-            <p>Everything here is manual. Enter ordered boxes, extras, and prices the way you use the spreadsheet.</p>
-            <div class="excel-calc-table-wrap">
-              <table class="excel-calc-table">
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th>Ordered Boxes</th>
-                    <th>Extra Boxes</th>
-                    <th>Total Boxes</th>
-                    <th>Price</th>
-                    <th>Total Value</th>
-                  </tr>
-                </thead>
-                <tbody id="excelCalcOrderedBody"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="excel-calc-card">
-            <h3>Cash Count</h3>
-            <p>Enter your denomination counts and opening cash from hand below.</p>
-            <div class="excel-calc-table-wrap">
-              <table class="excel-calc-table">
-                <thead>
-                  <tr>
-                    <th>Denomination</th>
-                    <th>Count</th>
-                    <th>Sum</th>
-                  </tr>
-                </thead>
-                <tbody id="excelCalcCashBody"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="excel-calc-card">
-            <h3>Remaining And Damaged</h3>
-            <p>Enter manual amounts by product here. Damaged stays in the same section and the summary auto totals it.</p>
-            <div class="excel-calc-table-wrap">
-              <table class="excel-calc-table">
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th>Amount</th>
-                  </tr>
-                </thead>
-                <tbody id="excelCalcRemainingBody"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="excel-calc-card">
-            <h3>Summary</h3>
-            <p>Invoice, cash from hand, and zelle stay fully manual. Damaged amount is auto filled from the remaining and damaged section.</p>
-            <div id="excelCalcSummary"></div>
-          </div>
+        <div class="excel-sheet-frame">
+          <div id="excelCalcSheet"></div>
         </div>
       </div>
       </main>
