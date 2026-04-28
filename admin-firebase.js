@@ -25,6 +25,7 @@ import {
 const BASE_PRODUCTS = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || []));
 const GO_LIVE_STATS_DATE = '2026-04-10';
 const EXCEL_CALC_DOC_PREFIX = 'excel_sheet__';
+const DAMAGED_BOX_UNIT_PRICE = 56;
 const PROCESSED_ORDER_STATUSES = ['fulfilled', 'cancelled', 'no_show'];
 const NON_REVENUE_ORDER_STATUSES = ['cancelled', 'no_show'];
 
@@ -214,12 +215,20 @@ function excelCalcMoneyValue(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function excelCalcCountValue(value) {
+  return Math.max(0, parseInt(value, 10) || 0);
+}
+
 function accounting2Products() {
   return getSortedProducts(state.products).filter((product) => !product.displayOnly && normalizeProductCategory(product.category) === 'mangoes');
 }
 
 function accounting2ProductPrice(product) {
   return moneyNumber(product?.price || 0);
+}
+
+function accounting2ProductUnitPrice(product, productPrices = {}) {
+  return excelCalcMoneyValue(productPrices[product.id] ?? accounting2ProductPrice(product));
 }
 
 function accounting2DefaultDenominations() {
@@ -371,19 +380,21 @@ function accounting2ComputedTotals(batchName = accounting2BatchName()) {
     sum + (Number(denomination) * Math.max(0, parseInt(cashCounts[denomination], 10) || 0))
   ), 0);
   const cashSales = cashCountTotal - cashFromHand;
-  const batchOrderTotal = products.reduce((sum, product) => (
-    sum + (Math.max(0, Number(orderedCounts[product.id] || 0)) * moneyValue(productPrices[product.id] ?? accounting2ProductPrice(product)))
+  const orderedBoxesValue = products.reduce((sum, product) => (
+    sum + (excelCalcCountValue(orderedCounts[product.id]) * accounting2ProductUnitPrice(product, productPrices))
   ), 0);
+  const extraBoxesValue = products.reduce((sum, product) => (
+    sum + (accounting2ProductUnitPrice(product, productPrices) * excelCalcCountValue(extraBoxes[product.id]))
+  ), 0);
+  const batchOrderTotal = orderedBoxesValue + extraBoxesValue;
   const unknownAmount = batchOrderTotal - (cashSales + zelleAmount);
   const remainingValue = products.reduce((sum, product) => (
-    sum + Math.max(0, excelCalcMoneyValue(remainingQty[product.id]))
+    sum + (excelCalcCountValue(remainingQty[product.id]) * accounting2ProductUnitPrice(product, productPrices))
   ), 0);
-  const damagedAmount = moneyValue(record.damagedAmount);
-  const orderedBoxesTotal = Object.values(orderedCounts).reduce((sum, qty) => sum + Number(qty || 0), 0);
-  const extraBoxesTotal = Object.values(extraBoxes).reduce((sum, qty) => sum + Number(qty || 0), 0);
-  const extraBoxesValue = products.reduce((sum, product) => (
-    sum + (moneyValue(productPrices[product.id] ?? accounting2ProductPrice(product)) * Math.max(0, parseInt(extraBoxes[product.id], 10) || 0))
-  ), 0);
+  const damagedCount = excelCalcCountValue(record.damagedCount);
+  const damagedAmount = damagedCount * DAMAGED_BOX_UNIT_PRICE;
+  const orderedBoxesTotal = Object.values(orderedCounts).reduce((sum, qty) => sum + excelCalcCountValue(qty), 0);
+  const extraBoxesTotal = Object.values(extraBoxes).reduce((sum, qty) => sum + excelCalcCountValue(qty), 0);
   const invoiceBalance = batchOrderTotal - invoiceTotal;
   const receivedTotal = cashSales + zelleAmount;
   const tallyValue = batchOrderTotal - receivedTotal - (remainingValue + damagedAmount);
@@ -404,7 +415,9 @@ function accounting2ComputedTotals(batchName = accounting2BatchName()) {
     cashSales,
     receivedTotal,
     unknownAmount,
+    orderedBoxesValue,
     remainingValue,
+    damagedCount,
     damagedAmount,
     orderedBoxesTotal,
     extraBoxesTotal,
@@ -2110,12 +2123,17 @@ function renderExcelCalculations() {
     `;
   }).join('');
 
-  const remainingRows = sheetProducts.map(({ product }) => `
-    <tr>
-      <td>${escapeHtml(product.name || '')}</td>
-      <td><input type="text" inputmode="decimal" value="${computed.remainingQty[product.id] ?? ''}" onchange="setExcelCalcProductMap('remainingQty','${escapeHtml(product.id)}', this.value)"></td>
-    </tr>
-  `).join('');
+  const remainingRows = sheetProducts.map(({ product }) => {
+    const count = computed.remainingQty[product.id] ?? '';
+    const amount = excelCalcCountValue(count) * accounting2ProductUnitPrice(product, computed.productPrices);
+    return `
+      <tr>
+        <td>${escapeHtml(product.name || '')}</td>
+        <td><input type="number" min="0" step="1" value="${count}" onchange="setExcelCalcProductMap('remainingQty','${escapeHtml(product.id)}', this.value)"></td>
+        <td>${formatCurrency(amount)}</td>
+      </tr>
+    `;
+  }).join('');
 
   sheetEl.innerHTML = `
     <div class="excel-spreadsheet">
@@ -2270,13 +2288,20 @@ function renderExcelCalculations() {
         <div class="excel-sheet-panel-title">Remaining and Damaged:</div>
         <table class="excel-sheet-table excel-sheet-table-remaining">
           <tbody>
+            <tr>
+              <th>Item</th>
+              <th>Count</th>
+              <th>Amount</th>
+            </tr>
             ${remainingRows}
             <tr>
-              <td>Damaged</td>
-              <td><input type="text" inputmode="decimal" value="${record.damagedAmount ?? ''}" onchange="setExcelCalcValue('damagedAmount', this.value)"></td>
+              <td>Damaged ($${DAMAGED_BOX_UNIT_PRICE})</td>
+              <td><input type="number" min="0" step="1" value="${computed.damagedCount || ''}" onchange="setExcelCalcValue('damagedCount', this.value)"></td>
+              <td>${formatCurrency(computed.damagedAmount)}</td>
             </tr>
             <tr class="excel-calc-total-row">
               <td>Total</td>
+              <td></td>
               <td>${formatCurrency(computed.totalLossValue)}</td>
             </tr>
           </tbody>
@@ -2292,6 +2317,10 @@ function renderExcelCalculations() {
 }
 
 function setExcelCalcValue(key, value) {
+  if (key === 'damagedCount') {
+    accounting2SetValue(key, value === '' ? '' : excelCalcCountValue(value));
+    return;
+  }
   accounting2SetValue(key, value === '' ? '' : excelCalcMoneyValue(value));
 }
 
@@ -2308,8 +2337,8 @@ function setExcelCalcCashCount(denomination, value) {
 }
 
 function setExcelCalcProductMap(key, productId, value) {
-  if (key === 'extraBoxes' || key === 'orderedBoxes') {
-    accounting2SetMapValue(key, productId, Math.max(0, parseInt(value, 10) || 0));
+  if (key === 'extraBoxes' || key === 'orderedBoxes' || key === 'remainingQty') {
+    accounting2SetMapValue(key, productId, excelCalcCountValue(value));
     return;
   }
   if (key === 'productPrices') {
@@ -2326,6 +2355,7 @@ async function saveExcelCalculations() {
 
   const batchName = accounting2BatchName();
   const existing = accounting2SavedRecord(batchName) || {};
+  const computed = accounting2ComputedTotals(batchName);
   const payload = {
     batchName,
     batchDate: dateInput.value || todayDateInputValue(),
@@ -2333,7 +2363,8 @@ async function saveExcelCalculations() {
     invoiceTotal: moneyValue(existing.invoiceTotal),
     cashFromHand: Number(existing.cashFromHand || 0),
     zelleAmount: moneyValue(existing.zelleAmount),
-    damagedAmount: moneyValue(existing.damagedAmount),
+    damagedCount: computed.damagedCount,
+    damagedAmount: computed.damagedAmount,
     extraBoxes: accounting2MutableMap(existing, 'extraBoxes'),
     productPrices: accounting2MutableMap(existing, 'productPrices'),
     remainingQty: accounting2MutableMap(existing, 'remainingQty'),
