@@ -20,7 +20,13 @@ service cloud.firestore {
       allow get: if true;
       allow list: if false;
       allow create: if true;
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (
+          resource.data.status in ['no_show', 'cancelled']
+          && request.resource.data.status == 'pending'
+          && request.resource.data.phoneDigits == phoneDigits
+        );
+      allow delete: if isAdmin();
     }
 
     match /notify_requests/{docId} {

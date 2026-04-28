@@ -189,6 +189,12 @@
           addressLocality: 'Chesterfield',
           addressRegion: 'VA',
           addressCountry: 'US'
+        },
+        {
+          '@type': 'PostalAddress',
+          addressLocality: 'Mechanicsville',
+          addressRegion: 'VA',
+          addressCountry: 'US'
         }
       ],
       areaServed: {

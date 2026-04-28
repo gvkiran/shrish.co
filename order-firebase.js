@@ -14,6 +14,15 @@ let cart = JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
 let selectedLoc = '';
 let isSubmitting = false;
 const CONFIRMATION_WAIT_MS = 15000;
+const LOCATION_LABELS = {
+  shortpump: 'Short Pump, VA',
+  chesterfield: 'Chesterfield, VA',
+  mechanicsville: 'Mechanicsville, VA'
+};
+
+function pickupLocationLabel(locationId) {
+  return LOCATION_LABELS[locationId] || locationId || '';
+}
 
 function updateNavCart() {
   const total = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
@@ -129,7 +138,7 @@ function rebuildErrorBanner() {
   if (document.getElementById('err-email')?.style.display === 'block') {
     errors.push(document.getElementById('err-email').textContent || 'Valid email required');
   }
-  if (!selectedLoc) errors.push('Please select a pickup location (Short Pump or Chesterfield)');
+  if (!selectedLoc) errors.push('Please select a pickup location');
   if (!cart.length) errors.push('Your cart is empty - go back to shop and add items');
 
   if (!errors.length) {
@@ -190,6 +199,63 @@ function showDuplicateOrderMessage(phone) {
     <li>If you would like to modify it, please contact us on <a href="https://wa.me/17653255577" target="_blank" rel="noopener" style="color:inherit;font-weight:700">WhatsApp</a>.</li>`;
   banner.className = 'error-banner show hard-error';
   banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function showNoShowNotice() {
+  return new Promise((resolve) => {
+    const existing = document.getElementById('noShowNoticeModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'noShowNoticeModal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.innerHTML = `
+      <div class="nsn-card">
+        <h3>Pickup Reminder</h3>
+        <p>Your last order was marked as a no-show. We completely understand that plans can change or you may get busy.</p>
+        <p>But next time, please send us a quick WhatsApp message if you're unable to pick up. That helps us offer those boxes to other customers.</p>
+        <p>Thank you for understanding!</p>
+        <button type="button" id="noShowNoticeOk">I Understand</button>
+      </div>`;
+
+    const style = document.createElement('style');
+    style.textContent = `
+      #noShowNoticeModal {
+        position: fixed; inset: 0; z-index: 5000;
+        display: flex; align-items: center; justify-content: center;
+        padding: 20px; background: rgba(26,18,8,.58);
+        backdrop-filter: blur(4px);
+      }
+      #noShowNoticeModal .nsn-card {
+        width: min(520px, 100%); background: #fff; color: var(--text);
+        border-radius: 20px; padding: 26px 24px; box-shadow: var(--shadow-lg);
+      }
+      #noShowNoticeModal h3 {
+        margin: 0 0 12px; font-family: var(--font-display);
+        font-size: 28px; color: var(--dark);
+      }
+      #noShowNoticeModal p {
+        margin: 0 0 14px; font-size: 15px; line-height: 1.7;
+        color: var(--text-light);
+      }
+      #noShowNoticeModal button {
+        width: 100%; margin-top: 6px; padding: 13px 18px;
+        border: none; border-radius: 999px; background: var(--saffron);
+        color: #fff; font: inherit; font-weight: 700; cursor: pointer;
+      }`;
+
+    document.head.appendChild(style);
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+
+    document.getElementById('noShowNoticeOk')?.addEventListener('click', () => {
+      modal.remove();
+      style.remove();
+      document.body.style.overflow = '';
+      resolve();
+    }, { once: true });
+  });
 }
 
 async function waitForOrderConfirmationNumber(orderRef) {
@@ -358,12 +424,16 @@ async function submitOrder() {
 
     const lockRef = orderLockRef(phoneDigits);
     const lockSnap = await getDoc(lockRef);
-    if (lockSnap.exists()) {
+    const lockStatus = lockSnap.exists() ? (lockSnap.data()?.status || 'pending') : '';
+    if (lockStatus === 'pending') {
       showDuplicateOrderMessage(phone);
       return;
     }
+    if (lockStatus === 'no_show') {
+      await showNoShowNotice();
+    }
 
-    const locLabel = selectedLoc === 'shortpump' ? 'Short Pump, VA' : 'Chesterfield, VA';
+    const locLabel = pickupLocationLabel(selectedLoc);
     const orderRef = doc(collection(db, 'orders'));
     const order = {
       orderNumber: '',
@@ -399,7 +469,8 @@ async function submitOrder() {
 
     await runTransaction(db, async (transaction) => {
       const pendingLock = await transaction.get(lockRef);
-      if (pendingLock.exists()) {
+      const pendingLockStatus = pendingLock.exists() ? (pendingLock.data()?.status || 'pending') : '';
+      if (pendingLockStatus === 'pending') {
         throw new Error('DUPLICATE_PENDING_ORDER');
       }
 
@@ -470,7 +541,7 @@ async function submitOrder() {
     ) {
       const lockRef = orderLockRef(phoneDigits);
       const existingLock = await getDoc(lockRef).catch(() => null);
-      if (existingLock?.exists()) {
+      if (existingLock?.exists() && (existingLock.data()?.status || 'pending') === 'pending') {
         showDuplicateOrderMessage(phone);
         return;
       }

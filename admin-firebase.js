@@ -199,7 +199,12 @@ function orderStatusLabel(status = 'pending') {
 }
 
 function locationLabel(location = '') {
-  return location === 'shortpump' ? 'Short Pump, VA' : 'Chesterfield, VA';
+  const labels = {
+    shortpump: 'Short Pump, VA',
+    chesterfield: 'Chesterfield, VA',
+    mechanicsville: 'Mechanicsville, VA'
+  };
+  return labels[location] || location || '';
 }
 
 function excelCalcMoneyValue(value) {
@@ -1673,7 +1678,7 @@ async function applyOrderStatus(id, status, silent = false) {
   if (order?.phoneDigits) {
     const lockRef = doc(db, 'order_locks', order.phoneDigits);
 
-    if (status === 'fulfilled' || status === 'no_show') {
+    if (status === 'fulfilled') {
       await deleteDoc(lockRef);
     } else {
       await setDoc(lockRef, {

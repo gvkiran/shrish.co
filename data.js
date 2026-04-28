@@ -9,7 +9,8 @@ const SHRISH_DATA = {
 
   locations: [
     { id: "shortpump",    label: "Short Pump, VA" },
-    { id: "chesterfield", label: "Chesterfield, VA" }
+    { id: "chesterfield", label: "Chesterfield, VA" },
+    { id: "mechanicsville", label: "Mechanicsville, VA" }
   ],
 
   categories: [
