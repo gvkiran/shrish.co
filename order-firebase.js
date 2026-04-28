@@ -213,8 +213,8 @@ function showNoShowNotice() {
     modal.innerHTML = `
       <div class="nsn-card">
         <h3>Pickup Reminder</h3>
-        <p>Your last order was marked as a no-show. We completely understand that plans can change or you may get busy.</p>
-        <p>But next time, please send us a quick WhatsApp message if you're unable to pick up. That helps us offer those boxes to other customers.</p>
+        <p>Your last order was marked as a <strong>no-show</strong>. We completely understand that <strong>plans can change</strong> or you may get busy.</p>
+        <p>But next time, please send us a <strong>quick WhatsApp message</strong> if you're unable to pick up. That helps us <strong>offer those boxes to other customers</strong>.</p>
         <p>Thank you for understanding!</p>
         <button type="button" id="noShowNoticeOk">I Understand</button>
       </div>`;
@@ -238,6 +238,9 @@ function showNoShowNotice() {
       #noShowNoticeModal p {
         margin: 0 0 14px; font-size: 15px; line-height: 1.7;
         color: var(--text-light);
+      }
+      #noShowNoticeModal strong {
+        color: var(--dark); font-weight: 800;
       }
       #noShowNoticeModal button {
         width: 100%; margin-top: 6px; padding: 13px 18px;
