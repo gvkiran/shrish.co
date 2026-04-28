@@ -1050,7 +1050,7 @@ function renderOrders() {
   if (!tbody) return;
 
   if (!orders.length) {
-    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📭</div><p>No orders found.</p></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📭</div><p>No orders found.</p></div></td></tr>';
     renderStats();
     return;
   }
@@ -1066,10 +1066,6 @@ function renderOrders() {
     const paymentMethod = order.paymentMethod || '';
     const paymentCollected = Boolean(order.paymentCollected);
     const fallbackBatch = batchNameFromDate(todayDateInputValue());
-    const pickupDateValue = formatDateInput(order.pickupDate);
-    const pickupDateCellHtml = ['active', 'processed'].includes(state.orderSheet)
-      ? `<span style="font-size:12px;color:var(--text-light)">${escapeHtml(pickupDateValue || '--')}</span>`
-      : `<input type="date" class="pickup-date-input" value="${pickupDateValue}" onchange="updatePickupDate('${escapeHtml(order.id)}', this.value)">`;
     const paymentCellHtml = status === 'no_show'
       ? `<div class="payment-note">No show. Accounting total is $0.</div>`
       : state.orderSheet === 'active'
@@ -1096,7 +1092,6 @@ function renderOrders() {
       <td>${itemsHtml}</td>
       <td><div class="total-amount">${formatCurrency(order.totalPrice || 0)}</div></td>
       <td style="font-size:13px">${escapeHtml(order.locationLabel || order.location || '—')}</td>
-      <td>${pickupDateCellHtml}</td>
       <td>${paymentCellHtml}</td>
       <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
       <td><div class="action-btns"><button class="action-btn btn-fulfill" onclick="setStatus('${escapeHtml(order.id)}','fulfilled')">✓ Fulfill</button><button class="action-btn btn-noshow" onclick="setStatus('${escapeHtml(order.id)}','no_show')">No Show</button><button class="action-btn btn-cancel" onclick="setStatus('${escapeHtml(order.id)}','cancelled')">✕ Cancel</button><button class="action-btn btn-reset" onclick="setStatus('${escapeHtml(order.id)}','pending')">↺ Reset</button></div></td>
