@@ -201,6 +201,16 @@ function showDuplicateOrderMessage(phone) {
   banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+async function isActivePendingLock(lockSnap) {
+  if (!lockSnap?.exists()) return false;
+  const lock = lockSnap.data() || {};
+  if ((lock.status || 'pending') !== 'pending') return false;
+  if (!lock.orderId) return true;
+
+  const orderSnap = await getDoc(doc(db, 'orders', lock.orderId)).catch(() => null);
+  return orderSnap?.exists() && (orderSnap.data()?.status || 'pending') === 'pending';
+}
+
 function showNoShowNotice() {
   return new Promise((resolve) => {
     const existing = document.getElementById('noShowNoticeModal');
@@ -428,7 +438,7 @@ async function submitOrder() {
     const lockRef = orderLockRef(phoneDigits);
     const lockSnap = await getDoc(lockRef);
     const lockStatus = lockSnap.exists() ? (lockSnap.data()?.status || 'pending') : '';
-    if (lockStatus === 'pending') {
+    if (await isActivePendingLock(lockSnap)) {
       showDuplicateOrderMessage(phone);
       return;
     }
@@ -474,7 +484,15 @@ async function submitOrder() {
       const pendingLock = await transaction.get(lockRef);
       const pendingLockStatus = pendingLock.exists() ? (pendingLock.data()?.status || 'pending') : '';
       if (pendingLockStatus === 'pending') {
-        throw new Error('DUPLICATE_PENDING_ORDER');
+        const pendingLockData = pendingLock.data() || {};
+        if (!pendingLockData.orderId) {
+          throw new Error('DUPLICATE_PENDING_ORDER');
+        }
+
+        const linkedOrder = await transaction.get(doc(db, 'orders', pendingLockData.orderId));
+        if (linkedOrder.exists() && (linkedOrder.data()?.status || 'pending') === 'pending') {
+          throw new Error('DUPLICATE_PENDING_ORDER');
+        }
       }
 
       transaction.set(orderRef, order);
@@ -544,7 +562,7 @@ async function submitOrder() {
     ) {
       const lockRef = orderLockRef(phoneDigits);
       const existingLock = await getDoc(lockRef).catch(() => null);
-      if (existingLock?.exists() && (existingLock.data()?.status || 'pending') === 'pending') {
+      if (await isActivePendingLock(existingLock)) {
         showDuplicateOrderMessage(phone);
         return;
       }
