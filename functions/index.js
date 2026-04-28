@@ -358,6 +358,7 @@ exports.sendOrderEmails = onDocumentCreated(
 
     const orderRef = snapshot.ref;
     const order = snapshot.data();
+    if (order?.source === "admin_manual" || order?.skipCustomerEmail) return;
     if (!order || !order.email) return;
 
     const finalOrderNumber = await assignSequentialOrderNumber(

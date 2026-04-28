@@ -232,6 +232,7 @@
     .status-pending   { background: #FFF8E1; color: #F57F17; }
     .status-fulfilled { background: #E8F5E9; color: #2E7D32; }
     .status-cancelled { background: #FFEBEE; color: #C62828; }
+    .status-no_show   { background: #ECEFF1; color: #455A64; }
 
     /* Payment badge */
     .payment-badge {
@@ -278,6 +279,8 @@
     .btn-fulfill:hover { background: #2E7D32; color: white; }
     .btn-cancel  { border-color: #C62828; color: #C62828; background: transparent; }
     .btn-cancel:hover  { background: #C62828; color: white; }
+    .btn-noshow  { border-color: #546E7A; color: #546E7A; background: transparent; }
+    .btn-noshow:hover  { background: #546E7A; color: white; }
     .btn-reset   { border-color: var(--text-light); color: var(--text-light); background: transparent; }
     .btn-reset:hover   { background: var(--text-light); color: white; }
     .btn-edit    { border-color: var(--saffron); color: var(--saffron); background: transparent; }
@@ -349,6 +352,48 @@
       background: var(--cream);
       color: var(--text);
     }
+    .manual-order-fields {
+      display: none;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 14px;
+      border: 1px solid rgba(200,121,26,0.14);
+      border-radius: 14px;
+      background: #fffdf9;
+    }
+    .manual-order-fields.show { display: grid; }
+    .manual-order-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-light);
+    }
+    .manual-order-field input,
+    .manual-order-field select,
+    .manual-order-field textarea {
+      border: 1.5px solid #E0D0B8;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-transform: none;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+    }
+    .manual-order-field input:focus,
+    .manual-order-field select:focus,
+    .manual-order-field textarea:focus {
+      border-color: var(--saffron);
+    }
+    .manual-order-field.full { grid-column: 1 / -1; }
     .order-editor-list {
       display: flex;
       flex-direction: column;
@@ -455,6 +500,7 @@
         grid-template-columns: 1fr;
         align-items: stretch;
       }
+      .manual-order-fields { grid-template-columns: 1fr; }
       .order-editor-item-total { text-align: left; }
     }
 
@@ -1192,7 +1238,9 @@
                 <option value="pending">Pending</option>
                 <option value="fulfilled">Fulfilled</option>
                 <option value="cancelled">Cancelled</option>
+                <option value="no_show">No Show</option>
               </select>
+              <button class="toolbar-btn" type="button" onclick="openManualOrderForm()">+ Manual Order</button>
               <button class="toolbar-btn" id="bulkFulfillBtn" onclick="markFilteredActiveFulfilled()">✓ Mark Filtered Fulfilled</button>
               <button class="toolbar-btn" onclick="printActiveOrders()">🖨 Print Active</button>
               <button class="toolbar-btn" onclick="exportCSV()">⬇ Export CSV</button>
@@ -1200,7 +1248,7 @@
           </div>
 
           <div class="orders-help" id="ordersHelpText">
-            Active Orders shows your current pending pickup list. Processed Orders shows fulfilled and cancelled records. All Orders is the permanent master history.
+            Active Orders shows your current pending pickup list. Processed Orders shows fulfilled, cancelled, and no-show records. All Orders is the permanent master history.
           </div>
 
           <div class="active-order-summary" id="activeOrderSummary"></div>
@@ -1241,6 +1289,48 @@
                 <option value="">Add an item</option>
               </select>
               <button class="toolbar-btn" type="button" onclick="addOrderDraftItem()">+ Add Item</button>
+            </div>
+            <div class="manual-order-fields" id="manualOrderFields">
+              <label class="manual-order-field">
+                First Name
+                <input type="text" id="manualFirstName" autocomplete="off">
+              </label>
+              <label class="manual-order-field">
+                Last Name
+                <input type="text" id="manualLastName" autocomplete="off">
+              </label>
+              <label class="manual-order-field">
+                Phone
+                <input type="tel" id="manualPhone" autocomplete="off">
+              </label>
+              <label class="manual-order-field">
+                Email
+                <input type="email" id="manualEmail" autocomplete="off">
+              </label>
+              <label class="manual-order-field">
+                Pickup Location
+                <select id="manualLocation">
+                  <option value="shortpump">Short Pump, VA</option>
+                  <option value="chesterfield">Chesterfield, VA</option>
+                </select>
+              </label>
+              <label class="manual-order-field">
+                Pickup Date
+                <input type="date" id="manualPickupDate">
+              </label>
+              <label class="manual-order-field">
+                Payment Method
+                <select id="manualPaymentMethod">
+                  <option value="cash">Cash</option>
+                  <option value="zelle">Zelle</option>
+                  <option value="card">Card</option>
+                  <option value="">Not collected</option>
+                </select>
+              </label>
+              <label class="manual-order-field full">
+                Notes
+                <textarea id="manualNotes" rows="2"></textarea>
+              </label>
             </div>
             <div class="order-editor-list" id="orderEditorItems"></div>
             <div class="order-editor-empty" id="orderEditorEmpty">This order has no items yet. Add a catalog item before saving.</div>

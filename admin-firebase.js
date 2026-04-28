@@ -13,6 +13,7 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
+  serverTimestamp,
   moneyNumber,
   escapeHtml,
   formatDate,
@@ -24,6 +25,8 @@ import {
 const BASE_PRODUCTS = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || []));
 const GO_LIVE_STATS_DATE = '2026-04-10';
 const EXCEL_CALC_DOC_PREFIX = 'excel_sheet__';
+const PROCESSED_ORDER_STATUSES = ['fulfilled', 'cancelled', 'no_show'];
+const NON_REVENUE_ORDER_STATUSES = ['cancelled', 'no_show'];
 
 const state = {
   orders: [],
@@ -37,7 +40,8 @@ const state = {
   orderSheet: 'active',
   orderEditor: {
     orderId: '',
-    items: []
+    items: [],
+    mode: 'edit'
   },
   orderFilters: {
     active: { status: 'pending', dateFrom: '', dateTo: '', search: '', location: 'all' },
@@ -122,8 +126,8 @@ function renderStats() {
   const total = statsOrders.length;
   const pending = orders.filter((o) => o.status === 'pending').length;
   const fulfilled = statsOrders.filter((o) => o.status === 'fulfilled').length;
-  const totalBoxes = statsOrders.filter((o) => o.status !== 'cancelled').reduce((sum, order) => sum + (order.totalBoxes || 0), 0);
-  const totalRevenue = statsOrders.filter((o) => o.status !== 'cancelled').reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+  const totalBoxes = statsOrders.filter((o) => !NON_REVENUE_ORDER_STATUSES.includes(o.status || 'pending')).reduce((sum, order) => sum + (order.totalBoxes || 0), 0);
+  const totalRevenue = statsOrders.reduce((sum, order) => sum + orderRevenueValue(order), 0);
   const available = state.products.filter((product) => product.available && !product.displayOnly).length;
   const totalProducts = state.products.filter((product) => !product.displayOnly).length;
   const totalSubscribers = state.subscribers.length;
@@ -178,6 +182,24 @@ function formatDateTime(value) {
 
 function moneyValue(value) {
   return Number(value || 0);
+}
+
+function orderRevenueValue(order = {}) {
+  return NON_REVENUE_ORDER_STATUSES.includes(order.status || 'pending') ? 0 : moneyValue(order.totalPrice);
+}
+
+function orderStatusLabel(status = 'pending') {
+  const labels = {
+    pending: 'Pending',
+    fulfilled: 'Fulfilled',
+    cancelled: 'Cancelled',
+    no_show: 'No Show'
+  };
+  return labels[status] || String(status || 'pending').replace(/_/g, ' ');
+}
+
+function locationLabel(location = '') {
+  return location === 'shortpump' ? 'Short Pump, VA' : 'Chesterfield, VA';
 }
 
 function excelCalcMoneyValue(value) {
@@ -319,6 +341,7 @@ function accounting2BatchOrders(batchName = accounting2BatchName()) {
 function accounting2OrderedCounts(batchName = accounting2BatchName()) {
   const counts = {};
   accounting2BatchOrders(batchName).forEach((order) => {
+    if (NON_REVENUE_ORDER_STATUSES.includes(order.status || 'pending')) return;
     (order.items || []).forEach((item) => {
       const productId = accounting2ResolveProductIdFromItem(item);
       if (!productId) return;
@@ -417,7 +440,7 @@ function getAccountingBatchEntries(view = state.accountingView) {
         batchName,
         status: record.status || 'open',
         orderCount: record.orderCount ?? orders.length,
-        collectedTotal: record.collectedTotal ?? collectedOrders.reduce((sum, order) => sum + moneyValue(order.totalPrice), 0),
+        collectedTotal: record.collectedTotal ?? collectedOrders.reduce((sum, order) => sum + orderRevenueValue(order), 0),
         lastSavedAt: record.lastSavedAt || null,
         closedAt: record.closedAt || null
       };
@@ -508,7 +531,7 @@ function getOrdersForSheet(sheet = state.orderSheet) {
   if (sheet === 'processed') {
     return state.orders.filter((order) => {
       const status = order.status || 'pending';
-      return ['fulfilled', 'cancelled'].includes(status) && !order.paymentCollected;
+      return PROCESSED_ORDER_STATUSES.includes(status) && !order.paymentCollected;
     });
   }
   return [...state.orders];
@@ -574,7 +597,7 @@ function updateOrdersSheetUi() {
     },
       processed: {
         title: 'Processed Orders',
-        help: 'Processed Orders shows fulfilled and cancelled records that still need payment follow-up. Once payment is collected, they move out of this list.',
+        help: 'Processed Orders shows fulfilled, cancelled, and no-show records. No-show orders stay visible here and count as $0 in accounting.',
       },
     all: {
       title: 'All Orders',
@@ -744,7 +767,12 @@ function getOrderEditorCatalogOptions() {
 
 function renderOrderEditor() {
   const modal = document.getElementById('orderEditorModal');
-  const order = orderEditorDraftOrder();
+  const isManual = state.orderEditor.mode === 'manual';
+  const order = isManual ? {
+    orderNumber: 'Manual Order',
+    fullName: 'Walk-up customer',
+    phone: ''
+  } : orderEditorDraftOrder();
   if (!modal || !order) return;
 
   const titleEl = document.getElementById('orderEditorOrderNumber');
@@ -754,13 +782,17 @@ function renderOrderEditor() {
   const totalEl = document.getElementById('orderEditorTotal');
   const boxesEl = document.getElementById('orderEditorBoxes');
   const addSelect = document.getElementById('orderEditorAddSelect');
+  const manualFields = document.getElementById('manualOrderFields');
   const options = getOrderEditorCatalogOptions();
   const totals = orderEditorTotals(state.orderEditor.items);
 
   if (titleEl) titleEl.textContent = order.orderNumber || order.id;
   if (customerEl) {
-    customerEl.textContent = `${order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim()} - ${order.phone || ''}`;
+    customerEl.textContent = isManual
+      ? 'Add a walk-up pickup order after the customer has received items.'
+      : `${order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim()} - ${order.phone || ''}`;
   }
+  manualFields?.classList.toggle('show', isManual);
   if (totalEl) totalEl.textContent = formatCurrency(totals.totalPrice);
   if (boxesEl) boxesEl.textContent = String(totals.totalBoxes);
 
@@ -802,8 +834,45 @@ function openOrderEditor(id) {
 
   state.orderEditor = {
     orderId: id,
-    items: Array.isArray(order.items) ? order.items.map((item, index) => cloneOrderEditorItem(item, index)) : []
+    items: Array.isArray(order.items) ? order.items.map((item, index) => cloneOrderEditorItem(item, index)) : [],
+    mode: 'edit'
   };
+  const saveBtn = document.getElementById('orderEditorSaveBtn');
+  if (saveBtn) saveBtn.textContent = 'Save Changes';
+
+  renderOrderEditor();
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function openManualOrderForm() {
+  const modal = document.getElementById('orderEditorModal');
+  if (!modal) return;
+
+  state.orderEditor = {
+    orderId: '',
+    items: [],
+    mode: 'manual'
+  };
+
+  const today = todayDateInputValue();
+  const fieldDefaults = {
+    manualFirstName: 'Walk-up',
+    manualLastName: 'Customer',
+    manualPhone: '',
+    manualEmail: '',
+    manualLocation: 'chesterfield',
+    manualPickupDate: today,
+    manualPaymentMethod: 'cash',
+    manualNotes: 'Manual walk-up order entered by admin.'
+  };
+  Object.entries(fieldDefaults).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = value;
+  });
+
+  const saveBtn = document.getElementById('orderEditorSaveBtn');
+  if (saveBtn) saveBtn.textContent = 'Save Manual Order';
 
   renderOrderEditor();
   modal.classList.add('open');
@@ -814,7 +883,11 @@ function closeOrderEditor() {
   const modal = document.getElementById('orderEditorModal');
   if (!modal) return;
   modal.classList.remove('open');
-  state.orderEditor = { orderId: '', items: [] };
+  state.orderEditor = { orderId: '', items: [], mode: 'edit' };
+  const manualFields = document.getElementById('manualOrderFields');
+  manualFields?.classList.remove('show');
+  const saveBtn = document.getElementById('orderEditorSaveBtn');
+  if (saveBtn) saveBtn.textContent = 'Save Changes';
   document.body.style.overflow = '';
 }
 
@@ -871,8 +944,9 @@ function addOrderDraftItem() {
 }
 
 async function saveEditedOrder() {
-  const order = orderEditorDraftOrder();
-  if (!order) return;
+  const isManual = state.orderEditor.mode === 'manual';
+  const order = isManual ? null : orderEditorDraftOrder();
+  if (!isManual && !order) return;
 
   const saveBtn = document.getElementById('orderEditorSaveBtn');
   if (!state.orderEditor.items.length) {
@@ -905,21 +979,64 @@ async function saveEditedOrder() {
   }
 
   try {
-    await updateDoc(doc(db, 'orders', order.id), {
-      items: cleanedItems,
-      totalBoxes: totals.totalBoxes,
-      totalPrice: totals.totalPrice,
-      updatedAt: new Date().toISOString()
-    });
+    if (isManual) {
+      const firstName = (document.getElementById('manualFirstName')?.value || 'Walk-up').trim() || 'Walk-up';
+      const lastName = (document.getElementById('manualLastName')?.value || 'Customer').trim() || 'Customer';
+      const phone = (document.getElementById('manualPhone')?.value || '').trim();
+      const email = (document.getElementById('manualEmail')?.value || '').trim();
+      const location = document.getElementById('manualLocation')?.value || 'chesterfield';
+      const pickupDate = document.getElementById('manualPickupDate')?.value || todayDateInputValue();
+      const paymentMethod = document.getElementById('manualPaymentMethod')?.value || '';
+      const notes = (document.getElementById('manualNotes')?.value || '').trim();
+      const phoneDigits = phone.replace(/\D/g, '');
+      const nowIso = new Date().toISOString();
+      const orderRef = doc(collection(db, 'orders'));
+      const batchName = paymentMethod ? batchNameFromDate(pickupDate || todayDateInputValue()) : '';
+
+      await setDoc(orderRef, {
+        orderNumber: `MAN-${Date.now()}`,
+        firstName,
+        lastName,
+        fullName: `${firstName} ${lastName}`.trim(),
+        phone,
+        phoneDigits,
+        email,
+        location,
+        locationLabel: locationLabel(location),
+        referral: 'Manual admin entry',
+        notes,
+        items: cleanedItems,
+        totalBoxes: totals.totalBoxes,
+        totalPrice: totals.totalPrice,
+        payment: paymentMethod ? 'paid' : 'pending',
+        paymentMethod,
+        paymentCollected: Boolean(paymentMethod),
+        paymentCollectedAt: paymentMethod ? nowIso : null,
+        accountingBatch: batchName,
+        pickupDate,
+        status: 'fulfilled',
+        source: 'admin_manual',
+        skipCustomerEmail: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    } else {
+      await updateDoc(doc(db, 'orders', order.id), {
+        items: cleanedItems,
+        totalBoxes: totals.totalBoxes,
+        totalPrice: totals.totalPrice,
+        updatedAt: new Date().toISOString()
+      });
+    }
     closeOrderEditor();
-    showToast('Order updated');
+    showToast(isManual ? 'Manual order added' : 'Order updated');
   } catch (error) {
     console.error(error);
-    showToast('Could not update order right now');
+    showToast(isManual ? 'Could not add manual order right now' : 'Could not update order right now');
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
-      saveBtn.textContent = 'Save Changes';
+      saveBtn.textContent = state.orderEditor.mode === 'manual' ? 'Save Manual Order' : 'Save Changes';
     }
   }
 }
@@ -943,12 +1060,15 @@ function renderOrders() {
       ? `<div class="items-list">${order.items.map((item) => `<div class="item-row"><strong>${escapeHtml(item.name)}</strong> <span>× ${item.qty} · ${escapeHtml(item.price)}</span></div>`).join('')}</div>`
       : '<span style="color:#ccc">—</span>';
 
-    const statusClass = `status-${order.status || 'pending'}`;
-    const statusLabel = (order.status || 'pending').charAt(0).toUpperCase() + (order.status || 'pending').slice(1);
+    const status = order.status || 'pending';
+    const statusClass = `status-${status}`;
+    const statusLabel = orderStatusLabel(status);
     const paymentMethod = order.paymentMethod || '';
     const paymentCollected = Boolean(order.paymentCollected);
     const fallbackBatch = batchNameFromDate(todayDateInputValue());
-    const paymentCellHtml = state.orderSheet === 'active'
+    const paymentCellHtml = status === 'no_show'
+      ? `<div class="payment-note">No show. Accounting total is $0.</div>`
+      : state.orderSheet === 'active'
       ? `<div class="payment-note">Collect at pickup. Add method after processing.</div>`
       : `<div class="payment-cell">
           <select class="payment-select" onchange="updatePaymentMethod('${escapeHtml(order.id)}', this.value)">
@@ -975,7 +1095,7 @@ function renderOrders() {
       <td><input type="date" class="pickup-date-input" value="${formatDateInput(order.pickupDate)}" onchange="updatePickupDate('${escapeHtml(order.id)}', this.value)"></td>
       <td>${paymentCellHtml}</td>
       <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
-      <td><div class="action-btns"><button class="action-btn btn-fulfill" onclick="setStatus('${escapeHtml(order.id)}','fulfilled')">✓ Fulfill</button><button class="action-btn btn-cancel" onclick="setStatus('${escapeHtml(order.id)}','cancelled')">✕ Cancel</button><button class="action-btn btn-reset" onclick="setStatus('${escapeHtml(order.id)}','pending')">↺ Reset</button></div></td>
+      <td><div class="action-btns"><button class="action-btn btn-fulfill" onclick="setStatus('${escapeHtml(order.id)}','fulfilled')">✓ Fulfill</button><button class="action-btn btn-noshow" onclick="setStatus('${escapeHtml(order.id)}','no_show')">No Show</button><button class="action-btn btn-cancel" onclick="setStatus('${escapeHtml(order.id)}','cancelled')">✕ Cancel</button><button class="action-btn btn-reset" onclick="setStatus('${escapeHtml(order.id)}','pending')">↺ Reset</button></div></td>
     </tr>`;
   }).join('');
 
@@ -1531,25 +1651,42 @@ async function toggleAvailable(id, available) {
 
 async function applyOrderStatus(id, status, silent = false) {
   const order = state.orders.find((item) => item.id === id);
+  const nowIso = new Date().toISOString();
+  const payload = {
+    status,
+    updatedAt: nowIso
+  };
 
-  await updateDoc(doc(db, 'orders', id), { status, updatedAt: new Date().toISOString() });
+  if (status === 'no_show') {
+    payload.payment = 'pending';
+    payload.paymentMethod = '';
+    payload.paymentCollected = false;
+    payload.paymentCollectedAt = null;
+    payload.accountingBatch = order?.accountingBatch || batchNameFromDate(order?.pickupDate || todayDateInputValue());
+  }
+
+  if (status === 'pending' && order?.status === 'no_show') {
+    payload.accountingBatch = '';
+  }
+
+  await updateDoc(doc(db, 'orders', id), payload);
 
   if (order?.phoneDigits) {
     const lockRef = doc(db, 'order_locks', order.phoneDigits);
 
-    if (status === 'fulfilled') {
+    if (status === 'fulfilled' || status === 'no_show') {
       await deleteDoc(lockRef);
     } else {
       await setDoc(lockRef, {
         phoneDigits: order.phoneDigits,
         orderId: id,
         status,
-        updatedAt: new Date().toISOString()
+        updatedAt: nowIso
       }, { merge: true });
     }
   }
 
-  if (!silent) showToast(`Order updated to ${status}`);
+  if (!silent) showToast(`Order updated to ${orderStatusLabel(status)}`);
 }
 
 async function setStatus(id, status) {
@@ -1637,13 +1774,13 @@ async function saveAccountingBatch(options = {}) {
   const batchName = state.selectedAccountingBatch || batchNameFromDate(dateInput.value, seqInput?.value || 1);
   const batchOrders = state.orders.filter((order) => (order.accountingBatch || '') === batchName);
 
-  const expectedTotal = batchOrders.reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
+  const expectedTotal = batchOrders.reduce((sum, order) => sum + orderRevenueValue(order), 0);
   const collectedOrders = batchOrders.filter((order) => order.paymentCollected && order.paymentMethod);
-  const collectedTotal = collectedOrders.reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
-  const cashTotal = collectedOrders.filter((order) => order.paymentMethod === 'cash').reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
-  const zelleTotal = collectedOrders.filter((order) => order.paymentMethod === 'zelle').reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
-  const cardTotal = collectedOrders.filter((order) => order.paymentMethod === 'card').reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
-  const unpaidCount = batchOrders.filter((order) => !order.paymentCollected).length;
+  const collectedTotal = collectedOrders.reduce((sum, order) => sum + orderRevenueValue(order), 0);
+  const cashTotal = collectedOrders.filter((order) => order.paymentMethod === 'cash').reduce((sum, order) => sum + orderRevenueValue(order), 0);
+  const zelleTotal = collectedOrders.filter((order) => order.paymentMethod === 'zelle').reduce((sum, order) => sum + orderRevenueValue(order), 0);
+  const cardTotal = collectedOrders.filter((order) => order.paymentMethod === 'card').reduce((sum, order) => sum + orderRevenueValue(order), 0);
+  const unpaidCount = batchOrders.filter((order) => !order.paymentCollected && (order.status || '') !== 'no_show').length;
   const actualCash = moneyValue(document.getElementById('actualCash')?.value);
   const actualZelle = moneyValue(document.getElementById('actualZelle')?.value);
   const actualCard = moneyValue(document.getElementById('actualCard')?.value);
@@ -1735,7 +1872,7 @@ function exportAccountingBatchCSV() {
       order.orderNumber || order.id,
       order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim(),
       order.phone || '',
-      order.totalPrice || 0,
+      orderRevenueValue(order),
       order.paymentMethod || '',
       order.paymentCollected ? 'Yes' : 'No',
       formatDateTime(order.paymentCollectedAt)
@@ -1754,7 +1891,7 @@ function exportAccountingBatchCSV() {
 async function clearFulfilled() {
   state.orderSheet = 'processed';
   renderOrders();
-  showToast('Fulfilled and cancelled orders are shown in Processed Orders.');
+  showToast('Fulfilled, cancelled, and no-show orders are shown in Processed Orders.');
 }
 
 function exportCSV() {
@@ -1782,7 +1919,7 @@ function exportCSV() {
       order.payment || 'pending',
       order.paymentMethod || '',
       order.paymentCollected ? 'Yes' : 'No',
-      order.status || 'pending',
+      orderStatusLabel(order.status || 'pending'),
       formatDate(order.createdAt)
     ]);
   });
@@ -2296,13 +2433,13 @@ function renderAccounting() {
       return bTime - aTime;
     });
 
-  const expectedTotal = batchOrders.reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
+  const expectedTotal = batchOrders.reduce((sum, order) => sum + orderRevenueValue(order), 0);
   const collectedOrders = batchOrders.filter((order) => order.paymentCollected && order.paymentMethod);
-  const collectedTotal = collectedOrders.reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
-  const cashTotal = collectedOrders.filter((order) => order.paymentMethod === 'cash').reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
-  const zelleTotal = collectedOrders.filter((order) => order.paymentMethod === 'zelle').reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
-  const cardTotal = collectedOrders.filter((order) => order.paymentMethod === 'card').reduce((sum, order) => sum + moneyValue(order.totalPrice), 0);
-  const unpaidCount = batchOrders.filter((order) => !order.paymentCollected).length;
+  const collectedTotal = collectedOrders.reduce((sum, order) => sum + orderRevenueValue(order), 0);
+  const cashTotal = collectedOrders.filter((order) => order.paymentMethod === 'cash').reduce((sum, order) => sum + orderRevenueValue(order), 0);
+  const zelleTotal = collectedOrders.filter((order) => order.paymentMethod === 'zelle').reduce((sum, order) => sum + orderRevenueValue(order), 0);
+  const cardTotal = collectedOrders.filter((order) => order.paymentMethod === 'card').reduce((sum, order) => sum + orderRevenueValue(order), 0);
+  const unpaidCount = batchOrders.filter((order) => !order.paymentCollected && (order.status || '') !== 'no_show').length;
 
   const actualCash = moneyValue(document.getElementById('actualCash')?.value);
   const actualZelle = moneyValue(document.getElementById('actualZelle')?.value);
@@ -2350,9 +2487,9 @@ function renderAccounting() {
     <tr>
       <td><div class="order-id">${escapeHtml(order.orderNumber || order.id)}</div></td>
       <td><div class="customer-name">${escapeHtml(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim())}</div><div class="customer-phone">${escapeHtml(order.phone || '')}</div></td>
-      <td><div class="total-amount">${formatCurrency(order.totalPrice || 0)}</div></td>
+      <td><div class="total-amount">${formatCurrency(orderRevenueValue(order))}</div></td>
       <td>${escapeHtml(order.paymentMethod || '--')}</td>
-      <td>${order.paymentCollected ? '<span class="status-badge status-fulfilled">Collected</span>' : '<span class="status-badge status-pending">Pending</span>'}</td>
+      <td>${(order.status || '') === 'no_show' ? '<span class="status-badge status-no_show">No Show</span>' : (order.paymentCollected ? '<span class="status-badge status-fulfilled">Collected</span>' : '<span class="status-badge status-pending">Pending</span>')}</td>
       <td>${escapeHtml(formatDateTime(order.paymentCollectedAt))}</td>
       <td>${escapeHtml(order.accountingBatch || batchName)}</td>
     </tr>
@@ -2558,6 +2695,7 @@ window.closeAccountingBatch = closeAccountingBatch;
 window.reopenAccountingBatch = reopenAccountingBatch;
 window.exportAccountingBatchCSV = exportAccountingBatchCSV;
 window.openAddProductForm = openAddProductForm;
+window.openManualOrderForm = openManualOrderForm;
 window.closeAddProductForm = closeAddProductForm;
 window.resetAddProductForm = resetAddProductForm;
 window.editProduct = editProduct;
