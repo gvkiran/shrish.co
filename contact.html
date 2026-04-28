@@ -163,9 +163,9 @@
   <div style="text-align:center;margin-bottom:32px">
     <div class="section-label">Find Us</div>
     <h2 class="section-title">Pickup <em>Locations</em></h2>
-    <p style="color:var(--text-light);font-size:15px">Two convenient locations in the Richmond area. Exact address confirmed when we call you.</p>
+    <p style="color:var(--text-light);font-size:15px">Three convenient locations in the Richmond area. Exact address confirmed when we call you.</p>
   </div>
-  <div id="maps-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+  <div id="maps-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px">
     <div style="background:var(--white);border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(26,18,8,.08)">
       <iframe
         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3162.5!2d-77.6367!3d37.6509!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89b1680ae3b10001%3A0x1!2sShort+Pump%2C+VA!5e0!3m2!1sen!2sus!4v1"
@@ -190,10 +190,25 @@
            style="display:inline-block;margin-top:10px;font-size:13px;color:var(--saffron);font-weight:600">Open in Google Maps →</a>
       </div>
     </div>
+    <div style="background:var(--white);border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(26,18,8,.08)">
+      <iframe
+        src="https://www.google.com/maps?q=Mechanicsville,+VA&output=embed"
+        width="100%" height="220" style="border:0;display:block" allowfullscreen="" loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade" title="Mechanicsville VA map"></iframe>
+      <div style="padding:16px 20px">
+        <div style="font-weight:700;color:var(--dark);font-size:16px;margin-bottom:4px">ðŸ“ Mechanicsville, VA</div>
+        <div style="font-size:13px;color:var(--text-light)">North of Richmond Â· Exact address on confirmation</div>
+        <a href="https://maps.google.com/?q=Mechanicsville+VA" target="_blank" rel="noopener"
+           style="display:inline-block;margin-top:10px;font-size:13px;color:var(--saffron);font-weight:600">Open in Google Maps â†’</a>
+      </div>
+    </div>
   </div>
 </div>
 
 <style>
+@media(max-width:900px){
+  #maps-grid{grid-template-columns:1fr 1fr !important}
+}
 @media(max-width:600px){
   #maps-grid{grid-template-columns:1fr !important}
 }
