@@ -26,7 +26,6 @@ const BASE_PRODUCTS = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || 
 const GO_LIVE_STATS_DATE = '2026-04-10';
 const EXCEL_CALC_DOC_PREFIX = 'excel_sheet__';
 const DAMAGED_BOX_UNIT_PRICE = 56;
-const PROCESSED_ORDER_STATUSES = ['fulfilled', 'cancelled', 'no_show'];
 const NON_REVENUE_ORDER_STATUSES = ['cancelled', 'no_show'];
 
 const state = {
@@ -549,7 +548,7 @@ function getOrdersForSheet(sheet = state.orderSheet) {
   if (sheet === 'processed') {
     return state.orders.filter((order) => {
       const status = order.status || 'pending';
-      return PROCESSED_ORDER_STATUSES.includes(status) && !order.paymentCollected;
+      return status === 'fulfilled' && !order.paymentCollected;
     });
   }
   return [...state.orders];
@@ -615,7 +614,7 @@ function updateOrdersSheetUi() {
     },
       processed: {
         title: 'Processed Orders',
-        help: 'Processed Orders shows fulfilled, cancelled, and no-show records. No-show orders stay visible here and count as $0 in accounting.',
+        help: 'Processed Orders shows fulfilled pickups that still need payment or accounting review. Cancelled and no-show records live in All Orders.',
       },
     all: {
       title: 'All Orders',
@@ -1908,7 +1907,7 @@ function exportAccountingBatchCSV() {
 async function clearFulfilled() {
   state.orderSheet = 'processed';
   renderOrders();
-  showToast('Fulfilled, cancelled, and no-show orders are shown in Processed Orders.');
+  showToast('Processed Orders now shows fulfilled pickups that still need review.');
 }
 
 function exportCSV() {
