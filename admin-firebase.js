@@ -1488,7 +1488,8 @@ function productCategoryLabel(category) {
   const labels = {
     mangoes: 'Mangoes',
     putharekulu: 'Putharekulu',
-    jellysnacks: 'Jelly & Snacks'
+    jellysnacks: 'Jelly & Snacks',
+    picklespodi: 'Pickles & Podi'
   };
   return labels[normalizedCategory] || normalizedCategory || 'Product';
 }
@@ -1518,6 +1519,7 @@ function renderProductsFilterBar() {
     { id: 'mangoes', label: 'Mangoes', count: state.products.filter((product) => normalizeProductCategory(product.category) === 'mangoes').length },
     { id: 'putharekulu', label: 'Putharekulu', count: state.products.filter((product) => normalizeProductCategory(product.category) === 'putharekulu').length },
     { id: 'jellysnacks', label: 'Jelly & Snacks', count: state.products.filter((product) => normalizeProductCategory(product.category) === 'jellysnacks').length },
+    { id: 'picklespodi', label: 'Pickles & Podi', count: state.products.filter((product) => normalizeProductCategory(product.category) === 'picklespodi').length },
     { id: 'sweets', label: 'Sweets', count: state.products.filter((product) => ['putharekulu', 'jellysnacks'].includes(normalizeProductCategory(product.category))).length }
   ];
 
@@ -1593,7 +1595,8 @@ function applyCategoryDefaults() {
   const defaults = {
     mangoes: 'per box',
     putharekulu: '5 count or 10 count',
-    jellysnacks: '250g or 500g'
+    jellysnacks: '250g or 500g',
+    picklespodi: '250g or 500g'
   };
   const nextValue = defaults[category] || 'per box';
   if (!unitInput) return nextValue;
@@ -1603,7 +1606,7 @@ function applyCategoryDefaults() {
 }
 
 function productUsesVariants(category) {
-  return ['putharekulu', 'jellysnacks'].includes(category);
+  return ['putharekulu', 'jellysnacks', 'picklespodi'].includes(category);
 }
 
 function updateVariantFieldHints() {
@@ -1642,6 +1645,17 @@ function updateVariantFieldHints() {
     labelTwo.placeholder = '500g';
     skuOne.placeholder = 'Ex: MJS250';
     skuTwo.placeholder = 'Ex: MJS500';
+  } else if (category === 'picklespodi') {
+    if (labelOneText) labelOneText.textContent = 'Size 1 Label';
+    if (labelTwoText) labelTwoText.textContent = 'Size 2 Label';
+    if (priceOneText) priceOneText.textContent = 'Size 1 Price';
+    if (priceTwoText) priceTwoText.textContent = 'Size 2 Price';
+    if (skuOneText) skuOneText.textContent = 'Size 1 SKU';
+    if (skuTwoText) skuTwoText.textContent = 'Size 2 SKU';
+    labelOne.placeholder = '250g';
+    labelTwo.placeholder = '500g';
+    skuOne.placeholder = 'Ex: pickle-mango-avakai-250g';
+    skuTwo.placeholder = 'Ex: pickle-mango-avakai-500g';
   } else {
     if (labelOneText) labelOneText.textContent = 'Option 1 Label';
     if (labelTwoText) labelTwoText.textContent = 'Option 2 Label';
@@ -1700,6 +1714,24 @@ function productVariantsFromForm(category, status) {
 function primaryPriceFromVariants(variants = [], status = 'live') {
   if (!variants.length) return status === 'soon' ? 'Coming Soon' : '';
   return variants[0].price || (status === 'soon' ? 'Coming Soon' : '');
+}
+
+function picklesPodiSaveFields(product = {}) {
+  if (normalizeProductCategory(product.category) !== 'picklespodi') return {};
+
+  return [
+    'preorderOnly',
+    'filterGroup',
+    'ingredientsText',
+    'storageNote',
+    'shelfLifeDisplay',
+    'foodSafetyNote',
+    'shippingNote',
+    'badges'
+  ].reduce((acc, field) => {
+    if (product[field] !== undefined) acc[field] = product[field];
+    return acc;
+  }, {});
 }
 
 function galleryFromInput(value) {
@@ -1828,6 +1860,9 @@ async function submitAddProduct(event) {
   }
 
   const id = editingProductId || getUniqueProductId(name);
+  const existingProduct = editingProductId
+    ? state.products.find((product) => product.id === editingProductId)
+    : null;
   const baseUnit = usesVariants ? (unit || applyCategoryDefaults()) : unit;
   const payload = {
     id,
@@ -1847,8 +1882,9 @@ async function submitAddProduct(event) {
     taste: taste || '',
     bestFor: bestFor || '',
     variants,
+    ...picklesPodiSaveFields(existingProduct),
     sortOrder: editingProductId
-      ? (state.products.find((product) => product.id === editingProductId)?.sortOrder ?? getNextSortOrder())
+      ? (existingProduct?.sortOrder ?? getNextSortOrder())
       : getNextSortOrder(),
     updatedAt: new Date().toISOString()
   };
