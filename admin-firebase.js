@@ -128,9 +128,10 @@ function renderStats() {
   });
   const total = statsOrders.length;
   const pending = orders.filter((o) => o.status === 'pending').length;
-  const fulfilled = statsOrders.filter((o) => o.status === 'fulfilled').length;
-  const totalBoxes = statsOrders.filter((o) => !NON_REVENUE_ORDER_STATUSES.includes(o.status || 'pending')).reduce((sum, order) => sum + (order.totalBoxes || 0), 0);
-  const totalRevenue = statsOrders.reduce((sum, order) => sum + orderRevenueValue(order), 0);
+  const fulfilledOrders = statsOrders.filter((o) => o.status === 'fulfilled');
+  const fulfilled = fulfilledOrders.length;
+  const totalBoxes = fulfilledOrders.reduce((sum, order) => sum + (order.totalBoxes || 0), 0);
+  const totalRevenue = fulfilledOrders.reduce((sum, order) => sum + orderRevenueValue(order), 0);
   const available = state.products.filter((product) => product.available && !product.displayOnly).length;
   const totalProducts = state.products.filter((product) => !product.displayOnly).length;
   const totalSubscribers = state.subscribers.length;
@@ -1092,10 +1093,73 @@ function defaultReminderBody() {
   ].join('\n');
 }
 
+function defaultWhatsAppReminderBody() {
+  return [
+    'Hi {{firstName}},',
+    '',
+    'This is a friendly reminder that your Shrish order {{orderNumber}} is ready for pickup at {{pickupLocation}}.',
+    '',
+    'Order summary:',
+    '{{items}}',
+    '',
+    'Total boxes: {{totalBoxes}}',
+    'Estimated total: {{totalPrice}}',
+    '',
+    'Payment is collected at pickup.',
+    '',
+    'If you are unable to pick up, please send us a quick WhatsApp message so we can plan accordingly.',
+    '',
+    'Thank you,',
+    'Shrish'
+  ].join('\n');
+}
+
+function reminderItemsText(items = []) {
+  if (!Array.isArray(items) || !items.length) return 'Order items are listed in your confirmation email.';
+  return items.map((item) => `- ${item.name || 'Item'} x ${Math.max(1, parseInt(item.qty, 10) || 1)}`).join('\n');
+}
+
+function reminderTemplateValues(order = {}) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  const totals = {
+    totalBoxes: order.totalBoxes || items.reduce((sum, item) => sum + (Math.max(1, parseInt(item.qty, 10) || 1)), 0),
+    totalPrice: moneyNumber(order.totalPrice) || items.reduce((sum, item) => {
+      const qty = Math.max(1, parseInt(item.qty, 10) || 1);
+      return sum + (Number(item.lineTotal || 0) || (moneyNumber(item.price) * qty));
+    }, 0)
+  };
+  const fullName = order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim() || 'Customer';
+
+  return {
+    firstName: order.firstName || fullName.split(' ')[0] || 'Customer',
+    fullName,
+    orderNumber: order.orderNumber || order.id || 'your order',
+    pickupLocation: order.locationLabel || order.pickupLocation || locationLabel(order.location) || 'your selected pickup location',
+    items: reminderItemsText(items),
+    totalBoxes: String(totals.totalBoxes || 0),
+    totalPrice: formatCurrency(totals.totalPrice || 0)
+  };
+}
+
+function applyReminderTemplate(template = '', order = {}) {
+  const values = reminderTemplateValues(order);
+  return String(template || '').replace(/{{\s*([a-zA-Z]+)\s*}}/g, (match, key) =>
+    Object.prototype.hasOwnProperty.call(values, key) ? values[key] : match
+  );
+}
+
+function whatsappPhoneDigits(order = {}) {
+  const raw = String(order.phoneDigits || order.phone || '').replace(/\D/g, '');
+  if (raw.length === 10) return `1${raw}`;
+  if (raw.length === 11 && raw.startsWith('1')) return raw;
+  return raw.length > 11 ? raw : '';
+}
+
 function updateReminderActionUi() {
   const isActiveSheet = state.orderSheet === 'active';
   const selectedOrders = activeReminderOrdersFromSelection();
   const reminderBtn = document.getElementById('emailReminderBtn');
+  const whatsappBtn = document.getElementById('whatsappReminderBtn');
   const selectAll = document.getElementById('selectAllActiveOrders');
 
   if (reminderBtn) {
@@ -1104,6 +1168,14 @@ function updateReminderActionUi() {
     reminderBtn.textContent = selectedOrders.length
       ? `Email Reminder (${selectedOrders.length})`
       : 'Email Reminder';
+  }
+
+  if (whatsappBtn) {
+    whatsappBtn.style.display = isActiveSheet ? 'inline-flex' : 'none';
+    whatsappBtn.disabled = !isActiveSheet || !selectedOrders.length;
+    whatsappBtn.textContent = selectedOrders.length
+      ? `WhatsApp Reminder (${selectedOrders.length})`
+      : 'WhatsApp Reminder';
   }
 
   if (selectAll) {
@@ -1191,6 +1263,89 @@ function closeEmailReminderModal() {
 
 function handleEmailReminderOverlayClick(event) {
   if (event.target?.id === 'emailReminderModal') closeEmailReminderModal();
+}
+
+function openWhatsAppReminderModal() {
+  const modal = document.getElementById('whatsappReminderModal');
+  if (!modal) return;
+
+  const selectedOrders = activeReminderOrdersFromSelection();
+  if (!selectedOrders.length) {
+    showToast('Select at least one active order first');
+    return;
+  }
+
+  const withPhone = selectedOrders.filter((order) => whatsappPhoneDigits(order));
+  const bodyInput = document.getElementById('whatsappReminderBody');
+  const recipientsEl = document.getElementById('whatsappReminderRecipients');
+  const summaryEl = document.getElementById('whatsappReminderSummary');
+
+  if (bodyInput) bodyInput.value = defaultWhatsAppReminderBody();
+  if (summaryEl) {
+    const skipped = selectedOrders.length - withPhone.length;
+    summaryEl.textContent = skipped
+      ? `${withPhone.length} with phone, ${skipped} missing phone and cannot open WhatsApp.`
+      : `${withPhone.length} customer${withPhone.length === 1 ? '' : 's'} ready for manual WhatsApp send.`;
+  }
+  if (recipientsEl) {
+    recipientsEl.innerHTML = selectedOrders.map((order) => {
+      const name = order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim() || 'Customer';
+      const phone = String(order.phone || '').trim();
+      const hasPhone = Boolean(whatsappPhoneDigits(order));
+      return `
+        <div class="reminder-recipient ${hasPhone ? '' : 'missing'}">
+          <div>
+            <strong>${escapeHtml(name)}</strong>
+            <span>${escapeHtml(order.orderNumber || order.id)}</span>
+          </div>
+          ${
+            hasPhone
+              ? `<button class="reminder-link-btn" type="button" data-order-id="${escapeHtml(order.id)}" onclick="openWhatsAppReminderForOrder(this.dataset.orderId)">Open WhatsApp</button>`
+              : `<em>${phone ? 'Invalid phone' : 'Missing phone'}</em>`
+          }
+        </div>
+      `;
+    }).join('');
+  }
+
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeWhatsAppReminderModal() {
+  const modal = document.getElementById('whatsappReminderModal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function handleWhatsAppReminderOverlayClick(event) {
+  if (event.target?.id === 'whatsappReminderModal') closeWhatsAppReminderModal();
+}
+
+function openWhatsAppReminderForOrder(orderId) {
+  const order = activeReminderOrdersFromSelection().find((candidate) => candidate.id === orderId);
+  const body = document.getElementById('whatsappReminderBody')?.value?.trim() || '';
+  const digits = whatsappPhoneDigits(order || {});
+
+  if (!order) {
+    showToast('This order is no longer selected');
+    return;
+  }
+  if (!digits) {
+    showToast('This customer does not have a valid phone number');
+    return;
+  }
+  if (!body) {
+    showToast('Add a WhatsApp message before opening');
+    return;
+  }
+
+  const message = applyReminderTemplate(body, order);
+  const url = `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+  const opened = window.open(url, '_blank');
+  if (opened) opened.opener = null;
+  if (!opened) showToast('Allow popups to open WhatsApp');
 }
 
 async function sendSelectedReminderEmails() {
@@ -2881,6 +3036,7 @@ function bindUi() {
     if (e.key === 'Escape') {
       closeOrderEditor();
       closeEmailReminderModal();
+      closeWhatsAppReminderModal();
     }
   });
 }
@@ -2923,6 +3079,10 @@ window.openEmailReminderModal = openEmailReminderModal;
 window.closeEmailReminderModal = closeEmailReminderModal;
 window.handleEmailReminderOverlayClick = handleEmailReminderOverlayClick;
 window.sendSelectedReminderEmails = sendSelectedReminderEmails;
+window.openWhatsAppReminderModal = openWhatsAppReminderModal;
+window.closeWhatsAppReminderModal = closeWhatsAppReminderModal;
+window.handleWhatsAppReminderOverlayClick = handleWhatsAppReminderOverlayClick;
+window.openWhatsAppReminderForOrder = openWhatsAppReminderForOrder;
 window.printActiveOrders = printActiveOrders;
 window.exportCSV = exportCSV;
 window.exportSubscribersCSV = exportSubscribersCSV;

@@ -566,6 +566,18 @@
     .reminder-recipient span { display: block; color: var(--text-light); font-size: 11px; margin-top: 2px; }
     .reminder-recipient em { color: var(--text-light); font-style: normal; font-size: 12px; }
     .reminder-recipient.missing em { color: #C62828; font-weight: 700; }
+    .reminder-link-btn {
+      border: 1px solid #1f8f49;
+      background: #fff;
+      color: #1f8f49;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .reminder-link-btn:hover { background: #E8F5E9; }
     .reminder-help {
       margin: 0;
       font-size: 12px;
@@ -1322,6 +1334,7 @@
               </select>
               <button class="toolbar-btn" type="button" onclick="openManualOrderForm()">+ Manual Order</button>
               <button class="toolbar-btn" id="emailReminderBtn" type="button" onclick="openEmailReminderModal()" style="display:none;">Email Reminder</button>
+              <button class="toolbar-btn" id="whatsappReminderBtn" type="button" onclick="openWhatsAppReminderModal()" style="display:none;">WhatsApp Reminder</button>
               <button class="toolbar-btn" id="bulkFulfillBtn" onclick="markFilteredActiveFulfilled()">✓ Mark Filtered Fulfilled</button>
               <button class="toolbar-btn" onclick="printActiveOrders()">🖨 Print Active</button>
               <button class="toolbar-btn" onclick="exportCSV()">⬇ Export CSV</button>
@@ -1454,6 +1467,31 @@
               <div class="order-editor-actions">
                 <button class="toolbar-btn" type="button" onclick="closeEmailReminderModal()">Cancel</button>
                 <button class="toolbar-btn" id="emailReminderSendBtn" type="button" onclick="sendSelectedReminderEmails()">Send Reminder Emails</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-editor-modal" id="whatsappReminderModal" onclick="handleWhatsAppReminderOverlayClick(event)">
+          <div class="order-editor-card reminder-editor-card" role="dialog" aria-modal="true" aria-labelledby="whatsappReminderTitle">
+            <div class="order-editor-head">
+              <div>
+                <h3 id="whatsappReminderTitle">WhatsApp Pickup Reminder</h3>
+                <p id="whatsappReminderSummary">Review selected customers before opening WhatsApp.</p>
+              </div>
+              <button class="order-editor-close" type="button" onclick="closeWhatsAppReminderModal()">Close</button>
+            </div>
+            <div class="reminder-form">
+              <div class="reminder-recipient-list" id="whatsappReminderRecipients"></div>
+              <label class="reminder-field">
+                Message
+                <textarea id="whatsappReminderBody"></textarea>
+              </label>
+              <p class="reminder-help">
+                Review the message, then use each Open WhatsApp button. WhatsApp opens with the message filled in, and you send it manually.
+              </p>
+              <div class="order-editor-actions">
+                <button class="toolbar-btn" type="button" onclick="closeWhatsAppReminderModal()">Done</button>
               </div>
             </div>
           </div>
