@@ -20,6 +20,22 @@ const LOCATION_LABELS = {
   mechanicsville: 'Mechanicsville, VA'
 };
 
+function trackCheckoutEvent(eventName, props = {}) {
+  window.SHRISH_ANALYTICS?.track(eventName, props);
+}
+
+function cartAnalyticsSummary() {
+  const totalItems = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
+  const totalValue = cart.reduce((sum, item) => {
+    const num = parseFloat(String(item.price || '0').replace(/[^0-9.]/g, ''));
+    return sum + (Number.isNaN(num) ? 0 : num * (item.qty || 1));
+  }, 0);
+  return {
+    cart_total_items: totalItems,
+    cart_estimated_total: Number(totalValue.toFixed(2))
+  };
+}
+
 function pickupLocationLabel(locationId) {
   return LOCATION_LABELS[locationId] || locationId || '';
 }
@@ -293,6 +309,9 @@ function bindFormUi() {
       selectedLoc = card.dataset.loc;
       document.querySelectorAll('.loc-card').forEach((entry) => entry.classList.remove('selected'));
       card.classList.add('selected');
+      trackCheckoutEvent('pickup_location_selected', {
+        pickup_location: selectedLoc
+      });
       const errEl = document.getElementById('err-location');
       if (errEl) errEl.style.display = 'none';
       rebuildErrorBanner();
@@ -388,6 +407,11 @@ async function submitOrder() {
   const notes = document.getElementById('notes').value.trim();
   const phoneDigits = extractUsPhoneDigits(phone);
   const emailValid = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email);
+  trackCheckoutEvent('order_submit_attempted', {
+    ...cartAnalyticsSummary(),
+    pickup_location: selectedLoc || '',
+    referral: referral || 'Not specified'
+  });
 
   if (phoneInput) phoneInput.value = phone;
 
@@ -408,6 +432,9 @@ async function submitOrder() {
   ) && ok;
 
   if (!cart.length) {
+    trackCheckoutEvent('checkout_validation_failed', {
+      reason: 'empty_cart'
+    });
     const banner = document.getElementById('errorBanner');
     const list = document.getElementById('errorList');
     list.innerHTML = '<li>Your cart is empty - go back to shop and add items first</li>';
@@ -424,6 +451,11 @@ async function submitOrder() {
   }
 
   if (!ok) {
+    trackCheckoutEvent('checkout_validation_failed', {
+      reason: 'invalid_required_fields',
+      has_pickup_location: Boolean(selectedLoc),
+      ...cartAnalyticsSummary()
+    });
     rebuildErrorBanner();
     return;
   }
@@ -439,6 +471,10 @@ async function submitOrder() {
     const lockSnap = await getDoc(lockRef);
     const lockStatus = lockSnap.exists() ? (lockSnap.data()?.status || 'pending') : '';
     if (await isActivePendingLock(lockSnap)) {
+      trackCheckoutEvent('order_duplicate_blocked', {
+        ...cartAnalyticsSummary(),
+        pickup_location: selectedLoc
+      });
       showDuplicateOrderMessage(phone);
       return;
     }
@@ -502,6 +538,12 @@ async function submitOrder() {
       });
     });
 
+    const submittedOrderAnalytics = {
+      ...cartAnalyticsSummary(),
+      pickup_location: selectedLoc,
+      referral: referral || 'Not specified'
+    };
+
     sessionStorage.removeItem('shrish_cart');
     cart = [];
     updateNavCart();
@@ -548,9 +590,18 @@ async function submitOrder() {
       <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Pay at Pickup</span></div>
       <div class="ss-row"><span>Order Confirmation No</span><span>${escapeHtml(displayNumber)}</span></div>`;
 
+    trackCheckoutEvent('order_submitted', {
+      ...submittedOrderAnalytics
+    });
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (error) {
     console.error('Order submit failed', error);
+    trackCheckoutEvent('order_submit_failed', {
+      reason: error?.message === 'DUPLICATE_PENDING_ORDER' ? 'duplicate_pending_order' : (error?.code || 'submit_error'),
+      ...cartAnalyticsSummary(),
+      pickup_location: selectedLoc || ''
+    });
 
     const banner = document.getElementById('errorBanner');
     const list = document.getElementById('errorList');
@@ -584,6 +635,9 @@ function init() {
   renderCartReview();
   updateNavCart();
   bindFormUi();
+  if (cart.length) {
+    trackCheckoutEvent('checkout_page_loaded_with_cart', cartAnalyticsSummary());
+  }
 }
 
 init();

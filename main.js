@@ -9,6 +9,10 @@ const SHRISH_CONFIG = {
   whatsappMessage: "Hi Shrish! I'd like to know more about your mangoes ð¥­"
 };
 
+function trackShrishEvent(eventName, props = {}) {
+  window.SHRISH_ANALYTICS?.track(eventName, props);
+}
+
 // ââ INJECT GLOBAL UI (runs on every page) âââââââââââââââââ
 function injectGlobalUI() {
   // 1. WhatsApp Floating Button
@@ -178,6 +182,24 @@ function injectGlobalUI() {
 document.addEventListener('DOMContentLoaded', () => {
   // Inject global UI
   injectGlobalUI();
+
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest?.('a[href]');
+    if (!link) return;
+    const href = link.getAttribute('href') || '';
+    let channel = '';
+    if (/wa\.me|whatsapp\.com/i.test(href)) channel = 'whatsapp';
+    else if (/instagram\.com/i.test(href)) channel = 'instagram';
+    else if (/^mailto:/i.test(href)) channel = 'email';
+    else if (/^tel:/i.test(href)) channel = 'phone';
+    if (!channel) return;
+
+    trackShrishEvent('contact_link_clicked', {
+      channel,
+      link_area: link.closest('footer') ? 'footer' : link.closest('.nav') ? 'nav' : 'page',
+      link_text: (link.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 80)
+    });
+  });
 
   // Nav scroll shadow
   const nav = document.getElementById('nav');

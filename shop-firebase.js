@@ -12,6 +12,23 @@ let cardVariantSelections = {};
 let notifyTarget = null;
 let picklePodiFilter = 'all';
 
+function trackShopEvent(eventName, props = {}) {
+  window.SHRISH_ANALYTICS?.track(eventName, props);
+}
+
+function productEventProps(product, variant = null) {
+  return {
+    product_id: product?.id || '',
+    product_title: product?.name || '',
+    category: product?.category || '',
+    filter_group: product?.filterGroup || '',
+    variant_id: variant?.id || '',
+    variant_label: variant?.label || '',
+    preorder: Boolean(product?.preorderOnly),
+    available: Boolean(product?.available && !product?.displayOnly)
+  };
+}
+
 function normalizeProductCategory(category) {
   return category === 'Mango Jelly' ? 'jellysnacks' : category;
 }
@@ -280,12 +297,20 @@ function addToCart(productId, qty, variantId = null) {
   updateCartUI();
   showToast(`${selectedVariant.id === 'default' ? p.name : `${p.name} (${selectedVariant.label})`} added!`);
   renderCardQty(productId);
+  trackShopEvent('product_added_to_cart', {
+    ...productEventProps(p, selectedVariant),
+    quantity: qty,
+    cart_total_items: cart.reduce((sum, item) => sum + (item.qty || 0), 0)
+  });
 }
 
 function openCart() {
   document.getElementById('cartDrawer')?.classList.add('open');
   document.getElementById('cartOverlay')?.classList.add('open');
   document.body.style.overflow = 'hidden';
+  trackShopEvent('cart_opened', {
+    cart_total_items: cart.reduce((sum, item) => sum + (item.qty || 0), 0)
+  });
 }
 
 function closeCart() {
@@ -300,6 +325,9 @@ function goCheckout() {
     return;
   }
   saveCart();
+  trackShopEvent('checkout_started', {
+    cart_total_items: cart.reduce((sum, item) => sum + (item.qty || 0), 0)
+  });
   window.location.href = 'order.html';
 }
 
@@ -323,6 +351,7 @@ function openModal(productId) {
   const isSoon = p.displayOnly;
   const imgs = productImages(productId, p);
   const selectedVariant = getSelectedVariant(p, modalVariantId);
+  trackShopEvent('product_details_opened', productEventProps(p, selectedVariant));
 
   const mainWrap = document.getElementById('modalMainImgWrap');
   if (mainWrap) {
@@ -449,6 +478,8 @@ function modalSelectVariant(productId, variantId) {
 
 async function notifyMe(productId, productName) {
   notifyTarget = { productId, productName };
+  const product = window.SHRISH_DATA.products.find((entry) => entry.id === productId);
+  trackShopEvent('product_notify_opened', productEventProps(product || { id: productId, name: productName }));
   const title = document.getElementById('notifyModalTitle');
   const text = document.getElementById('notifyModalText');
   const email = document.getElementById('notifyEmail');
@@ -540,6 +571,10 @@ async function submitNotifyRequest(event) {
     });
 
     setNotifyMessage('success', `Thanks. We'll notify you when "${notifyTarget.productName}" is available.`);
+    trackShopEvent('product_notify_subscribed', {
+      product_id: notifyTarget.productId,
+      product_title: notifyTarget.productName
+    });
     emailInput.value = '';
     showToast(`Saved notification for ${notifyTarget.productName}`);
     window.setTimeout(() => {
@@ -708,6 +743,10 @@ function buildFilters() {
       btn.classList.add('active');
       activeFilter = normalizedCatId;
       if (normalizedCatId !== 'picklespodi') picklePodiFilter = 'all';
+      trackShopEvent('shop_category_filter_clicked', {
+        filter_id: normalizedCatId,
+        filter_label: cat.label
+      });
       renderShop();
     };
     bar.appendChild(btn);
@@ -744,6 +783,9 @@ function renderPicklesPodiFilters(items) {
 
 function setPicklesPodiFilter(filterId) {
   picklePodiFilter = filterId;
+  trackShopEvent('pickles_podi_filter_clicked', {
+    filter_id: filterId
+  });
   renderShop();
 }
 
