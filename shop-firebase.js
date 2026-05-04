@@ -762,8 +762,22 @@ function renderShop() {
     mangoes: { title: 'Fruits', em: 'Mangoes', sub: 'Click any product to view full details. Available varieties shown first.', banner: false },
     putharekulu: { title: 'Sweets', em: 'Putharekulu', sub: 'Hand-crafted in Atreyapuram, Andhra Pradesh. Coming soon to Shrish LLC!', banner: true },
     jellysnacks: { title: 'Sweets', em: 'Jelly', sub: 'Traditional Mamidi Thandra & Thati Thandra from Atreyapuram. Coming soon.', banner: false },
-    snacks: { title: 'Snacks', em: '', sub: 'More snacks will be added soon.', banner: false },
-    picklespodi: { title: 'Pickles', em: '& Podi', sub: 'Traditional Andhra-style pickles and podi. Non-veg pickles are preorder only. Use package Best Before date as final.', banner: false }
+    snacks: {
+      title: 'Snacks',
+      em: '',
+      sub: 'More snacks will be added soon.',
+      banner: true,
+      bannerTitle: 'Snacks Coming Soon!',
+      bannerText: 'We are getting select snacks directly from India. Stay tuned for fresh arrivals and limited batches.'
+    },
+    picklespodi: {
+      title: 'Pickles',
+      em: '& Podi',
+      sub: 'Traditional Andhra-style pickles and podi. Non-veg pickles are preorder only. Use package Best Before date as final.',
+      banner: true,
+      bannerTitle: 'More Pickles & Podi Coming Soon!',
+      bannerText: 'More regional pickle and podi varieties are being planned. Watch this section for limited batches and preorder updates.'
+    }
   };
 
   const activeFilterConfig = SHOP_FILTERS.find((filter) => filter.id === activeFilter) || SHOP_FILTERS[0];
@@ -772,8 +786,9 @@ function renderShop() {
   cats.forEach((catId) => {
     const allCatItems = sortWithinAvailability(window.SHRISH_DATA.products.filter((p) => p.category === catId));
     const items = catId === 'picklespodi' ? allCatItems.filter(picklesPodiMatches) : allCatItems;
-    if (!allCatItems.length) return;
     const m = catMeta[catId] || { title: catId, em: '', sub: '', banner: false };
+    const showEmptyCategory = activeFilter === catId && ['snacks'].includes(catId);
+    if (!allCatItems.length && !showEmptyCategory) return;
     const hasLiveItems = allCatItems.some((product) => product.available && !product.displayOnly);
     let sectionSub = m.sub;
     if (catId === 'putharekulu' && hasLiveItems) {
@@ -787,8 +802,11 @@ function renderShop() {
     }
     const subFilters = catId === 'picklespodi' ? renderPicklesPodiFilters(allCatItems) : '';
     let html = `<div class="shop-section"><div class="shop-section-head"><div><div class="shop-section-title">${m.title} <em>${m.em}</em></div><div class="section-divider"></div></div>${subFilters}</div><p style="color:var(--text-light);font-size:14px;margin-bottom:24px">${sectionSub}</p>`;
-    if (m.banner && !hasLiveItems) {
-      html += `<div class="coming-banner"><div class="cb-icon">New</div><div><h3>Coming Soon to Shrish!</h3><p>Authentic GI-tagged Putharekulu from Atreyapuram. Hit "Notify Me" to be first in line when we launch.</p></div></div>`;
+    const showBanner = m.banner && (!hasLiveItems || activeFilter === catId);
+    if (showBanner) {
+      const bannerTitle = m.bannerTitle || 'Coming Soon to Shrish!';
+      const bannerText = m.bannerText || 'Authentic GI-tagged Putharekulu from Atreyapuram. Hit "Notify Me" to be first in line when we launch.';
+      html += `<div class="coming-banner"><div class="cb-icon">New</div><div><h3>${escapeHtml(bannerTitle)}</h3><p>${escapeHtml(bannerText)}</p></div></div>`;
     }
     html += `<div class="products-grid-v2">${items.map(renderCard).join('')}</div></div>`;
     container.innerHTML += html;
