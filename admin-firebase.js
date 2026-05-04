@@ -1229,7 +1229,17 @@ async function sendSelectedReminderEmails() {
     showToast(skipped ? `Reminder emails sent to ${sent}; ${skipped} skipped` : `Reminder emails sent to ${sent}`);
   } catch (error) {
     console.error(error);
-    showToast(error?.message || 'Could not send reminder emails right now');
+    const code = String(error?.code || '');
+    const message = String(error?.message || '');
+    if (code.includes('not-found') || message.toLowerCase().includes('not found')) {
+      showToast('Reminder email function is not deployed yet.');
+    } else if (code.includes('unauthenticated')) {
+      showToast('Please log out and log back in before sending reminders.');
+    } else if (message && message !== 'internal') {
+      showToast(message);
+    } else {
+      showToast('Reminder email failed in Firebase Functions. Check deployment/logs.');
+    }
   } finally {
     if (sendBtn) {
       sendBtn.disabled = false;

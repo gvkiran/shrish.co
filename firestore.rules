@@ -9,6 +9,10 @@ service cloud.firestore {
       return resource.data.status in ['no_show', 'cancelled']
         || (
           resource.data.status == 'pending'
+          && !(resource.data.orderId is string)
+        )
+        || (
+          resource.data.status == 'pending'
           && resource.data.orderId is string
           && (
             !exists(/databases/$(database)/documents/orders/$(resource.data.orderId))

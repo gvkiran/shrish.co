@@ -205,7 +205,7 @@ async function isActivePendingLock(lockSnap) {
   if (!lockSnap?.exists()) return false;
   const lock = lockSnap.data() || {};
   if ((lock.status || 'pending') !== 'pending') return false;
-  if (!lock.orderId) return true;
+  if (!lock.orderId) return false;
 
   const orderSnap = await getDoc(doc(db, 'orders', lock.orderId)).catch(() => null);
   return orderSnap?.exists() && (orderSnap.data()?.status || 'pending') === 'pending';
@@ -485,13 +485,11 @@ async function submitOrder() {
       const pendingLockStatus = pendingLock.exists() ? (pendingLock.data()?.status || 'pending') : '';
       if (pendingLockStatus === 'pending') {
         const pendingLockData = pendingLock.data() || {};
-        if (!pendingLockData.orderId) {
-          throw new Error('DUPLICATE_PENDING_ORDER');
-        }
-
-        const linkedOrder = await transaction.get(doc(db, 'orders', pendingLockData.orderId));
-        if (linkedOrder.exists() && (linkedOrder.data()?.status || 'pending') === 'pending') {
-          throw new Error('DUPLICATE_PENDING_ORDER');
+        if (pendingLockData.orderId) {
+          const linkedOrder = await transaction.get(doc(db, 'orders', pendingLockData.orderId));
+          if (linkedOrder.exists() && (linkedOrder.data()?.status || 'pending') === 'pending') {
+            throw new Error('DUPLICATE_PENDING_ORDER');
+          }
         }
       }
 

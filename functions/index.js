@@ -478,21 +478,34 @@ exports.sendOrderReminderEmails = onCall(
       const subject = applyReminderTemplate(subjectTemplate, order).slice(0, 160);
       const messageText = applyReminderTemplate(bodyTemplate, order);
 
-      await resend.emails.send({
-        from: SHRISH_FROM_EMAIL,
-        to: [order.email],
-        subject,
-        html: buildReminderEmail(order, messageText),
-      });
+      try {
+        await resend.emails.send({
+          from: SHRISH_FROM_EMAIL,
+          to: [order.email],
+          subject,
+          html: buildReminderEmail(order, messageText),
+        });
 
-      await orderRef.update({
-        "reminders.email.lastSentAt": admin.firestore.FieldValue.serverTimestamp(),
-        "reminders.email.lastSubject": subject,
-        "reminders.email.sentBy": sentBy,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+        await orderRef.update({
+          "reminders.email.lastSentAt": admin.firestore.FieldValue.serverTimestamp(),
+          "reminders.email.lastSubject": subject,
+          "reminders.email.sentBy": sentBy,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
 
-      sent += 1;
+        sent += 1;
+      } catch (error) {
+        console.error("Reminder email send failed", {
+          orderId,
+          email: order.email,
+          error: error?.message || String(error),
+        });
+        skippedOrders.push({ orderId, reason: "send_failed" });
+      }
+    }
+
+    if (!sent && skippedOrders.length) {
+      throw new HttpsError("failed-precondition", "No reminder emails were sent. Check Firebase Functions logs and Resend setup.");
     }
 
     return {
