@@ -213,7 +213,7 @@ function renderCartDrawer() {
       <div class="ce-icon">Cart</div>
       <p style="font-size:16px;font-weight:600;color:var(--dark);margin-bottom:8px">Your cart is empty</p>
       <p style="font-size:14px;color:var(--text-light);margin-bottom:20px">Browse our fresh Indian mangoes and add some to your cart!</p>
-      <a href="shop.html" onclick="closeCart()" style="display:inline-flex;align-items:center;gap:8px;background:var(--saffron);color:white;padding:12px 24px;border-radius:50px;font-family:var(--font-body);font-size:14px;font-weight:700;text-decoration:none;transition:all .3s">Shop Mangoes</a>
+      <a href="shop.html" onclick="closeCart()" style="display:inline-flex;align-items:center;gap:8px;background:var(--saffron);color:white;padding:12px 24px;border-radius:50px;font-family:var(--font-body);font-size:14px;font-weight:700;text-decoration:none;transition:all .3s">Shop</a>
     </div>`;
     foot.style.display = 'none';
     return;
