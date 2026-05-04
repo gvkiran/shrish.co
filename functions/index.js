@@ -1,4 +1,5 @@
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const { Resend } = require("resend");
@@ -14,6 +15,7 @@ const SHRISH_INSTAGRAM_URL = "https://www.instagram.com/shrish_richmond_mangos/"
 const SHRISH_WHATSAPP_URL = "https://wa.me/17653255577";
 const SHRISH_LOGO_URL = "https://gvkiran.github.io/shrish.co/logo.png";
 const ORDER_COUNTER_START = 671499;
+const MAX_REMINDER_EMAILS_PER_SEND = 50;
 
 function currency(value) {
   const num = Number(value || 0);
@@ -345,6 +347,161 @@ function buildAdminEmail(order) {
   </html>
   `;
 }
+
+function reminderItemsText(items = []) {
+  if (!Array.isArray(items) || !items.length) return "Order items are listed in your confirmation email.";
+  return items
+    .map((item) => {
+      const name = item?.name || "Item";
+      const qty = normalizeQty(item);
+      return `- ${name} x ${qty}`;
+    })
+    .join("\n");
+}
+
+function reminderCustomerName(order = {}) {
+  return (
+    order.fullName ||
+    `${order.firstName || ""} ${order.lastName || ""}`.trim() ||
+    "Customer"
+  );
+}
+
+function reminderTemplateValues(order = {}) {
+  const totals = getOrderTotals(order);
+  const fullName = reminderCustomerName(order);
+  return {
+    firstName: order.firstName || fullName.split(" ")[0] || "Customer",
+    fullName,
+    orderNumber: order.orderNumber || order.id || "your order",
+    pickupLocation: order.locationLabel || order.pickupLocation || order.location || "your selected pickup location",
+    items: reminderItemsText(order.items || []),
+    totalBoxes: String(totals.totalBoxes || 0),
+    totalPrice: currency(totals.estimatedTotal || 0),
+  };
+}
+
+function applyReminderTemplate(template = "", order = {}) {
+  const values = reminderTemplateValues(order);
+  return String(template || "").replace(/{{\s*([a-zA-Z]+)\s*}}/g, (match, key) => {
+    return Object.prototype.hasOwnProperty.call(values, key) ? values[key] : match;
+  });
+}
+
+function plainTextToEmailHtml(text = "") {
+  return escapeHtml(text).replace(/\r?\n/g, "<br>");
+}
+
+function buildReminderEmail(order, messageText) {
+  const orderNumber = escapeHtml(order.orderNumber || order.id || "");
+  const messageHtml = plainTextToEmailHtml(messageText);
+
+  return `
+  <!doctype html>
+  <html>
+    <body style="margin:0; padding:0; background:#ece7df; font-family: Arial, Helvetica, sans-serif; color:#2b2218;">
+      <div style="padding:32px 12px;">
+        <div style="max-width:680px; margin:0 auto; background:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.08);">
+          <div style="background:#b87512; padding:26px 24px; text-align:center;">
+            <img src="${SHRISH_LOGO_URL}" alt="Shrish" style="display:block; width:110px; height:110px; object-fit:contain; margin:0 auto 14px auto;" />
+            <div style="font-size:12px; letter-spacing:1.6px; font-weight:700; color:#f8ebd4; text-transform:uppercase;">SHRISH LLC</div>
+            <div style="margin-top:10px; font-size:20px; line-height:1.3; font-weight:700; color:#ffffff;">Pickup reminder</div>
+          </div>
+          <div style="padding:24px;">
+            <div style="font-size:15px; line-height:1.7; color:#2b2218; margin-bottom:20px;">${messageHtml}</div>
+            <div style="background:#f6f1e8; border-radius:14px; padding:16px 18px; margin-bottom:18px;">
+              <div style="font-size:13px; font-weight:700; margin-bottom:8px; color:#2b2218;">Order reference</div>
+              <div style="font-size:14px; line-height:1.7; color:#3d3225;">${orderNumber}</div>
+            </div>
+            <div style="font-size:14px; line-height:1.8; color:#2b2218;">
+              <div><strong>Phone:</strong> ${escapeHtml(SHRISH_SUPPORT_PHONE)}</div>
+              <div><strong>WhatsApp:</strong> <a href="${SHRISH_WHATSAPP_URL}" style="color:#1e63c6; text-decoration:none;">${SHRISH_WHATSAPP_URL}</a></div>
+              <div><strong>Instagram:</strong> <a href="${SHRISH_INSTAGRAM_URL}" style="color:#1e63c6; text-decoration:none;">${SHRISH_INSTAGRAM_URL}</a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+  </html>
+  `;
+}
+
+exports.sendOrderReminderEmails = onCall(
+  {
+    region: "us-central1",
+    secrets: [RESEND_API_KEY],
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign in as admin before sending reminders.");
+    }
+
+    const rawOrderIds = Array.isArray(request.data?.orderIds) ? request.data.orderIds : [];
+    const orderIds = [...new Set(rawOrderIds.map((id) => String(id || "").trim()).filter(Boolean))];
+    const subjectTemplate = String(request.data?.subject || "").trim().slice(0, 160);
+    const bodyTemplate = String(request.data?.body || "").trim().slice(0, 5000);
+
+    if (!orderIds.length) {
+      throw new HttpsError("invalid-argument", "Select at least one active order.");
+    }
+    if (orderIds.length > MAX_REMINDER_EMAILS_PER_SEND) {
+      throw new HttpsError("invalid-argument", `Send ${MAX_REMINDER_EMAILS_PER_SEND} or fewer reminder emails at a time.`);
+    }
+    if (!subjectTemplate || !bodyTemplate) {
+      throw new HttpsError("invalid-argument", "Subject and message are required.");
+    }
+
+    const resend = new Resend(RESEND_API_KEY.value());
+    const db = admin.firestore();
+    const sentBy = request.auth.token?.email || request.auth.uid || "admin";
+    const skippedOrders = [];
+    let sent = 0;
+
+    for (const orderId of orderIds) {
+      const orderRef = db.collection("orders").doc(orderId);
+      const snapshot = await orderRef.get();
+      if (!snapshot.exists) {
+        skippedOrders.push({ orderId, reason: "missing" });
+        continue;
+      }
+
+      const order = { id: orderId, ...snapshot.data() };
+      if ((order.status || "pending") !== "pending") {
+        skippedOrders.push({ orderId, reason: "not_active" });
+        continue;
+      }
+      if (!order.email) {
+        skippedOrders.push({ orderId, reason: "missing_email" });
+        continue;
+      }
+
+      const subject = applyReminderTemplate(subjectTemplate, order).slice(0, 160);
+      const messageText = applyReminderTemplate(bodyTemplate, order);
+
+      await resend.emails.send({
+        from: SHRISH_FROM_EMAIL,
+        to: [order.email],
+        subject,
+        html: buildReminderEmail(order, messageText),
+      });
+
+      await orderRef.update({
+        "reminders.email.lastSentAt": admin.firestore.FieldValue.serverTimestamp(),
+        "reminders.email.lastSubject": subject,
+        "reminders.email.sentBy": sentBy,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      sent += 1;
+    }
+
+    return {
+      sent,
+      skipped: skippedOrders.length,
+      skippedOrders,
+    };
+  }
+);
 
 exports.sendOrderEmails = onDocumentCreated(
   {

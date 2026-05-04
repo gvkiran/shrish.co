@@ -13,6 +13,8 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
+  cloudFunctions,
+  httpsCallable,
   serverTimestamp,
   moneyNumber,
   escapeHtml,
@@ -37,6 +39,7 @@ const state = {
   accountingView: 'open',
   selectedAccountingBatch: '',
   productFilter: 'all',
+  selectedReminderOrderIds: new Set(),
   orderSheet: 'active',
   orderEditor: {
     orderId: '',
@@ -1058,6 +1061,183 @@ async function saveEditedOrder() {
   }
 }
 
+function activeReminderOrdersFromSelection() {
+  return state.orders.filter((order) =>
+    state.selectedReminderOrderIds.has(order.id) && (order.status || 'pending') === 'pending'
+  );
+}
+
+function defaultReminderSubject() {
+  return 'Pickup reminder for your Shrish order {{orderNumber}}';
+}
+
+function defaultReminderBody() {
+  return [
+    'Hi {{firstName}},',
+    '',
+    'This is a friendly reminder that your Shrish order {{orderNumber}} is ready for pickup at {{pickupLocation}}.',
+    '',
+    'Order summary:',
+    '{{items}}',
+    '',
+    'Total boxes: {{totalBoxes}}',
+    'Estimated total: {{totalPrice}}',
+    '',
+    'Payment is collected at pickup.',
+    '',
+    'If you are unable to pick up, please send us a quick WhatsApp message so we can plan accordingly.',
+    '',
+    'Thank you,',
+    'Shrish'
+  ].join('\n');
+}
+
+function updateReminderActionUi() {
+  const isActiveSheet = state.orderSheet === 'active';
+  const selectedOrders = activeReminderOrdersFromSelection();
+  const reminderBtn = document.getElementById('emailReminderBtn');
+  const selectAll = document.getElementById('selectAllActiveOrders');
+
+  if (reminderBtn) {
+    reminderBtn.style.display = isActiveSheet ? 'inline-flex' : 'none';
+    reminderBtn.disabled = !isActiveSheet || !selectedOrders.length;
+    reminderBtn.textContent = selectedOrders.length
+      ? `Email Reminder (${selectedOrders.length})`
+      : 'Email Reminder';
+  }
+
+  if (selectAll) {
+    const visiblePending = getFilteredOrders('active').filter((order) => (order.status || 'pending') === 'pending');
+    const selectedVisible = visiblePending.filter((order) => state.selectedReminderOrderIds.has(order.id));
+    selectAll.disabled = !isActiveSheet || !visiblePending.length;
+    selectAll.checked = Boolean(visiblePending.length && selectedVisible.length === visiblePending.length);
+    selectAll.indeterminate = Boolean(selectedVisible.length && selectedVisible.length < visiblePending.length);
+  }
+}
+
+function toggleReminderOrderSelection(orderId, checked) {
+  if (!orderId) return;
+  if (checked) {
+    state.selectedReminderOrderIds.add(orderId);
+  } else {
+    state.selectedReminderOrderIds.delete(orderId);
+  }
+  updateReminderActionUi();
+}
+
+function toggleVisibleReminderOrders(checked) {
+  if (state.orderSheet !== 'active') return;
+  getFilteredOrders('active').forEach((order) => {
+    if ((order.status || 'pending') !== 'pending') return;
+    if (checked) {
+      state.selectedReminderOrderIds.add(order.id);
+    } else {
+      state.selectedReminderOrderIds.delete(order.id);
+    }
+  });
+  renderOrders();
+}
+
+function openEmailReminderModal() {
+  const modal = document.getElementById('emailReminderModal');
+  if (!modal) return;
+
+  const selectedOrders = activeReminderOrdersFromSelection();
+  if (!selectedOrders.length) {
+    showToast('Select at least one active order first');
+    return;
+  }
+
+  const withEmail = selectedOrders.filter((order) => String(order.email || '').trim());
+  const subjectInput = document.getElementById('emailReminderSubject');
+  const bodyInput = document.getElementById('emailReminderBody');
+  const recipientsEl = document.getElementById('emailReminderRecipients');
+  const summaryEl = document.getElementById('emailReminderSummary');
+
+  if (subjectInput) subjectInput.value = defaultReminderSubject();
+  if (bodyInput) bodyInput.value = defaultReminderBody();
+  if (summaryEl) {
+    const skipped = selectedOrders.length - withEmail.length;
+    summaryEl.textContent = skipped
+      ? `${withEmail.length} with email, ${skipped} missing email and will be skipped.`
+      : `${withEmail.length} customer${withEmail.length === 1 ? '' : 's'} ready to email.`;
+  }
+  if (recipientsEl) {
+    recipientsEl.innerHTML = selectedOrders.map((order) => {
+      const name = order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim() || 'Customer';
+      const email = String(order.email || '').trim();
+      return `
+        <div class="reminder-recipient ${email ? '' : 'missing'}">
+          <div>
+            <strong>${escapeHtml(name)}</strong>
+            <span>${escapeHtml(order.orderNumber || order.id)}</span>
+          </div>
+          <em>${email ? escapeHtml(email) : 'Missing email'}</em>
+        </div>
+      `;
+    }).join('');
+  }
+
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEmailReminderModal() {
+  const modal = document.getElementById('emailReminderModal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function handleEmailReminderOverlayClick(event) {
+  if (event.target?.id === 'emailReminderModal') closeEmailReminderModal();
+}
+
+async function sendSelectedReminderEmails() {
+  const selectedOrders = activeReminderOrdersFromSelection();
+  const subject = document.getElementById('emailReminderSubject')?.value?.trim() || '';
+  const body = document.getElementById('emailReminderBody')?.value?.trim() || '';
+  const sendBtn = document.getElementById('emailReminderSendBtn');
+
+  if (!selectedOrders.length) {
+    showToast('No selected active orders to email');
+    return;
+  }
+  if (!subject || !body) {
+    showToast('Add both subject and message before sending');
+    return;
+  }
+
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending...';
+  }
+
+  try {
+    const sendReminder = httpsCallable(cloudFunctions, 'sendOrderReminderEmails');
+    const result = await sendReminder({
+      orderIds: selectedOrders.map((order) => order.id),
+      subject,
+      body
+    });
+    const data = result?.data || {};
+    const sent = Number(data.sent || 0);
+    const skipped = Number(data.skipped || 0);
+    state.selectedReminderOrderIds.clear();
+    closeEmailReminderModal();
+    renderOrders();
+    showToast(skipped ? `Reminder emails sent to ${sent}; ${skipped} skipped` : `Reminder emails sent to ${sent}`);
+  } catch (error) {
+    console.error(error);
+    showToast(error?.message || 'Could not send reminder emails right now');
+  } finally {
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Send Reminder Emails';
+    }
+  }
+}
+
 function renderOrders() {
   const orders = getFilteredOrders();
   updateOrdersSheetUi();
@@ -1067,7 +1247,8 @@ function renderOrders() {
   if (!tbody) return;
 
   if (!orders.length) {
-    tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📭</div><p>No orders found.</p></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📭</div><p>No orders found.</p></div></td></tr>';
+    updateReminderActionUi();
     renderStats();
     return;
   }
@@ -1083,6 +1264,8 @@ function renderOrders() {
     const paymentMethod = order.paymentMethod || '';
     const paymentCollected = Boolean(order.paymentCollected);
     const fallbackBatch = batchNameFromDate(todayDateInputValue());
+    const canSelect = state.orderSheet === 'active' && status === 'pending';
+    const checked = state.selectedReminderOrderIds.has(order.id) ? 'checked' : '';
     const paymentCellHtml = status === 'no_show'
       ? `<div class="payment-note">No show. Accounting total is $0.</div>`
       : state.orderSheet === 'active'
@@ -1103,6 +1286,7 @@ function renderOrders() {
         </div>`;
 
     return `<tr id="row-${escapeHtml(order.id)}">
+      <td class="order-select-col">${canSelect ? `<input type="checkbox" class="order-select-checkbox" ${checked} onchange="toggleReminderOrderSelection('${escapeHtml(order.id)}', this.checked)">` : ''}</td>
       <td><div class="order-id">${escapeHtml(order.orderNumber || order.id)}</div></td>
       <td style="font-size:12px;color:var(--text-light)">${formatDate(order.createdAt)}</td>
       <td><div class="customer-name">${escapeHtml(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim())}</div><div class="customer-phone">${escapeHtml(order.phone)}</div><div class="customer-email">${escapeHtml(order.email)}</div></td>
@@ -1131,6 +1315,7 @@ function renderOrders() {
   }
 
   renderStats();
+  updateReminderActionUi();
 }
 
 function productCategoryLabel(category) {
@@ -1953,6 +2138,7 @@ function exportCSV() {
 function setOrderSheet(sheet) {
   syncCurrentOrderFilters();
   state.orderSheet = sheet;
+  if (sheet !== 'active') state.selectedReminderOrderIds.clear();
   renderOrders();
 }
 
@@ -2682,7 +2868,10 @@ function bindUi() {
   document.getElementById('addProductForm')?.addEventListener('submit', submitAddProduct);
   document.getElementById('adminPw')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeOrderEditor();
+    if (e.key === 'Escape') {
+      closeOrderEditor();
+      closeEmailReminderModal();
+    }
   });
 }
 
@@ -2695,6 +2884,7 @@ function initAuthWatch() {
       state.unsubSubscribersProduct?.();
       state.unsubAccountingBatches?.();
       state.unsubAccounting2Records?.();
+      state.selectedReminderOrderIds.clear();
       setLoggedInUi(false);
       return;
     }
@@ -2717,6 +2907,12 @@ window.togglePaymentCollected = togglePaymentCollected;
 window.clearFulfilled = clearFulfilled;
 window.setOrderSheet = setOrderSheet;
 window.markFilteredActiveFulfilled = markFilteredActiveFulfilled;
+window.toggleReminderOrderSelection = toggleReminderOrderSelection;
+window.toggleVisibleReminderOrders = toggleVisibleReminderOrders;
+window.openEmailReminderModal = openEmailReminderModal;
+window.closeEmailReminderModal = closeEmailReminderModal;
+window.handleEmailReminderOverlayClick = handleEmailReminderOverlayClick;
+window.sendSelectedReminderEmails = sendSelectedReminderEmails;
 window.printActiveOrders = printActiveOrders;
 window.exportCSV = exportCSV;
 window.exportSubscribersCSV = exportSubscribersCSV;

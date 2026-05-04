@@ -209,6 +209,14 @@
       border-top: 1px solid rgba(0,0,0,0.04); vertical-align: top;
     }
     .orders-table tr:hover td { background: rgba(200,121,26,0.025); }
+    .order-select-col { width: 42px; text-align: center !important; }
+    .order-select-checkbox,
+    #selectAllActiveOrders {
+      width: 16px; height: 16px; accent-color: var(--saffron); cursor: pointer;
+    }
+    .toolbar-btn:disabled {
+      opacity: .45; cursor: not-allowed; box-shadow: none;
+    }
 
     .order-id { font-weight: 700; color: var(--saffron); font-size: 12px; }
     .customer-name { font-weight: 600; color: var(--dark); }
@@ -492,6 +500,77 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
+    }
+    .reminder-editor-card { width: min(780px, 100%); }
+    .reminder-form {
+      display: grid;
+      gap: 14px;
+    }
+    .reminder-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-light);
+    }
+    .reminder-field input,
+    .reminder-field textarea {
+      border: 1.5px solid #E0D0B8;
+      border-radius: 8px;
+      padding: 11px 12px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+    }
+    .reminder-field textarea {
+      min-height: 220px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+    .reminder-field input:focus,
+    .reminder-field textarea:focus {
+      border-color: var(--saffron);
+    }
+    .reminder-summary {
+      border-radius: 12px;
+      background: var(--cream);
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--text);
+    }
+    .reminder-recipient-list {
+      display: grid;
+      gap: 8px;
+      max-height: 180px;
+      overflow: auto;
+      border: 1px solid rgba(200,121,26,0.14);
+      border-radius: 12px;
+      padding: 10px;
+      background: #fffdf9;
+    }
+    .reminder-recipient {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      padding: 6px 2px 8px;
+      font-size: 13px;
+    }
+    .reminder-recipient:last-child { border-bottom: 0; }
+    .reminder-recipient strong { display: block; color: var(--dark); }
+    .reminder-recipient span { display: block; color: var(--text-light); font-size: 11px; margin-top: 2px; }
+    .reminder-recipient em { color: var(--text-light); font-style: normal; font-size: 12px; }
+    .reminder-recipient.missing em { color: #C62828; font-weight: 700; }
+    .reminder-help {
+      margin: 0;
+      font-size: 12px;
+      color: var(--text-light);
+      line-height: 1.6;
     }
 
     @media (max-width: 720px) {
@@ -1242,6 +1321,7 @@
                 <option value="no_show">No Show</option>
               </select>
               <button class="toolbar-btn" type="button" onclick="openManualOrderForm()">+ Manual Order</button>
+              <button class="toolbar-btn" id="emailReminderBtn" type="button" onclick="openEmailReminderModal()" style="display:none;">Email Reminder</button>
               <button class="toolbar-btn" id="bulkFulfillBtn" onclick="markFilteredActiveFulfilled()">✓ Mark Filtered Fulfilled</button>
               <button class="toolbar-btn" onclick="printActiveOrders()">🖨 Print Active</button>
               <button class="toolbar-btn" onclick="exportCSV()">⬇ Export CSV</button>
@@ -1258,6 +1338,7 @@
             <table class="orders-table">
               <thead>
                 <tr>
+                  <th class="order-select-col"><input type="checkbox" id="selectAllActiveOrders" onchange="toggleVisibleReminderOrders(this.checked)" aria-label="Select all visible active orders"></th>
                   <th>Order #</th>
                   <th>Received Date</th>
                   <th>Customer</th>
@@ -1343,6 +1424,36 @@
               <div class="order-editor-actions">
                 <button class="toolbar-btn" type="button" onclick="closeOrderEditor()">Cancel</button>
                 <button class="toolbar-btn" id="orderEditorSaveBtn" type="button" onclick="saveEditedOrder()">Save Changes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-editor-modal" id="emailReminderModal" onclick="handleEmailReminderOverlayClick(event)">
+          <div class="order-editor-card reminder-editor-card" role="dialog" aria-modal="true" aria-labelledby="emailReminderTitle">
+            <div class="order-editor-head">
+              <div>
+                <h3 id="emailReminderTitle">Email Pickup Reminder</h3>
+                <p id="emailReminderSummary">Review selected customers before sending.</p>
+              </div>
+              <button class="order-editor-close" type="button" onclick="closeEmailReminderModal()">Close</button>
+            </div>
+            <div class="reminder-form">
+              <div class="reminder-recipient-list" id="emailReminderRecipients"></div>
+              <label class="reminder-field">
+                Subject
+                <input type="text" id="emailReminderSubject" maxlength="160">
+              </label>
+              <label class="reminder-field">
+                Message
+                <textarea id="emailReminderBody"></textarea>
+              </label>
+              <p class="reminder-help">
+                You can use placeholders: {{firstName}}, {{fullName}}, {{orderNumber}}, {{pickupLocation}}, {{items}}, {{totalBoxes}}, and {{totalPrice}}.
+              </p>
+              <div class="order-editor-actions">
+                <button class="toolbar-btn" type="button" onclick="closeEmailReminderModal()">Cancel</button>
+                <button class="toolbar-btn" id="emailReminderSendBtn" type="button" onclick="sendSelectedReminderEmails()">Send Reminder Emails</button>
               </div>
             </div>
           </div>

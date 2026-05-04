@@ -8,6 +8,9 @@ import {
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
+import {
+  getFunctions, httpsCallable
+} from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-functions.js';
 
 const required = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
 const config = window.SHRISH_FIREBASE_CONFIG || {};
@@ -19,6 +22,7 @@ if (missing.length) {
 const app = initializeApp(config);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const cloudFunctions = getFunctions(app, 'us-central1');
 
 function safeText(value, fallback = 'â') {
   if (value === undefined || value === null || value === '') return fallback;
@@ -60,7 +64,7 @@ function orderItemsSummary(items = []) {
 }
 
 export {
-  db, auth,
+  db, auth, cloudFunctions, httpsCallable,
   collection, doc, addDoc, getDocs, getDoc, setDoc, updateDoc, deleteDoc,
   query, where, orderBy, onSnapshot, limit,
   runTransaction,   // â exported
