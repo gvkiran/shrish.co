@@ -17,7 +17,8 @@ const SHRISH_DATA = {
     { id: "all",         label: "All Products" },
     { id: "mangoes",     label: "🥭 Mangoes" },
     { id: "putharekulu", label: "🍬 Putharekulu" },
-    { id: "jellysnacks", label: "🍡 Jelly & Snacks" }
+    { id: "jellysnacks", label: "🍡 Jelly & Snacks" },
+    { id: "picklespodi", label: "Pickles & Podi" }
   ],
 
   products: [
@@ -293,6 +294,606 @@ const SHRISH_DATA = {
       badges: ["Seasonal", "Rare Delicacy", "Naturally Bitter"],
       variants: [
         { id: "opt1", label: "500g", price: "$14.99", sku: "PFJ500" }
+      ]
+    },
+
+    // PICKLES & PODI
+    // ===========================================
+    {
+      id: "picklespodi-brinjal-amla-pickle", category: "picklespodi",
+      name: "Brinjal Amla Pickle", localName: "250g or 500g", origin: "Veg Pickle",
+      price: "$8.99", unit: "250g or 500g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
+      image: "images/products/pickles/brinjal-amla-pickle.jpg",
+      description: "Unique brinjal and amla pickle with tangy, spicy, and earthy flavors. Good rare variety for customers who want something different.",
+      ingredientsText: "Brinjal, amla, red chilli powder, mustard, fenugreek, salt, turmeric, oil, tamarind optional",
+      storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 3-6 months. After opening: refrigerate and use within 30-60 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Veg Pickle", "Veg", "Rare", "Tangy", "Family Pack"],
+      filterGroup: "Veg Pickles",
+      season: "Available Now", taste: "Spice: Medium-Hot",
+      bestFor: "Hot rice - curd rice - chapati - dosa",
+      variants: [
+        { id: "pickle-brinjal-amla-250g", label: "250g", price: "$8.99", sku: "pickle-brinjal-amla-250g" },
+        { id: "pickle-brinjal-amla-500g", label: "500g", price: "$16.99", sku: "pickle-brinjal-amla-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-carrot-pickle", category: "picklespodi",
+      name: "Carrot Pickle", localName: "250g or 500g", origin: "Veg Pickle",
+      price: "$8.99", unit: "250g or 500g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
+      image: "images/products/pickles/carrot.jpg",
+      description: "Andhra-style carrot pickle made with firm carrot pieces, chilli, mustard, fenugreek, turmeric, salt, and oil. Slightly sweet, spicy, and kid-friendly compared with very hot avakai.",
+      ingredientsText: "Carrot pieces, red chilli powder, mustard powder, fenugreek, turmeric, salt, oil, lemon or vinegar depending on supplier recipe",
+      storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 3-6 months. After opening: refrigerate and use within 30-60 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Veg Pickle", "Veg", "Andhra Style", "Mild Sweetness", "Family Friendly"],
+      filterGroup: "Veg Pickles",
+      season: "Available Now", taste: "Spice: Medium",
+      bestFor: "Curd rice - chapati - dosa - idli - upma - lemon rice",
+      variants: [
+        { id: "pickle-carrot-250g", label: "250g", price: "$8.99", sku: "pickle-carrot-250g" },
+        { id: "pickle-carrot-500g", label: "500g", price: "$16.99", sku: "pickle-carrot-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-cauliflower-pickle", category: "picklespodi",
+      name: "Cauliflower Pickle", localName: "250g or 500g", origin: "Veg Pickle",
+      price: "$8.99", unit: "250g or 500g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
+      image: "images/products/pickles/cauliflower.jpg",
+      description: "Andhra-style cauliflower pickle with crunchy cauliflower florets coated in red chilli, mustard, fenugreek, turmeric, salt, and oil. Tangy, spicy, and great as a rice or tiffin side.",
+      ingredientsText: "Cauliflower florets, red chilli powder, mustard powder, fenugreek, turmeric, salt, oil, lemon or vinegar depending on supplier recipe",
+      storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 3-6 months. After opening: refrigerate and use within 30-60 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Veg Pickle", "Veg", "Andhra Style", "Crunchy", "Spicy"],
+      filterGroup: "Veg Pickles",
+      season: "Available Now", taste: "Spice: Medium-Hot",
+      bestFor: "Curd rice - hot rice with ghee - dosa - idli - chapati - upma",
+      variants: [
+        { id: "pickle-cauliflower-250g", label: "250g", price: "$8.99", sku: "pickle-cauliflower-250g" },
+        { id: "pickle-cauliflower-500g", label: "500g", price: "$16.99", sku: "pickle-cauliflower-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-chintakaya-pachadi-tamarind-pickle", category: "picklespodi",
+      name: "Chintakaya Pachadi / Tamarind Pickle", localName: "250g", origin: "Veg Pickle",
+      price: "$7.99", unit: "250g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
+      image: "images/products/pickles/chintakaya-pachadi.jpg",
+      description: "Traditional tamarind-style pickle with sharp tangy flavor and South Indian spice. Excellent with rice, dal, curd rice, and breakfast items.",
+      ingredientsText: "Raw tamarind, green or red chilli, mustard, fenugreek, turmeric, salt, oil, tempering spices",
+      storageNote: "Refrigerate after opening and use within 60-90 days for best taste and safety. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 6-12 months. After opening: refrigerate and use within 60-90 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Veg Pickle", "Veg", "Tangy", "Traditional"],
+      filterGroup: "Veg Pickles",
+      season: "Available Now", taste: "Spice: Hot",
+      bestFor: "Hot rice - curd rice - dal - pesarattu - dosa",
+      variants: [
+        { id: "pickle-chintakaya-250g", label: "250g", price: "$7.99", sku: "pickle-chintakaya-250g" }
+      ]
+    },
+    {
+      id: "picklespodi-drumstick-pickle", category: "picklespodi",
+      name: "Drumstick Pickle", localName: "250g or 500g", origin: "Veg Pickle",
+      price: "$8.99", unit: "250g or 500g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
+      image: "images/products/pickles/drumstick-pickle.jpg",
+      description: "Traditional drumstick pickle with spicy, tangy flavor. A good South Indian side for rice and dal.",
+      ingredientsText: "Drumstick pieces, red chilli powder, mustard, fenugreek, tamarind or lemon, salt, turmeric, oil",
+      storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 3-6 months. After opening: refrigerate and use within 30-60 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Veg Pickle", "Veg", "Traditional", "Tangy", "Family Pack"],
+      filterGroup: "Veg Pickles",
+      season: "Available Now", taste: "Spice: Medium-Hot",
+      bestFor: "Hot rice - curd rice - dal rice - chapati",
+      variants: [
+        { id: "pickle-drumstick-250g", label: "250g", price: "$8.99", sku: "pickle-drumstick-250g" },
+        { id: "pickle-drumstick-500g", label: "500g", price: "$16.99", sku: "pickle-drumstick-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-garlic-pickle", category: "picklespodi",
+      name: "Garlic Pickle", localName: "250g", origin: "Veg Pickle",
+      price: "$7.99", unit: "250g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
+      image: "images/products/pickles/garlic-pickle.jpg",
+      description: "Bold garlic pickle with strong spice and deep flavor. Best for customers who love a punchy pickle with rice, dosa, or chapati.",
+      ingredientsText: "Garlic cloves, red chilli powder, mustard, fenugreek, turmeric, salt, oil, tamarind optional",
+      storageNote: "Refrigerate after opening and use within 60-90 days for best taste and safety. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 6-12 months. After opening: refrigerate and use within 60-90 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Veg Pickle", "Veg", "Bold Flavor", "Spicy"],
+      filterGroup: "Veg Pickles",
+      season: "Available Now", taste: "Spice: Medium-Hot",
+      bestFor: "Dal rice - curd rice - chapati - dosa - idli",
+      variants: [
+        { id: "pickle-garlic-250g", label: "250g", price: "$7.99", sku: "pickle-garlic-250g" }
+      ]
+    },
+    {
+      id: "picklespodi-gongura-pickle", category: "picklespodi",
+      name: "Gongura Pickle", localName: "250g", origin: "Veg Pickle",
+      price: "$7.99", unit: "250g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
+      image: "images/products/pickles/gongura-pickle.jpg",
+      description: "Tangy gongura pickle with bold South Indian spice. A Telugu favorite that pairs beautifully with hot rice and ghee.",
+      ingredientsText: "Gongura leaves, red chilli, garlic, mustard, fenugreek, salt, oil, tempering spices",
+      storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 3-6 months. After opening: refrigerate and use within 30-60 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Veg Pickle", "Veg", "Telugu Favorite", "Tangy"],
+      filterGroup: "Veg Pickles",
+      season: "Available Now", taste: "Spice: Hot",
+      bestFor: "Hot rice with ghee - dal rice - curd rice - dosa - chapati",
+      variants: [
+        { id: "pickle-gongura-250g", label: "250g", price: "$7.99", sku: "pickle-gongura-250g" }
+      ]
+    },
+    {
+      id: "picklespodi-karivepaku-pachadi-curry-leaf-pickle", category: "picklespodi",
+      name: "Karivepaku Pachadi / Curry Leaf Pickle", localName: "200g", origin: "Veg Pickle",
+      price: "$7.99", unit: "200g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
+      image: "images/products/pickles/karivepaku-pachadi.jpg",
+      description: "Aromatic curry leaf pickle with earthy South Indian flavor and medium spice. Good with rice, idli, dosa, and curd rice.",
+      ingredientsText: "Curry leaves, red chilli, garlic, tamarind, mustard, fenugreek, salt, oil, tempering spices",
+      storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 3-6 months. After opening: refrigerate and use within 30-60 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Veg Pickle", "Veg", "Curry Leaf", "Aromatic"],
+      filterGroup: "Veg Pickles",
+      season: "Available Now", taste: "Spice: Medium",
+      bestFor: "Hot rice - idli - dosa - curd rice",
+      variants: [
+        { id: "pickle-karivepaku-pachadi-200g", label: "200g", price: "$7.99", sku: "pickle-karivepaku-pachadi-200g" }
+      ]
+    },
+    {
+      id: "picklespodi-kothimeera-coriander-pickle", category: "picklespodi",
+      name: "Kothimeera / Coriander Pickle", localName: "250g or 500g", origin: "Veg Pickle",
+      price: "$7.99", unit: "250g or 500g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
+      image: "images/products/pickles/kothimeera-pickle.jpg",
+      description: "Fresh coriander-style pickle with a herby, spicy, and tangy taste. A good everyday pickle for rice, dosa, idli, and chapati.",
+      ingredientsText: "Fresh coriander leaves, green chilli or red chilli, garlic, tamarind, mustard, salt, oil, tempering spices",
+      storageNote: "Refrigerate after opening and use within 30 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 2-4 months. After opening: refrigerate and use within 30 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Veg Pickle", "Veg", "Herby", "Everyday Pickle", "Family Pack"],
+      filterGroup: "Veg Pickles",
+      season: "Available Now", taste: "Spice: Medium",
+      bestFor: "Idli - dosa - curd rice - chapati - upma",
+      variants: [
+        { id: "pickle-kothimeera-250g", label: "250g", price: "$7.99", sku: "pickle-kothimeera-250g" },
+        { id: "pickle-kothimeera-500g", label: "500g", price: "$15.99", sku: "pickle-kothimeera-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-mango-avakai-pickle", category: "picklespodi",
+      name: "Mango Avakai Pickle", localName: "250g or 500g", origin: "Veg Pickle",
+      price: "$9.99", unit: "250g or 500g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
+      image: "images/products/pickles/mango-avakai.jpg",
+      description: "Traditional Andhra-style raw mango avakai with mustard, red chilli, spices, and oil. Spicy, tangy, and perfect with hot rice, curd rice, dosa, idli, and chapati.",
+      ingredientsText: "Raw mango pieces, mustard powder, red chilli powder, salt, turmeric, fenugreek, sesame or groundnut oil, garlic optional",
+      storageNote: "Refrigerate after opening and use within 60-90 days for best taste and safety. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 6-12 months. After opening: refrigerate and use within 60-90 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Veg Pickle", "Veg", "Andhra Style", "Best Seller", "Spicy", "Family Pack"],
+      filterGroup: "Veg Pickles",
+      season: "Available Now", taste: "Spice: Hot",
+      bestFor: "Hot rice with ghee - curd rice - dosa - idli - chapati - dal rice",
+      variants: [
+        { id: "pickle-mango-avakai-250g", label: "250g", price: "$9.99", sku: "pickle-mango-avakai-250g" },
+        { id: "pickle-mango-avakai-500g", label: "500g", price: "$17.99", sku: "pickle-mango-avakai-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-mango-ginger-pickle", category: "picklespodi",
+      name: "Mango Ginger Pickle", localName: "250g", origin: "Veg Pickle",
+      price: "$8.99", unit: "250g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
+      image: "images/products/pickles/mango-ginger-pickle.jpg",
+      description: "A rare and flavorful pickle made with mango ginger. Fresh, aromatic, mildly tangy, and different from regular mango pickle.",
+      ingredientsText: "Mango ginger, lemon or tamarind, green chilli or red chilli, mustard, salt, turmeric, oil",
+      storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 3-6 months. After opening: refrigerate and use within 30-60 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Veg Pickle", "Veg", "Rare", "Limited Batch"],
+      filterGroup: "Veg Pickles",
+      season: "Available Now", taste: "Spice: Medium",
+      bestFor: "Curd rice - lemon rice - dosa - upma - chapati",
+      variants: [
+        { id: "pickle-mango-ginger-250g", label: "250g", price: "$8.99", sku: "pickle-mango-ginger-250g" }
+      ]
+    },
+    {
+      id: "picklespodi-mango-thokku-magai-pickle", category: "picklespodi",
+      name: "Mango Thokku / Magai Pickle", localName: "250g or 500g", origin: "Veg Pickle",
+      price: "$9.99", unit: "250g or 500g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
+      image: "images/products/pickles/mango-thokku-magai.jpg",
+      description: "Classic grated mango-style pickle with a rich spicy and tangy flavor. A strong everyday side for rice, dosa, idli, and curd rice.",
+      ingredientsText: "Grated or chopped raw mango, red chilli powder, mustard, fenugreek, turmeric, salt, oil, garlic optional",
+      storageNote: "Refrigerate after opening and use within 60-90 days for best taste and safety. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 6-12 months. After opening: refrigerate and use within 60-90 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Veg Pickle", "Veg", "Tangy", "Everyday Pickle", "Family Pack"],
+      filterGroup: "Veg Pickles",
+      season: "Available Now", taste: "Spice: Medium-Hot",
+      bestFor: "Curd rice - dosa - idli - upma - chapati - hot rice",
+      variants: [
+        { id: "pickle-mango-thokku-magai-250g", label: "250g", price: "$9.99", sku: "pickle-mango-thokku-magai-250g" },
+        { id: "pickle-mango-thokku-magai-500g", label: "500g", price: "$16.99", sku: "pickle-mango-thokku-magai-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-mixed-vegetable-pickle", category: "picklespodi",
+      name: "Mixed Vegetable Pickle", localName: "250g or 500g", origin: "Veg Pickle",
+      price: "$8.99", unit: "250g or 500g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
+      image: "images/products/pickles/mixed-vegetable.jpg",
+      description: "Andhra-style mixed vegetable pickle with carrot, cauliflower, green chilli, and seasonal vegetables in a bold chilli-mustard spice mix. A colorful, crunchy side for rice and tiffins.",
+      ingredientsText: "Mixed vegetables such as carrot, cauliflower, green chilli, and seasonal vegetables, red chilli powder, mustard powder, fenugreek, turmeric, salt, oil, lemon or vinegar depending on supplier recipe",
+      storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 3-6 months. After opening: refrigerate and use within 30-60 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Veg Pickle", "Veg", "Andhra Style", "Assorted Vegetables", "Combo Friendly"],
+      filterGroup: "Veg Pickles",
+      season: "Available Now", taste: "Spice: Medium-Hot",
+      bestFor: "Curd rice - hot rice - chapati - dosa - idli - upma",
+      variants: [
+        { id: "pickle-mixed-vegetable-250g", label: "250g", price: "$8.99", sku: "pickle-mixed-vegetable-250g" },
+        { id: "pickle-mixed-vegetable-500g", label: "500g", price: "$16.99", sku: "pickle-mixed-vegetable-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-pandu-mirchi-pickle", category: "picklespodi",
+      name: "Pandu Mirchi Pickle", localName: "500g", origin: "Veg Pickle",
+      price: "$17.99", unit: "500g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
+      image: "images/products/pickles/pandu-mirchi-pickle.jpg",
+      description: "Spicy red chilli pickle for customers who love serious heat. Strong, flavorful, and best with hot rice, dosa, idli, and curd rice.",
+      ingredientsText: "Red ripe chillies, tamarind, mustard, fenugreek, salt, turmeric, oil, garlic optional",
+      storageNote: "Refrigerate after opening and use within 60-90 days for best taste and safety. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 6-12 months. After opening: refrigerate and use within 60-90 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Veg Pickle", "Veg", "Extra Spicy", "Limited Batch"],
+      filterGroup: "Veg Pickles",
+      season: "Available Now", taste: "Spice: Very Hot",
+      bestFor: "Hot rice with ghee - idli - dosa - pappu rice - curd rice",
+      variants: [
+        { id: "pickle-pandu-mirchi-500g", label: "500g", price: "$17.99", sku: "pickle-pandu-mirchi-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-tomato-pickle", category: "picklespodi",
+      name: "Tomato Pickle", localName: "250g", origin: "Veg Pickle",
+      price: "$7.99", unit: "250g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
+      image: "images/products/pickles/tomato-pickle.jpg",
+      description: "Rich and spicy tomato pickle with a deep, tangy flavor. Great with rice, dosa, upma, idli, chapati, and curd rice.",
+      ingredientsText: "Tomatoes, red chilli powder, tamarind optional, mustard, fenugreek, salt, oil, garlic optional",
+      storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 3-6 months. After opening: refrigerate and use within 30-60 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Veg Pickle", "Veg", "Tangy", "Everyday Pickle"],
+      filterGroup: "Veg Pickles",
+      season: "Available Now", taste: "Spice: Medium-Hot",
+      bestFor: "Idli - dosa - curd rice - chapati - upma - hot rice",
+      variants: [
+        { id: "pickle-tomato-250g", label: "250g", price: "$7.99", sku: "pickle-tomato-250g" }
+      ]
+    },
+    {
+      id: "picklespodi-boneless-chicken-pickle", category: "picklespodi",
+      name: "Boneless Chicken Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      price: "$15.99", unit: "250g or 500g",
+      available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
+      image: "images/products/pickles/chicken-boneless-pickle.jpg",
+      description: "Spicy Andhra-style boneless chicken pickle with bold masala and rich flavor. Best with rice, roti, dosa, and curd rice.",
+      ingredientsText: "Boneless chicken, red chilli powder, ginger garlic, garam masala, mustard, fenugreek, salt, oil, lemon or vinegar depending on supplier recipe",
+      storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Preorder only. Follow package Best Before date. After opening: refrigerate and use within 15-30 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Pickup only",
+      badges: ["Non-Veg Pickle", "Non-Veg", "Preorder Only", "Spicy", "Family Pack"],
+      filterGroup: "Non-Veg Pickles",
+      season: "Preorder Only", taste: "Spice: Hot",
+      bestFor: "Hot rice - chapati - dosa - curd rice - travel meals",
+      variants: [
+        { id: "pickle-chicken-boneless-250g", label: "250g", price: "$15.99", sku: "pickle-chicken-boneless-250g" },
+        { id: "pickle-chicken-boneless-500g", label: "500g", price: "$27.99", sku: "pickle-chicken-boneless-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-boneless-mutton-pickle", category: "picklespodi",
+      name: "Boneless Mutton Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      price: "$18.99", unit: "250g or 500g",
+      available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
+      image: "images/products/pickles/mutton-boneless-pickle.jpg",
+      description: "Premium boneless mutton pickle with rich spice, deep flavor, and strong Andhra-style masala.",
+      ingredientsText: "Boneless mutton, red chilli powder, ginger garlic, garam masala, mustard, fenugreek, salt, oil, lemon or vinegar depending on supplier recipe",
+      storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Preorder only. Follow package Best Before date. After opening: refrigerate and use within 15-30 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Pickup only",
+      badges: ["Non-Veg Pickle", "Non-Veg", "Preorder Only", "Premium", "Family Pack"],
+      filterGroup: "Non-Veg Pickles",
+      season: "Preorder Only", taste: "Spice: Hot",
+      bestFor: "Hot rice - chapati - dosa - curd rice",
+      variants: [
+        { id: "pickle-mutton-boneless-250g", label: "250g", price: "$18.99", sku: "pickle-mutton-boneless-250g" },
+        { id: "pickle-mutton-boneless-500g", label: "500g", price: "$31.99", sku: "pickle-mutton-boneless-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-fish-pickle-koramenu-pickle", category: "picklespodi",
+      name: "Fish Pickle / Koramenu Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      price: "$17.99", unit: "250g or 500g",
+      available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
+      image: "images/products/pickles/fish-koramenu-pickle.jpg",
+      description: "Spicy fish pickle with Andhra-style masala. Premium seafood pickle for preorder customers.",
+      ingredientsText: "Fish pieces, red chilli powder, ginger garlic, mustard, fenugreek, salt, oil, lemon or vinegar depending on supplier recipe, spices",
+      storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Preorder only. Follow package Best Before date. After opening: refrigerate and use within 15-30 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Pickup only",
+      badges: ["Non-Veg Pickle", "Non-Veg", "Preorder Only", "Seafood", "Family Pack"],
+      filterGroup: "Non-Veg Pickles",
+      season: "Preorder Only", taste: "Spice: Hot",
+      bestFor: "Hot rice - chapati - dosa - curd rice",
+      variants: [
+        { id: "pickle-fish-koramenu-250g", label: "250g", price: "$17.99", sku: "pickle-fish-koramenu-250g" },
+        { id: "pickle-fish-koramenu-500g", label: "500g", price: "$31.99", sku: "pickle-fish-koramenu-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-gongura-chicken-pickle", category: "picklespodi",
+      name: "Gongura Chicken Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      price: "$15.99", unit: "250g or 500g",
+      available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
+      image: "images/products/pickles/gongura-chicken-pickle.jpg",
+      description: "Tangy gongura chicken pickle with spicy masala and bold Telugu flavor. A high-demand non-veg variety.",
+      ingredientsText: "Chicken, gongura leaves, red chilli powder, ginger garlic, mustard, fenugreek, salt, oil, spices",
+      storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Preorder only. Follow package Best Before date. After opening: refrigerate and use within 15-30 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Pickup only",
+      badges: ["Non-Veg Pickle", "Non-Veg", "Preorder Only", "Tangy", "Family Pack"],
+      filterGroup: "Non-Veg Pickles",
+      season: "Preorder Only", taste: "Spice: Hot",
+      bestFor: "Hot rice - chapati - dosa - curd rice",
+      variants: [
+        { id: "pickle-gongura-chicken-250g", label: "250g", price: "$15.99", sku: "pickle-gongura-chicken-250g" },
+        { id: "pickle-gongura-chicken-500g", label: "500g", price: "$27.99", sku: "pickle-gongura-chicken-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-gongura-mutton-pickle", category: "picklespodi",
+      name: "Gongura Mutton Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      price: "$18.99", unit: "250g or 500g",
+      available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
+      image: "images/products/pickles/gongura-mutton-pickle.jpg",
+      description: "Premium gongura mutton pickle with tangy gongura and rich mutton masala. Strong Telugu demand item.",
+      ingredientsText: "Mutton, gongura leaves, red chilli powder, ginger garlic, mustard, fenugreek, salt, oil, spices",
+      storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Preorder only. Follow package Best Before date. After opening: refrigerate and use within 15-30 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Pickup only",
+      badges: ["Non-Veg Pickle", "Non-Veg", "Preorder Only", "Premium", "Family Pack"],
+      filterGroup: "Non-Veg Pickles",
+      season: "Preorder Only", taste: "Spice: Hot",
+      bestFor: "Hot rice - chapati - dosa",
+      variants: [
+        { id: "pickle-gongura-mutton-250g", label: "250g", price: "$18.99", sku: "pickle-gongura-mutton-250g" },
+        { id: "pickle-gongura-mutton-500g", label: "500g", price: "$32.99", sku: "pickle-gongura-mutton-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-gongura-prawn-pickle", category: "picklespodi",
+      name: "Gongura Prawn Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      price: "$18.99", unit: "250g or 500g",
+      available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
+      image: "images/products/pickles/gongura-prawn-pickle.jpg",
+      description: "Premium gongura prawn pickle with tangy gongura and spicy seafood masala.",
+      ingredientsText: "Prawns, gongura leaves, red chilli powder, ginger garlic, mustard, fenugreek, salt, oil, spices",
+      storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Preorder only. Follow package Best Before date. After opening: refrigerate and use within 15-30 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Pickup only",
+      badges: ["Non-Veg Pickle", "Non-Veg", "Preorder Only", "Premium", "Family Pack"],
+      filterGroup: "Non-Veg Pickles",
+      season: "Preorder Only", taste: "Spice: Hot",
+      bestFor: "Hot rice - chapati - dosa",
+      variants: [
+        { id: "pickle-gongura-prawn-250g", label: "250g", price: "$18.99", sku: "pickle-gongura-prawn-250g" },
+        { id: "pickle-gongura-prawn-500g", label: "500g", price: "$32.99", sku: "pickle-gongura-prawn-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-natu-kodi-country-chicken-pickle", category: "picklespodi",
+      name: "Natu Kodi / Country Chicken Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      price: "$17.99", unit: "250g or 500g",
+      available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
+      image: "images/products/pickles/natu-kodi-pickle.jpg",
+      description: "Country chicken pickle with strong traditional flavor and spicy masala. Preorder-only specialty item.",
+      ingredientsText: "Country chicken, red chilli powder, ginger garlic, garam masala, mustard, fenugreek, salt, oil, spices",
+      storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Preorder only. Follow package Best Before date. After opening: refrigerate and use within 15-30 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Pickup only",
+      badges: ["Non-Veg Pickle", "Non-Veg", "Preorder Only", "Specialty", "Family Pack"],
+      filterGroup: "Non-Veg Pickles",
+      season: "Preorder Only", taste: "Spice: Hot",
+      bestFor: "Hot rice - chapati - dosa",
+      variants: [
+        { id: "pickle-natu-kodi-250g", label: "250g", price: "$17.99", sku: "pickle-natu-kodi-250g" },
+        { id: "pickle-natu-kodi-500g", label: "500g", price: "$32.99", sku: "pickle-natu-kodi-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-prawns-pickle", category: "picklespodi",
+      name: "Prawns Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      price: "$17.99", unit: "250g or 500g",
+      available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
+      image: "images/products/pickles/prawns-pickle.jpg",
+      description: "Spicy prawns pickle with rich seafood flavor and strong Andhra-style masala. Premium preorder item.",
+      ingredientsText: "Prawns, red chilli powder, ginger garlic, mustard, fenugreek, salt, oil, lemon or vinegar depending on supplier recipe",
+      storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Preorder only. Follow package Best Before date. After opening: refrigerate and use within 15-30 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Pickup only",
+      badges: ["Non-Veg Pickle", "Non-Veg", "Preorder Only", "Premium", "Family Pack"],
+      filterGroup: "Non-Veg Pickles",
+      season: "Preorder Only", taste: "Spice: Hot",
+      bestFor: "Hot rice - chapati - dosa - curd rice",
+      variants: [
+        { id: "pickle-prawns-250g", label: "250g", price: "$17.99", sku: "pickle-prawns-250g" },
+        { id: "pickle-prawns-500g", label: "500g", price: "$31.99", sku: "pickle-prawns-500g" }
+      ]
+    },
+    {
+      id: "picklespodi-dhaniyalu-podi-coriander-spice-powder", category: "picklespodi",
+      name: "Dhaniyalu Podi / Coriander Spice Powder", localName: "200g", origin: "Spice Powder",
+      price: "$6.99", unit: "200g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
+      image: "images/products/podi/dhaniyalu-podi.jpg",
+      description: "Andhra-style dhaniyalu podi made with roasted coriander seeds, chillies, cumin, and traditional spices. Aromatic, earthy, and perfect for mixing with hot rice and ghee or sprinkling on tiffins.",
+      ingredientsText: "Coriander seeds, red chillies, cumin, chana dal optional, garlic optional, curry leaves optional, salt",
+      storageNote: "Use within 60-90 days after opening for best aroma. Keep airtight; refrigerate if your kitchen is humid. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 4-6 months. After opening: keep airtight and use within 60-90 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Spice Powder", "Podi", "Andhra Style", "Aromatic", "Easy Shipping"],
+      filterGroup: "Podi",
+      season: "Available Now", taste: "Spice: Medium",
+      bestFor: "Hot rice with ghee - idli - dosa - upma - curd rice - vegetable stir-fries",
+      variants: [
+        { id: "podi-dhaniyalu-200g", label: "200g", price: "$6.99", sku: "podi-dhaniyalu-200g" }
+      ]
+    },
+    {
+      id: "picklespodi-drumstick-leaf-podi-munagaku-podi", category: "picklespodi",
+      name: "Drumstick Leaf Podi / Munagaku Podi", localName: "200g", origin: "Spice Powder",
+      price: "$7.99", unit: "200g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
+      image: "images/products/podi/drumstick-leaf-podi.jpg",
+      description: "Andhra-style munagaku podi made with roasted drumstick leaves, dals, chillies, garlic, and spices. Nutty, earthy, and excellent with hot rice, ghee, idli, and dosa.",
+      ingredientsText: "Drumstick leaves, chana dal, urad dal, red chillies, garlic optional, cumin, tamarind optional, salt",
+      storageNote: "Use within 45-60 days after opening for best aroma. Keep airtight; refrigerate if humid. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 3-4 months. After opening: keep airtight and use within 45-60 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Spice Powder", "Podi", "Andhra Style", "Leaf Powder", "Traditional"],
+      filterGroup: "Podi",
+      season: "Available Now", taste: "Spice: Medium",
+      bestFor: "Hot rice with ghee - idli - dosa - upma - curd rice",
+      variants: [
+        { id: "podi-drumstick-leaf-200g", label: "200g", price: "$7.99", sku: "podi-drumstick-leaf-200g" }
+      ]
+    },
+    {
+      id: "picklespodi-idli-podi", category: "picklespodi",
+      name: "Idli Podi", localName: "200g", origin: "Spice Powder",
+      price: "$6.99", unit: "200g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
+      image: "images/products/podi/idli-podi.jpg",
+      description: "Classic South Indian idli karam podi. Mix with ghee or oil and serve with idli, dosa, uttapam, or hot rice.",
+      ingredientsText: "Chana dal, urad dal, red chillies, sesame seeds optional, curry leaves optional, garlic optional, salt",
+      storageNote: "Use within 60-90 days after opening for best aroma. Keep airtight; refrigerate if your kitchen is humid. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 4-6 months. After opening: keep airtight and use within 60-90 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Spice Powder", "Podi", "Breakfast Favorite", "Good Shelf Life"],
+      filterGroup: "Podi",
+      season: "Available Now", taste: "Spice: Medium-Hot",
+      bestFor: "Idli with ghee - dosa - uttapam - upma",
+      variants: [
+        { id: "podi-idli-200g", label: "200g", price: "$6.99", sku: "podi-idli-200g" }
+      ]
+    },
+    {
+      id: "picklespodi-kandi-podi", category: "picklespodi",
+      name: "Kandi Podi", localName: "200g", origin: "Spice Powder",
+      price: "$7.99", unit: "200g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
+      image: "images/products/podi/kandi-podi.jpg",
+      description: "Traditional dal-based kandi podi with rich South Indian flavor. Best mixed with hot rice and ghee or served with breakfast items.",
+      ingredientsText: "Toor dal, chana dal optional, red chillies, cumin, garlic optional, curry leaves optional, salt",
+      storageNote: "Use within 60-90 days after opening for best aroma. Keep airtight; refrigerate if your kitchen is humid. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 4-6 months. After opening: keep airtight and use within 60-90 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Spice Powder", "Podi", "Protein Rich", "Traditional", "Good Shelf Life"],
+      filterGroup: "Podi",
+      season: "Available Now", taste: "Spice: Medium",
+      bestFor: "Hot rice with ghee - idli - dosa - upma",
+      variants: [
+        { id: "podi-kandi-200g", label: "200g", price: "$7.99", sku: "podi-kandi-200g" }
+      ]
+    },
+    {
+      id: "picklespodi-karapu-podi-with-garlic", category: "picklespodi",
+      name: "Karapu Podi with Garlic", localName: "200g", origin: "Spice Powder",
+      price: "$6.99", unit: "200g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
+      image: "images/products/podi/karapu-podi-garlic.jpg",
+      description: "Spicy garlic karam podi with bold flavor. Perfect with hot rice and ghee, idli, dosa, or as a spicy side for everyday meals.",
+      ingredientsText: "Garlic cloves, red chilli powder, mustard, fenugreek, turmeric, salt, oil, tamarind optional",
+      storageNote: "Refrigerate after opening and use within 60-90 days for best taste and safety. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 6-12 months. After opening: refrigerate and use within 60-90 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Spice Powder", "Podi", "Garlic", "Spicy", "Good Shelf Life"],
+      filterGroup: "Podi",
+      season: "Available Now", taste: "Spice: Medium-Hot",
+      bestFor: "Dal rice - curd rice - chapati - dosa - idli",
+      variants: [
+        { id: "podi-karapu-garlic-200g", label: "200g", price: "$6.99", sku: "podi-karapu-garlic-200g" }
+      ]
+    },
+    {
+      id: "picklespodi-karivepaku-podi-curry-leaf-powder", category: "picklespodi",
+      name: "Karivepaku Podi / Curry Leaf Powder", localName: "100g or 200g", origin: "Spice Powder",
+      price: "$4.99", unit: "100g or 200g",
+      available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
+      image: "images/products/podi/karivepaku-podi.jpg",
+      description: "Aromatic curry leaf podi with traditional South Indian spices. Mix with hot rice and ghee or enjoy with idli, dosa, and upma.",
+      ingredientsText: "Curry leaves, red chillies, urad dal, chana dal, cumin, garlic optional, tamarind optional, salt",
+      storageNote: "Use within 45-60 days after opening for best aroma. Keep airtight; refrigerate if humid. Store unopened packs cool, dry, and away from sunlight.",
+      shelfLifeDisplay: "Unopened: 3-4 months. After opening: keep airtight and use within 45-60 days.",
+      foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
+      shippingNote: "Shipping eligible",
+      badges: ["Spice Powder", "Podi", "Curry Leaf", "Good Shelf Life"],
+      filterGroup: "Podi",
+      season: "Available Now", taste: "Spice: Medium",
+      bestFor: "Hot rice with ghee - idli - dosa - upma - curd rice",
+      variants: [
+        { id: "podi-karivepaku-100g", label: "100g", price: "$4.99", sku: "podi-karivepaku-100g" },
+        { id: "podi-karivepaku-200g", label: "200g", price: "$6.99", sku: "podi-karivepaku-200g" }
       ]
     }
   ],

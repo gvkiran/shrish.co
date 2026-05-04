@@ -10,6 +10,7 @@ let modalProductId = null;
 let modalVariantId = null;
 let cardVariantSelections = {};
 let notifyTarget = null;
+let picklePodiFilter = 'all';
 
 function normalizeProductCategory(category) {
   return category === 'Mango Jelly' ? 'jellysnacks' : category;
@@ -37,7 +38,7 @@ const PRODUCT_IMAGES = {
   palm_jelly: ['img_palm_jelly.webp']
 };
 
-const SHOP_CATEGORY_IDS = new Set(['mangoes', 'putharekulu', 'jellysnacks']);
+const SHOP_CATEGORY_IDS = new Set(['mangoes', 'putharekulu', 'jellysnacks', 'picklespodi']);
 
 const FORCE_BASE_PRODUCT_OVERRIDES = {};
 
@@ -310,6 +311,7 @@ function openModal(productId) {
   modalQty = 1;
   modalVariantId = getSelectedVariant(p, modalVariantId).id;
 
+  const isPreorder = Boolean(p.preorderOnly);
   const isAvail = p.available && !p.displayOnly;
   const isSoon = p.displayOnly;
   const imgs = productImages(productId, p);
@@ -318,14 +320,14 @@ function openModal(productId) {
   const mainWrap = document.getElementById('modalMainImgWrap');
   if (mainWrap) {
     mainWrap.innerHTML = imgs.length
-      ? `<img class="modal-main-img" id="modalMainImg" src="${escapeHtml(imgs[0])}" alt="${escapeHtml(p.name)}" onerror="this.style.display='none'">`
+      ? `<img class="modal-main-img" id="modalMainImg" src="${escapeHtml(imgs[0])}" alt="${escapeHtml(p.name)}" onerror="this.onerror=null;this.src='logo.png'">`
       : `<div class="modal-img-placeholder">No Image</div>`;
   }
 
   const thumbs = document.getElementById('modalThumbs');
   if (thumbs) {
     if (imgs.length) {
-      thumbs.innerHTML = imgs.map((src, i) => `<img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(p.name)} ${i + 1}" onclick="switchModalImg('${escapeHtml(src)}',this)" onerror="this.style.display='none'">`).join('');
+      thumbs.innerHTML = imgs.map((src, i) => `<img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(p.name)} ${i + 1}" onclick="switchModalImg('${escapeHtml(src)}',this)" onerror="this.onerror=null;this.src='logo.png'">`).join('');
       thumbs.style.display = 'flex';
     } else {
       thumbs.innerHTML = '';
@@ -333,8 +335,8 @@ function openModal(productId) {
     }
   }
 
-  const statusCls = isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
-  const statusText = isSoon ? 'Coming Soon' : isAvail ? 'Available Now' : 'Currently Not Available';
+  const statusCls = isPreorder ? 'soon' : isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
+  const statusText = isPreorder ? 'Preorder Only' : isSoon ? 'Coming Soon' : isAvail ? 'Available Now' : 'Currently Not Available';
   const chips = [p.season && `Season: ${p.season}`, p.taste && `Taste: ${p.taste}`]
     .filter(Boolean)
     .map((chip) => `<span class="modal-chip">${escapeHtml(chip)}</span>`)
@@ -356,13 +358,26 @@ function openModal(productId) {
     const variantSelect = usesVariantUI(p)
       ? `<div class="modal-variant-group"><div class="modal-variant-title">${p.category === 'putharekulu' ? 'Choose count' : 'Choose size'}</div><select class="modal-variant-select" onchange="modalSelectVariant('${escapeHtml(p.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === modalVariantId ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select></div>`
       : '';
-    actionHtml = `${variantSelect}<div class="modal-qty-row"><div class="modal-qty-ctrl"><button class="modal-qty-btn" onclick="modalChangeQty(-1)">-</button><span class="modal-qty-num" id="modalQtyNum">1</span><button class="modal-qty-btn" onclick="modalChangeQty(1)">+</button></div><span style="font-size:13px;color:var(--text-light)">${escapeHtml(selectedVariant.unit || 'item')}</span><button class="modal-add-btn" id="modalAddBtn" onclick="modalAddToCart()">Add to Cart</button></div>`;
+    actionHtml = `${variantSelect}<div class="modal-qty-row"><div class="modal-qty-ctrl"><button class="modal-qty-btn" onclick="modalChangeQty(-1)">-</button><span class="modal-qty-num" id="modalQtyNum">1</span><button class="modal-qty-btn" onclick="modalChangeQty(1)">+</button></div><span style="font-size:13px;color:var(--text-light)">${escapeHtml(selectedVariant.unit || 'item')}</span><button class="modal-add-btn" id="modalAddBtn" onclick="modalAddToCart()">${isPreorder ? 'Preorder' : 'Add to Cart'}</button></div>`;
   } else {
     actionHtml = `<button class="modal-add-btn" style="background:#ccc;cursor:not-allowed" disabled>Currently Not Available</button>`;
   }
 
   const info = document.getElementById('modalInfo');
   if (info) {
+    const isPicklesPodi = p.category === 'picklespodi';
+    const picklesPodiFacts = isPicklesPodi
+      ? [
+        p.ingredientsText && ['Ingredients', p.ingredientsText],
+        p.shelfLifeDisplay && ['Shelf life', p.shelfLifeDisplay],
+        p.storageNote && ['Storage', p.storageNote],
+        p.shippingNote && ['Shipping', p.shippingNote],
+        p.foodSafetyNote && ['Best Before', p.foodSafetyNote]
+      ].filter(Boolean)
+      : [];
+    const picklesPodiDetails = picklesPodiFacts.length
+      ? `<div class="modal-detail-list">${picklesPodiFacts.map(([label, value]) => `<div><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</div>`).join('')}</div>`
+      : '';
     info.innerHTML = `
       <div class="modal-origin">${escapeHtml(p.origin)}</div>
       <div class="modal-name">${escapeHtml(p.name)}</div>
@@ -371,7 +386,8 @@ function openModal(productId) {
       <div class="modal-desc">${escapeHtml(p.description)}</div>
       ${chips ? `<div class="modal-chips">${chips}</div>` : ''}
       ${badges ? `<div class="modal-badges">${badges}</div>` : ''}
-      ${p.details ? `<div class="modal-note">Info: ${escapeHtml(p.details)}</div>` : ''}
+      ${p.details && !isPicklesPodi ? `<div class="modal-note">Info: ${escapeHtml(p.details)}</div>` : ''}
+      ${picklesPodiDetails}
       ${p.bestFor ? `<div class="modal-best"><strong>Best for:</strong> ${escapeHtml(p.bestFor)}</div>` : ''}
       <div class="modal-price-row"><div><div class="modal-price">${escapeHtml(selectedVariant.price || p.price)}</div><div class="modal-unit">${escapeHtml(selectedVariant.unit || p.unit)}</div></div></div>
       ${actionHtml}`;
@@ -405,13 +421,16 @@ function modalChangeQty(delta) {
 
 function modalAddToCart() {
   if (!modalProductId) return;
+  const product = window.SHRISH_DATA.products.find((entry) => entry.id === modalProductId);
+  const addedLabel = product?.preorderOnly ? 'Preorder Added' : 'Added!';
+  const resetLabel = product?.preorderOnly ? 'Preorder' : 'Add to Cart';
   addToCart(modalProductId, modalQty, modalVariantId);
   const btn = document.getElementById('modalAddBtn');
   if (!btn) return;
-  btn.textContent = 'Added!';
+  btn.textContent = addedLabel;
   btn.classList.add('added');
   setTimeout(() => {
-    btn.textContent = 'Add to Cart';
+    btn.textContent = resetLabel;
     btn.classList.remove('added');
   }, 1800);
 }
@@ -531,6 +550,7 @@ function tagClass(tag) {
   if (!tag) return '';
   const t = tag.toLowerCase();
   if (t.includes('coming')) return 't-coming';
+  if (t.includes('preorder')) return 't-coming';
   if (t.includes('rare') || t.includes('seasonal')) return 't-rare';
   if (t.includes('diabetic') || t.includes('free')) return 't-diabetic';
   if (t.includes('requested')) return 't-requested';
@@ -538,12 +558,13 @@ function tagClass(tag) {
 }
 
 function renderCard(p) {
+  const isPreorder = Boolean(p.preorderOnly);
   const isAvail = p.available && !p.displayOnly;
   const isSoon = p.displayOnly;
-  const stripCls = isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
-  const stripText = isSoon ? 'Coming Soon' : isAvail ? 'Available' : 'Not Available';
+  const stripCls = isPreorder ? 'soon' : isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
+  const stripText = isPreorder ? 'Preorder Only' : isSoon ? 'Coming Soon' : isAvail ? 'Available' : 'Not Available';
   const imgSrc = p.image || null;
-  const imgHtml = imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
+  const imgHtml = imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.onerror=null;this.src='logo.png'">` : '';
   const emojiStyle = imgSrc ? 'style="display:none"' : '';
   const shortDesc = (p.description || '').length > 90 ? `${p.description.slice(0, 90)}...` : (p.description || '');
   const variants = getProductVariants(p);
@@ -554,9 +575,9 @@ function renderCard(p) {
   if (isSoon) {
     actionHtml = `<button class="pc-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify Me</button>`;
   } else if (isAvail && hasChoices) {
-    actionHtml = `<div class="pc-card-actions pc-card-actions-variant" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><div class="pc-variant-list"><select class="pc-variant-select" onchange="cardVariantChanged('${escapeHtml(p.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === selectedCardVariant.id ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select><button class="pc-add-btn" onclick="quickAddSelectedVariant('${escapeHtml(p.id)}')">+ Add to Cart</button></div></div>`;
+    actionHtml = `<div class="pc-card-actions pc-card-actions-variant" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><div class="pc-variant-list"><select class="pc-variant-select" onchange="cardVariantChanged('${escapeHtml(p.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === selectedCardVariant.id ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select><button class="pc-add-btn" onclick="quickAddSelectedVariant('${escapeHtml(p.id)}')">${isPreorder ? '+ Preorder' : '+ Add to Cart'}</button></div></div>`;
   } else if (isAvail) {
-    actionHtml = `<div class="pc-card-actions" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" onclick="quickAdd('${escapeHtml(p.id)}')">+ Add to Cart</button></div>`;
+    actionHtml = `<div class="pc-card-actions" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" onclick="quickAdd('${escapeHtml(p.id)}')">${isPreorder ? '+ Preorder' : '+ Add to Cart'}</button></div>`;
   } else {
     actionHtml = `<div class="pc-card-actions"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" disabled>Not Available</button></div>`;
   }
@@ -607,6 +628,7 @@ function renderCardQty(productId) {
   if (!wrap) return;
   const product = window.SHRISH_DATA.products.find((entry) => entry.id === productId);
   if (!product) return;
+  const addLabel = product.preorderOnly ? '+ Preorder' : '+ Add to Cart';
   if (usesVariantUI(product)) {
     const variants = getProductVariants(product);
     const selectedVariant = getCardSelectedVariant(product);
@@ -615,7 +637,7 @@ function renderCardQty(productId) {
     const qty = item ? item.qty : 0;
 
     if (qty === 0) {
-      wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><div class="pc-variant-list"><select class="pc-variant-select" onchange="cardVariantChanged('${escapeHtml(product.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === selectedVariant.id ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select><button class="pc-add-btn" onclick="quickAddSelectedVariant('${escapeHtml(product.id)}')">+ Add to Cart</button></div>`;
+      wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><div class="pc-variant-list"><select class="pc-variant-select" onchange="cardVariantChanged('${escapeHtml(product.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === selectedVariant.id ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select><button class="pc-add-btn" onclick="quickAddSelectedVariant('${escapeHtml(product.id)}')">${addLabel}</button></div>`;
       return;
     }
 
@@ -625,7 +647,7 @@ function renderCardQty(productId) {
   const item = cart.find((x) => x.id === productId);
   const qty = item ? item.qty : 0;
   if (qty === 0) {
-    wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><button class="pc-add-btn" onclick="quickAdd('${escapeHtml(productId)}')">+ Add to Cart</button>`;
+    wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><button class="pc-add-btn" onclick="quickAdd('${escapeHtml(productId)}')">${addLabel}</button>`;
     return;
   }
   wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><div class="card-qty-wrap"><button class="card-qty-btn remove-btn" onclick="cardQtyChange('${escapeHtml(productId)}',-1)" title="Remove one">-</button><div class="card-qty-mid"><span class="cqn">${qty}</span><span style="font-size:11px;opacity:.85">box${qty !== 1 ? 'es' : ''}</span></div><button class="card-qty-btn" onclick="cardQtyChange('${escapeHtml(productId)}',1)" title="Add one">+</button></div>`;
@@ -677,10 +699,44 @@ function buildFilters() {
       document.querySelectorAll('.filter-btn').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       activeFilter = normalizedCatId;
+      if (normalizedCatId !== 'picklespodi') picklePodiFilter = 'all';
       renderShop();
     };
     bar.appendChild(btn);
   });
+}
+
+function picklesPodiMatches(product) {
+  if (picklePodiFilter === 'veg') return product.filterGroup === 'Veg Pickles';
+  if (picklePodiFilter === 'nonveg') return product.filterGroup === 'Non-Veg Pickles';
+  if (picklePodiFilter === 'podi') return product.filterGroup === 'Podi';
+  return true;
+}
+
+function renderPicklesPodiFilters(items) {
+  const filters = [
+    { id: 'all', label: 'All' },
+    { id: 'veg', label: 'Veg Pickles' },
+    { id: 'nonveg', label: 'Non-Veg Pickles' },
+    { id: 'podi', label: 'Podi' }
+  ];
+  const countFor = (filterId) => items.filter((product) => {
+    if (filterId === 'veg') return product.filterGroup === 'Veg Pickles';
+    if (filterId === 'nonveg') return product.filterGroup === 'Non-Veg Pickles';
+    if (filterId === 'podi') return product.filterGroup === 'Podi';
+    return true;
+  }).length;
+
+  return `<div class="pickle-subfilters" aria-label="Pickles and podi filters">${filters.map((filter) => `
+    <button type="button" class="pickle-type-btn${picklePodiFilter === filter.id ? ' active' : ''}" onclick="setPicklesPodiFilter('${filter.id}')">
+      ${escapeHtml(filter.label)} <span>${countFor(filter.id)}</span>
+    </button>
+  `).join('')}</div>`;
+}
+
+function setPicklesPodiFilter(filterId) {
+  picklePodiFilter = filterId;
+  renderShop();
 }
 
 function renderShop() {
@@ -697,15 +753,17 @@ function renderShop() {
   const catMeta = {
     mangoes: { title: 'Indian Mango', em: 'Varieties', sub: 'Click any product to view full details. Available varieties shown first.', banner: false },
     putharekulu: { title: 'Authentic', em: 'Putharekulu', sub: 'Hand-crafted in Atreyapuram, Andhra Pradesh. Coming soon to Shrish LLC!', banner: true },
-    jellysnacks: { title: 'Mango & Palm', em: 'Jelly & Snacks', sub: 'Traditional Mamidi Thandra & Thati Thandra from Atreyapuram. Coming soon.', banner: false }
+    jellysnacks: { title: 'Mango & Palm', em: 'Jelly & Snacks', sub: 'Traditional Mamidi Thandra & Thati Thandra from Atreyapuram. Coming soon.', banner: false },
+    picklespodi: { title: 'Pickles', em: '& Podi', sub: 'Traditional Andhra-style pickles and podi. Non-veg pickles are preorder only. Use package Best Before date as final.', banner: false }
   };
 
-  const cats = activeFilter === 'all' ? ['mangoes', 'putharekulu', 'jellysnacks'] : [activeFilter];
+  const cats = activeFilter === 'all' ? ['mangoes', 'putharekulu', 'jellysnacks', 'picklespodi'] : [activeFilter];
   cats.forEach((catId) => {
-    const items = sortWithinAvailability(window.SHRISH_DATA.products.filter((p) => p.category === catId));
-    if (!items.length) return;
+    const allCatItems = sortWithinAvailability(window.SHRISH_DATA.products.filter((p) => p.category === catId));
+    const items = catId === 'picklespodi' ? allCatItems.filter(picklesPodiMatches) : allCatItems;
+    if (!allCatItems.length) return;
     const m = catMeta[catId] || { title: catId, em: '', sub: '', banner: false };
-    const hasLiveItems = items.some((product) => product.available && !product.displayOnly);
+    const hasLiveItems = allCatItems.some((product) => product.available && !product.displayOnly);
     let sectionSub = m.sub;
     if (catId === 'putharekulu' && hasLiveItems) {
       sectionSub = 'Hand-crafted in Atreyapuram, Andhra Pradesh. Available items are shown first.';
@@ -713,7 +771,11 @@ function renderShop() {
     if (catId === 'jellysnacks' && hasLiveItems) {
       sectionSub = 'Traditional Mamidi Thandra & Thati Thandra from Atreyapuram. Available items are shown first.';
     }
-    let html = `<div class="shop-section"><div class="shop-section-title">${m.title} <em>${m.em}</em></div><div class="section-divider"></div><p style="color:var(--text-light);font-size:14px;margin-bottom:24px">${sectionSub}</p>`;
+    if (catId === 'picklespodi') {
+      sectionSub = 'Traditional Andhra-style pickles and podi. Non-veg pickles are preorder only and depend on supplier batch and pickup timing.';
+    }
+    const subFilters = catId === 'picklespodi' ? renderPicklesPodiFilters(allCatItems) : '';
+    let html = `<div class="shop-section"><div class="shop-section-head"><div><div class="shop-section-title">${m.title} <em>${m.em}</em></div><div class="section-divider"></div></div>${subFilters}</div><p style="color:var(--text-light);font-size:14px;margin-bottom:24px">${sectionSub}</p>`;
     if (m.banner && !hasLiveItems) {
       html += `<div class="coming-banner"><div class="cb-icon">New</div><div><h3>Coming Soon to Shrish!</h3><p>Authentic GI-tagged Putharekulu from Atreyapuram. Hit "Notify Me" to be first in line when we launch.</p></div></div>`;
     }
@@ -773,6 +835,7 @@ window.quickAdd = quickAdd;
 window.quickAddVariant = quickAddVariant;
 window.quickAddSelectedVariant = quickAddSelectedVariant;
 window.cardVariantChanged = cardVariantChanged;
+window.setPicklesPodiFilter = setPicklesPodiFilter;
 window.cardQtyChange = cardQtyChange;
 window.cardVariantQtyChange = cardVariantQtyChange;
 window.renderCardQty = renderCardQty;
