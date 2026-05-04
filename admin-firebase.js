@@ -1486,9 +1486,10 @@ function renderOrders() {
 function productCategoryLabel(category) {
   const normalizedCategory = normalizeProductCategory(category);
   const labels = {
-    mangoes: 'Mangoes',
+    mangoes: 'Fruits/Mangoes',
     putharekulu: 'Putharekulu',
-    jellysnacks: 'Jelly & Snacks',
+    jellysnacks: 'Jelly',
+    snacks: 'Snacks',
     picklespodi: 'Pickles & Podi'
   };
   return labels[normalizedCategory] || normalizedCategory || 'Product';
@@ -1516,11 +1517,10 @@ function renderProductsFilterBar() {
 
   const options = [
     { id: 'all', label: 'All', count: state.products.length },
-    { id: 'mangoes', label: 'Mangoes', count: state.products.filter((product) => normalizeProductCategory(product.category) === 'mangoes').length },
-    { id: 'putharekulu', label: 'Putharekulu', count: state.products.filter((product) => normalizeProductCategory(product.category) === 'putharekulu').length },
-    { id: 'jellysnacks', label: 'Jelly & Snacks', count: state.products.filter((product) => normalizeProductCategory(product.category) === 'jellysnacks').length },
+    { id: 'mangoes', label: 'Fruits/Mangoes', count: state.products.filter((product) => normalizeProductCategory(product.category) === 'mangoes').length },
+    { id: 'sweets', label: 'Sweets', count: state.products.filter((product) => ['putharekulu', 'jellysnacks'].includes(normalizeProductCategory(product.category))).length },
+    { id: 'snacks', label: 'Snacks', count: state.products.filter((product) => normalizeProductCategory(product.category) === 'snacks').length },
     { id: 'picklespodi', label: 'Pickles & Podi', count: state.products.filter((product) => normalizeProductCategory(product.category) === 'picklespodi').length },
-    { id: 'sweets', label: 'Sweets', count: state.products.filter((product) => ['putharekulu', 'jellysnacks'].includes(normalizeProductCategory(product.category))).length }
   ];
 
   bar.innerHTML = `<span class="products-filter-label">Filter Products</span>${options.map((option) => `
@@ -1596,6 +1596,7 @@ function applyCategoryDefaults() {
     mangoes: 'per box',
     putharekulu: '5 count or 10 count',
     jellysnacks: '250g or 500g',
+    snacks: 'per pack',
     picklespodi: '250g or 500g'
   };
   const nextValue = defaults[category] || 'per box';

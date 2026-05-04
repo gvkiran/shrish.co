@@ -15,9 +15,9 @@ const SHRISH_DATA = {
 
   categories: [
     { id: "all",         label: "All Products" },
-    { id: "mangoes",     label: "🥭 Mangoes" },
-    { id: "putharekulu", label: "🍬 Putharekulu" },
-    { id: "jellysnacks", label: "🍡 Jelly & Snacks" },
+    { id: "mangoes",     label: "Fruits/Mangoes" },
+    { id: "sweets",      label: "Sweets" },
+    { id: "snacks",      label: "Snacks" },
     { id: "picklespodi", label: "Pickles & Podi" }
   ],
 
