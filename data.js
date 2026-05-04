@@ -779,7 +779,7 @@ const SHRISH_DATA = {
       id: "picklespodi-dhaniyalu-podi-coriander-spice-powder", category: "picklespodi",
       name: "Dhaniyalu Podi / Coriander Spice Powder", localName: "200g", origin: "Spice Powder",
       price: "$6.99", unit: "200g",
-      available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
+      available: true, displayOnly: false, hidden: true, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/dhaniyalu-podi.jpg",
       description: "Andhra-style dhaniyalu podi made with roasted coriander seeds, chillies, cumin, and traditional spices. Aromatic, earthy, and perfect for mixing with hot rice and ghee or sprinkling on tiffins.",
       ingredientsText: "Coriander seeds, red chillies, cumin, chana dal optional, garlic optional, curry leaves optional, salt",

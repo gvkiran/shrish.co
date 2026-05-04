@@ -132,8 +132,8 @@ function renderStats() {
   const fulfilled = fulfilledOrders.length;
   const totalBoxes = fulfilledOrders.reduce((sum, order) => sum + (order.totalBoxes || 0), 0);
   const totalRevenue = fulfilledOrders.reduce((sum, order) => sum + orderRevenueValue(order), 0);
-  const available = state.products.filter((product) => product.available && !product.displayOnly).length;
-  const totalProducts = state.products.filter((product) => !product.displayOnly).length;
+  const available = state.products.filter((product) => product.available && !product.displayOnly && !product.hidden).length;
+  const totalProducts = state.products.filter((product) => !product.displayOnly && !product.hidden).length;
   const totalSubscribers = state.subscribers.length;
 
   document.getElementById('adminStats').innerHTML = `
@@ -752,7 +752,7 @@ function orderEditorTotals(items = []) {
 
 function getOrderEditorCatalogOptions() {
   return getSortedProducts(state.products)
-    .filter((product) => !product.displayOnly && product.available)
+    .filter((product) => !product.hidden && !product.displayOnly && product.available)
     .flatMap((product) => {
       const variants = Array.isArray(product.variants) && product.variants.length
         ? product.variants.filter((variant) => variant?.label)
@@ -1883,6 +1883,7 @@ async function submitAddProduct(event) {
     taste: taste || '',
     bestFor: bestFor || '',
     variants,
+    hidden: Boolean(existingProduct?.hidden),
     ...picklesPodiSaveFields(existingProduct),
     sortOrder: editingProductId
       ? (existingProduct?.sortOrder ?? getNextSortOrder())
@@ -1923,7 +1924,8 @@ function renderProducts() {
 
   grid.innerHTML = products.map((product) => {
     const isComingSoon = product.displayOnly;
-    const statusText = isComingSoon ? 'Soon' : (product.available ? 'Live' : 'Off');
+    const isHidden = Boolean(product.hidden);
+    const statusText = isHidden ? 'Hidden' : isComingSoon ? 'Soon' : (product.available ? 'Live' : 'Off');
     const shortDescription = String(product.description || '').trim();
     const variants = Array.isArray(product.variants) ? product.variants.filter((variant) => variant?.label) : [];
     const variantSummary = variants.length
@@ -1947,7 +1949,7 @@ function renderProducts() {
         <div class="pm-sort-wrap"><span class="pm-sort-label">Order</span><input type="number" class="pm-sort-input" id="sort-${escapeHtml(product.id)}" value="${escapeHtml(String(product.sortOrder ?? ''))}" min="1" step="1"><button class="pm-save-btn" onclick="saveProductSortOrder('${escapeHtml(product.id)}')">Save</button></div>
         <div class="pm-sub">Use Edit to update ${variants.length ? 'size and price options' : 'price and product details'}.</div>
       </div>
-      <div class="pm-controls"><label class="toggle-switch"><input type="checkbox" ${product.available ? 'checked' : ''} onchange="toggleAvailable('${escapeHtml(product.id)}', this.checked)"><span class="toggle-slider"></span></label><span style="font-size:10px;color:var(--text-light)">${statusText}</span><button class="pm-edit-btn" type="button" onclick="editProduct('${escapeHtml(product.id)}')">Edit</button></div>
+      <div class="pm-controls"><label class="toggle-switch"><input type="checkbox" ${product.available && !isHidden ? 'checked' : ''} onchange="toggleAvailable('${escapeHtml(product.id)}', this.checked)"><span class="toggle-slider"></span></label><span style="font-size:10px;color:var(--text-light)">${statusText}</span><button class="pm-edit-btn" type="button" onclick="editProduct('${escapeHtml(product.id)}')">Edit</button><button class="pm-edit-btn" type="button" onclick="toggleProductHidden('${escapeHtml(product.id)}', ${isHidden ? 'false' : 'true'})">${isHidden ? 'Unhide' : 'Hide'}</button></div>
     </div>`;
   }).join('');
 }
@@ -2045,11 +2047,23 @@ async function toggleAvailable(id, available) {
   if (!product) return;
   const payload = {
     available,
+    hidden: available ? false : Boolean(product.hidden),
     displayOnly: available ? false : Boolean(product.displayOnly),
     updatedAt: new Date().toISOString()
   };
   await updateDoc(doc(db, 'products', id), payload);
-  showToast(`${product.name} ${available ? 'is live' : 'hidden'}`);
+  showToast(`${product.name} ${available ? 'is live' : 'is off'}`);
+}
+
+async function toggleProductHidden(id, hidden) {
+  const product = state.products.find((item) => item.id === id);
+  if (!product) return;
+  const payload = {
+    hidden,
+    updatedAt: new Date().toISOString()
+  };
+  await updateDoc(doc(db, 'products', id), payload);
+  showToast(`${product.name} ${hidden ? 'hidden from shop' : 'visible in shop'}`);
 }
 
 async function applyOrderStatus(id, status, silent = false) {
@@ -3103,6 +3117,7 @@ window.doLogout = doLogout;
 window.switchTab = switchTab;
 window.saveProductPrice = saveProductPrice;
 window.toggleAvailable = toggleAvailable;
+window.toggleProductHidden = toggleProductHidden;
 window.setStatus = setStatus;
 window.updatePickupDate = updatePickupDate;
 window.updatePaymentMethod = updatePaymentMethod;

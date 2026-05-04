@@ -137,7 +137,7 @@ function mergeProducts(docs) {
     });
   window.SHRISH_DATA.products = sortCatalogProducts(
     [...mergedBase, ...extraProducts]
-      .filter((product) => SHOP_CATEGORY_IDS.has(normalizeProductCategory(product.category)))
+      .filter((product) => !product.hidden && SHOP_CATEGORY_IDS.has(normalizeProductCategory(product.category)))
   );
 }
 
@@ -698,8 +698,8 @@ function buildFilters() {
   SHOP_FILTERS.forEach((cat) => {
     const normalizedCatId = cat.id;
     const count = normalizedCatId === 'all'
-      ? window.SHRISH_DATA.products.length
-      : window.SHRISH_DATA.products.filter((p) => cat.categories.includes(normalizeProductCategory(p.category))).length;
+      ? window.SHRISH_DATA.products.filter((p) => !p.hidden).length
+      : window.SHRISH_DATA.products.filter((p) => !p.hidden && cat.categories.includes(normalizeProductCategory(p.category))).length;
     const btn = document.createElement('button');
     btn.className = `filter-btn${normalizedCatId === activeFilter ? ' active' : ''}`;
     btn.innerHTML = `${escapeHtml(cat.label)} <span class="filter-count">${count}</span>`;
@@ -784,7 +784,7 @@ function renderShop() {
   const cats = activeFilterConfig.categories;
   let renderedSections = 0;
   cats.forEach((catId) => {
-    const allCatItems = sortWithinAvailability(window.SHRISH_DATA.products.filter((p) => p.category === catId));
+    const allCatItems = sortWithinAvailability(window.SHRISH_DATA.products.filter((p) => !p.hidden && p.category === catId));
     const items = catId === 'picklespodi' ? allCatItems.filter(picklesPodiMatches) : allCatItems;
     const m = catMeta[catId] || { title: catId, em: '', sub: '', banner: false };
     const showEmptyCategory = activeFilter === catId && ['snacks'].includes(catId);
