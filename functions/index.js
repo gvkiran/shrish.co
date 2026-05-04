@@ -392,9 +392,53 @@ function plainTextToEmailHtml(text = "") {
   return escapeHtml(text).replace(/\r?\n/g, "<br>");
 }
 
+function splitReminderMessageSections(text = "") {
+  const lines = String(text || "").replace(/\r\n/g, "\n").split("\n");
+  const before = [];
+  const after = [];
+  let target = before;
+  let skippingSummary = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    const lower = trimmed.toLowerCase();
+
+    if (target === before && /^order summary:?$/i.test(trimmed)) {
+      target = after;
+      skippingSummary = true;
+      continue;
+    }
+
+    if (skippingSummary) {
+      if (
+        !trimmed ||
+        trimmed.startsWith("- ") ||
+        lower.startsWith("total boxes:") ||
+        lower.startsWith("estimated total:")
+      ) {
+        continue;
+      }
+
+      skippingSummary = false;
+    }
+
+    target.push(line);
+  }
+
+  return {
+    before: before.join("\n").trim(),
+    after: after.join("\n").trim(),
+  };
+}
+
 function buildReminderEmail(order, messageText) {
+  const items = Array.isArray(order.items) ? order.items : [];
   const orderNumber = escapeHtml(order.orderNumber || order.id || "");
-  const messageHtml = plainTextToEmailHtml(messageText);
+  const { totalBoxes, estimatedTotal } = getOrderTotals(order);
+  const itemRows = buildItemsRows(items);
+  const messageSections = splitReminderMessageSections(messageText);
+  const beforeMessageHtml = plainTextToEmailHtml(messageSections.before);
+  const afterMessageHtml = plainTextToEmailHtml(messageSections.after);
 
   return `
   <!doctype html>
@@ -402,13 +446,62 @@ function buildReminderEmail(order, messageText) {
     <body style="margin:0; padding:0; background:#ece7df; font-family: Arial, Helvetica, sans-serif; color:#2b2218;">
       <div style="padding:32px 12px;">
         <div style="max-width:680px; margin:0 auto; background:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.08);">
-          <div style="background:#b87512; padding:26px 24px; text-align:center;">
-            <img src="${SHRISH_LOGO_URL}" alt="Shrish" style="display:block; width:110px; height:110px; object-fit:contain; margin:0 auto 14px auto;" />
+          <div style="background:#b87512; padding:28px 24px 24px; text-align:center;">
+            <img src="${SHRISH_LOGO_URL}" alt="Shrish" style="display:block; width:120px; height:120px; object-fit:contain; margin:0 auto 16px auto;" />
             <div style="font-size:12px; letter-spacing:1.6px; font-weight:700; color:#f8ebd4; text-transform:uppercase;">SHRISH LLC</div>
             <div style="margin-top:10px; font-size:20px; line-height:1.3; font-weight:700; color:#ffffff;">Pickup reminder</div>
+            <div style="margin-top:10px; font-size:14px; line-height:1.6; color:#fff3df; max-width:520px; margin-left:auto; margin-right:auto;">
+              Your order is ready for pickup.
+            </div>
           </div>
           <div style="padding:24px;">
-            <div style="font-size:15px; line-height:1.7; color:#2b2218; margin-bottom:20px;">${messageHtml}</div>
+            ${
+              beforeMessageHtml
+                ? `<div style="font-size:15px; line-height:1.7; color:#2b2218; margin-bottom:22px;">${beforeMessageHtml}</div>`
+                : ""
+            }
+
+            <table style="width:100%; border-collapse:collapse; margin:0 0 24px;">
+              <thead>
+                <tr style="background:#efe8dd;">
+                  <th style="text-align:left; padding:10px 12px; font-size:13px; color:#4d3c22;">Item</th>
+                  <th style="text-align:center; padding:10px 12px; font-size:13px; color:#4d3c22;">Qty</th>
+                  <th style="text-align:right; padding:10px 12px; font-size:13px; color:#4d3c22;">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemRows}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td style="padding-top:16px; font-size:14px; font-weight:700; color:#2b2218;">
+                    Total
+                  </td>
+                  <td style="padding-top:16px; text-align:center; font-size:14px; font-weight:700; color:#2b2218;">
+                    ${totalBoxes}
+                  </td>
+                  <td style="padding-top:16px; text-align:right; font-size:14px; font-weight:700; color:#2b2218;">
+                    ${currency(estimatedTotal)}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top:4px; font-size:12px; color:#7a6853;">&nbsp;</td>
+                  <td style="padding-top:4px; text-align:center; font-size:12px; color:#7a6853;">
+                    Total boxes
+                  </td>
+                  <td style="padding-top:4px; text-align:right; font-size:12px; color:#7a6853;">
+                    Estimated total
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+
+            ${
+              afterMessageHtml
+                ? `<div style="font-size:15px; line-height:1.7; color:#2b2218; margin-bottom:20px;">${afterMessageHtml}</div>`
+                : ""
+            }
+
             <div style="background:#f6f1e8; border-radius:14px; padding:16px 18px; margin-bottom:18px;">
               <div style="font-size:13px; font-weight:700; margin-bottom:8px; color:#2b2218;">Order reference</div>
               <div style="font-size:14px; line-height:1.7; color:#3d3225;">${orderNumber}</div>
