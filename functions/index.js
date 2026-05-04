@@ -164,7 +164,7 @@ function buildCustomerEmail(order) {
               Your order is confirmed
             </div>
             <div style="margin-top:10px; font-size:14px; line-height:1.6; color:#fff3df; max-width:520px; margin-left:auto; margin-right:auto;">
-              Thank you for ordering from Shrish. Your request has been received. Please follow our WhatsApp group for pickup instructions and updates.
+              Thank you for ordering from Shrish. Your request has been received. Please follow our WhatsApp group for pickup location, pickup day, and timing updates.
             </div>
           </div>
 
