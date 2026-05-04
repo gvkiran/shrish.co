@@ -3,8 +3,16 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const { Resend } = require("resend");
+const { PostHog } = require("posthog-node");
 
 admin.initializeApp();
+
+const posthog = new PostHog(process.env.POSTHOG_API_KEY, {
+  host: process.env.POSTHOG_HOST,
+  flushAt: 1,
+  flushInterval: 0,
+  enableExceptionAutocapture: true,
+});
 
 const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
 
@@ -593,9 +601,36 @@ exports.sendOrderReminderEmails = onCall(
           email: order.email,
           error: error?.message || String(error),
         });
+        posthog.captureException(error, sentBy, {
+          order_id: orderId,
+          function: "sendOrderReminderEmails",
+        });
         skippedOrders.push({ orderId, reason: "send_failed" });
       }
     }
+
+    posthog.capture({
+      distinctId: sentBy,
+      event: "reminder_emails_sent",
+      properties: {
+        sent_count: sent,
+        skipped_count: skippedOrders.length,
+        total_attempted: orderIds.length,
+      },
+    });
+
+    for (const skipped of skippedOrders) {
+      posthog.capture({
+        distinctId: sentBy,
+        event: "reminder_email_skipped",
+        properties: {
+          order_id: skipped.orderId,
+          reason: skipped.reason,
+        },
+      });
+    }
+
+    await posthog.flush();
 
     if (!sent && skippedOrders.length) {
       throw new HttpsError("failed-precondition", "No reminder emails were sent. Check Firebase Functions logs and Resend setup.");
@@ -652,5 +687,29 @@ exports.sendOrderEmails = onDocumentCreated(
       subject: adminSubject,
       html: buildAdminEmail(finalOrder),
     });
+
+    const { totalBoxes, estimatedTotal } = getOrderTotals(finalOrder);
+    posthog.identify({
+      distinctId: finalOrder.email,
+      properties: {
+        $set: {
+          name: `${finalOrder.firstName || ""} ${finalOrder.lastName || ""}`.trim() || undefined,
+          email: finalOrder.email,
+          phone: finalOrder.phone || undefined,
+        },
+      },
+    });
+    posthog.capture({
+      distinctId: finalOrder.email,
+      event: "order_confirmed",
+      properties: {
+        order_number: finalOrder.orderNumber,
+        pickup_location: finalOrder.locationLabel || finalOrder.pickupLocation || "Chesterfield, VA",
+        total_boxes: totalBoxes,
+        estimated_total: estimatedTotal,
+        item_count: Array.isArray(finalOrder.items) ? finalOrder.items.length : 0,
+      },
+    });
+    await posthog.flush();
   }
 );
