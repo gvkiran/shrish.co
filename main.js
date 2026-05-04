@@ -5,7 +5,7 @@
 const SHRISH_CONFIG = {
   whatsappNumber: '17653255577',
   whatsappGroup: 'https://chat.whatsapp.com/EHk3KbL03s4J9zfFIeEOi9', // â WhatsApp group link
-  instagram: 'https://www.instagram.com/shrish_richmond_mangos/',            // â Instagram
+  instagram: 'https://www.instagram.com/shrish_llc/',                        // Instagram
   whatsappMessage: "Hi Shrish! I'd like to know more about your mangoes ð¥­"
 };
 

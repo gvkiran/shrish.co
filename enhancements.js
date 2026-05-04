@@ -206,7 +206,7 @@
       paymentAccepted: 'Cash',
       priceRange: '$$',
       sameAs: [
-        'https://www.instagram.com/shrish_richmond_mangos/'
+        'https://www.instagram.com/shrish_llc/'
       ],
       hasOfferCatalog: {
         '@type': 'OfferCatalog',
