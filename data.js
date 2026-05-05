@@ -101,7 +101,7 @@ const SHRISH_DATA = {
       name: "Dasheri", localName: "दशहरी", origin: "Malihabad, Uttar Pradesh",
       price: "$38", unit: "per box (~3 kg)",
       available: false, displayOnly: false, tag: "",
-      image: null,
+      image: "img_dasheri.jpg",
       description: "Long, greenish-yellow with a fiberless, syrupy pulp - Dasheri from Malihabad holds a GI tag and is legendary in UP. Sweet, fragrant pulp with thin skin. One of North India's most beloved varieties for desserts and eating fresh.",
       season: "June - July", taste: "Syrupy  -  Fragrant  -  Fiberless",
       bestFor: "Eating fresh  -  Shakes  -  Kulfi"
@@ -111,7 +111,7 @@ const SHRISH_DATA = {
       name: "Malgova", localName: "மல்கோவா", origin: "Tamil Nadu & Karnataka",
       price: "$40", unit: "per box (~2 kg)",
       available: false, displayOnly: false, tag: "",
-      image: null,
+      image: "img_malgova.jpg",
       description: "One of the largest mango varieties - Malgova is huge, round, and packed with rich buttery sweetness. South India's most celebrated mango, often used in temples. Thick luscious pulp with low fibre makes it incredibly satisfying.",
       season: "May - July", taste: "Rich  -  Buttery  -  Sweet",
       bestFor: "Eating fresh  -  Juices  -  Temple offering"
@@ -121,7 +121,7 @@ const SHRISH_DATA = {
       name: "Neelam", localName: "నీలం", origin: "South India (AP, TN, Karnataka)",
       price: "$36", unit: "per box (~3 kg)",
       available: false, displayOnly: false, tag: "",
-      image: null,
+      image: "img_neelam.jpg",
       description: "Small, oval, and intensely fragrant - Neelam is one of the last varieties of the mango season, extending the joy into August. Deep orange pulp is sweet with a mild tartness and unmistakable floral perfume.",
       season: "July - August", taste: "Sweet-Tart  -  Fragrant  -  Juicy",
       bestFor: "Eating fresh  -  Pickles  -  Late-season desserts"
