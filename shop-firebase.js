@@ -12,6 +12,7 @@ let cardVariantSelections = {};
 let notifyTarget = null;
 let picklePodiFilter = 'all';
 let initialProductOpened = false;
+let productSearchQuery = '';
 
 function trackShopEvent(eventName, props = {}) {
   window.SHRISH_ANALYTICS?.track(eventName, props);
@@ -71,6 +72,7 @@ function applyInitialShopFiltersFromUrl() {
     const category = params.get('category') || params.get('filter');
     const pickleType = params.get('type');
     const productId = params.get('product');
+    productSearchQuery = (params.get('search') || params.get('q') || '').trim();
     const product = productId ? window.SHRISH_DATA?.products?.find((entry) => entry.id === productId) : null;
     if (category && SHOP_FILTERS.some((filter) => filter.id === category)) {
       activeFilter = category;
@@ -818,10 +820,36 @@ function setPicklesPodiFilter(filterId) {
   renderShop();
 }
 
+function normalizeSearchText(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function productMatchesSearch(product, query = productSearchQuery) {
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return true;
+  const terms = normalizedQuery.split(' ').filter((term) => term.length > 1);
+  const haystack = normalizeSearchText([
+    product.name,
+    product.localName,
+    product.origin,
+    product.category,
+    product.filterGroup,
+    product.tag,
+    product.taste,
+    product.bestFor,
+    product.description,
+    product.ingredientsText,
+    ...(product.badges || []),
+    ...(product.recommendationTags || [])
+  ].filter(Boolean).join(' '));
+  return terms.every((term) => haystack.includes(term));
+}
+
 function renderShop() {
   const container = document.getElementById('shopContent');
   if (!container) return;
   container.innerHTML = '';
+  const escapedSearchQuery = escapeHtml(productSearchQuery);
 
   const sortWithinAvailability = (arr) => [
     ...arr.filter((p) => p.available && !p.displayOnly),
@@ -856,10 +884,12 @@ function renderShop() {
   let renderedSections = 0;
   cats.forEach((catId) => {
     const allCatItems = sortWithinAvailability(window.SHRISH_DATA.products.filter((p) => !p.hidden && p.category === catId));
-    const items = catId === 'picklespodi' ? allCatItems.filter(picklesPodiMatches) : allCatItems;
+    const searchedItems = allCatItems.filter((product) => productMatchesSearch(product));
+    const items = catId === 'picklespodi' ? searchedItems.filter(picklesPodiMatches) : searchedItems;
     const m = catMeta[catId] || { title: catId, em: '', sub: '', banner: false };
     const showEmptyCategory = activeFilter === catId && ['snacks'].includes(catId);
     if (!allCatItems.length && !showEmptyCategory) return;
+    if (productSearchQuery && !items.length) return;
     const hasLiveItems = allCatItems.some((product) => product.available && !product.displayOnly);
     let sectionSub = m.sub;
     if (catId === 'putharekulu' && hasLiveItems) {
@@ -872,7 +902,8 @@ function renderShop() {
       sectionSub = 'Traditional Andhra-style pickles and podi. Non-veg pickles are preorder only and depend on supplier batch and pickup timing.';
     }
     const subFilters = catId === 'picklespodi' ? renderPicklesPodiFilters(allCatItems) : '';
-    let html = `<div class="shop-section"><div class="shop-section-head"><div><div class="shop-section-title">${m.title} <em>${m.em}</em></div><div class="section-divider"></div></div>${subFilters}</div><p style="color:var(--text-light);font-size:14px;margin-bottom:24px">${sectionSub}</p>`;
+    const searchNote = productSearchQuery ? `<div class="shop-search-note">Showing matches for <strong>${escapedSearchQuery}</strong>. <a href="shop.html${activeFilter !== 'all' ? `?category=${encodeURIComponent(activeFilter)}` : ''}">Clear search</a></div>` : '';
+    let html = `<div class="shop-section"><div class="shop-section-head"><div><div class="shop-section-title">${m.title} <em>${m.em}</em></div><div class="section-divider"></div></div>${subFilters}</div>${searchNote}<p style="color:var(--text-light);font-size:14px;margin-bottom:24px">${sectionSub}</p>`;
     const showBanner = m.banner && (!hasLiveItems || activeFilter === catId);
     if (showBanner) {
       const bannerTitle = m.bannerTitle || 'Coming Soon to Shrish!';
@@ -885,7 +916,9 @@ function renderShop() {
   });
 
   if (!renderedSections) {
-    container.innerHTML = '<div class="no-results"><div class="nr-icon">!</div><p>No products in this category yet.</p></div>';
+    container.innerHTML = productSearchQuery
+      ? `<div class="no-results"><div class="nr-icon">!</div><p>No products matched "${escapedSearchQuery}". Try sweet, spicy, tangy, podi, avakai, putharekulu, or mango.</p><a class="btn-primary" href="shop.html">Clear search</a></div>`
+      : '<div class="no-results"><div class="nr-icon">!</div><p>No products in this category yet.</p></div>';
   }
 
   window.SHRISH_DATA.products.forEach((product) => renderCardQty(product.id));

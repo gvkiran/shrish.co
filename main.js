@@ -229,6 +229,51 @@ function buildGeetResponse(action, userText = '') {
   };
 }
 
+function buildProductSearchUrl(query) {
+  const normalized = String(query || '').trim();
+  return normalized ? `shop.html?search=${encodeURIComponent(normalized)}` : 'shop.html';
+}
+
+function injectProductSearch() {
+  const navInner = document.querySelector('.nav-inner');
+  const navCartWrap = document.querySelector('.nav-cart-wrap');
+  if (navInner && navCartWrap && !document.getElementById('navProductSearch')) {
+    const currentSearch = new URLSearchParams(window.location.search).get('search') || '';
+    const searchForm = document.createElement('form');
+    searchForm.id = 'navProductSearch';
+    searchForm.className = 'nav-product-search';
+    searchForm.action = 'shop.html';
+    searchForm.method = 'get';
+    searchForm.setAttribute('role', 'search');
+    searchForm.innerHTML = `
+      <input type="search" id="navProductSearchInput" name="search" placeholder="Search products" aria-label="Search products">
+      <button type="submit" aria-label="Search products">Search</button>
+    `;
+    navInner.insertBefore(searchForm, navCartWrap);
+    document.body.classList.add('nav-has-search');
+    const desktopInput = searchForm.querySelector('input');
+    if (desktopInput) desktopInput.value = currentSearch;
+  }
+
+  const navMobile = document.getElementById('navMobile');
+  if (navMobile && !document.getElementById('mobileProductSearch')) {
+    const currentSearch = new URLSearchParams(window.location.search).get('search') || '';
+    const mobileForm = document.createElement('form');
+    mobileForm.id = 'mobileProductSearch';
+    mobileForm.className = 'mobile-product-search';
+    mobileForm.action = 'shop.html';
+    mobileForm.method = 'get';
+    mobileForm.setAttribute('role', 'search');
+    mobileForm.innerHTML = `
+      <input type="search" name="search" placeholder="Search products" aria-label="Search products">
+      <button type="submit">Search</button>
+    `;
+    navMobile.appendChild(mobileForm);
+    const mobileInput = mobileForm.querySelector('input');
+    if (mobileInput) mobileInput.value = currentSearch;
+  }
+}
+
 function appendGeetMessage(messagesEl, text, sender = 'geet') {
   const messageEl = document.createElement('div');
   messageEl.className = `geet-message geet-message-${sender}`;
@@ -349,6 +394,8 @@ function injectGeetAssistant() {
 }
 
 function injectGlobalUI() {
+  injectProductSearch();
+
   // 1. WhatsApp Floating Button
   const waBtn = document.createElement('a');
   waBtn.id = 'waFloat';
@@ -395,6 +442,104 @@ function injectGlobalUI() {
     @media (max-width: 480px) {
       #waFloat { padding: 12px; border-radius: 50%; bottom: 88px; right: 16px; }
       #waFloat span { display: none; }
+    }
+
+    /* Product search in nav */
+    body.nav-has-search .nav-inner {
+      grid-template-columns: 190px minmax(0, 1fr) minmax(190px, 260px) 88px;
+      column-gap: 16px;
+    }
+    body.nav-has-search .nav-links {
+      transform: translateX(-28px);
+      gap: 30px;
+    }
+    .nav-product-search {
+      display: flex;
+      align-items: center;
+      justify-self: end;
+      width: min(260px, 100%);
+      height: 42px;
+      border: 1.5px solid rgba(200,121,26,.24);
+      border-radius: 50px;
+      background: rgba(255,255,255,.72);
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(26,18,8,.05);
+    }
+    .nav-product-search input {
+      min-width: 0;
+      flex: 1;
+      height: 100%;
+      border: 0;
+      background: transparent;
+      padding: 0 12px 0 15px;
+      color: var(--text, #3D2A0A);
+      font-family: var(--font-body, 'Jost', system-ui, sans-serif);
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+    }
+    .nav-product-search button {
+      height: 100%;
+      border: 0;
+      background: var(--saffron, #C8791A);
+      color: #fff;
+      padding: 0 13px;
+      font-family: var(--font-body, 'Jost', system-ui, sans-serif);
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .nav-product-search button:hover {
+      background: var(--saffron-d, #A8600F);
+    }
+    .mobile-product-search {
+      display: none;
+    }
+    @media (max-width: 1180px) {
+      body.nav-has-search .nav-inner {
+        grid-template-columns: 176px minmax(0, 1fr) minmax(160px, 210px) 78px;
+        column-gap: 12px;
+      }
+      body.nav-has-search .nav-links {
+        gap: 20px;
+        transform: translateX(-8px);
+      }
+      body.nav-has-search .nav-link {
+        font-size: 20px;
+      }
+      .nav-product-search {
+        width: min(210px, 100%);
+      }
+    }
+    @media (max-width: 900px) {
+      .nav-product-search {
+        display: none;
+      }
+      .mobile-product-search {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .mobile-product-search input {
+        min-width: 0;
+        border: 1.5px solid rgba(200,121,26,.24);
+        border-radius: 50px;
+        background: #fff;
+        padding: 11px 14px;
+        font: inherit;
+        font-size: 14px;
+        color: var(--text, #3D2A0A);
+        outline: none;
+      }
+      .mobile-product-search button {
+        border: 0;
+        border-radius: 50px;
+        background: var(--saffron, #C8791A);
+        color: #fff;
+        padding: 0 16px;
+        font-weight: 800;
+      }
     }
 
     /* Geet assistant */
@@ -602,6 +747,18 @@ function injectGlobalUI() {
       right: 28px;
       bottom: 150px;
     }
+    body.geet-enabled.has-cart-fab .geet-widget {
+      right: 28px;
+      bottom: 92px;
+    }
+    body.geet-enabled.has-cart-fab #waFloat {
+      right: 28px;
+      bottom: 158px;
+    }
+    body.geet-enabled.has-cart-fab #backToTop {
+      right: 92px;
+      bottom: 158px;
+    }
     @media (max-width: 640px) {
       .geet-widget {
         right: 16px;
@@ -627,6 +784,18 @@ function injectGlobalUI() {
       body.geet-enabled #backToTop {
         right: 16px;
         bottom: 86px;
+      }
+      body.geet-enabled.has-cart-fab .geet-widget {
+        right: 16px;
+        bottom: 82px;
+      }
+      body.geet-enabled.has-cart-fab #waFloat {
+        right: 86px;
+        bottom: 16px;
+      }
+      body.geet-enabled.has-cart-fab #backToTop {
+        right: 16px;
+        bottom: 148px;
       }
     }
 
