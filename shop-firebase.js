@@ -11,6 +11,7 @@ let modalVariantId = null;
 let cardVariantSelections = {};
 let notifyTarget = null;
 let picklePodiFilter = 'all';
+let initialProductOpened = false;
 
 function trackShopEvent(eventName, props = {}) {
   window.SHRISH_ANALYTICS?.track(eventName, props);
@@ -63,6 +64,28 @@ const SHOP_FILTERS = [
   { id: 'snacks', label: 'Snacks', categories: ['snacks'] },
   { id: 'picklespodi', label: 'Pickles & Podi', categories: ['picklespodi'] }
 ];
+
+function applyInitialShopFiltersFromUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const category = params.get('category') || params.get('filter');
+    const pickleType = params.get('type');
+    const productId = params.get('product');
+    const product = productId ? window.SHRISH_DATA?.products?.find((entry) => entry.id === productId) : null;
+    if (category && SHOP_FILTERS.some((filter) => filter.id === category)) {
+      activeFilter = category;
+    } else if (product) {
+      activeFilter = product.category === 'putharekulu' || product.category === 'jellysnacks' ? 'sweets' : product.category;
+    }
+    if (['all', 'veg', 'nonveg', 'podi'].includes(pickleType)) {
+      picklePodiFilter = pickleType;
+    }
+  } catch (error) {
+    console.warn('Unable to read shop filters from URL', error);
+  }
+}
+
+applyInitialShopFiltersFromUrl();
 
 const FORCE_BASE_PRODUCT_OVERRIDES = {};
 
@@ -373,7 +396,8 @@ function openModal(productId) {
 
   const statusCls = isPreorder ? 'soon' : isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
   const statusText = isPreorder ? 'Preorder Only' : isSoon ? 'Coming Soon' : isAvail ? 'Available Now' : 'Currently Not Available';
-  const chips = [p.season && `Season: ${p.season}`, p.taste && `Taste: ${p.taste}`]
+  const recommendationChips = (p.recommendationTags || []).slice(0, 8).map((tag) => `Tag: ${tag}`);
+  const chips = [p.season && `Season: ${p.season}`, p.taste && `Taste: ${p.taste}`, ...recommendationChips]
     .filter(Boolean)
     .map((chip) => `<span class="modal-chip">${escapeHtml(chip)}</span>`)
     .join('');
@@ -609,6 +633,10 @@ function renderCard(p) {
   const imgHtml = imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.onerror=null;this.src='logo.png'">` : '';
   const emojiStyle = imgSrc ? 'style="display:none"' : '';
   const shortDesc = (p.description || '').length > 90 ? `${p.description.slice(0, 90)}...` : (p.description || '');
+  const recommendationTagHtml = (p.recommendationTags || [])
+    .slice(0, 4)
+    .map((tag) => `<span>${escapeHtml(tag)}</span>`)
+    .join('');
   const variants = getProductVariants(p);
   const hasChoices = usesVariantUI(p);
   const selectedCardVariant = getCardSelectedVariant(p);
@@ -637,6 +665,7 @@ function renderCard(p) {
         <div class="pc-name" onclick="openModal('${escapeHtml(p.id)}')">${escapeHtml(p.name)}</div>
         ${p.localName ? `<div class="pc-local">${escapeHtml(p.localName)}</div>` : ''}
         <div class="pc-short-desc">${escapeHtml(shortDesc)}</div>
+        ${recommendationTagHtml ? `<div class="pc-rec-tags">${recommendationTagHtml}</div>` : ''}
         <div class="pc-footer"><div class="pc-price-wrap"><div class="pc-price">${escapeHtml(selectedCardVariant.price || p.price)}</div><div class="pc-unit">${escapeHtml(selectedCardVariant.unit || p.unit)}</div></div></div>
         ${actionHtml}
       </div>
@@ -862,18 +891,34 @@ function renderShop() {
   window.SHRISH_DATA.products.forEach((product) => renderCardQty(product.id));
 }
 
+function openInitialProductFromUrl() {
+  if (initialProductOpened) return;
+  try {
+    const productId = new URLSearchParams(window.location.search).get('product');
+    if (!productId) return;
+    const product = window.SHRISH_DATA.products.find((entry) => entry.id === productId);
+    if (!product) return;
+    initialProductOpened = true;
+    window.setTimeout(() => openModal(product.id), 150);
+  } catch (error) {
+    console.warn('Unable to open product from URL', error);
+  }
+}
+
 function subscribeCatalog() {
   onSnapshot(collection(db, 'products'), (snapshot) => {
     const docs = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
     mergeProducts(docs);
     buildFilters();
     renderShop();
+    openInitialProductFromUrl();
     updateCartUI();
   }, (error) => {
     console.error('Catalog sync failed', error);
     showToast('Using website catalog. Live sync failed.');
     buildFilters();
     renderShop();
+    openInitialProductFromUrl();
     updateCartUI();
   });
 }

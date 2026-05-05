@@ -14,6 +14,340 @@ function trackShrishEvent(eventName, props = {}) {
 }
 
 // ââ INJECT GLOBAL UI (runs on every page) âââââââââââââââââ
+const GEET_RESPONSES = {
+  sweet: {
+    text: "For something sweet, I would start with Alphonso or Kesar mangoes when they are available. If you want sweets, our Putharekulu and mango jelly are the easiest crowd-pleasers.",
+    chips: [
+      { label: "Shop mangoes", href: "shop.html?category=mangoes" },
+      { label: "Shop sweets", href: "shop.html?category=sweets" }
+    ]
+  },
+  tangy: {
+    text: "Tangy-sweet is a lovely lane. Look for Langra or Neelam mangoes in season, or try mango jelly for a chewy fruit-sweet option. If you like more punch, the pickle section is perfect.",
+    chips: [
+      { label: "Tangy picks", href: "shop.html?category=mangoes" },
+      { label: "Pickles and podi", href: "shop.html?category=picklespodi" }
+    ]
+  },
+  spicy: {
+    text: "If you want spice, I would guide you to our Andhra-style pickles and podi. Mango avakai, gongura, tomato pickle, and idli podi are good places to begin.",
+    chips: [
+      { label: "Shop spicy items", href: "shop.html?category=picklespodi" },
+      { label: "Ask on WhatsApp", href: `https://wa.me/${SHRISH_CONFIG.whatsappNumber}?text=${encodeURIComponent("Hi Shrish! Geet helped me find spicy items. Can you recommend what is available today?")}`, external: true }
+    ]
+  },
+  squeeze: {
+    text: "For squeeze-and-eat or juicy mangoes, look for Rasalu, Payari, Dasheri, or other juicy seasonal varieties in the mango section.",
+    chips: [
+      { label: "Shop mangoes", href: "shop.html?category=mangoes" },
+      { label: "Ask on WhatsApp", href: `https://wa.me/${SHRISH_CONFIG.whatsappNumber}?text=${encodeURIComponent("Hi Shrish! Which mango is best for squeeze-and-eat today?")}`, external: true }
+    ]
+  },
+  healthy: {
+    text: "For lighter choices, look for sugar-free Putharekulu, natural-sweet dates or palm-jaggery sweets, and protein-rich podi options.",
+    chips: [
+      { label: "Healthy sweets", href: "shop.html?category=sweets" },
+      { label: "Podi options", href: "shop.html?category=picklespodi&type=podi" }
+    ]
+  },
+  ordering: {
+    text: "Ordering is simple: choose items in the shop, add them to cart, select pickup, and pay at pickup. Pickup is available in Short Pump, Chesterfield, and Mechanicsville.",
+    chips: [
+      { label: "Start order", href: "shop.html" },
+      { label: "Contact us", href: "contact.html" }
+    ]
+  },
+  available: {
+    text: "The shop page shows the latest available items and sold-out items. For today's freshest recommendation, you can also message Shrish directly on WhatsApp.",
+    chips: [
+      { label: "View shop", href: "shop.html" },
+      { label: "WhatsApp Shrish", href: `https://wa.me/${SHRISH_CONFIG.whatsappNumber}?text=${encodeURIComponent("Hi Shrish! Can you tell me what is available today?")}`, external: true }
+    ]
+  },
+  fallback: {
+    text: "I can help you find something sweet, tangy-sweet, spicy, or help you place an order. What sounds good today?",
+    chips: [
+      { label: "Sweet", action: "sweet" },
+      { label: "Tangy sweet", action: "tangy" },
+      { label: "Spicy", action: "spicy" },
+      { label: "Squeeze and eat", action: "squeeze" },
+      { label: "Healthy choice", action: "healthy" },
+      { label: "Ordering help", action: "ordering" }
+    ]
+  }
+};
+
+function classifyGeetMessage(message) {
+  const text = String(message || '').toLowerCase();
+  if (/order|cart|pickup|pay|checkout|location|where/.test(text)) return 'ordering';
+  if (/available|today|stock|fresh|now/.test(text)) return 'available';
+  if (/healthy|diabetic|sugar\s*free|less sugar|protein|natural|palm jaggery/.test(text)) return 'healthy';
+  if (/squeeze|suck|juice|juicy|pulp|aamras/.test(text)) return 'squeeze';
+  if (/spice|spicy|hot|pickle|podi|avakai|gongura/.test(text)) return 'spicy';
+  if (/tangy|tart|sour|sweet.*tangy|tangy.*sweet/.test(text)) return 'tangy';
+  if (/sweet|mango|alphonso|kesar|putharekulu|jelly|dessert/.test(text)) return 'sweet';
+  return 'fallback';
+}
+
+function getGeetRecommendation(action) {
+  return GEET_RESPONSES[action] || GEET_RESPONSES.fallback;
+}
+
+const GEET_INTENTS = {
+  sweet: {
+    intro: "I matched your sweet craving against the product tags. These are the best fits:",
+    tags: ["sweet", "very sweet", "honey sweet", "jaggery sweet", "natural sweet", "mango sweet", "dessert", "aamras", "milkshake", "putharekulu", "jelly"],
+    categories: ["mangoes", "putharekulu", "jellysnacks"],
+    shopHref: "shop.html?category=sweets"
+  },
+  tangy: {
+    intro: "For tangy-sweet flavor, I looked for tags like tangy, sweet-tart, raw mango, and Andhra-style pickle:",
+    tags: ["tangy", "sweet tart", "sweet tangy", "tangy sweet", "very tangy", "raw mango", "tamarind", "gongura", "pickle"],
+    categories: ["mangoes", "picklespodi", "jellysnacks"],
+    shopHref: "shop.html?category=picklespodi"
+  },
+  spicy: {
+    intro: "For spice lovers, I ranked products tagged spicy, hot, very spicy, Andhra classic, podi, and pickle:",
+    tags: ["spicy", "hot", "very spicy", "extra hot", "medium hot", "andhra classic", "podi", "pickle", "avakai", "gongura"],
+    categories: ["picklespodi"],
+    shopHref: "shop.html?category=picklespodi"
+  },
+  healthy: {
+    intro: "For a lighter or health-minded choice, I looked for tags like healthy choice, diabetic friendly, protein rich, natural sweet, and curry leaf:",
+    tags: ["healthy choice", "diabetic friendly", "less sugar", "protein rich", "natural sweet", "curry leaf", "leaf powder", "podi", "palm jaggery"],
+    categories: ["putharekulu", "jellysnacks", "picklespodi"],
+    shopHref: "shop.html?category=sweets"
+  },
+  squeeze: {
+    intro: "For squeeze-and-eat mangoes or juicy pulp-style picks, these tags matched best:",
+    tags: ["squeeze and eat", "extremely juicy", "juicy", "pulpy", "juice mango", "aamras", "mango pulp"],
+    categories: ["mangoes"],
+    shopHref: "shop.html?category=mangoes"
+  },
+  ordering: {
+    intro: "For ordering help, start in the shop. These available items are easy to add to cart now:",
+    tags: ["available", "best seller", "family friendly", "everyday", "gifting", "combo friendly"],
+    categories: ["mangoes", "putharekulu", "jellysnacks", "picklespodi"],
+    shopHref: "shop.html"
+  },
+  available: {
+    intro: "I prioritized items marked available now and then matched the most useful tags:",
+    tags: ["available", "best seller", "most requested", "family friendly", "everyday", "gifting"],
+    categories: ["mangoes", "putharekulu", "jellysnacks", "picklespodi"],
+    shopHref: "shop.html"
+  }
+};
+
+function getGeetCategoryFilter(product) {
+  if (product.category === 'putharekulu' || product.category === 'jellysnacks') return 'sweets';
+  return product.category || 'all';
+}
+
+function normalizeGeetText(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function geetProductHaystack(product) {
+  return normalizeGeetText([
+    product.name,
+    product.category,
+    product.filterGroup,
+    product.origin,
+    product.tag,
+    product.taste,
+    product.bestFor,
+    product.description,
+    ...(product.badges || []),
+    ...(product.recommendationTags || [])
+  ].filter(Boolean).join(' '));
+}
+
+function scoreGeetProduct(product, intent, userText = '') {
+  const haystack = geetProductHaystack(product);
+  const terms = [
+    ...(intent.tags || []),
+    ...normalizeGeetText(userText).split(' ').filter((word) => word.length > 2)
+  ];
+  let score = 0;
+
+  if (product.available && !product.displayOnly) score += 6;
+  if (product.preorderOnly) score -= 2;
+  if ((intent.categories || []).includes(product.category)) score += 4;
+  if (product.category === 'putharekulu' && intent.categories?.includes('jellysnacks')) score += 2;
+  if (product.category === 'jellysnacks' && intent.categories?.includes('putharekulu')) score += 2;
+
+  terms.forEach((term) => {
+    const normalized = normalizeGeetText(term);
+    if (!normalized) return;
+    if (haystack.includes(normalized)) score += normalized.length > 8 ? 5 : 3;
+  });
+
+  if (/very|extra|hot|spicy/.test(haystack) && terms.some((term) => /spicy|hot/.test(term))) score += 4;
+  if (/squeeze and eat|extremely juicy|juice mango|pulpy/.test(haystack) && terms.some((term) => /juicy|squeeze|pulp/.test(term))) score += 4;
+  if (/diabetic friendly|less sugar|healthy choice|protein rich/.test(haystack) && terms.some((term) => /healthy|sugar|protein/.test(term))) score += 4;
+
+  return score;
+}
+
+function getGeetProductRecommendations(action, userText = '') {
+  const intent = GEET_INTENTS[action] || GEET_INTENTS.available;
+  const products = window.SHRISH_DATA?.products || [];
+  return products
+    .filter((product) => !product.hidden && !product.displayOnly)
+    .map((product) => ({ product, score: scoreGeetProduct(product, intent, userText) }))
+    .filter((entry) => entry.score > 4)
+    .sort((a, b) => b.score - a.score || Number(Boolean(b.product.available)) - Number(Boolean(a.product.available)))
+    .slice(0, 3)
+    .map((entry) => entry.product);
+}
+
+function geetProductSummary(product) {
+  const tags = (product.recommendationTags || []).slice(0, 4).join(', ');
+  const status = product.available && !product.displayOnly ? 'Available now' : product.preorderOnly ? 'Preorder' : 'Not available now';
+  return `${product.name} (${status}) - ${tags}`;
+}
+
+function getGeetProductHref(product) {
+  return `shop.html?category=${encodeURIComponent(getGeetCategoryFilter(product))}&product=${encodeURIComponent(product.id)}`;
+}
+
+function buildGeetResponse(action, userText = '') {
+  const fallback = getGeetRecommendation(action);
+  if (!window.SHRISH_DATA?.products?.length || !GEET_INTENTS[action]) return fallback;
+
+  const intent = GEET_INTENTS[action];
+  const products = getGeetProductRecommendations(action, userText);
+  if (!products.length) return fallback;
+
+  return {
+    text: `${intent.intro} ${products.map(geetProductSummary).join(' | ')}`,
+    chips: [
+      ...products.map((product) => ({ label: product.name.replace(/\s*\(.+?\)\s*/g, '').slice(0, 28), href: getGeetProductHref(product) })),
+      { label: "View matching section", href: intent.shopHref },
+      { label: "Ask on WhatsApp", href: `https://wa.me/${SHRISH_CONFIG.whatsappNumber}?text=${encodeURIComponent(`Hi Shrish! Geet recommended ${products.map((product) => product.name).join(', ')}. What is best for me today?`)}`, external: true }
+    ]
+  };
+}
+
+function appendGeetMessage(messagesEl, text, sender = 'geet') {
+  const messageEl = document.createElement('div');
+  messageEl.className = `geet-message geet-message-${sender}`;
+  messageEl.textContent = text;
+  messagesEl.appendChild(messageEl);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function renderGeetChips(chipsEl, chips = []) {
+  chipsEl.innerHTML = '';
+  chips.forEach((chip) => {
+    const chipEl = chip.href ? document.createElement('a') : document.createElement('button');
+    chipEl.className = 'geet-chip';
+    chipEl.textContent = chip.label;
+    if (chip.href) {
+      chipEl.href = chip.href;
+      if (chip.external) {
+        chipEl.target = '_blank';
+        chipEl.rel = 'noopener';
+      }
+    } else {
+      chipEl.type = 'button';
+      chipEl.dataset.geetAction = chip.action;
+    }
+    chipsEl.appendChild(chipEl);
+  });
+}
+
+function injectGeetAssistant() {
+  if (document.getElementById('geetAssistant')) return;
+
+  const widget = document.createElement('section');
+  widget.id = 'geetAssistant';
+  widget.className = 'geet-widget';
+  widget.setAttribute('aria-label', 'Geet shopping assistant');
+  widget.innerHTML = `
+    <div class="geet-panel" id="geetPanel" role="dialog" aria-modal="false" aria-labelledby="geetTitle" aria-hidden="true">
+      <div class="geet-head">
+        <div class="geet-avatar" aria-hidden="true">G</div>
+        <div>
+          <h2 id="geetTitle">Geet</h2>
+          <p>Shopping assistant</p>
+        </div>
+        <button type="button" class="geet-close" id="geetClose" aria-label="Close Geet">x</button>
+      </div>
+      <div class="geet-messages" id="geetMessages">
+        <div class="geet-message geet-message-geet">Hi I'm Geet can i help you today</div>
+      </div>
+      <div class="geet-chips" id="geetChips" aria-label="Suggested questions"></div>
+      <form class="geet-form" id="geetForm">
+        <input id="geetInput" type="text" autocomplete="off" placeholder="Ask about sweet, spicy, tangy..." aria-label="Ask Geet a question">
+        <button type="submit">Send</button>
+      </form>
+    </div>
+    <button type="button" class="geet-launcher" id="geetLauncher" aria-expanded="false" aria-controls="geetPanel">
+      <span class="geet-launcher-dot" aria-hidden="true"></span>
+      <span>Ask Geet</span>
+    </button>
+  `;
+  document.body.appendChild(widget);
+  document.body.classList.add('geet-enabled');
+
+  const launcher = document.getElementById('geetLauncher');
+  const panel = document.getElementById('geetPanel');
+  const closeBtn = document.getElementById('geetClose');
+  const messagesEl = document.getElementById('geetMessages');
+  const chipsEl = document.getElementById('geetChips');
+  const form = document.getElementById('geetForm');
+  const input = document.getElementById('geetInput');
+
+  const openGeet = (source = 'manual') => {
+    widget.classList.add('open');
+    panel.setAttribute('aria-hidden', 'false');
+    launcher.setAttribute('aria-expanded', 'true');
+    sessionStorage.setItem('shrish_geet_seen', '1');
+    trackShrishEvent('geet_opened', { source });
+  };
+
+  const closeGeet = () => {
+    widget.classList.remove('open');
+    panel.setAttribute('aria-hidden', 'true');
+    launcher.setAttribute('aria-expanded', 'false');
+    sessionStorage.setItem('shrish_geet_closed', '1');
+    trackShrishEvent('geet_closed');
+  };
+
+  const answerWith = (action, userLabel = '') => {
+    const response = buildGeetResponse(action, userLabel);
+    if (userLabel) appendGeetMessage(messagesEl, userLabel, 'user');
+    appendGeetMessage(messagesEl, response.text, 'geet');
+    renderGeetChips(chipsEl, response.chips);
+    trackShrishEvent('geet_question_answered', { action });
+  };
+
+  renderGeetChips(chipsEl, GEET_RESPONSES.fallback.chips);
+
+  launcher.addEventListener('click', () => {
+    if (widget.classList.contains('open')) closeGeet();
+    else openGeet('launcher');
+  });
+  closeBtn.addEventListener('click', closeGeet);
+  chipsEl.addEventListener('click', (event) => {
+    const actionBtn = event.target.closest('[data-geet-action]');
+    if (!actionBtn) return;
+    answerWith(actionBtn.dataset.geetAction, actionBtn.textContent.trim());
+  });
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const question = input.value.trim();
+    if (!question) return;
+    input.value = '';
+    answerWith(classifyGeetMessage(question), question);
+  });
+
+  if (!sessionStorage.getItem('shrish_geet_seen') && !sessionStorage.getItem('shrish_geet_closed')) {
+    window.setTimeout(() => openGeet('auto'), 1200);
+  }
+}
+
 function injectGlobalUI() {
   // 1. WhatsApp Floating Button
   const waBtn = document.createElement('a');
@@ -61,6 +395,239 @@ function injectGlobalUI() {
     @media (max-width: 480px) {
       #waFloat { padding: 12px; border-radius: 50%; bottom: 88px; right: 16px; }
       #waFloat span { display: none; }
+    }
+
+    /* Geet assistant */
+    .geet-widget {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 1400;
+      font-family: var(--font-body, 'Jost', system-ui, sans-serif);
+    }
+    .geet-launcher {
+      min-width: 132px;
+      min-height: 52px;
+      border: 0;
+      border-radius: 50px;
+      background: var(--dark, #1A1208);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 14px 20px;
+      box-shadow: 0 10px 30px rgba(26,18,8,.28);
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+      transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+    }
+    .geet-launcher:hover {
+      background: var(--saffron, #C8791A);
+      transform: translateY(-2px);
+      box-shadow: 0 14px 36px rgba(200,121,26,.32);
+    }
+    .geet-launcher-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--gold-l, #F0C84A);
+      box-shadow: 0 0 0 5px rgba(240,200,74,.18);
+      flex: 0 0 auto;
+    }
+    .geet-panel {
+      position: absolute;
+      right: 0;
+      bottom: 68px;
+      width: min(360px, calc(100vw - 32px));
+      max-height: min(620px, calc(100vh - 120px));
+      background: #fff;
+      border: 1px solid rgba(200,121,26,.24);
+      border-radius: 18px;
+      box-shadow: 0 20px 60px rgba(26,18,8,.22);
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(14px) scale(.98);
+      pointer-events: none;
+      transition: opacity .25s ease, transform .25s ease;
+    }
+    .geet-widget.open .geet-panel {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .geet-head {
+      display: grid;
+      grid-template-columns: 44px 1fr 34px;
+      gap: 12px;
+      align-items: center;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--dark, #1A1208), var(--saffron-d, #A8600F));
+      color: #fff;
+    }
+    .geet-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--gold-l, #F0C84A);
+      color: var(--dark, #1A1208);
+      font-weight: 800;
+      font-size: 20px;
+    }
+    .geet-head h2 {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.1;
+      color: #fff;
+    }
+    .geet-head p {
+      margin: 3px 0 0;
+      font-size: 12px;
+      line-height: 1.2;
+      color: rgba(255,255,255,.74);
+    }
+    .geet-close {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(255,255,255,.15);
+      color: #fff;
+      cursor: pointer;
+      font-size: 17px;
+      line-height: 1;
+    }
+    .geet-messages {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 16px;
+      max-height: 276px;
+      overflow-y: auto;
+      background: var(--cream, #FDF6EC);
+    }
+    .geet-message {
+      max-width: 88%;
+      padding: 10px 12px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.4;
+      box-shadow: 0 2px 10px rgba(26,18,8,.06);
+    }
+    .geet-message-geet {
+      align-self: flex-start;
+      background: #fff;
+      color: var(--text, #3D2A0A);
+      border-bottom-left-radius: 5px;
+    }
+    .geet-message-user {
+      align-self: flex-end;
+      background: var(--saffron, #C8791A);
+      color: #fff;
+      border-bottom-right-radius: 5px;
+    }
+    .geet-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px 16px 4px;
+      background: #fff;
+    }
+    .geet-chip {
+      border: 1px solid rgba(200,121,26,.32);
+      border-radius: 50px;
+      background: rgba(253,246,236,.8);
+      color: var(--saffron-d, #A8600F);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.1;
+      text-decoration: none;
+      transition: background .2s ease, color .2s ease, border-color .2s ease;
+    }
+    .geet-chip:hover {
+      background: var(--saffron, #C8791A);
+      border-color: var(--saffron, #C8791A);
+      color: #fff;
+    }
+    .geet-form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      padding: 12px 16px 16px;
+      background: #fff;
+    }
+    .geet-form input {
+      min-width: 0;
+      height: 42px;
+      border: 1px solid rgba(107,74,32,.22);
+      border-radius: 50px;
+      padding: 0 14px;
+      font: inherit;
+      font-size: 14px;
+      color: var(--text, #3D2A0A);
+      outline: none;
+    }
+    .geet-form input:focus {
+      border-color: var(--saffron, #C8791A);
+      box-shadow: 0 0 0 3px rgba(200,121,26,.14);
+    }
+    .geet-form button {
+      height: 42px;
+      border: 0;
+      border-radius: 50px;
+      background: var(--saffron, #C8791A);
+      color: #fff;
+      padding: 0 15px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    body.geet-enabled #waFloat {
+      right: 176px;
+      bottom: 25px;
+    }
+    body.geet-enabled #backToTop {
+      right: 24px;
+      bottom: 90px;
+    }
+    body.geet-enabled.has-cart-fab #backToTop {
+      right: 28px;
+      bottom: 150px;
+    }
+    @media (max-width: 640px) {
+      .geet-widget {
+        right: 16px;
+        bottom: 16px;
+      }
+      .geet-panel {
+        bottom: 64px;
+        max-height: calc(100vh - 94px);
+      }
+      .geet-launcher {
+        min-width: 58px;
+        width: 58px;
+        height: 58px;
+        padding: 0;
+      }
+      .geet-launcher span:last-child {
+        display: none;
+      }
+      body.geet-enabled #waFloat {
+        right: 86px;
+        bottom: 16px;
+      }
+      body.geet-enabled #backToTop {
+        right: 16px;
+        bottom: 86px;
+      }
     }
 
     /* Back to top */
@@ -176,6 +743,8 @@ function injectGlobalUI() {
     orderLink.textContent = 'Order Now';
     navMobile.appendChild(orderLink);
   }
+
+  injectGeetAssistant();
 }
 
 // ââ DOM READY âââââââââââââââââââââââââââââââââââââââââââââââ

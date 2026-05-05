@@ -904,5 +904,77 @@ const SHRISH_DATA = {
   }
 };
 
+const SHRISH_RECOMMENDATION_TAGS = {
+  alphonso: ["Sweet", "Rich", "Aromatic", "Fiberless", "Creamy", "Cut and eat", "Dessert mango", "Aamras", "Lassi", "Shrikhand", "Premium"],
+  kesar: ["Honey sweet", "Floral", "Aromatic", "Fiberless", "Smooth", "Cut and eat", "Lassi", "Milkshake", "Ice cream", "Aamras", "Family favorite"],
+  banganapalli: ["Mild sweet", "Balanced", "Fiberless", "Smooth", "Buttery", "Cut and eat", "Juice", "Everyday mango", "Kids friendly", "Andhra vibe"],
+  langra: ["Tangy sweet", "Juicy", "Bold flavor", "Aromatic", "Fiberless", "Cut and eat", "Chutney", "Mango panna", "Pickle friendly", "North Indian favorite"],
+  rasalu: ["Very sweet", "Extremely juicy", "Squeeze and eat", "Andhra vibe", "Delicate", "Low shelf life", "Candy-like", "Aamras", "Milkshake", "Juice mango"],
+  himayat: ["Very sweet", "Creamy", "Fiberless", "Royal", "Premium", "Aromatic", "Melt in mouth", "Cut and eat", "Dessert mango", "Kulfi"],
+  payari: ["Sweet tangy", "Juicy", "Pulpy", "Aamras", "Milkshake", "Squeeze and eat", "Delicate", "Low shelf life", "Konkan favorite", "Mango pulp"],
+  dasheri: ["Very sweet", "Fragrant", "Fiberless", "Juicy", "Smooth", "Cut and eat", "Squeeze and eat", "Lassi", "Mango shake", "North Indian favorite"],
+  malgova: ["Very sweet", "Buttery", "Creamy", "Fiberless", "Large fruit", "Cut and eat", "Dessert mango", "Milkshake", "Tamil Nadu favorite", "Low acidity"],
+  neelam: ["Sweet tart", "Fragrant", "Juicy", "Late season", "Balanced", "Cut and eat", "Juice", "Dessert", "South Indian favorite", "Long shelf life"],
+
+  puth_sugar_kaju: ["Sweet", "Paper sweet", "Melt in mouth", "Dry fruit", "Kaju badam", "Ghee aroma", "Crunchy nuts", "Festive", "Gifting", "Atreyapuram"],
+  puth_sugar_kaju_pista: ["Sweet", "Premium dry fruit", "Paper sweet", "Melt in mouth", "Kaju badam pista", "Ghee aroma", "Festive", "Gifting", "Rich", "Atreyapuram"],
+  puth_jaggery_kaju: ["Jaggery sweet", "Traditional sweet", "Paper sweet", "Melt in mouth", "Kaju", "Ghee aroma", "Rustic sweetness", "Festive", "Andhra vibe", "Atreyapuram"],
+  puth_jaggery_kaju_badam: ["Jaggery sweet", "Dry fruit", "Paper sweet", "Melt in mouth", "Kaju badam", "Traditional", "Nutty", "Festive", "Gifting", "Atreyapuram"],
+  puth_jaggery_kaju_pista: ["Jaggery sweet", "Premium dry fruit", "Paper sweet", "Melt in mouth", "Kaju badam pista", "Traditional", "Rich", "Festive", "Gifting", "Atreyapuram"],
+  puth_sugarfree: ["Diabetic friendly", "Less sugar", "Healthy choice", "Dry fruit", "Paper sweet", "Melt in mouth", "Kaju badam pista", "Light sweetness", "Gifting", "Atreyapuram"],
+  puth_dates_kaju_badam_pista: ["Natural sweet", "Dates", "Dry fruit", "Paper sweet", "Melt in mouth", "Rich", "Chewy", "Premium", "Gifting", "Atreyapuram"],
+  puth_organic_palm_kaju_badam_pista: ["Palm jaggery", "Organic palm", "Natural sweet", "Premium dry fruit", "Paper sweet", "Deep caramel", "Rich", "Gifting", "Healthy choice", "Atreyapuram"],
+
+  mango_jelly_sugar: ["Mango sweet", "Chewy", "Fruit leather", "Mamidi thandra", "Kids friendly", "Snack", "Gifting", "Year round", "Balanced sweetness", "Andhra vibe"],
+  mango_jelly_jaggery: ["Jaggery sweet", "Chewy", "Fruit leather", "Mamidi thandra", "Traditional", "Warm sweetness", "Snack", "Limited", "Andhra vibe", "Gifting"],
+  palm_jelly: ["Palm fruit", "Thati thandra", "Rustic", "Earthy", "Palm jaggery", "Chewy", "Rare", "Seasonal", "Traditional", "Andhra vibe"],
+
+  "picklespodi-brinjal-amla-pickle": ["Tangy", "Spicy", "Medium hot", "Veg pickle", "Rare", "Earthy", "Amla", "Brinjal", "Hot rice", "Curd rice"],
+  "picklespodi-carrot-pickle": ["Mild spicy", "Slightly sweet", "Crunchy", "Veg pickle", "Family friendly", "Kids friendly", "Andhra style", "Curd rice", "Dosa", "Chapati"],
+  "picklespodi-cauliflower-pickle": ["Spicy", "Tangy", "Crunchy", "Medium hot", "Veg pickle", "Andhra style", "Hot rice", "Curd rice", "Dosa", "Chapati"],
+  "picklespodi-chintakaya-pachadi-tamarind-pickle": ["Very tangy", "Hot", "Traditional", "Veg pickle", "Tamarind", "Sour", "Andhra vibe", "Hot rice", "Dal rice", "Dosa"],
+  "picklespodi-drumstick-pickle": ["Tangy", "Spicy", "Medium hot", "Traditional", "Veg pickle", "Drumstick", "Hot rice", "Dal rice", "Curd rice", "Chapati"],
+  "picklespodi-garlic-pickle": ["Spicy", "Bold", "Garlic", "Medium hot", "Veg pickle", "Punchy", "Dal rice", "Curd rice", "Dosa", "Chapati"],
+  "picklespodi-gongura-pickle": ["Very tangy", "Hot", "Gongura", "Sorrel", "Telugu favorite", "Andhra classic", "Veg pickle", "Hot rice ghee", "Dal rice", "Curd rice"],
+  "picklespodi-karivepaku-pachadi-curry-leaf-pickle": ["Aromatic", "Curry leaf", "Medium spice", "Earthy", "Healthy choice", "Veg pickle", "Hot rice", "Idli", "Dosa", "Curd rice"],
+  "picklespodi-kothimeera-coriander-pickle": ["Herby", "Fresh", "Tangy", "Medium spice", "Everyday pickle", "Veg pickle", "Coriander", "Idli", "Dosa", "Chapati"],
+  "picklespodi-mango-avakai-pickle": ["Very spicy", "Tangy", "Raw mango", "Mustard", "Andhra classic", "Best seller", "Veg pickle", "Hot rice ghee", "Curd rice", "Dosa"],
+  "picklespodi-mango-ginger-pickle": ["Mild tangy", "Aromatic", "Mango ginger", "Medium spice", "Rare", "Veg pickle", "Fresh flavor", "Curd rice", "Lemon rice", "Chapati"],
+  "picklespodi-mango-thokku-magai-pickle": ["Tangy", "Spicy", "Medium hot", "Raw mango", "Everyday pickle", "Veg pickle", "Grated mango", "Curd rice", "Dosa", "Hot rice"],
+  "picklespodi-mixed-vegetable-pickle": ["Spicy", "Tangy", "Crunchy", "Assorted vegetables", "Combo friendly", "Veg pickle", "Andhra style", "Curd rice", "Dosa", "Chapati"],
+  "picklespodi-pandu-mirchi-pickle": ["Very spicy", "Extra hot", "Red chilli", "Limited batch", "Veg pickle", "Fiery", "Hot rice ghee", "Idli", "Dosa", "Pappu rice"],
+  "picklespodi-tomato-pickle": ["Tangy", "Spicy", "Medium hot", "Everyday pickle", "Veg pickle", "Tomato", "Idli", "Dosa", "Curd rice", "Chapati"],
+  "picklespodi-boneless-chicken-pickle": ["Spicy", "Hot", "Non veg pickle", "Chicken", "Protein rich", "Preorder", "Travel meals", "Hot rice", "Chapati", "Dosa"],
+  "picklespodi-boneless-mutton-pickle": ["Spicy", "Hot", "Non veg pickle", "Mutton", "Premium", "Rich masala", "Preorder", "Hot rice", "Chapati", "Dosa"],
+  "picklespodi-fish-pickle-koramenu-pickle": ["Spicy", "Hot", "Non veg pickle", "Seafood", "Fish", "Koramenu", "Preorder", "Hot rice", "Chapati", "Dosa"],
+  "picklespodi-gongura-chicken-pickle": ["Tangy", "Spicy", "Hot", "Gongura", "Chicken", "Non veg pickle", "Telugu favorite", "Preorder", "Hot rice", "Chapati"],
+  "picklespodi-gongura-mutton-pickle": ["Tangy", "Spicy", "Hot", "Gongura", "Mutton", "Non veg pickle", "Premium", "Preorder", "Hot rice", "Chapati"],
+  "picklespodi-gongura-prawn-pickle": ["Tangy", "Spicy", "Hot", "Gongura", "Prawn", "Seafood", "Non veg pickle", "Premium", "Preorder", "Hot rice"],
+  "picklespodi-natu-kodi-country-chicken-pickle": ["Spicy", "Hot", "Country chicken", "Natu kodi", "Non veg pickle", "Specialty", "Preorder", "Rustic", "Hot rice", "Chapati"],
+  "picklespodi-prawns-pickle": ["Spicy", "Hot", "Prawn", "Seafood", "Non veg pickle", "Premium", "Preorder", "Rich masala", "Hot rice", "Curd rice"],
+  "picklespodi-dhaniyalu-podi-coriander-spice-powder": ["Podi", "Aromatic", "Coriander", "Medium spice", "Earthy", "Andhra style", "Hot rice ghee", "Idli", "Dosa", "Easy shipping"],
+  "picklespodi-drumstick-leaf-podi-munagaku-podi": ["Podi", "Healthy choice", "Leaf powder", "Medium spice", "Earthy", "Traditional", "Andhra style", "Hot rice ghee", "Idli", "Dosa"],
+  "picklespodi-idli-podi": ["Podi", "Breakfast favorite", "Medium hot", "Spicy", "Good shelf life", "Idli", "Dosa", "Ghee", "Andhra style", "Everyday"],
+  "picklespodi-kandi-podi": ["Podi", "Protein rich", "Mild spicy", "Traditional", "Comfort food", "Hot rice ghee", "Idli", "Dosa", "Andhra style", "Everyday"],
+  "picklespodi-karapu-podi-with-garlic": ["Podi", "Spicy", "Garlic", "Medium hot", "Bold", "Andhra style", "Dal rice", "Curd rice", "Dosa", "Idli"],
+  "picklespodi-karivepaku-podi-curry-leaf-powder": ["Podi", "Curry leaf", "Aromatic", "Medium spice", "Healthy choice", "Earthy", "Hot rice ghee", "Idli", "Dosa", "Curd rice"]
+};
+
+SHRISH_DATA.products.forEach((product) => {
+  const extraTags = SHRISH_RECOMMENDATION_TAGS[product.id] || [];
+  const tasteTags = String(product.taste || '')
+    .split(/\s+-\s+|,|\|/)
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+  product.recommendationTags = Array.from(new Set([
+    ...extraTags,
+    ...tasteTags,
+    product.tag,
+    product.filterGroup,
+    ...(product.badges || [])
+  ].filter(Boolean)));
+});
+
+window.SHRISH_RECOMMENDATION_TAGS = SHRISH_RECOMMENDATION_TAGS;
 window.SHRISH_DATA = SHRISH_DATA;
 
