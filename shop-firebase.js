@@ -845,6 +845,21 @@ function productMatchesSearch(product, query = productSearchQuery) {
   return terms.every((term) => haystack.includes(term));
 }
 
+function updateProductSearch(query, { updateUrl = true } = {}) {
+  productSearchQuery = String(query || '').trim();
+  document.querySelectorAll('.nav-product-search input, .mobile-product-search input').forEach((input) => {
+    if (input.value !== productSearchQuery) input.value = productSearchQuery;
+  });
+  if (updateUrl) {
+    const url = new URL(window.location.href);
+    if (productSearchQuery) url.searchParams.set('search', productSearchQuery);
+    else url.searchParams.delete('search');
+    url.searchParams.delete('product');
+    window.history.replaceState({}, '', url);
+  }
+  renderShop();
+}
+
 function renderShop() {
   const container = document.getElementById('shopContent');
   if (!container) return;
@@ -962,6 +977,12 @@ function bindNotifyForm() {
   form.addEventListener('submit', submitNotifyRequest);
 }
 
+function bindLiveSearchEvents() {
+  window.addEventListener('shrish:product-search', (event) => {
+    updateProductSearch(event.detail?.query || '');
+  });
+}
+
 function init() {
   if (!window.SHRISH_DATA?.products) {
     const shopContent = document.getElementById('shopContent');
@@ -972,6 +993,7 @@ function init() {
   }
 
   bindNotifyForm();
+  bindLiveSearchEvents();
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeCart(); closeNotifyModal(); } });
   subscribeCatalog();
 }

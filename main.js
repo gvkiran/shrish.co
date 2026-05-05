@@ -234,6 +234,26 @@ function buildProductSearchUrl(query) {
   return normalized ? `shop.html?search=${encodeURIComponent(normalized)}` : 'shop.html';
 }
 
+function bindLiveProductSearch(form) {
+  const input = form?.querySelector('input[type="search"]');
+  if (!form || !input) return;
+
+  input.addEventListener('input', () => {
+    const query = input.value.trim();
+    document.querySelectorAll('.nav-product-search input, .mobile-product-search input').forEach((otherInput) => {
+      if (otherInput !== input) otherInput.value = input.value;
+    });
+    window.dispatchEvent(new CustomEvent('shrish:product-search', { detail: { query } }));
+  });
+
+  form.addEventListener('submit', (event) => {
+    const onShopPage = Boolean(document.getElementById('shopContent'));
+    if (!onShopPage) return;
+    event.preventDefault();
+    window.dispatchEvent(new CustomEvent('shrish:product-search', { detail: { query: input.value.trim() } }));
+  });
+}
+
 function injectProductSearch() {
   const navInner = document.querySelector('.nav-inner');
   const navCartWrap = document.querySelector('.nav-cart-wrap');
@@ -253,6 +273,7 @@ function injectProductSearch() {
     document.body.classList.add('nav-has-search');
     const desktopInput = searchForm.querySelector('input');
     if (desktopInput) desktopInput.value = currentSearch;
+    bindLiveProductSearch(searchForm);
   }
 
   const navMobile = document.getElementById('navMobile');
@@ -271,6 +292,7 @@ function injectProductSearch() {
     navMobile.appendChild(mobileForm);
     const mobileInput = mobileForm.querySelector('input');
     if (mobileInput) mobileInput.value = currentSearch;
+    bindLiveProductSearch(mobileForm);
   }
 }
 
