@@ -45,15 +45,8 @@
     api_host: POSTHOG_HOST,
     defaults: POSTHOG_DEFAULTS,
     autocapture: false,
-    capture_pageview: false,
+    capture_pageview: true,
     disable_session_recording: true,
     person_profiles: 'identified_only'
-  });
-
-  document.addEventListener('DOMContentLoaded', () => {
-    track('page_viewed', {
-      page_title: document.title,
-      page_path: safePath()
-    });
   });
 })();
