@@ -1718,7 +1718,8 @@ function primaryPriceFromVariants(variants = [], status = 'live') {
 }
 
 function picklesPodiSaveFields(product = {}) {
-  if (normalizeProductCategory(product.category) !== 'picklespodi') return {};
+  const sourceProduct = product || {};
+  if (normalizeProductCategory(sourceProduct.category) !== 'picklespodi') return {};
 
   return [
     'preorderOnly',
@@ -1730,9 +1731,23 @@ function picklesPodiSaveFields(product = {}) {
     'shippingNote',
     'badges'
   ].reduce((acc, field) => {
-    if (product[field] !== undefined) acc[field] = product[field];
+    if (sourceProduct[field] !== undefined) acc[field] = sourceProduct[field];
     return acc;
   }, {});
+}
+
+function productSaveErrorMessage(error) {
+  const code = String(error?.code || '');
+  if (code.includes('permission-denied') || code.includes('unauthenticated')) {
+    return 'Save blocked: admin session expired. Refresh, log in again, and retry.';
+  }
+  if (code.includes('unavailable') || code.includes('deadline-exceeded')) {
+    return 'Save blocked: Firebase/network is unavailable. Check connection and retry.';
+  }
+  if (code.includes('invalid-argument')) {
+    return 'Save blocked: one product field has an invalid value.';
+  }
+  return 'Could not save product right now. Check browser console for details.';
 }
 
 function galleryFromInput(value) {
@@ -1892,6 +1907,11 @@ async function submitAddProduct(event) {
   };
   if (!editingProductId) payload.createdAt = new Date().toISOString();
 
+  if (!auth.currentUser) {
+    showToast('Admin session expired. Refresh, log in again, and retry.');
+    return;
+  }
+
   submitButton.disabled = true;
   submitButton.textContent = 'Saving...';
 
@@ -1901,8 +1921,13 @@ async function submitAddProduct(event) {
     resetAddProductForm();
     closeAddProductForm();
   } catch (error) {
-    console.error(error);
-    showToast('Could not save product right now');
+    console.error('Product save failed', {
+      code: error?.code,
+      message: error?.message,
+      productId: id,
+      payload
+    });
+    showToast(productSaveErrorMessage(error));
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = 'Save Product';
