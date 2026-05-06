@@ -469,10 +469,11 @@ function renderGeetMessages(messagesEl, messages = []) {
 function renderGeetChips(chipsEl, chips = []) {
   chipsEl.innerHTML = '';
   chips.forEach((chip) => {
-    const chipEl = chip.href ? document.createElement('a') : document.createElement('button');
+    const isWhatsAppChip = /wa\.me|whatsapp\.com/i.test(chip.href || '');
+    const chipEl = chip.href && !isWhatsAppChip ? document.createElement('a') : document.createElement('button');
     chipEl.className = 'geet-chip';
-    chipEl.textContent = chip.label;
-    if (chip.href) {
+    chipEl.textContent = isWhatsAppChip ? 'Connect with Shrish' : chip.label;
+    if (chip.href && !isWhatsAppChip) {
       chipEl.href = chip.href;
       if (chip.external) {
         chipEl.target = '_blank';
@@ -480,7 +481,8 @@ function renderGeetChips(chipsEl, chips = []) {
       }
     } else {
       chipEl.type = 'button';
-      chipEl.dataset.geetAction = chip.action;
+      if (isWhatsAppChip) chipEl.dataset.geetHref = chip.href;
+      else chipEl.dataset.geetAction = chip.action;
     }
     chipsEl.appendChild(chipEl);
   });
@@ -568,7 +570,15 @@ function injectGeetAssistant() {
   });
   closeBtn.addEventListener('click', closeGeet);
   chipsEl.addEventListener('click', (event) => {
-    const actionBtn = event.target.closest('[data-geet-action]');
+    const chipTarget = event.target instanceof Element ? event.target : event.target?.parentElement;
+    const hrefTarget = chipTarget?.closest('[data-geet-href], a[href*="wa.me"], a[href*="whatsapp.com"]');
+    if (hrefTarget) {
+      event.preventDefault();
+      const href = hrefTarget.dataset.geetHref || hrefTarget.getAttribute('href');
+      if (href) window.location.assign(href);
+      return;
+    }
+    const actionBtn = chipTarget?.closest('[data-geet-action]');
     if (!actionBtn) return;
     answerWith(actionBtn.dataset.geetAction, actionBtn.textContent.trim());
   });
