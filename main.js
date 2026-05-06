@@ -511,16 +511,19 @@ function normalizeGeetApiChips(chips = []) {
 }
 
 async function getGeetAiResponse(question, action, messagesEl) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 6000);
   const response = await fetch('/api/geet-chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    signal: controller.signal,
     body: JSON.stringify({
       question,
       action,
       page: `${window.location.pathname}${window.location.search}`,
       history: getGeetSessionHistory(messagesEl)
     })
-  });
+  }).finally(() => window.clearTimeout(timeoutId));
   if (!response.ok) throw new Error('Geet AI unavailable');
   const data = await response.json();
   const text = String(data.text || '').trim();

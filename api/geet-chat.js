@@ -5,6 +5,7 @@ const vm = require('vm');
 const DEFAULT_MODEL = 'gpt-5-mini';
 const MAX_HISTORY_MESSAGES = 8;
 const MAX_QUESTION_LENGTH = 500;
+const OPENAI_TIMEOUT_MS = 7000;
 
 let cachedCatalog = null;
 
@@ -210,8 +211,11 @@ module.exports = async function handler(req, res) {
       }));
 
     const catalog = loadCatalog();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
     const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
+      signal: controller.signal,
       headers: {
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
         'Content-Type': 'application/json'
@@ -237,7 +241,7 @@ module.exports = async function handler(req, res) {
         ],
         max_output_tokens: 700
       })
-    });
+    }).finally(() => clearTimeout(timeoutId));
 
     if (!response.ok) {
       await response.text();
