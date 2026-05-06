@@ -457,6 +457,7 @@ function appendGeetMessage(messagesEl, text, sender = 'geet') {
   messageEl.textContent = text;
   messagesEl.appendChild(messageEl);
   messagesEl.scrollTop = messagesEl.scrollHeight;
+  return messageEl;
 }
 
 function renderGeetMessages(messagesEl, messages = []) {
@@ -486,6 +487,48 @@ function renderGeetChips(chipsEl, chips = []) {
     }
     chipsEl.appendChild(chipEl);
   });
+}
+
+function getGeetSessionHistory(messagesEl) {
+  return Array.from(messagesEl.querySelectorAll('.geet-message')).slice(-8).map((messageEl) => ({
+    sender: messageEl.classList.contains('geet-message-user') ? 'user' : 'geet',
+    text: (messageEl.textContent || '').trim()
+  })).filter((message) => message.text);
+}
+
+function normalizeGeetApiChips(chips = []) {
+  return (Array.isArray(chips) ? chips : []).map((chip) => {
+    const label = String(chip.label || '').trim().slice(0, 30);
+    const href = String(chip.href || '').trim();
+    const action = String(chip.action || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().slice(0, 40);
+    if (!label) return null;
+    if (/^(shop|contact|order)\.html(\?|#|$)/.test(href) || /^https:\/\/wa\.me\//i.test(href)) {
+      return { label, href, external: /^https:\/\//i.test(href) };
+    }
+    if (action.length >= 2) return { label, action };
+    return null;
+  }).filter(Boolean).slice(0, 5);
+}
+
+async function getGeetAiResponse(question, action, messagesEl) {
+  const response = await fetch('/api/geet-chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      question,
+      action,
+      page: `${window.location.pathname}${window.location.search}`,
+      history: getGeetSessionHistory(messagesEl)
+    })
+  });
+  if (!response.ok) throw new Error('Geet AI unavailable');
+  const data = await response.json();
+  const text = String(data.text || '').trim();
+  if (!text) throw new Error('Geet AI empty response');
+  return {
+    text,
+    chips: normalizeGeetApiChips(data.chips)
+  };
 }
 
 function injectGeetAssistant() {
@@ -527,7 +570,9 @@ function injectGeetAssistant() {
   const chipsEl = document.getElementById('geetChips');
   const form = document.getElementById('geetForm');
   const input = document.getElementById('geetInput');
+  const sendBtn = form.querySelector('button');
   const savedSession = loadGeetSession();
+  let geetPending = false;
 
   const openGeet = (source = 'manual') => {
     widget.classList.add('open');
@@ -545,15 +590,38 @@ function injectGeetAssistant() {
     trackShrishEvent('geet_closed');
   };
 
-  const answerWith = (action, userLabel = '') => {
-    const response = buildGeetResponse(action, userLabel);
-    const chips = withGeetConnectChip(response.chips);
-    if (userLabel) appendGeetMessage(messagesEl, userLabel, 'user');
-    appendGeetMessage(messagesEl, response.text, 'geet');
-    appendGeetMessage(messagesEl, "Would you like to connect with Shrish on WhatsApp for today's availability, pickup timing, or custom help?", 'geet');
-    renderGeetChips(chipsEl, chips);
-    saveGeetSession(messagesEl, chips);
-    trackShrishEvent('geet_question_answered', { action });
+  const answerWith = async (action, userLabel = '') => {
+    if (geetPending) return;
+    geetPending = true;
+    input.disabled = true;
+    if (sendBtn) sendBtn.disabled = true;
+    try {
+      await ensureProductSearchData();
+      const fallbackResponse = buildGeetResponse(action, userLabel);
+      const fallbackChips = withGeetConnectChip(fallbackResponse.chips);
+      if (userLabel) appendGeetMessage(messagesEl, userLabel, 'user');
+      const replyEl = appendGeetMessage(messagesEl, "Let me check Shrish products for you...", 'geet');
+      let response = fallbackResponse;
+      let chips = fallbackChips;
+      try {
+        const aiResponse = await getGeetAiResponse(userLabel || action, action, messagesEl);
+        response = aiResponse;
+        chips = withGeetConnectChip(aiResponse.chips.length ? aiResponse.chips : fallbackResponse.chips);
+        trackShrishEvent('geet_ai_answered', { action });
+      } catch (error) {
+        trackShrishEvent('geet_ai_fallback', { action });
+      }
+      replyEl.textContent = response.text;
+      appendGeetMessage(messagesEl, "Would you like to connect with Shrish on WhatsApp for today's availability, pickup timing, or custom help?", 'geet');
+      renderGeetChips(chipsEl, chips);
+      saveGeetSession(messagesEl, chips);
+      trackShrishEvent('geet_question_answered', { action });
+    } finally {
+      geetPending = false;
+      input.disabled = false;
+      if (sendBtn) sendBtn.disabled = false;
+      input.focus();
+    }
   };
 
   if (savedSession.messages.length) {
@@ -998,6 +1066,11 @@ function injectGlobalUI() {
       cursor: pointer;
       font-weight: 700;
       font-size: 13px;
+    }
+    .geet-form input:disabled,
+    .geet-form button:disabled {
+      opacity: .65;
+      cursor: wait;
     }
     body.geet-enabled #backToTop {
       right: 24px;
