@@ -651,11 +651,17 @@ function injectGlobalUI() {
       outline: none;
     }
     .nav-product-search button {
-      height: 100%;
+      height: calc(100% - 6px);
       border: 0;
+      border-radius: 999px;
       background: var(--saffron, #C8791A);
       color: #fff;
-      padding: 0 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 64px;
+      margin: 3px 3px 3px 0;
+      padding: 0 15px;
       font-family: var(--font-body, 'Jost', system-ui, sans-serif);
       font-size: 12px;
       font-weight: 800;
