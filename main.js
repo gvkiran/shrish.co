@@ -492,10 +492,70 @@ function withGeetConnectChip(chips = []) {
   return hasConnect ? chips : [...chips, getGeetConnectChip()];
 }
 
+function escapeGeetRegExp(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function getGeetProductLinks(text) {
+  const products = window.SHRISH_DATA?.products || [];
+  const matches = [];
+  products
+    .filter((product) => product.name && !product.hidden && !product.displayOnly)
+    .sort((a, b) => b.name.length - a.name.length)
+    .forEach((product) => {
+      const pattern = new RegExp(escapeGeetRegExp(product.name), 'gi');
+      let match;
+      while ((match = pattern.exec(text))) {
+        const start = match.index;
+        const end = start + match[0].length;
+        if (matches.some((existing) => start < existing.end && end > existing.start)) continue;
+        matches.push({
+          start,
+          end,
+          label: match[0],
+          href: getGeetProductHref(product)
+        });
+      }
+    });
+  return matches.sort((a, b) => a.start - b.start).slice(0, 8);
+}
+
+function setGeetMessageText(messageEl, text, sender = 'geet') {
+  const value = String(text || '');
+  messageEl.innerHTML = '';
+
+  if (sender !== 'geet') {
+    messageEl.textContent = value;
+    return;
+  }
+
+  const links = getGeetProductLinks(value);
+  if (!links.length) {
+    messageEl.textContent = value;
+    return;
+  }
+
+  let cursor = 0;
+  links.forEach((link) => {
+    if (link.start > cursor) {
+      messageEl.appendChild(document.createTextNode(value.slice(cursor, link.start)));
+    }
+    const productLink = document.createElement('a');
+    productLink.className = 'geet-product-link';
+    productLink.href = link.href;
+    productLink.textContent = link.label;
+    messageEl.appendChild(productLink);
+    cursor = link.end;
+  });
+  if (cursor < value.length) {
+    messageEl.appendChild(document.createTextNode(value.slice(cursor)));
+  }
+}
+
 function appendGeetMessage(messagesEl, text, sender = 'geet') {
   const messageEl = document.createElement('div');
   messageEl.className = `geet-message geet-message-${sender}`;
-  messageEl.textContent = text;
+  setGeetMessageText(messageEl, text, sender);
   messagesEl.appendChild(messageEl);
   messagesEl.scrollTop = messagesEl.scrollHeight;
   return messageEl;
@@ -663,7 +723,7 @@ function injectGeetAssistant() {
           .then((aiResponse) => {
             if (turnId !== geetTurn) return;
             const aiChips = withGeetConnectChip(aiResponse.chips.length ? aiResponse.chips : fallbackResponse.chips);
-            replyEl.textContent = aiResponse.text;
+            setGeetMessageText(replyEl, aiResponse.text, 'geet');
             renderGeetChips(chipsEl, aiChips);
             saveGeetSession(messagesEl, aiChips);
             trackShrishEvent('geet_ai_answered', { action });
@@ -1055,6 +1115,17 @@ function injectGlobalUI() {
       background: #fff;
       color: var(--text, #3D2A0A);
       border-bottom-left-radius: 5px;
+    }
+    .geet-product-link {
+      color: var(--saffron-d, #A8600F);
+      font-weight: 800;
+      text-decoration: underline;
+      text-decoration-color: rgba(200,121,26,.42);
+      text-underline-offset: 3px;
+    }
+    .geet-product-link:hover {
+      color: var(--maroon, #7B2E00);
+      text-decoration-color: currentColor;
     }
     .geet-message-user {
       align-self: flex-end;
