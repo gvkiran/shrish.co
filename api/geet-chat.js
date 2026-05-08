@@ -5,7 +5,7 @@ const vm = require('vm');
 const DEFAULT_MODEL = 'gpt-5-mini';
 const MAX_HISTORY_MESSAGES = 8;
 const MAX_QUESTION_LENGTH = 500;
-const OPENAI_TIMEOUT_MS = 7000;
+const OPENAI_TIMEOUT_MS = 5000;
 
 let cachedCatalog = null;
 
@@ -122,6 +122,7 @@ function buildInstructions() {
     'When recommending products, prefer products marked available. You may mention preorder items only when relevant and clearly say they are preorder.',
     'Do not give medical advice. For allergies, ingredients, custom orders, or exact same-day stock, suggest connecting with Shrish.',
     'If the question is unrelated to SHRISH, politely say you can only help with SHRISH products and ordering.',
+    'Sound like a warm shopping helper, not a robotic catalog. Keep the answer natural, short, and include one small follow-up question when useful.',
     'Return only valid JSON with this shape: {"text":"short friendly answer","productIds":["id1","id2"],"quickReplies":["Sweet","Spicy"]}.',
     'productIds must contain only IDs from the provided catalog, maximum 3. quickReplies should be short, maximum 3.'
   ].join('\n');
