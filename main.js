@@ -1098,7 +1098,7 @@ function injectGlobalUI() {
       flex-direction: column;
       gap: 10px;
       padding: 16px;
-      max-height: 276px;
+      max-height: 304px;
       overflow-y: auto;
       background: var(--cream, #FDF6EC);
     }
@@ -1136,8 +1136,8 @@ function injectGlobalUI() {
     .geet-chips {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      padding: 12px 16px 4px;
+      gap: 6px;
+      padding: 9px 16px 2px;
       background: #fff;
     }
     .geet-chip {
@@ -1148,9 +1148,9 @@ function injectGlobalUI() {
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      min-height: 34px;
-      padding: 8px 12px;
-      font-size: 13px;
+      min-height: 28px;
+      padding: 5px 10px;
+      font-size: 12px;
       font-weight: 700;
       line-height: 1.1;
       text-decoration: none;
