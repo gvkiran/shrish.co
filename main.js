@@ -386,6 +386,10 @@ function bindLiveProductSearch(form) {
   });
 
   form.addEventListener('submit', (event) => {
+    trackShrishEvent('product_search_submitted', {
+      search_length: input.value.trim().length,
+      search_area: form.id === 'mobileProductSearch' ? 'mobile_nav' : 'desktop_nav'
+    });
     const onShopPage = Boolean(document.getElementById('shopContent'));
     if (!onShopPage) return;
     event.preventDefault();
@@ -453,6 +457,11 @@ function injectGlobalCartShortcut() {
   cartLink.href = total > 0 ? 'order.html' : 'shop.html';
   cartLink.setAttribute('aria-label', total > 0 ? `View cart with ${total} items` : 'View cart');
   cartLink.innerHTML = `View Cart <span class="global-cart-count">${total}</span>`;
+  cartLink.addEventListener('click', () => {
+    trackShrishEvent('cart_shortcut_clicked', {
+      cart_total_items: total
+    });
+  });
   document.body.appendChild(cartLink);
   document.body.classList.add('has-cart-fab');
 }
@@ -759,11 +768,18 @@ function injectGeetAssistant() {
     if (hrefTarget) {
       event.preventDefault();
       const href = hrefTarget.dataset.geetHref || hrefTarget.getAttribute('href');
+      trackShrishEvent('geet_chip_clicked', {
+        chip_type: /wa\.me|whatsapp\.com/i.test(href || '') ? 'connect' : 'product_or_page'
+      });
       if (href) window.location.assign(href);
       return;
     }
     const actionBtn = chipTarget?.closest('[data-geet-action]');
     if (!actionBtn) return;
+    trackShrishEvent('geet_chip_clicked', {
+      chip_type: 'quick_reply',
+      action: actionBtn.dataset.geetAction || ''
+    });
     answerWith(actionBtn.dataset.geetAction, actionBtn.textContent.trim(), false);
   });
   form.addEventListener('submit', (event) => {

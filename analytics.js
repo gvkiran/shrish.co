@@ -8,9 +8,47 @@
   const POSTHOG_DEFAULTS = '2026-01-30';
   const isLocal = /^(localhost|127\.0\.0\.1|::1)$/i.test(window.location.hostname);
   const enabled = Boolean(POSTHOG_KEY) && !isLocal;
+  const scrollDepthsTracked = new Set();
 
   function safePath() {
     return window.location.pathname || '/';
+  }
+
+  function safeSearchParams() {
+    const params = new URLSearchParams(window.location.search || '');
+    return {
+      category: params.get('category') || params.get('filter') || '',
+      product_id: params.get('product') || '',
+      search_present: Boolean((params.get('search') || params.get('q') || '').trim()),
+      source: params.get('utm_source') || '',
+      campaign: params.get('utm_campaign') || '',
+      medium: params.get('utm_medium') || ''
+    };
+  }
+
+  function pageType() {
+    const file = safePath().split('/').pop() || 'index.html';
+    if (file === 'index.html' || file === '') return 'home';
+    if (file === 'shop.html') return 'shop';
+    if (file === 'order.html') return 'checkout';
+    if (file === 'contact.html') return 'contact';
+    if (file === 'recipes.html') return 'recipes';
+    return file.replace(/\.html$/i, '') || 'other';
+  }
+
+  function cartSummary() {
+    try {
+      const cart = JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
+      return {
+        cart_total_items: cart.reduce((sum, item) => sum + (Number(item.qty) || 0), 0),
+        cart_distinct_items: cart.length
+      };
+    } catch (error) {
+      return {
+        cart_total_items: 0,
+        cart_distinct_items: 0
+      };
+    }
   }
 
   function cleanProps(props = {}) {
@@ -29,13 +67,40 @@
     if (!eventName || !enabled || !window.posthog?.capture) return;
     window.posthog.capture(eventName, cleanProps({
       page_path: safePath(),
+      page_type: pageType(),
+      ...cartSummary(),
       ...props
     }));
   }
 
+  function trackPageViewed() {
+    track('page_viewed', {
+      page_title: document.title || '',
+      referrer_domain: document.referrer ? new URL(document.referrer).hostname : '',
+      ...safeSearchParams()
+    });
+  }
+
+  function bindScrollDepthTracking() {
+    window.addEventListener('scroll', () => {
+      const doc = document.documentElement;
+      const scrollable = doc.scrollHeight - window.innerHeight;
+      if (scrollable <= 0) return;
+      const depth = Math.round((window.scrollY / scrollable) * 100);
+      [25, 50, 75, 90].forEach((marker) => {
+        if (depth >= marker && !scrollDepthsTracked.has(marker)) {
+          scrollDepthsTracked.add(marker);
+          track('page_scroll_depth_reached', { scroll_depth_percent: marker });
+        }
+      });
+    }, { passive: true });
+  }
+
   window.SHRISH_ANALYTICS = {
     enabled,
-    track
+    track,
+    pageType,
+    cartSummary
   };
 
   if (!enabled) return;
@@ -49,4 +114,14 @@
     disable_session_recording: true,
     person_profiles: 'identified_only'
   });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      trackPageViewed();
+      bindScrollDepthTracking();
+    }, { once: true });
+  } else {
+    trackPageViewed();
+    bindScrollDepthTracking();
+  }
 })();
