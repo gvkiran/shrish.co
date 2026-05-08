@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shrish Product Ingredients Printable List</title>
+  <link rel="icon" href="logo.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --dark: #2C1A00;
+      --brown: #6B4211;
+      --saffron: #C8791A;
+      --saffron-dark: #A8600F;
+      --gold: #F5C45A;
+      --cream: #FFF8EC;
+      --paper: #FFFCF6;
+      --line: rgba(107,66,17,.16);
+      --muted: #7B6244;
+      --text: #3D2A0A;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #F4ECDE;
+      color: var(--text);
+      font-family: "Jost", system-ui, sans-serif;
+    }
+
+    .print-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 28px;
+      background: rgba(255,252,246,.94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+    }
+
+    .toolbar-title {
+      font-weight: 800;
+      color: var(--dark);
+    }
+
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .toolbar-actions button {
+      border: 1px solid rgba(200,121,26,.28);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--saffron-dark);
+      padding: 9px 14px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .toolbar-actions button.active,
+    .toolbar-actions button.print-btn {
+      background: var(--saffron);
+      border-color: var(--saffron);
+      color: #fff;
+    }
+
+    .catalog-wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 22px 56px;
+    }
+
+    .catalog-cover {
+      position: relative;
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 28px;
+      align-items: center;
+      min-height: 190px;
+      padding: 30px;
+      margin-bottom: 20px;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(245,196,90,.22), transparent 32%),
+        linear-gradient(135deg, #2C1A00, #7B3E00);
+      color: #fff;
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 18px 50px rgba(44,26,0,.16);
+    }
+
+    .catalog-cover img {
+      width: 140px;
+      height: 140px;
+      object-fit: contain;
+      background: rgba(255,255,255,.08);
+      border-radius: 50%;
+      padding: 8px;
+    }
+
+    .cover-kicker {
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      margin-bottom: 6px;
+    }
+
+    .catalog-cover h1 {
+      margin: 0;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 1;
+    }
+
+    .catalog-cover p {
+      max-width: 760px;
+      margin: 12px 0 0;
+      color: rgba(255,255,255,.78);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .summary-pill {
+      min-height: 78px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .summary-pill strong {
+      display: block;
+      font-size: 26px;
+      line-height: 1;
+      color: var(--saffron-dark);
+    }
+
+    .summary-pill span {
+      display: block;
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .category-section {
+      margin-top: 30px;
+      page-break-before: auto;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgba(200,121,26,.25);
+      margin-bottom: 14px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      color: var(--dark);
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .section-title span {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .product-card {
+      display: grid;
+      grid-template-columns: 32% 1fr;
+      min-height: 360px;
+      margin: 0 0 16px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 32px rgba(44,26,0,.08);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .brand-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100%;
+      padding: 28px;
+      background:
+        linear-gradient(180deg, rgba(255,248,236,.92), rgba(255,252,246,.98)),
+        radial-gradient(circle at center, rgba(245,196,90,.26), transparent 55%);
+      border-right: 1px solid var(--line);
+    }
+
+    .brand-panel img {
+      width: min(210px, 80%);
+      max-height: 220px;
+      object-fit: contain;
+    }
+
+    .product-info {
+      padding: 24px 28px 22px;
+    }
+
+    .product-topline {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .product-group {
+      display: inline-flex;
+      border-radius: 999px;
+      background: rgba(200,121,26,.12);
+      color: var(--saffron-dark);
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .product-status {
+      display: inline-flex;
+      border-radius: 999px;
+      background: #EEE9E1;
+      color: var(--dark);
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .product-name {
+      margin: 0;
+      color: var(--dark);
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 28px;
+      line-height: 1.12;
+    }
+
+    .price-line {
+      margin-top: 8px;
+      color: var(--saffron-dark);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .desc {
+      margin: 14px 0 14px;
+      max-width: 760px;
+      color: #6A4E2D;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin: 0 0 14px;
+    }
+
+    .chip {
+      border-radius: 999px;
+      background: #F5E9D5;
+      color: #7B3E00;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .chip.outline {
+      background: #fff;
+      border: 1px solid rgba(200,121,26,.42);
+      color: var(--saffron-dark);
+    }
+
+    .facts {
+      display: grid;
+      gap: 0;
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+    }
+
+    .fact {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+
+    .fact strong {
+      color: var(--dark);
+      font-weight: 900;
+    }
+
+    .fact span {
+      color: #5B4329;
+    }
+
+    .print-note {
+      margin: 24px 0 0;
+      padding: 14px 18px;
+      border: 1px solid rgba(200,121,26,.22);
+      border-radius: 14px;
+      background: rgba(255,255,255,.72);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 800px) {
+      .print-toolbar { position: static; align-items: flex-start; flex-direction: column; }
+      .catalog-cover { grid-template-columns: 1fr; text-align: center; }
+      .catalog-cover img { margin: 0 auto; }
+      .summary-row { grid-template-columns: repeat(2, 1fr); }
+      .product-card { grid-template-columns: 1fr; }
+      .brand-panel { min-height: 190px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .fact { grid-template-columns: 1fr; gap: 2px; }
+    }
+
+    @media print {
+      @page { size: letter; margin: .36in; }
+      body { background: #fff; }
+      .print-toolbar { display: none; }
+      .catalog-wrap { max-width: none; padding: 0; }
+      .catalog-cover {
+        min-height: 155px;
+        grid-template-columns: 112px 1fr;
+        border-radius: 0;
+        margin-bottom: 12px;
+        box-shadow: none;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+      .catalog-cover img { width: 106px; height: 106px; }
+      .catalog-cover h1 { font-size: 36px; }
+      .catalog-cover p { font-size: 12px; }
+      .summary-row { grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 12px; }
+      .summary-pill { min-height: 56px; padding: 10px; border-radius: 8px; }
+      .summary-pill strong { font-size: 20px; }
+      .summary-pill span { font-size: 9px; }
+      .category-section { margin-top: 14px; }
+      .section-title { margin-bottom: 8px; padding-bottom: 6px; }
+      .section-title h2 { font-size: 20px; }
+      .product-card {
+        grid-template-columns: 28% 1fr;
+        min-height: 0;
+        margin-bottom: 8px;
+        border-radius: 0;
+        box-shadow: none;
+      }
+      .brand-panel { padding: 14px; }
+      .brand-panel img { width: 122px; max-height: 132px; }
+      .product-info { padding: 13px 16px; }
+      .product-name { font-size: 19px; }
+      .desc { font-size: 10.8px; line-height: 1.45; margin: 8px 0; }
+      .price-line { font-size: 11px; margin-top: 4px; }
+      .product-group, .product-status, .chip { font-size: 8.5px; padding: 4px 7px; }
+      .chips { gap: 4px; margin-bottom: 8px; }
+      .fact { grid-template-columns: 76px 1fr; gap: 6px; padding: 4px 0; font-size: 9.5px; line-height: 1.35; }
+      .print-note { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="print-toolbar">
+    <div class="toolbar-title">Shrish Printable Product Ingredients List</div>
+    <div class="toolbar-actions" id="categoryControls">
+      <button type="button" class="active" data-filter="all">All</button>
+      <button type="button" data-filter="putharekulu">Sweets</button>
+      <button type="button" data-filter="jellysnacks">Jelly</button>
+      <button type="button" data-filter="Veg Pickles">Veg Pickles</button>
+      <button type="button" data-filter="Non-Veg Pickles">Non-Veg Pickles</button>
+      <button type="button" data-filter="Podi">Podi</button>
+      <button type="button" class="print-btn" onclick="window.print()">Print</button>
+    </div>
+  </div>
+
+  <main class="catalog-wrap">
+    <section class="catalog-cover">
+      <img src="logo.png" alt="Shrish logo">
+      <div>
+        <div class="cover-kicker">Shrish LLC</div>
+        <h1>Product Ingredients Guide</h1>
+        <p>Sweets, fruit jelly, pickles, and podi. Mango fruit varieties are excluded. Please use the package label and Best Before date as final for storage, allergens, and shelf life.</p>
+      </div>
+    </section>
+
+    <section class="summary-row" id="summaryRow" aria-label="Product count summary"></section>
+    <div id="catalogSections"></div>
+
+    <div class="print-note">
+      Note: Ingredients and storage details are prepared from the current Shrish product catalog. Supplier recipes may vary slightly by batch. Customers with allergies should confirm before purchase.
+    </div>
+  </main>
+
+  <script src="data.js"></script>
+  <script>
+    const GROUPS = [
+      { id: 'putharekulu', title: 'Sweets - Putharekulu', short: 'Sweets' },
+      { id: 'jellysnacks', title: 'Fruit Jelly', short: 'Jelly' },
+      { id: 'Veg Pickles', title: 'Veg Pickles', short: 'Veg Pickles' },
+      { id: 'Non-Veg Pickles', title: 'Non-Veg Pickles', short: 'Non-Veg Pickles' },
+      { id: 'Podi', title: 'Podi / Spice Powders', short: 'Podi' }
+    ];
+
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    function productGroup(product) {
+      if (product.category === 'putharekulu') return 'putharekulu';
+      if (product.category === 'jellysnacks') return 'jellysnacks';
+      return product.filterGroup || product.category || 'Other';
+    }
+
+    function cleanProductName(name) {
+      return String(name || '').replace(/\s+--\s+/g, ' - ').replace(/\s+-\s+/g, ' - ').trim();
+    }
+
+    function statusText(product) {
+      if (product.preorderOnly) return 'Preorder Only';
+      if (product.available && !product.displayOnly) return 'Available Now';
+      if (product.displayOnly) return 'Coming Soon';
+      return 'Currently Not Available';
+    }
+
+    function ingredients(product) {
+      if (product.ingredientsText) return product.ingredientsText;
+      const details = String(product.details || '');
+      const match = details.match(/Ingredients:\s*([^.]*)\.?/i);
+      return match ? match[1].trim() : 'Please confirm ingredients before purchase.';
+    }
+
+    function shelfLife(product) {
+      if (product.shelfLifeDisplay) return product.shelfLifeDisplay;
+      if (product.category === 'putharekulu') return 'Best enjoyed fresh. Store in a cool, dry place and follow package Best Before date.';
+      if (product.category === 'jellysnacks') return 'Store sealed in a cool, dry place. Best enjoyed fresh after opening.';
+      return 'Follow package Best Before date.';
+    }
+
+    function storage(product) {
+      if (product.storageNote) return product.storageNote;
+      if (product.category === 'putharekulu') return 'Store in a cool, dry place. Keep sealed after opening.';
+      if (product.category === 'jellysnacks') return 'Store sealed in a cool, dry place. Refrigerate if needed after opening.';
+      return 'Store cool, dry, and away from sunlight.';
+    }
+
+    function tags(product) {
+      return [
+        product.season && `Season: ${product.season}`,
+        product.taste && `Taste: ${product.taste}`,
+        product.tag && `Tag: ${product.tag}`,
+        ...(product.recommendationTags || []).slice(0, 7).map((tag) => `Tag: ${tag}`)
+      ].filter(Boolean);
+    }
+
+    function badgeTags(product) {
+      return (product.badges || []).slice(0, 5);
+    }
+
+    function renderChips(product) {
+      const primary = tags(product).map((tag) => `<span class="chip">${escapeHtml(tag)}</span>`);
+      const secondary = badgeTags(product).map((tag) => `<span class="chip outline">${escapeHtml(tag)}</span>`);
+      return [...primary, ...secondary].join('');
+    }
+
+    function fact(label, value) {
+      if (!value) return '';
+      return `<div class="fact"><strong>${escapeHtml(label)}:</strong><span>${escapeHtml(value)}</span></div>`;
+    }
+
+    function variantsText(product) {
+      if (Array.isArray(product.variants) && product.variants.length) {
+        return product.variants.map((variant) => `${variant.label} - ${variant.price}`).join(' | ');
+      }
+      return `${product.price || ''} ${product.unit || ''}`.trim();
+    }
+
+    function renderProduct(product) {
+      return `<article class="product-card" data-group="${escapeHtml(productGroup(product))}">
+        <div class="brand-panel"><img src="logo.png" alt="Shrish logo"></div>
+        <div class="product-info">
+          <div class="product-topline">
+            <span class="product-group">${escapeHtml(product.origin || productGroup(product))}</span>
+            <span class="product-status">${escapeHtml(statusText(product))}</span>
+          </div>
+          <h3 class="product-name">${escapeHtml(cleanProductName(product.name))}</h3>
+          <div class="price-line">${escapeHtml(variantsText(product))}</div>
+          <p class="desc">${escapeHtml(product.description || '')}</p>
+          <div class="chips">${renderChips(product)}</div>
+          <div class="facts">
+            ${fact('Ingredients', ingredients(product))}
+            ${fact('Shelf Life', shelfLife(product))}
+            ${fact('Storage', storage(product))}
+            ${fact('Shipping', product.shippingNote || (product.preorderOnly ? 'Pickup only' : 'Pickup / local availability'))}
+            ${fact('Best Before', product.foodSafetyNote)}
+            ${fact('Best for', product.bestFor)}
+          </div>
+        </div>
+      </article>`;
+    }
+
+    function catalogProducts() {
+      return (window.SHRISH_DATA?.products || [])
+        .filter((product) => product.category !== 'mangoes' && !product.hidden)
+        .sort((a, b) => {
+          const groupOrder = GROUPS.findIndex((group) => group.id === productGroup(a)) - GROUPS.findIndex((group) => group.id === productGroup(b));
+          if (groupOrder !== 0) return groupOrder;
+          return cleanProductName(a.name).localeCompare(cleanProductName(b.name));
+        });
+    }
+
+    function renderSummary(products) {
+      const summary = document.getElementById('summaryRow');
+      summary.innerHTML = GROUPS.map((group) => {
+        const count = products.filter((product) => productGroup(product) === group.id).length;
+        return `<div class="summary-pill"><strong>${count}</strong><span>${escapeHtml(group.short)}</span></div>`;
+      }).join('');
+    }
+
+    function renderCatalog() {
+      const products = catalogProducts();
+      renderSummary(products);
+      document.getElementById('catalogSections').innerHTML = GROUPS.map((group) => {
+        const items = products.filter((product) => productGroup(product) === group.id);
+        if (!items.length) return '';
+        return `<section class="category-section" data-section="${escapeHtml(group.id)}">
+          <div class="section-title">
+            <h2>${escapeHtml(group.title)}</h2>
+            <span>${items.length} products</span>
+          </div>
+          ${items.map(renderProduct).join('')}
+        </section>`;
+      }).join('');
+    }
+
+    function applyFilter(filter) {
+      document.querySelectorAll('[data-section]').forEach((section) => {
+        section.classList.toggle('hidden', filter !== 'all' && section.dataset.section !== filter);
+      });
+      document.querySelectorAll('#categoryControls button[data-filter]').forEach((button) => {
+        button.classList.toggle('active', button.dataset.filter === filter);
+      });
+    }
+
+    document.getElementById('categoryControls').addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-filter]');
+      if (!button) return;
+      applyFilter(button.dataset.filter);
+    });
+
+    renderCatalog();
+  </script>
+</body>
+</html>
