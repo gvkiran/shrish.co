@@ -98,47 +98,85 @@ function getGeetRecommendation(action) {
 
 const GEET_INTENTS = {
   sweet: {
-    intro: "I matched your sweet craving against the product tags. These are the best fits:",
+    intro: "Sweet sounds good. I checked the product tags and picked the ones that feel most dessert-friendly.",
+    followUp: "Want it more juicy, more classic, or ready today?",
     tags: ["sweet", "very sweet", "honey sweet", "jaggery sweet", "natural sweet", "mango sweet", "dessert", "aamras", "milkshake", "putharekulu", "jelly"],
     categories: ["mangoes", "putharekulu", "jellysnacks"],
     shopHref: "shop.html?category=sweets"
   },
   tangy: {
-    intro: "For tangy-sweet flavor, I looked for tags like tangy, sweet-tart, raw mango, and Andhra-style pickle:",
+    intro: "Tangy sweet is a fun choice. I looked for bright, sweet-tart, raw mango, and pickle-style tags.",
+    followUp: "Do you want fruit-style tangy or Andhra pickle-style tangy?",
     tags: ["tangy", "sweet tart", "sweet tangy", "tangy sweet", "very tangy", "raw mango", "tamarind", "gongura", "pickle"],
     categories: ["mangoes", "picklespodi", "jellysnacks"],
     shopHref: "shop.html?category=picklespodi"
   },
   spicy: {
-    intro: "For spice lovers, I ranked products tagged spicy, hot, very spicy, Andhra classic, podi, and pickle:",
+    intro: "For spice, I checked the hot, very spicy, Andhra classic, pickle, and podi tags first.",
+    followUp: "Should I keep it medium spicy, very spicy, or podi-style?",
     tags: ["spicy", "hot", "very spicy", "extra hot", "medium hot", "andhra classic", "podi", "pickle", "avakai", "gongura"],
     categories: ["picklespodi"],
     shopHref: "shop.html?category=picklespodi"
   },
   healthy: {
-    intro: "For a lighter or health-minded choice, I looked for tags like healthy choice, diabetic friendly, protein rich, natural sweet, and curry leaf:",
+    intro: "For a lighter choice, I looked at healthy choice, less sugar, protein rich, natural sweet, and curry leaf tags.",
+    followUp: "Are you leaning toward sweets, podi, or something available today?",
     tags: ["healthy choice", "diabetic friendly", "less sugar", "protein rich", "natural sweet", "curry leaf", "leaf powder", "podi", "palm jaggery"],
     categories: ["putharekulu", "jellysnacks", "picklespodi"],
     shopHref: "shop.html?category=sweets"
   },
   squeeze: {
-    intro: "For squeeze-and-eat mangoes or juicy pulp-style picks, these tags matched best:",
+    intro: "For squeeze-and-eat, I looked for juicy, pulpy, aamras, and mango pulp tags.",
+    followUp: "Want the juiciest mangoes, or only what is ready today?",
     tags: ["squeeze and eat", "extremely juicy", "juicy", "pulpy", "juice mango", "aamras", "mango pulp"],
     categories: ["mangoes"],
     shopHref: "shop.html?category=mangoes"
   },
   ordering: {
-    intro: "For ordering help, start in the shop. These available items are easy to add to cart now:",
+    intro: "For ordering, I started with items that are easy to add to cart.",
+    followUp: "Tap a product, or I can help with pickup and availability next.",
     tags: ["available", "best seller", "family friendly", "everyday", "gifting", "combo friendly"],
     categories: ["mangoes", "putharekulu", "jellysnacks", "picklespodi"],
     shopHref: "shop.html"
   },
   available: {
-    intro: "I prioritized items marked available now and then matched the most useful tags:",
+    intro: "I checked what looks available first, then matched useful taste tags.",
+    followUp: "Want sweet, spicy, or something easy for family sharing?",
     tags: ["available", "best seller", "most requested", "family friendly", "everyday", "gifting"],
     categories: ["mangoes", "putharekulu", "jellysnacks", "picklespodi"],
     shopHref: "shop.html"
   }
+};
+
+const GEET_QUICK_REPLIES = {
+  sweet: [
+    { label: "Tangier", action: "tangy" },
+    { label: "Ready today", action: "available" }
+  ],
+  tangy: [
+    { label: "More spicy", action: "spicy" },
+    { label: "Juicy mango", action: "squeeze" }
+  ],
+  spicy: [
+    { label: "Very spicy", action: "spicy" },
+    { label: "Healthy podi", action: "healthy" }
+  ],
+  healthy: [
+    { label: "Less sugar", action: "healthy" },
+    { label: "Ready today", action: "available" }
+  ],
+  squeeze: [
+    { label: "Sweet mango", action: "sweet" },
+    { label: "Ready today", action: "available" }
+  ],
+  ordering: [
+    { label: "Ready today", action: "available" },
+    { label: "Sweet picks", action: "sweet" }
+  ],
+  available: [
+    { label: "Sweet", action: "sweet" },
+    { label: "Spicy", action: "spicy" }
+  ]
 };
 
 function getGeetCategoryFilter(product) {
@@ -205,9 +243,9 @@ function getGeetProductRecommendations(action, userText = '') {
 }
 
 function geetProductSummary(product) {
-  const tags = (product.recommendationTags || []).slice(0, 4).join(', ');
-  const status = product.available && !product.displayOnly ? 'Available now' : product.preorderOnly ? 'Preorder' : 'Not available now';
-  return `${product.name} (${status}) - ${tags}`;
+  const tags = (product.recommendationTags || []).slice(0, 2).join(', ').toLowerCase();
+  const status = product.available && !product.displayOnly ? 'available now' : product.preorderOnly ? 'preorder' : 'not available right now';
+  return `${product.name} is ${status}${tags ? ` and has a ${tags} feel` : ''}`;
 }
 
 function getGeetProductHref(product) {
@@ -223,9 +261,10 @@ function buildGeetResponse(action, userText = '') {
   if (!products.length) return fallback;
 
   return {
-    text: `${intent.intro} ${products.map(geetProductSummary).join(' | ')}`,
+    text: `${intent.intro} I would start with ${products.map((product) => product.name).join(', ')}. ${products.map(geetProductSummary).join('. ')}. ${intent.followUp || 'Want to narrow it down more?'}`,
     chips: [
       ...products.map((product) => ({ label: product.name.replace(/\s*\(.+?\)\s*/g, '').slice(0, 28), href: getGeetProductHref(product) })),
+      ...(GEET_QUICK_REPLIES[action] || []),
       { label: "View matching section", href: intent.shopHref },
       { label: "Ask on WhatsApp", href: `https://wa.me/${SHRISH_CONFIG.whatsappNumber}?text=${encodeURIComponent(`Hi Shrish! Geet recommended ${products.map((product) => product.name).join(', ')}. What is best for me today?`)}`, external: true }
     ]
@@ -347,6 +386,10 @@ function bindLiveProductSearch(form) {
   });
 
   form.addEventListener('submit', (event) => {
+    trackShrishEvent('product_search_submitted', {
+      search_length: input.value.trim().length,
+      search_area: form.id === 'mobileProductSearch' ? 'mobile_nav' : 'desktop_nav'
+    });
     const onShopPage = Boolean(document.getElementById('shopContent'));
     if (!onShopPage) return;
     event.preventDefault();
@@ -414,6 +457,11 @@ function injectGlobalCartShortcut() {
   cartLink.href = total > 0 ? 'order.html' : 'shop.html';
   cartLink.setAttribute('aria-label', total > 0 ? `View cart with ${total} items` : 'View cart');
   cartLink.innerHTML = `View Cart <span class="global-cart-count">${total}</span>`;
+  cartLink.addEventListener('click', () => {
+    trackShrishEvent('cart_shortcut_clicked', {
+      cart_total_items: total
+    });
+  });
   document.body.appendChild(cartLink);
   document.body.classList.add('has-cart-fab');
 }
@@ -422,7 +470,9 @@ function loadGeetSession() {
   try {
     const saved = JSON.parse(sessionStorage.getItem(GEET_SESSION_KEY) || '{}');
     return {
-      messages: Array.isArray(saved.messages) ? saved.messages : [],
+      messages: Array.isArray(saved.messages)
+        ? saved.messages.filter((message) => !/let me check shrish products/i.test(message.text || ''))
+        : [],
       chips: Array.isArray(saved.chips) ? saved.chips : []
     };
   } catch (error) {
@@ -451,12 +501,77 @@ function withGeetConnectChip(chips = []) {
   return hasConnect ? chips : [...chips, getGeetConnectChip()];
 }
 
+function escapeGeetRegExp(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function getGeetProductLinks(text) {
+  const products = window.SHRISH_DATA?.products || [];
+  const matches = [];
+  products
+    .filter((product) => product.name && !product.hidden && !product.displayOnly)
+    .sort((a, b) => b.name.length - a.name.length)
+    .forEach((product) => {
+      const pattern = new RegExp(escapeGeetRegExp(product.name), 'gi');
+      let match;
+      while ((match = pattern.exec(text))) {
+        const start = match.index;
+        const end = start + match[0].length;
+        if (matches.some((existing) => start < existing.end && end > existing.start)) continue;
+        matches.push({
+          start,
+          end,
+          label: match[0],
+          href: getGeetProductHref(product)
+        });
+      }
+    });
+  return matches.sort((a, b) => a.start - b.start).slice(0, 8);
+}
+
+function setGeetMessageText(messageEl, text, sender = 'geet') {
+  const value = String(text || '');
+  messageEl.innerHTML = '';
+
+  if (sender !== 'geet') {
+    messageEl.textContent = value;
+    return;
+  }
+
+  const links = getGeetProductLinks(value);
+  if (!links.length) {
+    messageEl.textContent = value;
+    return;
+  }
+
+  let cursor = 0;
+  links.forEach((link) => {
+    if (link.start > cursor) {
+      messageEl.appendChild(document.createTextNode(value.slice(cursor, link.start)));
+    }
+    const productLink = document.createElement('a');
+    productLink.className = 'geet-product-link';
+    productLink.href = link.href;
+    productLink.textContent = link.label;
+    messageEl.appendChild(productLink);
+    cursor = link.end;
+  });
+  if (cursor < value.length) {
+    messageEl.appendChild(document.createTextNode(value.slice(cursor)));
+  }
+}
+
 function appendGeetMessage(messagesEl, text, sender = 'geet') {
   const messageEl = document.createElement('div');
   messageEl.className = `geet-message geet-message-${sender}`;
-  messageEl.textContent = text;
+  setGeetMessageText(messageEl, text, sender);
   messagesEl.appendChild(messageEl);
   messagesEl.scrollTop = messagesEl.scrollHeight;
+  return messageEl;
+}
+
+function hasGeetConnectPrompt(messagesEl) {
+  return Array.from(messagesEl.querySelectorAll('.geet-message')).some((messageEl) => /connect with shrish on whatsapp/i.test(messageEl.textContent || ''));
 }
 
 function renderGeetMessages(messagesEl, messages = []) {
@@ -486,6 +601,51 @@ function renderGeetChips(chipsEl, chips = []) {
     }
     chipsEl.appendChild(chipEl);
   });
+}
+
+function getGeetSessionHistory(messagesEl) {
+  return Array.from(messagesEl.querySelectorAll('.geet-message')).slice(-8).map((messageEl) => ({
+    sender: messageEl.classList.contains('geet-message-user') ? 'user' : 'geet',
+    text: (messageEl.textContent || '').trim()
+  })).filter((message) => message.text);
+}
+
+function normalizeGeetApiChips(chips = []) {
+  return (Array.isArray(chips) ? chips : []).map((chip) => {
+    const label = String(chip.label || '').trim().slice(0, 30);
+    const href = String(chip.href || '').trim();
+    const action = String(chip.action || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().slice(0, 40);
+    if (!label) return null;
+    if (/^(shop|contact|order)\.html(\?|#|$)/.test(href) || /^https:\/\/wa\.me\//i.test(href)) {
+      return { label, href, external: /^https:\/\//i.test(href) };
+    }
+    if (action.length >= 2) return { label, action };
+    return null;
+  }).filter(Boolean).slice(0, 5);
+}
+
+async function getGeetAiResponse(question, action, messagesEl) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 3500);
+  const response = await fetch('/api/geet-chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    signal: controller.signal,
+    body: JSON.stringify({
+      question,
+      action,
+      page: `${window.location.pathname}${window.location.search}`,
+      history: getGeetSessionHistory(messagesEl)
+    })
+  }).finally(() => window.clearTimeout(timeoutId));
+  if (!response.ok) throw new Error('Geet AI unavailable');
+  const data = await response.json();
+  const text = String(data.text || '').trim();
+  if (!text) throw new Error('Geet AI empty response');
+  return {
+    text,
+    chips: normalizeGeetApiChips(data.chips)
+  };
 }
 
 function injectGeetAssistant() {
@@ -527,7 +687,10 @@ function injectGeetAssistant() {
   const chipsEl = document.getElementById('geetChips');
   const form = document.getElementById('geetForm');
   const input = document.getElementById('geetInput');
+  const sendBtn = form.querySelector('button');
   const savedSession = loadGeetSession();
+  let geetPending = false;
+  let geetTurn = 0;
 
   const openGeet = (source = 'manual') => {
     widget.classList.add('open');
@@ -545,15 +708,45 @@ function injectGeetAssistant() {
     trackShrishEvent('geet_closed');
   };
 
-  const answerWith = (action, userLabel = '') => {
-    const response = buildGeetResponse(action, userLabel);
-    const chips = withGeetConnectChip(response.chips);
-    if (userLabel) appendGeetMessage(messagesEl, userLabel, 'user');
-    appendGeetMessage(messagesEl, response.text, 'geet');
-    appendGeetMessage(messagesEl, "Would you like to connect with Shrish on WhatsApp for today's availability, pickup timing, or custom help?", 'geet');
-    renderGeetChips(chipsEl, chips);
-    saveGeetSession(messagesEl, chips);
-    trackShrishEvent('geet_question_answered', { action });
+  const answerWith = async (action, userLabel = '', useAi = true) => {
+    if (geetPending) return;
+    geetPending = true;
+    geetTurn += 1;
+    const turnId = geetTurn;
+    input.disabled = true;
+    if (sendBtn) sendBtn.disabled = true;
+    try {
+      await ensureProductSearchData();
+      const fallbackResponse = buildGeetResponse(action, userLabel);
+      const fallbackChips = withGeetConnectChip(fallbackResponse.chips);
+      if (userLabel) appendGeetMessage(messagesEl, userLabel, 'user');
+      const replyEl = appendGeetMessage(messagesEl, fallbackResponse.text, 'geet');
+      if (!hasGeetConnectPrompt(messagesEl)) {
+        appendGeetMessage(messagesEl, "When you are ready, I can connect you with Shrish on WhatsApp for today's availability, pickup timing, or custom help.", 'geet');
+      }
+      renderGeetChips(chipsEl, fallbackChips);
+      saveGeetSession(messagesEl, fallbackChips);
+      trackShrishEvent('geet_question_answered', { action });
+      if (userLabel && useAi) {
+        getGeetAiResponse(userLabel, action, messagesEl)
+          .then((aiResponse) => {
+            if (turnId !== geetTurn) return;
+            const aiChips = withGeetConnectChip(aiResponse.chips.length ? aiResponse.chips : fallbackResponse.chips);
+            setGeetMessageText(replyEl, aiResponse.text, 'geet');
+            renderGeetChips(chipsEl, aiChips);
+            saveGeetSession(messagesEl, aiChips);
+            trackShrishEvent('geet_ai_answered', { action });
+          })
+          .catch(() => {
+            trackShrishEvent('geet_ai_fallback', { action });
+          });
+      }
+    } finally {
+      geetPending = false;
+      input.disabled = false;
+      if (sendBtn) sendBtn.disabled = false;
+      input.focus();
+    }
   };
 
   if (savedSession.messages.length) {
@@ -575,12 +768,19 @@ function injectGeetAssistant() {
     if (hrefTarget) {
       event.preventDefault();
       const href = hrefTarget.dataset.geetHref || hrefTarget.getAttribute('href');
+      trackShrishEvent('geet_chip_clicked', {
+        chip_type: /wa\.me|whatsapp\.com/i.test(href || '') ? 'connect' : 'product_or_page'
+      });
       if (href) window.location.assign(href);
       return;
     }
     const actionBtn = chipTarget?.closest('[data-geet-action]');
     if (!actionBtn) return;
-    answerWith(actionBtn.dataset.geetAction, actionBtn.textContent.trim());
+    trackShrishEvent('geet_chip_clicked', {
+      chip_type: 'quick_reply',
+      action: actionBtn.dataset.geetAction || ''
+    });
+    answerWith(actionBtn.dataset.geetAction, actionBtn.textContent.trim(), false);
   });
   form.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -914,7 +1114,7 @@ function injectGlobalUI() {
       flex-direction: column;
       gap: 10px;
       padding: 16px;
-      max-height: 276px;
+      max-height: 304px;
       overflow-y: auto;
       background: var(--cream, #FDF6EC);
     }
@@ -932,6 +1132,17 @@ function injectGlobalUI() {
       color: var(--text, #3D2A0A);
       border-bottom-left-radius: 5px;
     }
+    .geet-product-link {
+      color: var(--saffron-d, #A8600F);
+      font-weight: 800;
+      text-decoration: underline;
+      text-decoration-color: rgba(200,121,26,.42);
+      text-underline-offset: 3px;
+    }
+    .geet-product-link:hover {
+      color: var(--maroon, #7B2E00);
+      text-decoration-color: currentColor;
+    }
     .geet-message-user {
       align-self: flex-end;
       background: var(--saffron, #C8791A);
@@ -941,8 +1152,8 @@ function injectGlobalUI() {
     .geet-chips {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      padding: 12px 16px 4px;
+      gap: 6px;
+      padding: 9px 16px 2px;
       background: #fff;
     }
     .geet-chip {
@@ -953,9 +1164,9 @@ function injectGlobalUI() {
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      min-height: 34px;
-      padding: 8px 12px;
-      font-size: 13px;
+      min-height: 28px;
+      padding: 5px 10px;
+      font-size: 12px;
       font-weight: 700;
       line-height: 1.1;
       text-decoration: none;
@@ -998,6 +1209,11 @@ function injectGlobalUI() {
       cursor: pointer;
       font-weight: 700;
       font-size: 13px;
+    }
+    .geet-form input:disabled,
+    .geet-form button:disabled {
+      opacity: .65;
+      cursor: wait;
     }
     body.geet-enabled #backToTop {
       right: 24px;

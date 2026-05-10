@@ -127,6 +127,10 @@ function renderCartReview() {
       saveCart();
       renderCartReview();
       updateNavCart();
+      trackCheckoutEvent('checkout_cart_quantity_changed', {
+        quantity_delta: delta,
+        ...cartAnalyticsSummary()
+      });
     });
   });
 
@@ -136,6 +140,7 @@ function renderCartReview() {
       saveCart();
       renderCartReview();
       updateNavCart();
+      trackCheckoutEvent('checkout_cart_item_removed', cartAnalyticsSummary());
     });
   });
 }
@@ -635,9 +640,10 @@ function init() {
   renderCartReview();
   updateNavCart();
   bindFormUi();
-  if (cart.length) {
-    trackCheckoutEvent('checkout_page_loaded_with_cart', cartAnalyticsSummary());
-  }
+  trackCheckoutEvent('checkout_viewed', {
+    has_cart: Boolean(cart.length),
+    ...cartAnalyticsSummary()
+  });
 }
 
 init();
