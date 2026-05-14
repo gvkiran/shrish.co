@@ -14,12 +14,15 @@ import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   signOut,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updateEmail,
   onAuthStateChanged,
   serverTimestamp,
   normalizePhone,
   escapeHtml,
   formatCurrency
-} from './firebase-app.js';
+} from './firebase-app.js?v=account-profile-email-1';
 
 const LOCATION_LABELS = {
   shortpump: 'Short Pump, VA',
@@ -29,6 +32,7 @@ const LOCATION_LABELS = {
 
 let unsubOrders = null;
 let currentOrders = [];
+let latestProfileSnapshot = null;
 const updateCustomerPendingOrder = httpsCallable(cloudFunctions, 'updateCustomerPendingOrder');
 const claimCustomerOrder = httpsCallable(cloudFunctions, 'claimCustomerOrder');
 const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
@@ -248,6 +252,7 @@ function profilePayloadFromSignup(user) {
 }
 
 function profilePayloadFromForm(user) {
+  const email = normalizeEmail(el('profileEmailInput')?.value || user.email);
   const firstName = el('profileFirstName').value.trim();
   const lastName = el('profileLastName').value.trim();
   const phone = formatPhone(el('profilePhone').value);
@@ -255,7 +260,7 @@ function profilePayloadFromForm(user) {
 
   return {
     uid: user.uid,
-    email: normalizeEmail(user.email),
+    email,
     firstName,
     lastName,
     fullName: `${firstName} ${lastName}`.trim(),
@@ -275,6 +280,7 @@ function profilePayloadFromForm(user) {
 function fillProfile(profile = {}, user) {
   const email = normalizeEmail(profile.email || user?.email || '');
   el('profileEmail').textContent = email;
+  el('profileEmailInput').value = email;
   el('profileFirstName').value = profile.firstName || '';
   el('profileLastName').value = profile.lastName || '';
   el('profilePhone').value = profile.phone || '';
@@ -283,6 +289,54 @@ function fillProfile(profile = {}, user) {
   el('profileAddress2').value = profile.addressLine2 || '';
   el('profileCity').value = profile.city || '';
   el('profileZip').value = profile.zip || '';
+  latestProfileSnapshot = { ...profile, email };
+}
+
+function setProfileEditing(editing) {
+  const form = el('profileForm');
+  if (!form) return;
+
+  form.querySelectorAll('input, select').forEach((field) => {
+    field.disabled = !editing;
+  });
+  el('profileCurrentPassword').disabled = !editing;
+  el('profileEmailPasswordWrap').hidden = !editing;
+  el('editProfileBtn').hidden = editing;
+  el('saveProfileBtn').hidden = !editing;
+  el('cancelProfileEditBtn').hidden = !editing;
+  form.classList.toggle('is-editing', editing);
+  if (!editing) el('profileCurrentPassword').value = '';
+}
+
+function restoreProfileForm(user) {
+  fillProfile(latestProfileSnapshot || {}, user);
+  setProfileEditing(false);
+}
+
+function emailChangeErrorMessage(error) {
+  const code = String(error?.code || '');
+  if (code.includes('wrong-password') || code.includes('invalid-credential')) return 'Current password did not match.';
+  if (code.includes('email-already-in-use')) return 'That email is already used by another account.';
+  if (code.includes('requires-recent-login')) return 'Please sign out, sign back in, and try changing email again.';
+  if (code.includes('invalid-email')) return 'Enter a valid email address.';
+  return 'Could not update email right now.';
+}
+
+async function updateProfileEmailIfNeeded(user, button) {
+  const newEmail = normalizeEmail(el('profileEmailInput').value);
+  const currentEmail = normalizeEmail(user.email || '');
+  if (newEmail === currentEmail) return currentEmail;
+  if (newEmail === adminEmail()) throw new Error('ADMIN_EMAIL_NOT_ALLOWED');
+  if (!validEmail(newEmail)) throw new Error('INVALID_PROFILE_EMAIL');
+
+  const password = el('profileCurrentPassword').value;
+  if (!password) throw new Error('PASSWORD_REQUIRED_FOR_EMAIL');
+
+  setButtonBusy(button, true, 'Updating email...');
+  const credential = EmailAuthProvider.credential(currentEmail, password);
+  await reauthenticateWithCredential(user, credential);
+  await updateEmail(user, newEmail);
+  return newEmail;
 }
 
 function dateValue(value) {
@@ -782,6 +836,17 @@ function bindForms() {
     button.addEventListener('click', () => setAuthMode(button.dataset.mode));
   });
 
+  ['signinForm', 'signupForm'].forEach((formId) => {
+    const form = el(formId);
+    form?.querySelectorAll('input, select').forEach((field) => {
+      field.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        form.requestSubmit();
+      });
+    });
+  });
+
   ['signupPhone', 'profilePhone'].forEach((id) => {
     el(id)?.addEventListener('blur', (event) => {
       event.target.value = formatPhone(event.target.value);
@@ -792,7 +857,7 @@ function bindForms() {
     event.preventDefault();
     clearMessage('authMessage');
 
-    const button = event.submitter;
+    const button = event.submitter || event.currentTarget?.querySelector('button[type="submit"]');
     const email = normalizeEmail(el('signinEmail').value);
     const password = el('signinPassword').value;
     if (!validEmail(email) || !password) {
@@ -819,7 +884,7 @@ function bindForms() {
     event.preventDefault();
     clearMessage('authMessage');
 
-    const button = event.submitter;
+    const button = event.submitter || event.currentTarget?.querySelector('button[type="submit"]');
     const email = normalizeEmail(el('signupEmail').value);
     const password = el('signupPassword').value;
     if (email === adminEmail()) {
@@ -873,23 +938,63 @@ function bindForms() {
     const user = auth.currentUser;
     if (!user) return;
 
+    if (!event.currentTarget?.classList.contains('is-editing')) {
+      setProfileEditing(true);
+      return;
+    }
+
+    const newEmail = normalizeEmail(el('profileEmailInput').value);
+    if (!validEmail(newEmail)) {
+      showMessage('profileMessage', 'error', 'Enter a valid email address.');
+      return;
+    }
+    if (newEmail === adminEmail()) {
+      showMessage('profileMessage', 'error', 'Use a different email for customer account.');
+      return;
+    }
+
     if (!validPhone(el('profilePhone').value)) {
       showMessage('profileMessage', 'error', 'Enter a valid 10-digit phone number.');
       return;
     }
 
-    const button = event.submitter;
+    const button = event.submitter || event.currentTarget?.querySelector('button[type="submit"]');
     try {
       setButtonBusy(button, true, 'Saving...');
+      const savedEmail = await updateProfileEmailIfNeeded(user, button);
       await setDoc(profileRef(user.uid), profilePayloadFromForm(user), { merge: true });
-      showMessage('profileMessage', 'ok', 'Details saved for future checkout.');
+      const savedProfile = profilePayloadFromForm(user);
+      savedProfile.email = savedEmail;
+      latestProfileSnapshot = savedProfile;
+      el('profileEmail').textContent = savedEmail;
+      setProfileEditing(false);
+      showMessage('profileMessage', 'ok', 'Profile changes saved.');
       trackAccountEvent('customer_profile_saved');
     } catch (error) {
       console.error('Profile save failed', error);
-      showMessage('profileMessage', 'error', 'Could not save details right now.');
+      if (error?.message === 'PASSWORD_REQUIRED_FOR_EMAIL') {
+        showMessage('profileMessage', 'error', 'Enter current password to change email.');
+      } else if (error?.message === 'ADMIN_EMAIL_NOT_ALLOWED') {
+        showMessage('profileMessage', 'error', 'Use a different email for customer account.');
+      } else if (error?.message === 'INVALID_PROFILE_EMAIL') {
+        showMessage('profileMessage', 'error', 'Enter a valid email address.');
+      } else {
+        showMessage('profileMessage', 'error', emailChangeErrorMessage(error));
+      }
     } finally {
       setButtonBusy(button, false);
     }
+  });
+
+  el('editProfileBtn')?.addEventListener('click', () => {
+    clearMessage('profileMessage');
+    setProfileEditing(true);
+    el('profileFirstName')?.focus();
+  });
+
+  el('cancelProfileEditBtn')?.addEventListener('click', () => {
+    clearMessage('profileMessage');
+    restoreProfileForm(auth.currentUser);
   });
 
   el('signOutBtn')?.addEventListener('click', async () => {
@@ -947,6 +1052,7 @@ function init() {
 
     setAuthedUi(user);
     await loadProfile(user);
+    setProfileEditing(false);
     await claimRecentOrderForUser(user);
     subscribeOrders(user);
   });

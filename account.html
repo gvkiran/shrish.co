@@ -30,6 +30,7 @@
 .account-button.secondary:hover{background:var(--saffron);color:#fff}
 .account-button.subtle{background:var(--cream-d);color:var(--text);border:0}
 .account-button.subtle:hover{background:#eadbbf;color:var(--dark)}
+.account-button[hidden],.profile-email-edit[hidden]{display:none}
 .account-message{display:none;border-radius:14px;padding:12px 14px;font-size:14px;font-weight:700;margin-bottom:16px}
 .account-message.show{display:block}
 .account-message.ok{background:#E8F5E9;color:#1B5E20}
@@ -41,6 +42,8 @@
 .account-state.active{display:block}
 .profile-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:20px}
 .profile-email{color:var(--text-light);font-size:14px;margin-top:5px}
+.profile-email-edit{border:1px solid rgba(200,121,26,.18);border-radius:14px;background:#fffdf8;padding:14px;margin-bottom:18px}
+.profile-email-edit .account-muted{margin-bottom:12px}
 .orders-list{display:grid;gap:14px}
 .account-insights{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 18px}
 .account-insight{border:1px solid rgba(200,121,26,.16);border-radius:14px;background:#fffdf8;padding:13px 14px}
@@ -218,21 +221,30 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
     <div class="account-message" id="profileMessage"></div>
 
     <form class="account-form two-col" id="profileForm">
+      <div class="form-group full">
+        <label class="form-label" for="profileEmailInput">Email Address</label>
+        <input class="form-control" id="profileEmailInput" type="email" autocomplete="email" required disabled>
+      </div>
+      <div class="form-group full profile-email-edit" id="profileEmailPasswordWrap" hidden>
+        <label class="form-label" for="profileCurrentPassword">Current Password</label>
+        <input class="form-control" id="profileCurrentPassword" type="password" autocomplete="current-password" disabled>
+        <p class="account-muted">Required only when changing the email used to sign in.</p>
+      </div>
       <div class="form-group">
         <label class="form-label" for="profileFirstName">First Name</label>
-        <input class="form-control" id="profileFirstName" type="text" autocomplete="given-name" required>
+        <input class="form-control" id="profileFirstName" type="text" autocomplete="given-name" required disabled>
       </div>
       <div class="form-group">
         <label class="form-label" for="profileLastName">Last Name</label>
-        <input class="form-control" id="profileLastName" type="text" autocomplete="family-name" required>
+        <input class="form-control" id="profileLastName" type="text" autocomplete="family-name" required disabled>
       </div>
       <div class="form-group">
         <label class="form-label" for="profilePhone">Phone Number</label>
-        <input class="form-control" id="profilePhone" type="tel" autocomplete="tel" required>
+        <input class="form-control" id="profilePhone" type="tel" autocomplete="tel" required disabled>
       </div>
       <div class="form-group">
         <label class="form-label" for="profilePickup">Preferred Pickup</label>
-        <select class="form-control" id="profilePickup" required>
+        <select class="form-control" id="profilePickup" required disabled>
           <option value="chesterfield">Chesterfield, VA</option>
           <option value="shortpump">Short Pump, VA</option>
           <option value="mechanicsville">Mechanicsville, VA</option>
@@ -240,22 +252,24 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
       </div>
       <div class="form-group full">
         <label class="form-label" for="profileAddress1">Address Line 1 <span style="color:var(--text-light);font-weight:500">(optional)</span></label>
-        <input class="form-control" id="profileAddress1" type="text" autocomplete="address-line1">
+        <input class="form-control" id="profileAddress1" type="text" autocomplete="address-line1" disabled>
       </div>
       <div class="form-group full">
         <label class="form-label" for="profileAddress2">Address Line 2 <span style="color:var(--text-light);font-weight:500">(optional)</span></label>
-        <input class="form-control" id="profileAddress2" type="text" autocomplete="address-line2">
+        <input class="form-control" id="profileAddress2" type="text" autocomplete="address-line2" disabled>
       </div>
       <div class="form-group">
         <label class="form-label" for="profileCity">City <span style="color:var(--text-light);font-weight:500">(optional)</span></label>
-        <input class="form-control" id="profileCity" type="text" autocomplete="address-level2">
+        <input class="form-control" id="profileCity" type="text" autocomplete="address-level2" disabled>
       </div>
       <div class="form-group">
         <label class="form-label" for="profileZip">ZIP <span style="color:var(--text-light);font-weight:500">(optional)</span></label>
-        <input class="form-control" id="profileZip" type="text" autocomplete="postal-code">
+        <input class="form-control" id="profileZip" type="text" autocomplete="postal-code" disabled>
       </div>
       <div class="account-actions full">
-        <button class="account-button" type="submit">Save Details</button>
+        <button class="account-button" type="button" id="editProfileBtn">Edit Profile</button>
+        <button class="account-button" type="submit" id="saveProfileBtn" hidden>Save Changes</button>
+        <button class="account-button subtle" type="button" id="cancelProfileEditBtn" hidden>Cancel</button>
         <a class="account-button subtle" href="shop.html">Shop Now</a>
       </div>
     </form>
@@ -310,7 +324,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="analytics.js?v=customer-accounts-1"></script>
 <script src="main.js?v=account-menu-2"></script>
 <script src="firebase-config.js"></script>
-<script type="module" src="account-firebase.js?v=customer-order-account-2"></script>
+<script type="module" src="account-firebase.js?v=customer-order-account-3"></script>
 
 </body>
 </html>
