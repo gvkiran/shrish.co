@@ -179,8 +179,10 @@ async function claimRecentOrderForUser(user) {
       phoneDigits: claim.phoneDigits
     });
     sessionStorage.removeItem(RECENT_ORDER_CLAIM_KEY);
-    const status = result?.data?.status === 'already_linked' ? 'already linked' : 'linked';
-    showMessage('profileMessage', 'ok', `Recent order ${claim.orderNumber || claim.orderId} is ${status}. You can view or edit pending details below.`);
+    const message = result?.data?.status === 'already_linked'
+      ? 'Your recent order is already saved in your account.'
+      : 'Your recent order is now saved in your account.';
+    showMessage('profileMessage', 'ok', `${message} You can view it in Purchase History.`);
     trackAccountEvent('customer_recent_order_linked', {
       order_id: claim.orderId,
       status: result?.data?.status || 'linked'
