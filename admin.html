@@ -209,6 +209,34 @@
       border-top: 1px solid rgba(0,0,0,0.04); vertical-align: top;
     }
     .orders-table tr:hover td { background: rgba(200,121,26,0.025); }
+    .customers-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .customers-summary-card {
+      background: var(--white);
+      border: 1px solid rgba(200,121,26,0.12);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 8px 18px rgba(26,18,8,0.04);
+    }
+    .customers-summary-card span {
+      display: block;
+      color: var(--text-light);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .customers-summary-card strong {
+      display: block;
+      color: var(--dark);
+      font-size: 24px;
+      line-height: 1;
+    }
     .order-select-col { width: 42px; text-align: center !important; }
     .order-select-checkbox,
     #selectAllActiveOrders {
@@ -222,6 +250,7 @@
     .customer-name { font-weight: 600; color: var(--dark); }
     .customer-phone { color: var(--saffron); font-size: 12px; }
     .customer-email { font-size: 11px; color: var(--text-light); }
+    .customer-profile-muted { color: var(--text-light); font-size: 12px; line-height: 1.45; }
 
     /* Items list in table */
     .items-list { display: flex; flex-direction: column; gap: 4px; }
@@ -1304,6 +1333,7 @@
           </div>
           <div class="sidebar-divider"></div>
           <button class="admin-tab" onclick="switchTab('products',this)">🛒 Manage Products</button>
+          <button class="admin-tab" onclick="switchTab('customers',this)">Customer Accounts</button>
           <button class="admin-tab" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
           <button class="admin-tab" onclick="switchTab('accounting',this)">📒 Accounting</button>
           <button class="admin-tab" onclick="switchTab('excel-calculations',this)">Excel Calculations</button>
@@ -1648,6 +1678,37 @@
                 </tr>
               </thead>
               <tbody id="subscribersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="tab-customers" style="display:none;">
+          <div class="orders-toolbar">
+            <div>
+              <h2>Customer Accounts</h2>
+              <p class="orders-help">Read-only customer profiles. Delete is available only for accounts with no orders.</p>
+            </div>
+            <div class="toolbar-actions">
+              <input type="search" id="customerSearch" class="filter-input" placeholder="Search name, email, phone" oninput="renderCustomers()">
+              <button class="toolbar-btn" onclick="exportCustomersCSV()">Export CSV</button>
+            </div>
+          </div>
+          <div class="customers-summary" id="customersSummary"></div>
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email / UID</th>
+                  <th>Phone</th>
+                  <th>Preferred Pickup</th>
+                  <th>Address</th>
+                  <th>Orders</th>
+                  <th>Created / Updated</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="customersBody"></tbody>
             </table>
           </div>
         </div>

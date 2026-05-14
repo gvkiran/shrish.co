@@ -25,6 +25,10 @@ const SHRISH_LOGO_URL = "https://gvkiran.github.io/shrish.co/logo.png";
 const ORDER_COUNTER_START = 671499;
 const MAX_REMINDER_EMAILS_PER_SEND = 50;
 
+function isAdminRequest(request) {
+  return String(request.auth?.token?.email || "").trim().toLowerCase() === SHRISH_ADMIN_EMAIL;
+}
+
 function currency(value) {
   const num = Number(value || 0);
   return `$${num.toFixed(2)}`;
@@ -834,6 +838,211 @@ exports.claimCustomerOrder = onCall(
     await posthog.flush();
 
     return result;
+  }
+);
+
+function cleanFeedbackChoice(value, allowed = []) {
+  const text = String(value || "").trim().slice(0, 80);
+  return allowed.includes(text) ? text : "";
+}
+
+function cleanFeedbackRating(value) {
+  const rating = Math.floor(Number(value || 0));
+  if (!Number.isFinite(rating)) return 0;
+  return Math.min(Math.max(rating, 1), 5);
+}
+
+exports.submitOrderFeedback = onCall(
+  {
+    region: "us-central1",
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign in to submit order feedback.");
+    }
+
+    const uid = request.auth.uid;
+    const authEmail = String(request.auth.token?.email || "").trim().toLowerCase();
+    const orderId = String(request.data?.orderId || "").trim();
+    const responses = request.data?.responses || {};
+    if (!orderId) {
+      throw new HttpsError("invalid-argument", "Order ID is required.");
+    }
+
+    const overallRating = cleanFeedbackRating(responses.overallRating);
+    const pickupExperience = cleanFeedbackChoice(responses.pickupExperience, [
+      "Very smooth",
+      "Minor wait",
+      "Hard to find",
+      "Had issues",
+    ]);
+    const reorderIntent = cleanFeedbackChoice(responses.reorderIntent, [
+      "Definitely",
+      "Probably",
+      "Not sure",
+      "Unlikely",
+    ]);
+    const recommend = cleanFeedbackChoice(responses.recommend, [
+      "Very likely",
+      "Likely",
+      "Neutral",
+      "Unlikely",
+    ]);
+    const mangoSweetness = cleanFeedbackChoice(responses.mangoSweetness, [
+      "Very sweet",
+      "Sweet",
+      "Mild",
+      "Not sweet at all",
+    ]);
+    const mangoRipeness = cleanFeedbackChoice(responses.mangoRipeness, [
+      "Perfectly ripe",
+      "Slightly underripe",
+      "A bit overripe",
+      "Mixed",
+    ]);
+    const itemCondition = cleanFeedbackChoice(responses.itemCondition, [
+      "Excellent",
+      "Good",
+      "Okay",
+      "Had issues",
+    ]);
+    const comment = String(responses.comment || "").trim().slice(0, 500);
+
+    if (!overallRating || !pickupExperience || !reorderIntent || !recommend) {
+      throw new HttpsError("invalid-argument", "Please answer all required feedback questions.");
+    }
+
+    const db = admin.firestore();
+    const orderRef = db.collection("orders").doc(orderId);
+    const feedbackRef = db.collection("order_feedback").doc(`${orderId}_${uid}`);
+
+    const result = await db.runTransaction(async (tx) => {
+      const orderSnap = await tx.get(orderRef);
+      if (!orderSnap.exists) {
+        throw new HttpsError("not-found", "Order not found.");
+      }
+
+      const order = orderSnap.data() || {};
+      if (order.customerUid !== uid) {
+        throw new HttpsError("permission-denied", "You can only submit feedback for your own orders.");
+      }
+
+      const existingFeedback = await tx.get(feedbackRef);
+      if (existingFeedback.exists) {
+        throw new HttpsError("already-exists", "Feedback was already submitted for this order.");
+      }
+
+      const payload = {
+        orderId,
+        orderNumber: order.orderNumber || "",
+        customerUid: uid,
+        customerEmail: authEmail,
+        location: order.location || "",
+        locationLabel: order.locationLabel || "",
+        items: Array.isArray(order.items)
+          ? order.items.map((item) => ({
+              id: item.id || "",
+              name: item.name || "Item",
+              qty: normalizeQty(item),
+            }))
+          : [],
+        hasMangoItems: Boolean(request.data?.hasMangoItems),
+        responses: {
+          overallRating,
+          pickupExperience,
+          reorderIntent,
+          recommend,
+          mangoSweetness,
+          mangoRipeness,
+          itemCondition,
+          comment,
+        },
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      tx.set(feedbackRef, payload);
+      tx.update(orderRef, {
+        feedbackSubmitted: true,
+        feedbackSubmittedAt: admin.firestore.FieldValue.serverTimestamp(),
+        feedbackRating: overallRating,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      return { status: "submitted" };
+    });
+
+    posthog.capture({
+      distinctId: authEmail || uid,
+      event: "customer_order_feedback_submitted",
+      properties: {
+        order_id: orderId,
+        overall_rating: overallRating,
+        recommend,
+      },
+    });
+    await posthog.flush();
+
+    return result;
+  }
+);
+
+exports.deleteCustomerAccount = onCall(
+  {
+    region: "us-central1",
+  },
+  async (request) => {
+    if (!request.auth || !isAdminRequest(request)) {
+      throw new HttpsError("permission-denied", "Admin access is required.");
+    }
+
+    const uid = String(request.data?.uid || "").trim();
+    if (!uid) {
+      throw new HttpsError("invalid-argument", "Customer UID is required.");
+    }
+    if (uid === request.auth.uid) {
+      throw new HttpsError("failed-precondition", "Admin account cannot be deleted here.");
+    }
+
+    const db = admin.firestore();
+    const profileRef = db.collection("user_profiles").doc(uid);
+    const profileSnapshot = await profileRef.get();
+    const profile = profileSnapshot.exists ? profileSnapshot.data() || {} : {};
+    const email = String(profile.email || "").trim().toLowerCase();
+    const phoneDigits = normalizeOrderPhone(profile.phoneDigits || profile.phone || "");
+
+    if (email === SHRISH_ADMIN_EMAIL) {
+      throw new HttpsError("failed-precondition", "Admin account cannot be deleted here.");
+    }
+
+    const orderChecks = [
+      db.collection("orders").where("customerUid", "==", uid).limit(1).get(),
+    ];
+    if (email) {
+      orderChecks.push(db.collection("orders").where("email", "==", email).limit(1).get());
+      orderChecks.push(db.collection("orders").where("customerEmail", "==", email).limit(1).get());
+    }
+    if (phoneDigits) {
+      orderChecks.push(db.collection("orders").where("phoneDigits", "==", phoneDigits).limit(1).get());
+    }
+
+    const orderSnapshots = await Promise.all(orderChecks);
+    if (orderSnapshots.some((snapshot) => !snapshot.empty)) {
+      throw new HttpsError("failed-precondition", "Customer has order history and cannot be deleted.");
+    }
+
+    await profileRef.delete().catch(() => null);
+    await admin.auth().deleteUser(uid).catch((error) => {
+      if (error?.code !== "auth/user-not-found") throw error;
+    });
+
+    posthog.capture({
+      distinctId: request.auth.token.email,
+      event: "admin_customer_account_deleted",
+      properties: { customer_uid: uid },
+    });
+    await posthog.flush();
+
+    return { status: "deleted" };
   }
 );
 

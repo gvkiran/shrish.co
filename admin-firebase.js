@@ -29,10 +29,13 @@ const GO_LIVE_STATS_DATE = '2026-04-10';
 const EXCEL_CALC_DOC_PREFIX = 'excel_sheet__';
 const DAMAGED_BOX_UNIT_PRICE = 56;
 const NON_REVENUE_ORDER_STATUSES = ['cancelled', 'no_show'];
+const ADMIN_EMAIL = normalizeLookup(window.SHRISH_APP_CONFIG?.adminEmailHint || 'contact@shrish.co');
+const deleteCustomerAccount = httpsCallable(cloudFunctions, 'deleteCustomerAccount');
 
 const state = {
   orders: [],
   products: JSON.parse(JSON.stringify(BASE_PRODUCTS)),
+  customers: [],
   subscribers: [],
   accountingBatches: {},
   accounting2Records: {},
@@ -53,6 +56,7 @@ const state = {
   },
   unsubOrders: null,
   unsubProducts: null,
+  unsubCustomers: null,
   unsubSubscribersGeneral: null,
   unsubSubscribersProduct: null,
   unsubAccountingBatches: null,
@@ -209,6 +213,14 @@ function locationLabel(location = '') {
     mechanicsville: 'Mechanicsville, VA'
   };
   return labels[location] || location || '';
+}
+
+function normalizeLookup(value = '') {
+  return String(value || '').trim().toLowerCase();
+}
+
+function normalizeDigits(value = '') {
+  return String(value || '').replace(/\D/g, '').slice(-10);
 }
 
 function excelCalcMoneyValue(value) {
@@ -1984,6 +1996,181 @@ function setProductCategoryFilter(filter) {
   renderProducts();
 }
 
+function customerMatchesOrder(customer = {}, order = {}) {
+  if (!customer?.id && !customer?.uid) return false;
+  const customerUid = customer.uid || customer.id;
+  if (order.customerUid && order.customerUid === customerUid) return true;
+
+  const customerEmail = normalizeLookup(customer.email);
+  const orderEmail = normalizeLookup(order.email || order.customerEmail);
+  if (customerEmail && orderEmail && customerEmail === orderEmail) return true;
+
+  const customerPhone = normalizeDigits(customer.phoneDigits || customer.phone);
+  const orderPhone = normalizeDigits(order.phoneDigits || order.phone);
+  return Boolean(customerPhone && orderPhone && customerPhone === orderPhone);
+}
+
+function customerOrderCount(customer = {}) {
+  return state.orders.filter((order) => customerMatchesOrder(customer, order)).length;
+}
+
+function isProtectedCustomerAccount(customer = {}) {
+  const email = normalizeLookup(customer.email);
+  const uid = customer.uid || customer.id;
+  return email === ADMIN_EMAIL || (auth.currentUser?.uid && uid === auth.currentUser.uid);
+}
+
+function customerFullName(customer = {}) {
+  return customer.fullName || `${customer.firstName || ''} ${customer.lastName || ''}`.trim();
+}
+
+function customerAddress(customer = {}) {
+  return [
+    customer.addressLine1,
+    customer.addressLine2,
+    [customer.city, customer.state, customer.zip].filter(Boolean).join(' ')
+  ].filter(Boolean).join(', ');
+}
+
+function filteredCustomers() {
+  const search = normalizeLookup(document.getElementById('customerSearch')?.value || '');
+  return [...state.customers]
+    .sort((a, b) => {
+      const aTime = a.updatedAt?.toDate ? a.updatedAt.toDate().getTime() : new Date(a.updatedAt || a.createdAt || 0).getTime();
+      const bTime = b.updatedAt?.toDate ? b.updatedAt.toDate().getTime() : new Date(b.updatedAt || b.createdAt || 0).getTime();
+      return bTime - aTime;
+    })
+    .filter((customer) => {
+      if (!search) return true;
+      const haystack = [
+        customerFullName(customer),
+        customer.email,
+        customer.phone,
+        customer.phoneDigits,
+        customer.preferredPickupLocationLabel,
+        locationLabel(customer.preferredPickupLocation),
+        customer.id
+      ].map(normalizeLookup).join(' ');
+      return haystack.includes(search);
+    });
+}
+
+function renderCustomerSummary(customers) {
+  const summary = document.getElementById('customersSummary');
+  if (!summary) return;
+  const withOrders = customers.filter((customer) => customerOrderCount(customer) > 0).length;
+  const deletable = customers.length - withOrders;
+  const newest = customers[0]?.email || '--';
+  summary.innerHTML = `
+    <div class="customers-summary-card"><span>Total Customers</span><strong>${customers.length}</strong></div>
+    <div class="customers-summary-card"><span>With Orders</span><strong>${withOrders}</strong></div>
+    <div class="customers-summary-card"><span>Can Delete</span><strong>${deletable}</strong></div>
+    <div class="customers-summary-card"><span>Newest Account</span><strong style="font-size:15px;line-height:1.25">${escapeHtml(newest)}</strong></div>
+  `;
+}
+
+function renderCustomers() {
+  const tbody = document.getElementById('customersBody');
+  if (!tbody) return;
+
+  const customers = filteredCustomers();
+  renderCustomerSummary(customers);
+
+  if (!customers.length) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">C</div><p>No customer accounts found.</p></div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = customers.map((customer) => {
+    const ordersCount = customerOrderCount(customer);
+    const name = customerFullName(customer) || 'No name saved';
+    const pickup = customer.preferredPickupLocationLabel || locationLabel(customer.preferredPickupLocation) || '--';
+    const address = customerAddress(customer) || '--';
+    const protectedAccount = isProtectedCustomerAccount(customer);
+    const canDelete = ordersCount === 0 && !protectedAccount;
+    const deleteButton = canDelete
+      ? `<button class="action-btn btn-cancel delete-customer-btn" type="button" data-customer-uid="${escapeHtml(customer.id)}" data-customer-email="${escapeHtml(customer.email || '')}">Delete</button>`
+      : `<button class="action-btn" type="button" disabled title="${protectedAccount ? 'Admin account is protected' : 'Customer has order history'}">${protectedAccount ? 'Protected' : 'Has orders'}</button>`;
+
+    return `<tr>
+      <td><div class="customer-name">${escapeHtml(name)}</div><div class="customer-profile-muted">${escapeHtml(customer.city || '')}</div></td>
+      <td><div class="customer-name">${escapeHtml(customer.email || '--')}</div><div class="customer-profile-muted">${escapeHtml(customer.id || customer.uid || '')}</div></td>
+      <td>${escapeHtml(customer.phone || '--')}</td>
+      <td>${escapeHtml(pickup)}</td>
+      <td><div class="customer-profile-muted">${escapeHtml(address)}</div></td>
+      <td><span class="status-badge ${ordersCount ? 'status-fulfilled' : 'status-pending'}">${ordersCount}</span></td>
+      <td><div class="customer-profile-muted">Created: ${escapeHtml(formatDate(customer.createdAt))}<br>Updated: ${escapeHtml(formatDate(customer.updatedAt))}</div></td>
+      <td><div class="action-btns">${deleteButton}</div></td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('.delete-customer-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      deleteCustomerAccountFromAdmin(button.dataset.customerUid || '', button.dataset.customerEmail || '');
+    });
+  });
+}
+
+async function deleteCustomerAccountFromAdmin(uid, email = '') {
+  if (!uid) {
+    showToast('Could not find this customer account');
+    return;
+  }
+
+  const customer = state.customers.find((entry) => entry.id === uid || entry.uid === uid);
+  if (customer && isProtectedCustomerAccount(customer)) {
+    showToast('Admin account cannot be deleted here');
+    return;
+  }
+  if (customer && customerOrderCount(customer) > 0) {
+    showToast('This account has order history and cannot be deleted');
+    return;
+  }
+
+  const confirmed = window.confirm(`Delete customer account${email ? ` ${email}` : ''}? This is only for fake accounts with no orders and cannot be undone.`);
+  if (!confirmed) return;
+
+  try {
+    await deleteCustomerAccount({ uid });
+    showToast('Customer account deleted');
+  } catch (error) {
+    console.error(error);
+    const message = error?.message || 'Could not delete customer account';
+    showToast(message.includes('order history') ? 'Customer has order history and cannot be deleted' : 'Could not delete customer account');
+  }
+}
+
+function exportCustomersCSV() {
+  const customers = filteredCustomers();
+  if (!customers.length) {
+    showToast('No customer accounts to export');
+    return;
+  }
+
+  const rows = [['Name', 'Email', 'UID', 'Phone', 'Preferred Pickup', 'Address', 'Orders', 'Created', 'Updated']];
+  customers.forEach((customer) => {
+    rows.push([
+      customerFullName(customer),
+      customer.email || '',
+      customer.id || customer.uid || '',
+      customer.phone || '',
+      customer.preferredPickupLocationLabel || locationLabel(customer.preferredPickupLocation) || '',
+      customerAddress(customer),
+      customerOrderCount(customer),
+      formatDate(customer.createdAt),
+      formatDate(customer.updatedAt)
+    ]);
+  });
+
+  const csv = rows.map((row) => row.map((value) => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `shrish_customers_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  showToast('Customer accounts CSV downloaded');
+}
+
 function renderSubscribers() {
   const tbody = document.getElementById('subscribersBody');
   if (!tbody) return;
@@ -2985,11 +3172,13 @@ function switchTab(tab, btn) {
   btn.classList.add('active');
   document.getElementById('tab-orders').style.display = tab === 'orders' ? 'block' : 'none';
   document.getElementById('tab-products').style.display = tab === 'products' ? 'block' : 'none';
+  document.getElementById('tab-customers').style.display = tab === 'customers' ? 'block' : 'none';
   document.getElementById('tab-subscribers').style.display = tab === 'subscribers' ? 'block' : 'none';
   document.getElementById('tab-accounting').style.display = tab === 'accounting' ? 'block' : 'none';
   document.getElementById('tab-excel-calculations').style.display = tab === 'excel-calculations' ? 'block' : 'none';
   if (tab === 'products') renderProducts();
   if (tab === 'orders') renderOrders();
+  if (tab === 'customers') renderCustomers();
   if (tab === 'subscribers') renderSubscribers();
   if (tab === 'accounting') renderAccounting();
   if (tab === 'excel-calculations') renderExcelCalculations();
@@ -2999,6 +3188,7 @@ function switchTab(tab, btn) {
 function subscribeData() {
   state.unsubOrders?.();
   state.unsubProducts?.();
+  state.unsubCustomers?.();
   state.unsubSubscribersGeneral?.();
   state.unsubSubscribersProduct?.();
   state.unsubAccountingBatches?.();
@@ -3007,6 +3197,7 @@ function subscribeData() {
   state.unsubOrders = onSnapshot(query(collection(db, 'orders'), orderBy('createdAt', 'desc')), (snapshot) => {
     state.orders = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
     renderOrders();
+    renderCustomers();
     renderAccounting();
   }, (error) => {
     console.error(error);
@@ -3022,6 +3213,14 @@ function subscribeData() {
   }, (error) => {
     console.error(error);
     showToast('Products sync failed');
+  });
+
+  state.unsubCustomers = onSnapshot(collection(db, 'user_profiles'), (snapshot) => {
+    state.customers = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
+    renderCustomers();
+  }, (error) => {
+    console.error(error);
+    showToast('Customer accounts sync failed');
   });
 
   const syncSubscribers = () => {
@@ -3122,6 +3321,7 @@ function initAuthWatch() {
     if (!user) {
       state.unsubOrders?.();
       state.unsubProducts?.();
+      state.unsubCustomers?.();
       state.unsubSubscribersGeneral?.();
       state.unsubSubscribersProduct?.();
       state.unsubAccountingBatches?.();
@@ -3162,6 +3362,9 @@ window.handleWhatsAppReminderOverlayClick = handleWhatsAppReminderOverlayClick;
 window.openWhatsAppReminderForOrder = openWhatsAppReminderForOrder;
 window.printActiveOrders = printActiveOrders;
 window.exportCSV = exportCSV;
+window.renderCustomers = renderCustomers;
+window.exportCustomersCSV = exportCustomersCSV;
+window.deleteCustomerAccountFromAdmin = deleteCustomerAccountFromAdmin;
 window.exportSubscribersCSV = exportSubscribersCSV;
 window.deleteSubscriber = deleteSubscriber;
 window.renderAccounting = renderAccounting;

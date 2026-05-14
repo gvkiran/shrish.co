@@ -35,6 +35,7 @@ let currentOrders = [];
 let latestProfileSnapshot = null;
 const updateCustomerPendingOrder = httpsCallable(cloudFunctions, 'updateCustomerPendingOrder');
 const claimCustomerOrder = httpsCallable(cloudFunctions, 'claimCustomerOrder');
+const submitOrderFeedback = httpsCallable(cloudFunctions, 'submitOrderFeedback');
 const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
 const RECENT_ORDER_CLAIM_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -450,6 +451,11 @@ function normalizeCartItem(item = {}) {
   };
 }
 
+function orderHasMangoItems(order = {}) {
+  const mangoWords = /(mango|rasalu|himayat|imam|pasand|alphonso|kesar|banginapalli|rajapuri|chaunsa|mallika|dasheri|langra)/i;
+  return (order.items || []).some((item) => mangoWords.test(`${item.name || ''} ${item.category || ''} ${item.unit || ''}`));
+}
+
 function renderAccountInsights(orders = []) {
   const panel = el('accountInsights');
   if (!panel) return;
@@ -542,6 +548,59 @@ function renderPendingOrderEditor(order = {}) {
     </div>`;
 }
 
+function feedbackOptionButtons(name, options = []) {
+  return `
+    <div class="feedback-options">
+      ${options.map((option) => `<button class="feedback-choice" type="button" data-feedback-name="${escapeHtml(name)}" data-feedback-value="${escapeHtml(option)}">${escapeHtml(option)}</button>`).join('')}
+    </div>`;
+}
+
+function buildFeedbackHtml(order = {}) {
+  const orderNumber = order.orderNumber || order.id || 'Order';
+  const hasMangoItems = orderHasMangoItems(order);
+  return `
+    <h2 class="order-modal-title" id="orderDetailTitle">Order feedback</h2>
+    <div class="order-modal-sub">${escapeHtml(orderNumber)} - thank you for helping Shrish improve.</div>
+    <div class="feedback-card" data-feedback-order="${escapeHtml(order.id)}" data-has-mango="${hasMangoItems ? 'true' : 'false'}">
+      <div class="feedback-question">
+        <strong>1. ${hasMangoItems ? 'How would you rate the quality of the mangoes you received?' : 'How would you rate your order overall?'}</strong>
+        <div class="feedback-options" aria-label="Overall rating">
+          ${[1, 2, 3, 4, 5].map((rating) => `<button class="feedback-star" type="button" data-feedback-name="overallRating" data-feedback-value="${rating}" aria-label="${rating} star">${rating}</button>`).join('')}
+        </div>
+      </div>
+      ${hasMangoItems ? `
+        <div class="feedback-question">
+          <strong>2. How sweet were your mangoes?</strong>
+          ${feedbackOptionButtons('mangoSweetness', ['Very sweet', 'Sweet', 'Mild', 'Not sweet at all'])}
+        </div>` : `
+        <div class="feedback-question">
+          <strong>2. How was the condition of your items?</strong>
+          ${feedbackOptionButtons('itemCondition', ['Excellent', 'Good', 'Okay', 'Had issues'])}
+        </div>`}
+      <div class="feedback-question">
+        <strong>3. How smooth was your pickup experience?</strong>
+        ${feedbackOptionButtons('pickupExperience', ['Very smooth', 'Minor wait', 'Hard to find', 'Had issues'])}
+      </div>
+      <div class="feedback-question">
+        <strong>4. Would you buy this order again?</strong>
+        ${feedbackOptionButtons('reorderIntent', ['Definitely', 'Probably', 'Not sure', 'Unlikely'])}
+      </div>
+      <div class="feedback-question">
+        <strong>5. How likely are you to recommend Shrish to friends or family?</strong>
+        ${feedbackOptionButtons('recommend', ['Very likely', 'Likely', 'Neutral', 'Unlikely'])}
+      </div>
+      <div class="feedback-question">
+        <strong>Anything we should improve? <span style="color:var(--text-light);font-weight:500">(optional)</span></strong>
+        <textarea class="feedback-comment" data-feedback-comment maxlength="500" placeholder="Quick note for Shrish..."></textarea>
+      </div>
+      <div class="feedback-message" data-feedback-message></div>
+      <div class="order-history-actions">
+        <button class="order-mini-btn primary" type="button" data-feedback-submit="${escapeHtml(order.id)}">Submit feedback</button>
+        <button class="order-mini-btn" type="button" data-feedback-skip>Skip</button>
+      </div>
+    </div>`;
+}
+
 function buildOrderDetailHtml(order = {}) {
   const total = orderTotalValue(order);
   const location = order.locationLabel || LOCATION_LABELS[order.location] || 'Pickup location pending';
@@ -567,6 +626,9 @@ function buildOrderDetailHtml(order = {}) {
     <div class="order-history-actions">
       <button class="order-mini-btn primary" type="button" data-order-reorder="${escapeHtml(order.id)}">Order again</button>
       <button class="order-mini-btn" type="button" data-order-print="${escapeHtml(order.id)}">Print summary</button>
+      ${order.feedbackSubmitted
+        ? '<button class="order-mini-btn" type="button" disabled>Feedback sent</button>'
+        : `<button class="order-mini-btn" type="button" data-order-feedback="${escapeHtml(order.id)}">Give feedback</button>`}
       <a class="order-mini-btn" href="shop.html">Shop fresh arrivals</a>
     </div>`;
 }
@@ -581,6 +643,18 @@ function openOrderModal(order = {}) {
   modal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
   bindOrderModalActions();
+}
+
+function openFeedbackModal(order = {}) {
+  const modal = el('orderDetailModal');
+  const content = el('orderModalContent');
+  if (!modal || !content) return;
+
+  content.innerHTML = buildFeedbackHtml(order);
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  bindFeedbackModalActions();
 }
 
 function closeOrderModal() {
@@ -610,6 +684,73 @@ function setOrderEditBusy(busy) {
   el('orderDetailModal')?.querySelectorAll('[data-edit-delta], .order-edit-qty, [data-order-save], [data-order-cancel]').forEach((control) => {
     control.disabled = busy;
   });
+}
+
+function setFeedbackMessage(type, text) {
+  const message = el('orderDetailModal')?.querySelector('[data-feedback-message]');
+  if (!message) return;
+  message.className = `feedback-message ${type ? 'show ' + type : ''}`.trim();
+  message.textContent = text || '';
+}
+
+function collectFeedbackResponses() {
+  const card = el('orderDetailModal')?.querySelector('[data-feedback-order]');
+  if (!card) return null;
+  const responses = {};
+  card.querySelectorAll('.feedback-choice.selected, .feedback-star.selected').forEach((button) => {
+    responses[button.dataset.feedbackName] = button.dataset.feedbackValue;
+  });
+  responses.comment = card.querySelector('[data-feedback-comment]')?.value?.trim() || '';
+  return {
+    orderId: card.dataset.feedbackOrder,
+    hasMangoItems: card.dataset.hasMango === 'true',
+    responses
+  };
+}
+
+function feedbackHasRequiredAnswers(payload) {
+  if (!payload?.responses?.overallRating || !payload.responses.pickupExperience || !payload.responses.reorderIntent || !payload.responses.recommend) return false;
+  if (payload.hasMangoItems) return Boolean(payload.responses.mangoSweetness);
+  return Boolean(payload.responses.itemCondition);
+}
+
+async function submitFeedback(button) {
+  const payload = collectFeedbackResponses();
+  if (!feedbackHasRequiredAnswers(payload)) {
+    setFeedbackMessage('error', 'Please answer the quick questions before submitting.');
+    return;
+  }
+
+  try {
+    setButtonBusy(button, true, 'Submitting...');
+    setFeedbackMessage('info', 'Submitting feedback...');
+    await submitOrderFeedback(payload);
+    const order = findCurrentOrder(payload.orderId);
+    if (order) order.feedbackSubmitted = true;
+    trackAccountEvent('customer_order_feedback_submitted', { order_id: payload.orderId });
+    setFeedbackMessage('ok', 'Thank you. Your feedback was sent to Shrish.');
+    renderOrders(currentOrders);
+    setTimeout(closeOrderModal, 800);
+  } catch (error) {
+    console.error('Feedback submit failed', error);
+    setFeedbackMessage('error', error?.code?.includes('already-exists') ? 'Feedback was already sent for this order.' : 'Could not submit feedback right now.');
+  } finally {
+    setButtonBusy(button, false);
+  }
+}
+
+function bindFeedbackModalActions() {
+  const modal = el('orderDetailModal');
+  modal?.querySelectorAll('[data-feedback-name]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const name = button.dataset.feedbackName;
+      modal.querySelectorAll(`[data-feedback-name="${name}"]`).forEach((item) => item.classList.remove('selected'));
+      button.classList.add('selected');
+      setFeedbackMessage('', '');
+    });
+  });
+  modal?.querySelector('[data-feedback-submit]')?.addEventListener('click', (event) => submitFeedback(event.currentTarget));
+  modal?.querySelector('[data-feedback-skip]')?.addEventListener('click', closeOrderModal);
 }
 
 function updateOrderEditTotals() {
@@ -724,6 +865,11 @@ function bindOrderModalActions() {
   modal?.querySelector('[data-order-cancel]')?.addEventListener('click', (event) => {
     cancelPendingOrder(event.currentTarget);
   });
+
+  modal?.querySelector('[data-order-feedback]')?.addEventListener('click', (event) => {
+    const order = findCurrentOrder(event.currentTarget.dataset.orderFeedback);
+    if (order) openFeedbackModal(order);
+  });
 }
 
 function bindOrderHistoryActions(orders = []) {
@@ -743,6 +889,13 @@ function bindOrderHistoryActions(orders = []) {
         order_number: order.orderNumber || order.id || ''
       });
       window.location.href = 'order.html';
+    });
+  });
+
+  document.querySelectorAll('[data-order-feedback]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const order = orders.find((item) => item.id === button.dataset.orderFeedback);
+      if (order) openFeedbackModal(order);
     });
   });
 
@@ -817,6 +970,9 @@ function renderOrders(orders = []) {
         <div class="order-history-actions">
           <button class="order-mini-btn primary" type="button" data-order-toggle="${escapeHtml(order.id)}">View details</button>
           <button class="order-mini-btn" type="button" data-order-reorder="${escapeHtml(order.id)}">Order again</button>
+          ${order.feedbackSubmitted
+            ? '<button class="order-mini-btn" type="button" disabled>Feedback sent</button>'
+            : `<button class="order-mini-btn" type="button" data-order-feedback="${escapeHtml(order.id)}">Give feedback</button>`}
         </div>
       </article>`;
   }).join('');

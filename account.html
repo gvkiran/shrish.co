@@ -103,6 +103,20 @@
 .order-edit-message.ok{background:#E8F5E9;color:#1B5E20}
 .order-edit-message.error{background:#FFEBEE;color:#B71C1C}
 .order-edit-message.info{background:#FFF8E1;color:#7A4A00}
+.feedback-card{border:1px solid rgba(200,121,26,.16);border-radius:14px;background:#fffdf8;padding:16px;margin-top:8px}
+.feedback-question{margin:0 0 18px}
+.feedback-question strong{display:block;color:var(--dark);font-size:15px;line-height:1.45;margin-bottom:10px}
+.feedback-options{display:flex;gap:9px;flex-wrap:wrap}
+.feedback-choice,.feedback-star{border:1.5px solid rgba(200,121,26,.24);border-radius:999px;background:#fff;color:var(--text);padding:8px 13px;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.feedback-choice.selected,.feedback-star.selected{background:var(--saffron);border-color:var(--saffron);color:#fff}
+.feedback-star{width:38px;height:38px;border-radius:50%;padding:0;font-size:18px;color:#a7a19a}
+.feedback-star.selected{color:#fff}
+.feedback-comment{width:100%;min-height:86px;border:1.5px solid #E0D0B8;border-radius:12px;background:var(--cream);padding:12px 14px;font:inherit;color:var(--text);resize:vertical}
+.feedback-message{display:none;border-radius:10px;padding:10px 12px;margin:12px 0 0;font-size:13px;font-weight:800}
+.feedback-message.show{display:block}
+.feedback-message.ok{background:#E8F5E9;color:#1B5E20}
+.feedback-message.error{background:#FFEBEE;color:#B71C1C}
+.feedback-message.info{background:#FFF8E1;color:#7A4A00}
 .order-note{background:#fff;border-left:4px solid var(--saffron);border-radius:10px;padding:11px 13px;color:var(--text-light);font-size:13px;line-height:1.55}
 .empty-orders{border:1px dashed rgba(200,121,26,.35);border-radius:16px;padding:24px;text-align:center;color:var(--text-light);background:#fffdf8}
 .admin-account-note{border:1px solid rgba(200,121,26,.22);border-radius:16px;background:#fffdf8;padding:18px;color:var(--text-light);font-size:15px;line-height:1.7;margin-bottom:18px}
@@ -336,7 +350,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="analytics.js?v=customer-accounts-1"></script>
 <script src="main.js?v=account-menu-2"></script>
 <script src="firebase-config.js"></script>
-<script type="module" src="account-firebase.js?v=customer-order-account-4"></script>
+<script type="module" src="account-firebase.js?v=customer-order-account-5"></script>
 
 </body>
 </html>
