@@ -134,15 +134,17 @@ function readRecentOrderClaim() {
   }
 }
 
-function prepareRecentOrderSignup() {
+function prepareRecentOrderSignup(mode = 'signup') {
   const claim = readRecentOrderClaim();
   if (!claim) return;
-  setAuthMode('signup');
+  const authMode = mode === 'signin' ? 'signin' : 'signup';
+  setAuthMode(authMode);
+  if (el('signinEmail')) el('signinEmail').value = claim.email || '';
   if (el('signupEmail')) el('signupEmail').value = claim.email || '';
   if (el('signupPhone')) el('signupPhone').value = formatPhone(claim.phone || claim.phoneDigits || '');
   if (el('signupFirstName')) el('signupFirstName').value = claim.firstName || '';
   if (el('signupLastName')) el('signupLastName').value = claim.lastName || '';
-  showMessage('authMessage', 'info', 'Create or sign in with the same email and phone from checkout to link your recent order for history and pending edits.');
+  showMessage('authMessage', 'info', 'Sign in or create an account with the same email and phone from checkout to modify your pending order.');
 }
 
 async function claimRecentOrderForUser(user) {
@@ -896,8 +898,9 @@ function init() {
 
   bindForms();
   setAuthMode('signin');
-  if (new URLSearchParams(window.location.search).get('claim') === 'recent' || readRecentOrderClaim()) {
-    prepareRecentOrderSignup();
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('claim') === 'recent' || readRecentOrderClaim()) {
+    prepareRecentOrderSignup(params.get('mode'));
   }
 
   onAuthStateChanged(auth, async (user) => {

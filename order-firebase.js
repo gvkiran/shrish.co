@@ -18,6 +18,7 @@ let selectedLoc = '';
 let isSubmitting = false;
 let currentCustomer = null;
 let currentCustomerProfile = null;
+const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
 const CONFIRMATION_WAIT_MS = 15000;
 const LOCATION_LABELS = {
   shortpump: 'Short Pump, VA',
@@ -53,13 +54,35 @@ function recentOrderClaimPayload(orderRef, order, displayNumber) {
 function rememberRecentOrderForAccount(orderRef, order, displayNumber) {
   if (!customerAccountsEnabled()) return;
   if (currentCustomer) {
-    sessionStorage.removeItem('shrish_recent_order_claim');
+    sessionStorage.removeItem(RECENT_ORDER_CLAIM_KEY);
     return;
   }
 
   sessionStorage.setItem(
-    'shrish_recent_order_claim',
+    RECENT_ORDER_CLAIM_KEY,
     JSON.stringify(recentOrderClaimPayload(orderRef, order, displayNumber))
+  );
+}
+
+function rememberExistingOrderForAccount(orderId, displayNumber) {
+  if (!customerAccountsEnabled() || !orderId) return;
+  const email = document.getElementById('email')?.value?.trim() || '';
+  const phone = document.getElementById('phone')?.value?.trim() || '';
+  const phoneDigits = extractUsPhoneDigits(phone);
+  if (!email || !phoneDigits) return;
+
+  sessionStorage.setItem(
+    RECENT_ORDER_CLAIM_KEY,
+    JSON.stringify({
+      orderId,
+      orderNumber: displayNumber || orderId,
+      email,
+      phone,
+      phoneDigits,
+      firstName: document.getElementById('firstName')?.value?.trim() || '',
+      lastName: document.getElementById('lastName')?.value?.trim() || '',
+      createdAt: Date.now()
+    })
   );
 }
 
@@ -67,14 +90,15 @@ function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
   const prompt = document.getElementById('successAccountPrompt');
   if (!prompt || !customerAccountsEnabled()) return;
 
-  const accountHref = 'account.html?claim=recent';
+  const signupHref = 'account.html?claim=recent&mode=signup';
+  const signinHref = 'account.html?claim=recent&mode=signin';
   if (currentCustomer) {
     prompt.classList.add('show');
     prompt.innerHTML = `
       <strong>Track or edit this order</strong>
       <p>This order is saved to your Shrish account. You can view history, print the summary, change pending quantities, or cancel before pickup is confirmed.</p>
       <div class="success-account-actions">
-        <a href="${accountHref}" class="btn-primary">View My Orders</a>
+        <a href="account.html" class="btn-primary">View My Orders</a>
         <span class="success-account-note">${escapeHtml(displayNumber)} is ready in your account.</span>
       </div>`;
     return;
@@ -85,8 +109,8 @@ function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
     <strong>Want to edit this order later?</strong>
     <p>Create or sign in to a Shrish account with the same email and phone from checkout. Your recent order will link automatically so you can see purchase history, update pending boxes, or cancel before pickup is confirmed.</p>
     <div class="success-account-actions">
-      <a href="${accountHref}" class="btn-primary">Create Account</a>
-      <a href="${accountHref}" class="btn-outline">Sign In</a>
+      <a href="${signupHref}" class="btn-primary">Create Account</a>
+      <a href="${signinHref}" class="btn-outline">Sign In</a>
       <span class="success-account-note">Use ${escapeHtml(order.email || 'the same email')} to link ${escapeHtml(displayNumber)}.</span>
     </div>`;
 }
@@ -285,15 +309,29 @@ function formatUsPhoneDisplay(value) {
   return `+1 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
 }
 
-function showDuplicateOrderMessage(phone) {
+function setErrorBannerTitle(text) {
+  const title = document.querySelector('#errorBanner .error-banner-title');
+  if (title) title.textContent = text;
+}
+
+function showDuplicateOrderMessage(phone, existingOrderId = '') {
   const banner = document.getElementById('errorBanner');
   const list = document.getElementById('errorList');
   if (!banner || !list) return;
 
+  rememberExistingOrderForAccount(existingOrderId, existingOrderId);
+  setErrorBannerTitle('You already have a pending order');
+  const accountHref = existingOrderId ? 'account.html?claim=recent&mode=signin' : 'account.html?mode=signin';
+  const primaryLabel = currentCustomer ? 'Open My Orders' : 'Login to Modify Order';
   list.innerHTML = `
     <li>You already have an active order for <strong>${escapeHtml(phone)}</strong>.</li>
-    <li>If you would like to modify it, please contact us on <a href="https://wa.me/17653255577" target="_blank" rel="noopener" style="color:inherit;font-weight:700">WhatsApp</a>.</li>`;
-  banner.className = 'error-banner show hard-error';
+    <li>To change boxes, cancel, or view details, sign in or create a Shrish account using the same email and phone from your order.</li>
+    <li class="duplicate-order-actions">
+      <a class="primary" href="${accountHref}">${primaryLabel}</a>
+      <a class="secondary" href="account.html?claim=recent&mode=signup">Create Account</a>
+      <a class="secondary" href="https://wa.me/17653255577" target="_blank" rel="noopener">WhatsApp Help</a>
+    </li>`;
+  banner.className = 'error-banner show account-action';
   banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
@@ -628,6 +666,7 @@ async function submitOrder() {
       has_pickup_location: Boolean(selectedLoc),
       ...cartAnalyticsSummary()
     });
+    setErrorBannerTitle('Please fix the following before placing your order:');
     rebuildErrorBanner();
     return;
   }
@@ -647,7 +686,7 @@ async function submitOrder() {
         ...cartAnalyticsSummary(),
         pickup_location: selectedLoc
       });
-      showDuplicateOrderMessage(phone);
+      showDuplicateOrderMessage(phone, lockSnap.data()?.orderId || '');
       return;
     }
     if (lockStatus === 'no_show') {
@@ -796,12 +835,14 @@ async function submitOrder() {
       const lockRef = orderLockRef(phoneDigits);
       const existingLock = await getDoc(lockRef).catch(() => null);
       if (await isActivePendingLock(existingLock)) {
-        showDuplicateOrderMessage(phone);
+        showDuplicateOrderMessage(phone, existingLock.data()?.orderId || '');
         return;
       }
 
-      list.innerHTML = '<li>You already have an active order. If you would like to modify it, please contact us on WhatsApp.</li>';
+      setErrorBannerTitle('You already have a pending order');
+      list.innerHTML = '<li>Please sign in to your Shrish account to modify your existing pending order, or contact us on WhatsApp if you need help.</li>';
     } else {
+      setErrorBannerTitle('Please fix the following before placing your order:');
       list.innerHTML = '<li>We could not submit your order right now. Please try again in a minute.</li>';
     }
     banner.className = 'error-banner show hard-error';
