@@ -1377,6 +1377,115 @@ function injectGlobalUI() {
 }
 
 // ââ DOM READY âââââââââââââââââââââââââââââââââââââââââââââââ
+function renderAccountNavSignedOut(container) {
+  container.innerHTML = `
+    <a href="account.html" class="nav-account-btn" aria-label="Customer account">Account</a>
+  `;
+}
+
+function renderAccountNavSignedIn(container, authApi) {
+  container.innerHTML = `
+    <div class="nav-account-menu">
+      <button class="nav-account-btn" type="button" aria-haspopup="true" aria-expanded="false">Account</button>
+      <div class="nav-account-menu-panel" role="menu">
+        <a href="account.html" role="menuitem">Account Details</a>
+        <button type="button" data-nav-sign-out role="menuitem">Log Out</button>
+      </div>
+    </div>
+  `;
+
+  const menu = container.querySelector('.nav-account-menu');
+  const button = container.querySelector('.nav-account-btn');
+  button?.addEventListener('click', (event) => {
+    event.preventDefault();
+    const isOpen = menu?.classList.toggle('open');
+    button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+
+  container.querySelector('[data-nav-sign-out]')?.addEventListener('click', async () => {
+    try {
+      await authApi.signOut(authApi.auth);
+      trackShrishEvent('customer_signed_out_nav');
+      menu?.classList.remove('open');
+      button?.setAttribute('aria-expanded', 'false');
+      if (window.location.pathname.endsWith('/account.html') || window.location.pathname.endsWith('account.html')) {
+        window.location.reload();
+      }
+    } catch (error) {
+      console.warn('Could not sign out from nav', error);
+    }
+  });
+}
+
+function setupCustomerAccountNav(navCartWrap, navMobile) {
+  const customerAccountsEnabled = window.SHRISH_APP_CONFIG?.customerAccountsEnabled !== false;
+  if (!customerAccountsEnabled) return;
+
+  let accountSlot = navCartWrap?.querySelector('.nav-account-slot');
+  if (navCartWrap && !accountSlot) {
+    accountSlot = document.createElement('div');
+    accountSlot.className = 'nav-account-slot';
+    navCartWrap.insertBefore(accountSlot, navCartWrap.firstChild);
+  }
+  if (accountSlot) renderAccountNavSignedOut(accountSlot);
+
+  let mobileAccountLink = navMobile?.querySelector('[data-mobile-account-link]');
+  if (navMobile && !mobileAccountLink) {
+    mobileAccountLink = document.createElement('a');
+    mobileAccountLink.href = 'account.html';
+    mobileAccountLink.dataset.mobileAccountLink = 'true';
+    mobileAccountLink.textContent = 'Account';
+    mobileAccountLink.addEventListener('click', () => navMobile.classList.remove('open'));
+    navMobile.appendChild(mobileAccountLink);
+  }
+
+  if (!window.SHRISH_FIREBASE_CONFIG?.apiKey) return;
+
+  import('./firebase-app.js')
+    .then(({ auth, onAuthStateChanged, signOut }) => {
+      const authApi = { auth, signOut };
+      onAuthStateChanged(auth, (user) => {
+        if (accountSlot) {
+          if (user) renderAccountNavSignedIn(accountSlot, authApi);
+          else renderAccountNavSignedOut(accountSlot);
+        }
+
+        if (mobileAccountLink) {
+          mobileAccountLink.textContent = user ? 'Account Details' : 'Account';
+        }
+
+        let mobileSignOut = navMobile?.querySelector('[data-mobile-sign-out]');
+        if (user && navMobile && !mobileSignOut) {
+          mobileSignOut = document.createElement('button');
+          mobileSignOut.type = 'button';
+          mobileSignOut.dataset.mobileSignOut = 'true';
+          mobileSignOut.textContent = 'Log Out';
+          mobileSignOut.addEventListener('click', async () => {
+            await signOut(auth);
+            trackShrishEvent('customer_signed_out_nav');
+            navMobile.classList.remove('open');
+            if (window.location.pathname.endsWith('/account.html') || window.location.pathname.endsWith('account.html')) {
+              window.location.reload();
+            }
+          });
+          navMobile.appendChild(mobileSignOut);
+        } else if (!user && mobileSignOut) {
+          mobileSignOut.remove();
+        }
+      });
+    })
+    .catch((error) => {
+      console.warn('Customer account nav unavailable', error);
+    });
+
+  document.addEventListener('click', (event) => {
+    const menu = accountSlot?.querySelector('.nav-account-menu');
+    if (!menu || menu.contains(event.target)) return;
+    menu.classList.remove('open');
+    menu.querySelector('.nav-account-btn')?.setAttribute('aria-expanded', 'false');
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Inject global UI
   injectGlobalUI();
@@ -1423,24 +1532,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Active nav link
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-  const accountHref = 'account.html';
   const navCartWrap = document.querySelector('.nav-cart-wrap');
-  const customerAccountsEnabled = window.SHRISH_APP_CONFIG?.customerAccountsEnabled !== false;
-  if (customerAccountsEnabled && navCartWrap && !navCartWrap.querySelector('.nav-account-btn')) {
-    const accountLink = document.createElement('a');
-    accountLink.href = accountHref;
-    accountLink.className = 'nav-account-btn';
-    accountLink.setAttribute('aria-label', 'Customer account');
-    accountLink.textContent = 'Account';
-    navCartWrap.insertBefore(accountLink, navCartWrap.firstChild);
-  }
-  if (customerAccountsEnabled && navMobile && !navMobile.querySelector('a[href="account.html"]')) {
-    const accountMobileLink = document.createElement('a');
-    accountMobileLink.href = accountHref;
-    accountMobileLink.textContent = 'Account';
-    accountMobileLink.addEventListener('click', () => navMobile.classList.remove('open'));
-    navMobile.appendChild(accountMobileLink);
-  }
+  setupCustomerAccountNav(navCartWrap, navMobile);
   document.querySelectorAll('.nav-link').forEach(link => {
     const href = link.getAttribute('href');
     link.classList.toggle('active', href === currentPage || (currentPage === '' && href === 'index.html'));

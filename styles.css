@@ -215,6 +215,51 @@ button.btn-primary:active {
   background: rgba(200,121,26,0.12);
   border-color: rgba(200,121,26,0.45);
 }
+.nav-account-menu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.nav-account-menu-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 172px;
+  padding: 8px;
+  border: 1px solid rgba(200,121,26,0.22);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 16px 36px rgba(26,18,8,0.14);
+  z-index: 1400;
+}
+.nav-account-menu.open .nav-account-menu-panel {
+  display: grid;
+  gap: 4px;
+}
+.nav-account-menu-panel a,
+.nav-account-menu-panel button {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+}
+.nav-account-menu-panel a:hover,
+.nav-account-menu-panel button:hover {
+  background: var(--cream);
+  color: var(--saffron);
+}
+.nav-account-menu-panel button {
+  color: #9f341f;
+}
 .nav-cart-btn {
   display: flex;
   align-items: center;
@@ -296,12 +341,22 @@ button.btn-primary:active {
   border-top: 1px solid var(--cream-d);
 }
 
-.nav-mobile a {
+.nav-mobile a,
+.nav-mobile button {
   padding: 10px 0;
   font-size: 15px;
   color: var(--text);
   font-weight: 500;
   border-bottom: 1px solid rgba(212,160,23,0.1);
+}
+.nav-mobile button {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid rgba(212,160,23,0.1);
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .nav-mobile .mobile-cta {
@@ -366,7 +421,8 @@ button.btn-primary:active {
     justify-self: end;
   }
 
-  .nav-account-btn {
+  .nav-account-btn,
+  .nav-account-menu {
     display: none;
   }
 
