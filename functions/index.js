@@ -644,6 +644,129 @@ exports.sendOrderReminderEmails = onCall(
   }
 );
 
+function customerOrderUnitPrice(item = {}) {
+  const qty = normalizeQty(item);
+  const lineTotal = normalizeLineTotal(item);
+  if (lineTotal > 0 && qty > 0) return lineTotal / qty;
+  return parseMoney(item.price ?? item.unitPrice ?? item.itemPrice ?? 0);
+}
+
+function cleanCustomerQty(value) {
+  const qty = Math.floor(Number(value || 0));
+  if (!Number.isFinite(qty)) return 0;
+  return Math.min(Math.max(qty, 0), 99);
+}
+
+exports.updateCustomerPendingOrder = onCall(
+  {
+    region: "us-central1",
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign in before editing your order.");
+    }
+
+    const uid = request.auth.uid;
+    const orderId = String(request.data?.orderId || "").trim();
+    const action = String(request.data?.action || "").trim();
+    if (!orderId) {
+      throw new HttpsError("invalid-argument", "Order ID is required.");
+    }
+
+    const db = admin.firestore();
+    const orderRef = db.collection("orders").doc(orderId);
+
+    const result = await db.runTransaction(async (tx) => {
+      const snapshot = await tx.get(orderRef);
+      if (!snapshot.exists) {
+        throw new HttpsError("not-found", "Order not found.");
+      }
+
+      const order = snapshot.data() || {};
+      if (order.customerUid !== uid) {
+        throw new HttpsError("permission-denied", "You can only edit your own orders.");
+      }
+      if (String(order.status || "pending").toLowerCase() !== "pending") {
+        throw new HttpsError("failed-precondition", "Only pending orders can be changed.");
+      }
+
+      if (action === "cancel") {
+        tx.update(orderRef, {
+          status: "cancelled",
+          customerCancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+          customerCancelReason: String(request.data?.reason || "").trim().slice(0, 280),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        return { status: "cancelled" };
+      }
+
+      if (action !== "update_items") {
+        throw new HttpsError("invalid-argument", "Unknown order update action.");
+      }
+
+      const existingItems = Array.isArray(order.items) ? order.items : [];
+      if (!existingItems.length) {
+        throw new HttpsError("failed-precondition", "This order has no editable items.");
+      }
+
+      const requestedItems = Array.isArray(request.data?.items) ? request.data.items : [];
+      const qtyByIndex = new Map();
+      requestedItems.forEach((item) => {
+        const index = Number(item?.index);
+        if (Number.isInteger(index) && index >= 0 && index < existingItems.length) {
+          qtyByIndex.set(index, cleanCustomerQty(item?.qty));
+        }
+      });
+
+      if (!qtyByIndex.size) {
+        throw new HttpsError("invalid-argument", "At least one quantity is required.");
+      }
+
+      const updatedItems = existingItems.map((item, index) => {
+        const qty = qtyByIndex.has(index) ? qtyByIndex.get(index) : cleanCustomerQty(item.qty || 1);
+        const unitPrice = customerOrderUnitPrice(item);
+        return {
+          ...item,
+          qty,
+          lineTotal: Number((unitPrice * qty).toFixed(2)),
+        };
+      }).filter((item) => item.qty > 0);
+
+      if (!updatedItems.length) {
+        throw new HttpsError("failed-precondition", "Use cancel order if removing every item.");
+      }
+
+      const totals = getOrderTotals({ ...order, items: updatedItems, totalBoxes: 0, totalPrice: 0 });
+      tx.update(orderRef, {
+        items: updatedItems,
+        totalBoxes: totals.totalBoxes,
+        totalPrice: Number(totals.estimatedTotal.toFixed(2)),
+        customerLastEditedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      return {
+        status: "updated",
+        totalBoxes: totals.totalBoxes,
+        totalPrice: Number(totals.estimatedTotal.toFixed(2)),
+      };
+    });
+
+    posthog.capture({
+      distinctId: request.auth.token?.email || uid,
+      event: action === "cancel" ? "customer_order_cancelled" : "customer_order_updated",
+      properties: {
+        order_id: orderId,
+        action,
+      },
+    });
+    await posthog.flush();
+
+    return result;
+  }
+);
+
 exports.sendOrderEmails = onDocumentCreated(
   {
     document: "orders/{orderId}",

@@ -1,6 +1,8 @@
 import {
   db,
   auth,
+  cloudFunctions,
+  httpsCallable,
   collection,
   doc,
   getDoc,
@@ -27,6 +29,7 @@ const LOCATION_LABELS = {
 
 let unsubOrders = null;
 let currentOrders = [];
+const updateCustomerPendingOrder = httpsCallable(cloudFunctions, 'updateCustomerPendingOrder');
 
 function customerAccountsEnabled() {
   return window.SHRISH_APP_CONFIG?.customerAccountsEnabled === true;
@@ -231,6 +234,24 @@ function lineTotalValue(item = {}) {
   return Number.isFinite(price) ? price * qty : 0;
 }
 
+function orderItemUnitPrice(item = {}) {
+  const qty = Number(item.qty || 1);
+  const lineTotal = lineTotalValue(item);
+  if (lineTotal > 0 && qty > 0) return lineTotal / qty;
+  const price = parseFloat(String(item.price || item.unitPrice || item.itemPrice || '0').replace(/[^0-9.]/g, ''));
+  return Number.isFinite(price) ? price : 0;
+}
+
+function cleanOrderEditQty(value) {
+  const qty = Math.floor(Number(value || 0));
+  if (!Number.isFinite(qty)) return 0;
+  return Math.min(Math.max(qty, 0), 99);
+}
+
+function isPendingOrder(order = {}) {
+  return String(order.status || 'pending').toLowerCase() === 'pending';
+}
+
 function orderTotalValue(order = {}) {
   const explicit = Number(order.totalPrice || 0);
   if (explicit > 0) return explicit;
@@ -322,6 +343,44 @@ function renderOrderItemsTable(items = []) {
     </div>`;
 }
 
+function renderPendingOrderEditor(order = {}) {
+  if (!isPendingOrder(order)) return '';
+  const items = Array.isArray(order.items) ? order.items : [];
+  if (!items.length) return '';
+
+  return `
+    <div class="order-edit-panel">
+      <div class="order-edit-heading">
+        <strong>Edit pending order</strong>
+        <span>Change boxes before pickup is confirmed. Admin orders update automatically.</span>
+      </div>
+      <div class="order-edit-list">
+        ${items.map((item, index) => {
+          const qty = cleanOrderEditQty(item.qty || 1);
+          const unitPrice = orderItemUnitPrice(item);
+          return `
+            <div class="order-edit-row" data-edit-row data-unit-price="${escapeHtml(String(unitPrice))}">
+              <div>
+                <strong>${escapeHtml(item.name || 'Item')}</strong>
+                <span>${escapeHtml(formatCurrency(unitPrice))}${item.unit ? ` - ${escapeHtml(item.unit)}` : ''}</span>
+              </div>
+              <div class="order-edit-qty-control">
+                <button type="button" data-edit-delta="-1" data-index="${index}" aria-label="Reduce ${escapeHtml(item.name || 'item')} quantity">-</button>
+                <input class="order-edit-qty" data-index="${index}" type="number" min="0" max="99" step="1" value="${escapeHtml(String(qty))}" aria-label="${escapeHtml(item.name || 'Item')} quantity">
+                <button type="button" data-edit-delta="1" data-index="${index}" aria-label="Increase ${escapeHtml(item.name || 'item')} quantity">+</button>
+              </div>
+              <div class="order-edit-line" data-edit-line>${escapeHtml(formatCurrency(unitPrice * qty))}</div>
+            </div>`;
+        }).join('')}
+      </div>
+      <div class="order-edit-message" data-order-edit-message></div>
+      <div class="order-history-actions">
+        <button class="order-mini-btn primary" type="button" data-order-save="${escapeHtml(order.id)}">Save changes</button>
+        <button class="order-mini-btn danger" type="button" data-order-cancel="${escapeHtml(order.id)}">Cancel order</button>
+      </div>
+    </div>`;
+}
+
 function buildOrderDetailHtml(order = {}) {
   const total = orderTotalValue(order);
   const location = order.locationLabel || LOCATION_LABELS[order.location] || 'Pickup location pending';
@@ -342,6 +401,7 @@ function buildOrderDetailHtml(order = {}) {
       <div class="order-detail-cell"><span>Total price</span><strong>${escapeHtml(formatCurrency(total))}</strong></div>
     </div>
     ${renderOrderItemsTable(order.items || [])}
+    ${renderPendingOrderEditor(order)}
     <div class="order-note">${escapeHtml(orderStatusMessage(order))}</div>
     <div class="order-history-actions">
       <button class="order-mini-btn primary" type="button" data-order-reorder="${escapeHtml(order.id)}">Order again</button>
@@ -378,6 +438,86 @@ function findCurrentOrder(id) {
   return currentOrders.find((item) => item.id === id);
 }
 
+function setOrderEditMessage(type, text) {
+  const message = el('orderDetailModal')?.querySelector('[data-order-edit-message]');
+  if (!message) return;
+  message.className = `order-edit-message ${type ? 'show ' + type : ''}`.trim();
+  message.textContent = text || '';
+}
+
+function setOrderEditBusy(busy) {
+  el('orderDetailModal')?.querySelectorAll('[data-edit-delta], .order-edit-qty, [data-order-save], [data-order-cancel]').forEach((control) => {
+    control.disabled = busy;
+  });
+}
+
+function updateOrderEditTotals() {
+  el('orderDetailModal')?.querySelectorAll('[data-edit-row]').forEach((row) => {
+    const input = row.querySelector('.order-edit-qty');
+    const line = row.querySelector('[data-edit-line]');
+    const unitPrice = Number(row.dataset.unitPrice || 0);
+    const qty = cleanOrderEditQty(input?.value || 0);
+    if (input) input.value = String(qty);
+    if (line) line.textContent = formatCurrency(unitPrice * qty);
+  });
+}
+
+async function savePendingOrderChanges(button) {
+  const orderId = button?.dataset.orderSave;
+  const modal = el('orderDetailModal');
+  if (!orderId || !modal) return;
+
+  const items = [...modal.querySelectorAll('.order-edit-qty')].map((input) => ({
+    index: Number(input.dataset.index),
+    qty: cleanOrderEditQty(input.value)
+  }));
+
+  if (!items.length) return;
+  if (!items.some((item) => item.qty > 0)) {
+    setOrderEditMessage('error', 'Use Cancel order if you want to remove every box.');
+    return;
+  }
+
+  try {
+    setOrderEditBusy(true);
+    setOrderEditMessage('info', 'Saving changes...');
+    await updateCustomerPendingOrder({ orderId, action: 'update_items', items });
+    trackAccountEvent('customer_pending_order_updated', { order_id: orderId });
+    setOrderEditMessage('ok', 'Saved. Your order and the admin dashboard are updated.');
+    setTimeout(closeOrderModal, 700);
+  } catch (error) {
+    console.error('Pending order update failed', error);
+    setOrderEditMessage('error', 'Could not update this order. It may already be confirmed or changed by admin.');
+  } finally {
+    setOrderEditBusy(false);
+  }
+}
+
+async function cancelPendingOrder(button) {
+  const orderId = button?.dataset.orderCancel;
+  if (!orderId) return;
+  const confirmed = window.confirm('Cancel this pending order? It will leave the active order list and stay in your order history.');
+  if (!confirmed) return;
+
+  try {
+    setOrderEditBusy(true);
+    setOrderEditMessage('info', 'Cancelling order...');
+    await updateCustomerPendingOrder({
+      orderId,
+      action: 'cancel',
+      reason: 'Customer cancelled from account page'
+    });
+    trackAccountEvent('customer_pending_order_cancelled', { order_id: orderId });
+    setOrderEditMessage('ok', 'Cancelled. The admin active order list is updated.');
+    setTimeout(closeOrderModal, 700);
+  } catch (error) {
+    console.error('Pending order cancel failed', error);
+    setOrderEditMessage('error', 'Could not cancel this order. It may already be confirmed or changed by admin.');
+  } finally {
+    setOrderEditBusy(false);
+  }
+}
+
 function bindOrderModalActions() {
   const modal = el('orderDetailModal');
   modal?.querySelectorAll('[data-order-reorder]').forEach((button) => {
@@ -397,6 +537,31 @@ function bindOrderModalActions() {
       const order = findCurrentOrder(button.dataset.orderPrint);
       if (order) printOrderSummary(order);
     });
+  });
+
+  modal?.querySelectorAll('[data-edit-delta]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const input = modal.querySelector(`.order-edit-qty[data-index="${button.dataset.index}"]`);
+      if (!input) return;
+      input.value = String(cleanOrderEditQty(Number(input.value || 0) + Number(button.dataset.editDelta || 0)));
+      updateOrderEditTotals();
+      setOrderEditMessage('', '');
+    });
+  });
+
+  modal?.querySelectorAll('.order-edit-qty').forEach((input) => {
+    input.addEventListener('input', () => {
+      updateOrderEditTotals();
+      setOrderEditMessage('', '');
+    });
+  });
+
+  modal?.querySelector('[data-order-save]')?.addEventListener('click', (event) => {
+    savePendingOrderChanges(event.currentTarget);
+  });
+
+  modal?.querySelector('[data-order-cancel]')?.addEventListener('click', (event) => {
+    cancelPendingOrder(event.currentTarget);
   });
 }
 

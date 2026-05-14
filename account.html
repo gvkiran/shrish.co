@@ -55,6 +55,8 @@
 .order-mini-btn{border:1.5px solid rgba(200,121,26,.25);border-radius:999px;background:#fff;color:var(--saffron);padding:8px 13px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none}
 .order-mini-btn:hover{background:var(--cream-d)}
 .order-mini-btn.primary{background:var(--saffron);border-color:var(--saffron);color:#fff}
+.order-mini-btn.danger{background:#fff5f2;border-color:rgba(179,55,36,.22);color:#a33a24}
+.order-mini-btn:disabled{opacity:.58;cursor:not-allowed;transform:none}
 .order-modal{display:none;position:fixed;inset:0;z-index:4200;background:rgba(26,18,8,.56);padding:22px;align-items:center;justify-content:center}
 .order-modal.open{display:flex}
 .order-modal-card{position:relative;width:min(860px,100%);max-height:88vh;overflow:auto;background:#fff;border-radius:22px;box-shadow:0 30px 80px rgba(26,18,8,.28);padding:28px}
@@ -71,11 +73,28 @@
 .order-items-row:last-child{border-bottom:0}
 .order-items-head{background:var(--cream-d);font-weight:800;color:var(--text-light);font-size:12px}
 .order-items-qty,.order-items-price{text-align:right}
+.order-edit-panel{border:1px solid rgba(200,121,26,.18);border-radius:14px;background:#fffdf8;padding:14px;margin:12px 0}
+.order-edit-heading{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:12px}
+.order-edit-heading strong{color:var(--dark);font-size:15px}
+.order-edit-heading span{color:var(--text-light);font-size:12px;line-height:1.45;text-align:right}
+.order-edit-list{display:grid;gap:9px}
+.order-edit-row{display:grid;grid-template-columns:minmax(0,1fr) auto 88px;gap:12px;align-items:center;border:1px solid rgba(200,121,26,.12);border-radius:12px;background:#fff;padding:10px}
+.order-edit-row strong{display:block;color:var(--dark);font-size:13px;line-height:1.35}
+.order-edit-row span{display:block;color:var(--text-light);font-size:12px;margin-top:2px}
+.order-edit-qty-control{display:flex;align-items:center;border:1px solid rgba(200,121,26,.22);border-radius:999px;overflow:hidden;background:#fff}
+.order-edit-qty-control button{width:32px;height:32px;border:0;background:var(--cream-d);color:var(--dark);font:inherit;font-weight:900;cursor:pointer}
+.order-edit-qty-control input{width:46px;height:32px;border:0;text-align:center;font:inherit;font-weight:800;color:var(--dark);background:#fff}
+.order-edit-line{text-align:right;font-weight:800;color:var(--dark);font-size:13px}
+.order-edit-message{display:none;border-radius:10px;padding:10px 12px;margin-top:12px;font-size:13px;font-weight:800}
+.order-edit-message.show{display:block}
+.order-edit-message.ok{background:#E8F5E9;color:#1B5E20}
+.order-edit-message.error{background:#FFEBEE;color:#B71C1C}
+.order-edit-message.info{background:#FFF8E1;color:#7A4A00}
 .order-note{background:#fff;border-left:4px solid var(--saffron);border-radius:10px;padding:11px 13px;color:var(--text-light);font-size:13px;line-height:1.55}
 .empty-orders{border:1px dashed rgba(200,121,26,.35);border-radius:16px;padding:24px;text-align:center;color:var(--text-light);background:#fffdf8}
 .admin-account-note{border:1px solid rgba(200,121,26,.22);border-radius:16px;background:#fffdf8;padding:18px;color:var(--text-light);font-size:15px;line-height:1.7;margin-bottom:18px}
 .admin-account-note strong{color:var(--dark)}
-@media(max-width:900px){.account-shell{grid-template-columns:1fr;padding:40px 20px 64px}.account-form.two-col,.account-insights,.order-detail-grid{grid-template-columns:1fr}.profile-header{flex-direction:column}.order-modal-card{padding:24px 18px}.order-items-row{grid-template-columns:minmax(0,1fr) 44px 76px}}
+@media(max-width:900px){.account-shell{grid-template-columns:1fr;padding:40px 20px 64px}.account-form.two-col,.account-insights,.order-detail-grid{grid-template-columns:1fr}.profile-header{flex-direction:column}.order-modal-card{padding:24px 18px}.order-items-row{grid-template-columns:minmax(0,1fr) 44px 76px}.order-edit-heading{display:block}.order-edit-heading span{text-align:left;margin-top:4px}.order-edit-row{grid-template-columns:minmax(0,1fr);align-items:start}.order-edit-line{text-align:left}}
 </style>
 <script>
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
