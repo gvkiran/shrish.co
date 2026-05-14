@@ -657,6 +657,11 @@ function cleanCustomerQty(value) {
   return Math.min(Math.max(qty, 0), 99);
 }
 
+function normalizeOrderPhone(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  return digits.startsWith("1") ? digits.slice(1, 11) : digits.slice(0, 10);
+}
+
 exports.updateCustomerPendingOrder = onCall(
   {
     region: "us-central1",
@@ -759,6 +764,71 @@ exports.updateCustomerPendingOrder = onCall(
       properties: {
         order_id: orderId,
         action,
+      },
+    });
+    await posthog.flush();
+
+    return result;
+  }
+);
+
+exports.claimCustomerOrder = onCall(
+  {
+    region: "us-central1",
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign in to link this order.");
+    }
+
+    const uid = request.auth.uid;
+    const authEmail = String(request.auth.token?.email || "").trim().toLowerCase();
+    const orderId = String(request.data?.orderId || "").trim();
+    const phoneDigits = normalizeOrderPhone(request.data?.phoneDigits || request.data?.phone || "");
+    if (!orderId || !phoneDigits) {
+      throw new HttpsError("invalid-argument", "Order ID and phone are required.");
+    }
+
+    const db = admin.firestore();
+    const orderRef = db.collection("orders").doc(orderId);
+
+    const result = await db.runTransaction(async (tx) => {
+      const snapshot = await tx.get(orderRef);
+      if (!snapshot.exists) {
+        throw new HttpsError("not-found", "Order not found.");
+      }
+
+      const order = snapshot.data() || {};
+      const orderEmail = String(order.email || order.customerEmail || "").trim().toLowerCase();
+      const orderPhone = normalizeOrderPhone(order.phoneDigits || order.phone || "");
+      if (!authEmail || authEmail !== orderEmail || phoneDigits !== orderPhone) {
+        throw new HttpsError("permission-denied", "Use the same email and phone from checkout to link this order.");
+      }
+
+      if (order.customerUid && order.customerUid !== uid) {
+        throw new HttpsError("already-exists", "This order is already linked to another account.");
+      }
+
+      if (order.customerUid === uid) {
+        return { status: "already_linked" };
+      }
+
+      tx.update(orderRef, {
+        customerUid: uid,
+        customerEmail: authEmail,
+        customerLinkedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      return { status: "linked" };
+    });
+
+    posthog.capture({
+      distinctId: authEmail || uid,
+      event: "customer_order_linked",
+      properties: {
+        order_id: orderId,
+        status: result.status,
       },
     });
     await posthog.flush();

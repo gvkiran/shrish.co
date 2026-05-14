@@ -109,6 +109,13 @@
 .ss-item-qty,.ss-item-price,.ss-total-qty,.ss-total-price{text-align:right}
 .ss-total{font-size:15px;font-weight:700;color:var(--dark);padding-top:12px}
 .ss-total-price{color:var(--saffron)}
+.success-account-prompt{display:none;background:#fff;border:1px solid rgba(200,121,26,.18);border-radius:18px;padding:20px;margin:0 auto 22px;text-align:left;box-shadow:0 8px 28px rgba(26,18,8,.08)}
+.success-account-prompt.show{display:block}
+.success-account-prompt strong{display:block;font-family:var(--font-display);font-size:24px;line-height:1.15;color:var(--dark);margin-bottom:8px}
+.success-account-prompt p{color:var(--text-light);font-size:14px;line-height:1.65;margin:0 0 14px}
+.success-account-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.success-account-actions .btn-primary,.success-account-actions .btn-outline{padding:10px 18px;font-size:14px}
+.success-account-note{font-size:12px;color:var(--text-light);line-height:1.5}
 .success-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:32px}
 
 /* Community section */
@@ -306,6 +313,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
   <p>Thank you! Please watch for updates on the WhatsApp group for pickup details. If you're not part of the group yet, please join using the link below.</p>
   <p>Payment is collected at pickup.</p>
   <div class="success-summary" id="successSummary"></div>
+  <div class="success-account-prompt" id="successAccountPrompt"></div>
   <div class="success-actions">
     <a href="shop.html" class="btn-primary">Continue Shopping</a>
     <a href="index.html" class="btn-outline">Back to Home</a>
@@ -346,7 +354,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="analytics.js?v=owner-insights-1"></script>
   <script src="main.js?v=customer-accounts-2"></script>
 <script src="firebase-config.js"></script>
-<script type="module" src="order-firebase.js?v=owner-insights-1"></script>
+<script type="module" src="order-firebase.js?v=customer-order-account-1"></script>
 
 </body>
 </html>

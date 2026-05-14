@@ -37,6 +37,60 @@ function isCustomerUser(user) {
   return Boolean(user?.uid) && String(user.email || '').trim().toLowerCase() !== adminEmail();
 }
 
+function recentOrderClaimPayload(orderRef, order, displayNumber) {
+  return {
+    orderId: orderRef.id,
+    orderNumber: displayNumber || order.orderNumber || orderRef.id,
+    email: order.email || '',
+    phone: order.phone || '',
+    phoneDigits: order.phoneDigits || '',
+    firstName: order.firstName || '',
+    lastName: order.lastName || '',
+    createdAt: Date.now()
+  };
+}
+
+function rememberRecentOrderForAccount(orderRef, order, displayNumber) {
+  if (!customerAccountsEnabled()) return;
+  if (currentCustomer) {
+    sessionStorage.removeItem('shrish_recent_order_claim');
+    return;
+  }
+
+  sessionStorage.setItem(
+    'shrish_recent_order_claim',
+    JSON.stringify(recentOrderClaimPayload(orderRef, order, displayNumber))
+  );
+}
+
+function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
+  const prompt = document.getElementById('successAccountPrompt');
+  if (!prompt || !customerAccountsEnabled()) return;
+
+  const accountHref = 'account.html?claim=recent';
+  if (currentCustomer) {
+    prompt.classList.add('show');
+    prompt.innerHTML = `
+      <strong>Track or edit this order</strong>
+      <p>This order is saved to your Shrish account. You can view history, print the summary, change pending quantities, or cancel before pickup is confirmed.</p>
+      <div class="success-account-actions">
+        <a href="${accountHref}" class="btn-primary">View My Orders</a>
+        <span class="success-account-note">${escapeHtml(displayNumber)} is ready in your account.</span>
+      </div>`;
+    return;
+  }
+
+  prompt.classList.add('show');
+  prompt.innerHTML = `
+    <strong>Want to edit this order later?</strong>
+    <p>Create or sign in to a Shrish account with the same email and phone from checkout. Your recent order will link automatically so you can see purchase history, update pending boxes, or cancel before pickup is confirmed.</p>
+    <div class="success-account-actions">
+      <a href="${accountHref}" class="btn-primary">Create Account</a>
+      <a href="${accountHref}" class="btn-outline">Sign In</a>
+      <span class="success-account-note">Use ${escapeHtml(order.email || 'the same email')} to link ${escapeHtml(displayNumber)}.</span>
+    </div>`;
+}
+
 function trackCheckoutEvent(eventName, props = {}) {
   window.SHRISH_ANALYTICS?.track(eventName, props);
 }
@@ -716,6 +770,9 @@ async function submitOrder() {
       <div class="ss-row"><span>Phone</span><span>${escapeHtml(phone)}</span></div>
       <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Pay at Pickup</span></div>
       <div class="ss-row"><span>Order Confirmation No</span><span>${escapeHtml(displayNumber)}</span></div>`;
+
+    rememberRecentOrderForAccount(orderRef, order, displayNumber);
+    renderSuccessAccountPrompt(orderRef, order, displayNumber);
 
     trackCheckoutEvent('order_submitted', {
       ...submittedOrderAnalytics

@@ -30,6 +30,9 @@ const LOCATION_LABELS = {
 let unsubOrders = null;
 let currentOrders = [];
 const updateCustomerPendingOrder = httpsCallable(cloudFunctions, 'updateCustomerPendingOrder');
+const claimCustomerOrder = httpsCallable(cloudFunctions, 'claimCustomerOrder');
+const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
+const RECENT_ORDER_CLAIM_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 function customerAccountsEnabled() {
   return window.SHRISH_APP_CONFIG?.customerAccountsEnabled === true;
@@ -112,6 +115,61 @@ function authErrorMessage(error) {
   }
   if (code.includes('too-many-requests')) return 'Too many attempts. Please wait a bit and try again.';
   return 'Something went wrong. Please try again.';
+}
+
+function readRecentOrderClaim() {
+  try {
+    const raw = sessionStorage.getItem(RECENT_ORDER_CLAIM_KEY);
+    if (!raw) return null;
+    const claim = JSON.parse(raw);
+    if (!claim?.orderId || !claim?.email || !claim?.phoneDigits) return null;
+    if (Date.now() - Number(claim.createdAt || 0) > RECENT_ORDER_CLAIM_MAX_AGE_MS) {
+      sessionStorage.removeItem(RECENT_ORDER_CLAIM_KEY);
+      return null;
+    }
+    return claim;
+  } catch (error) {
+    sessionStorage.removeItem(RECENT_ORDER_CLAIM_KEY);
+    return null;
+  }
+}
+
+function prepareRecentOrderSignup() {
+  const claim = readRecentOrderClaim();
+  if (!claim) return;
+  setAuthMode('signup');
+  if (el('signupEmail')) el('signupEmail').value = claim.email || '';
+  if (el('signupPhone')) el('signupPhone').value = formatPhone(claim.phone || claim.phoneDigits || '');
+  if (el('signupFirstName')) el('signupFirstName').value = claim.firstName || '';
+  if (el('signupLastName')) el('signupLastName').value = claim.lastName || '';
+  showMessage('authMessage', 'info', 'Create or sign in with the same email and phone from checkout to link your recent order for history and pending edits.');
+}
+
+async function claimRecentOrderForUser(user) {
+  const claim = readRecentOrderClaim();
+  if (!claim || !user) return;
+
+  if (normalizeEmail(user.email || '') !== normalizeEmail(claim.email || '')) {
+    showMessage('profileMessage', 'info', `Signed in, but this recent order used ${claim.email}. Sign in with that email to link it.`);
+    return;
+  }
+
+  try {
+    const result = await claimCustomerOrder({
+      orderId: claim.orderId,
+      phoneDigits: claim.phoneDigits
+    });
+    sessionStorage.removeItem(RECENT_ORDER_CLAIM_KEY);
+    const status = result?.data?.status === 'already_linked' ? 'already linked' : 'linked';
+    showMessage('profileMessage', 'ok', `Recent order ${claim.orderNumber || claim.orderId} is ${status}. You can view or edit pending details below.`);
+    trackAccountEvent('customer_recent_order_linked', {
+      order_id: claim.orderId,
+      status: result?.data?.status || 'linked'
+    });
+  } catch (error) {
+    console.warn('Could not link recent order', error);
+    showMessage('profileMessage', 'info', 'Account created, but we could not link the recent order automatically. Please use the same checkout email and phone, or contact Shrish.');
+  }
 }
 
 function setAuthMode(mode) {
@@ -838,6 +896,9 @@ function init() {
 
   bindForms();
   setAuthMode('signin');
+  if (new URLSearchParams(window.location.search).get('claim') === 'recent' || readRecentOrderClaim()) {
+    prepareRecentOrderSignup();
+  }
 
   onAuthStateChanged(auth, async (user) => {
     clearMessage('authMessage');
@@ -858,6 +919,7 @@ function init() {
 
     setAuthedUi(user);
     await loadProfile(user);
+    await claimRecentOrderForUser(user);
     subscribeOrders(user);
   });
 }
