@@ -1423,6 +1423,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Active nav link
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  const accountHref = 'account.html';
+  const navCartWrap = document.querySelector('.nav-cart-wrap');
+  const customerAccountsEnabled = window.SHRISH_APP_CONFIG?.customerAccountsEnabled === true;
+  if (customerAccountsEnabled && navCartWrap && !navCartWrap.querySelector('.nav-account-btn')) {
+    const accountLink = document.createElement('a');
+    accountLink.href = accountHref;
+    accountLink.className = 'nav-account-btn';
+    accountLink.setAttribute('aria-label', 'Customer account');
+    accountLink.textContent = 'Account';
+    navCartWrap.insertBefore(accountLink, navCartWrap.firstChild);
+  }
+  if (customerAccountsEnabled && navMobile && !navMobile.querySelector('a[href="account.html"]')) {
+    const accountMobileLink = document.createElement('a');
+    accountMobileLink.href = accountHref;
+    accountMobileLink.textContent = 'Account';
+    accountMobileLink.addEventListener('click', () => navMobile.classList.remove('open'));
+    navMobile.appendChild(accountMobileLink);
+  }
   document.querySelectorAll('.nav-link').forEach(link => {
     const href = link.getAttribute('href');
     link.classList.toggle('active', href === currentPage || (currentPage === '' && href === 'index.html'));

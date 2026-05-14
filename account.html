@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Shrish customer account for saved checkout details and order history.">
+<title>Account - SHRISH LLC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="logo.png" type="image/png">
+<link rel="stylesheet" href="styles.css">
+<style>
+.account-shell{max-width:1320px;margin:0 auto;padding:56px 24px 84px;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.2fr);gap:28px;align-items:start}
+.account-panel{background:#fff;border-radius:20px;padding:28px;box-shadow:var(--shadow)}
+.account-panel h2,.account-panel h3{font-family:var(--font-display);color:var(--dark);line-height:1.15}
+.account-panel h2{font-size:32px;margin-bottom:8px}
+.account-panel h3{font-size:24px;margin-bottom:18px}
+.account-muted{color:var(--text-light);font-size:14px;line-height:1.65;margin-bottom:20px}
+.account-tabs{display:flex;background:var(--cream-d);border-radius:999px;padding:5px;margin-bottom:20px}
+.account-tab{flex:1;border:0;border-radius:999px;background:transparent;padding:10px 14px;font:inherit;font-weight:700;color:var(--text-light);cursor:pointer}
+.account-tab.active{background:#fff;color:var(--saffron);box-shadow:0 4px 16px rgba(26,18,8,.08)}
+.account-form{display:grid;gap:15px}
+.account-form.two-col{grid-template-columns:repeat(2,minmax(0,1fr))}
+.account-form .full{grid-column:1/-1}
+.account-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px}
+.account-button{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:999px;background:var(--saffron);color:#fff;padding:13px 24px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:var(--transition)}
+.account-button:hover{background:var(--saffron-d);transform:translateY(-1px)}
+.account-button.secondary{background:transparent;color:var(--saffron);border:2px solid var(--saffron)}
+.account-button.secondary:hover{background:var(--saffron);color:#fff}
+.account-button.subtle{background:var(--cream-d);color:var(--text);border:0}
+.account-button.subtle:hover{background:#eadbbf;color:var(--dark)}
+.account-message{display:none;border-radius:14px;padding:12px 14px;font-size:14px;font-weight:700;margin-bottom:16px}
+.account-message.show{display:block}
+.account-message.ok{background:#E8F5E9;color:#1B5E20}
+.account-message.error{background:#FFEBEE;color:#B71C1C}
+.account-message.info{background:#FFF8E1;color:#7A4A00}
+.account-state{display:none}
+.account-state.active{display:block}
+.profile-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:20px}
+.profile-email{color:var(--text-light);font-size:14px;margin-top:5px}
+.orders-list{display:grid;gap:14px}
+.order-history-card{border:1px solid rgba(200,121,26,.18);border-radius:16px;padding:16px;background:#fffdf8}
+.order-history-top{display:flex;justify-content:space-between;gap:16px;margin-bottom:10px}
+.order-history-id{font-weight:800;color:var(--dark)}
+.order-history-date{font-size:13px;color:var(--text-light)}
+.order-history-status{display:inline-flex;border-radius:999px;background:var(--cream-d);color:var(--mid);padding:4px 10px;font-size:12px;font-weight:800;text-transform:capitalize}
+.order-history-items{font-size:14px;color:var(--text);line-height:1.55;margin:10px 0}
+.order-history-meta{display:flex;gap:14px;flex-wrap:wrap;color:var(--text-light);font-size:13px}
+.empty-orders{border:1px dashed rgba(200,121,26,.35);border-radius:16px;padding:24px;text-align:center;color:var(--text-light);background:#fffdf8}
+@media(max-width:900px){.account-shell{grid-template-columns:1fr;padding:40px 20px 64px}.account-form.two-col{grid-template-columns:1fr}.profile-header{flex-direction:column}}
+</style>
+<script>
+window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+
+<div class="announcement-bar"><span>Fresh Indian Mangoes - Pickup in Short Pump, Chesterfield & Mechanicsville, VA</span></div>
+
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="logo.png" alt="Shrish LLC" class="logo-img" loading="eager" fetchpriority="high" decoding="async">
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="index.html" class="nav-link">Home</a></li>
+      <li><a href="about.html" class="nav-link">About</a></li>
+      <li><a href="shop.html" class="nav-link">Shop</a></li>
+      <li><a href="recipes.html" class="nav-link">Recipes</a></li>
+      <li><a href="contact.html" class="nav-link">Contact</a></li>
+    </ul>
+
+    <div class="nav-cart-wrap">
+      <a href="shop.html" id="navCartLink" class="nav-cart-btn" aria-label="View cart">
+        <span class="nav-cart-icon">&#128722;</span>
+        <span id="navCartBadge" class="nav-cart-badge">0</span>
+      </a>
+    </div>
+
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+
+  <div class="nav-mobile" id="navMobile">
+    <a href="index.html">Home</a><a href="about.html">About</a>
+    <a href="shop.html">Shop</a><a href="recipes.html">Recipes</a>
+    <a href="contact.html">Contact</a>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <h1>Your <em>Account</em></h1>
+  <p>Save basic checkout details and view Shrish orders placed while signed in.</p>
+</div>
+
+<main class="account-shell">
+  <section class="account-panel" id="authPanel">
+    <h2>Customer Login</h2>
+    <p class="account-muted">Use email and password for now. Phone number stays in your profile for pickup updates.</p>
+
+    <div class="account-message" id="authMessage"></div>
+
+    <div class="account-tabs" role="tablist" aria-label="Account forms">
+      <button class="account-tab active" type="button" id="signinTab" data-mode="signin">Sign In</button>
+      <button class="account-tab" type="button" id="signupTab" data-mode="signup">Create Account</button>
+    </div>
+
+    <form class="account-form" id="signinForm">
+      <div class="form-group">
+        <label class="form-label" for="signinEmail">Email Address</label>
+        <input class="form-control" id="signinEmail" type="email" autocomplete="email" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="signinPassword">Password</label>
+        <input class="form-control" id="signinPassword" type="password" autocomplete="current-password" required>
+      </div>
+      <div class="account-actions">
+        <button class="account-button" type="submit">Sign In</button>
+        <button class="account-button subtle" type="button" id="resetPasswordBtn">Reset Password</button>
+      </div>
+    </form>
+
+    <form class="account-form two-col" id="signupForm" style="display:none">
+      <div class="form-group">
+        <label class="form-label" for="signupFirstName">First Name</label>
+        <input class="form-control" id="signupFirstName" type="text" autocomplete="given-name" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="signupLastName">Last Name</label>
+        <input class="form-control" id="signupLastName" type="text" autocomplete="family-name" required>
+      </div>
+      <div class="form-group full">
+        <label class="form-label" for="signupEmail">Email Address</label>
+        <input class="form-control" id="signupEmail" type="email" autocomplete="email" required>
+      </div>
+      <div class="form-group full">
+        <label class="form-label" for="signupPassword">Password</label>
+        <input class="form-control" id="signupPassword" type="password" autocomplete="new-password" minlength="6" required>
+      </div>
+      <div class="form-group full">
+        <label class="form-label" for="signupPhone">Phone Number</label>
+        <input class="form-control" id="signupPhone" type="tel" autocomplete="tel" placeholder="+1 (804) 555-1234" required>
+      </div>
+      <div class="form-group full">
+        <label class="form-label" for="signupPickup">Preferred Pickup Location</label>
+        <select class="form-control" id="signupPickup" required>
+          <option value="chesterfield">Chesterfield, VA</option>
+          <option value="shortpump">Short Pump, VA</option>
+          <option value="mechanicsville">Mechanicsville, VA</option>
+        </select>
+      </div>
+      <div class="account-actions full">
+        <button class="account-button" type="submit">Create Account</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="account-panel account-state" id="profilePanel">
+    <div class="profile-header">
+      <div>
+        <h2>Profile</h2>
+        <div class="profile-email" id="profileEmail"></div>
+      </div>
+      <button class="account-button secondary" type="button" id="signOutBtn">Sign Out</button>
+    </div>
+
+    <div class="account-message" id="profileMessage"></div>
+
+    <form class="account-form two-col" id="profileForm">
+      <div class="form-group">
+        <label class="form-label" for="profileFirstName">First Name</label>
+        <input class="form-control" id="profileFirstName" type="text" autocomplete="given-name" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="profileLastName">Last Name</label>
+        <input class="form-control" id="profileLastName" type="text" autocomplete="family-name" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="profilePhone">Phone Number</label>
+        <input class="form-control" id="profilePhone" type="tel" autocomplete="tel" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="profilePickup">Preferred Pickup</label>
+        <select class="form-control" id="profilePickup" required>
+          <option value="chesterfield">Chesterfield, VA</option>
+          <option value="shortpump">Short Pump, VA</option>
+          <option value="mechanicsville">Mechanicsville, VA</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label" for="profileAddress1">Address Line 1 <span style="color:var(--text-light);font-weight:500">(optional)</span></label>
+        <input class="form-control" id="profileAddress1" type="text" autocomplete="address-line1">
+      </div>
+      <div class="form-group full">
+        <label class="form-label" for="profileAddress2">Address Line 2 <span style="color:var(--text-light);font-weight:500">(optional)</span></label>
+        <input class="form-control" id="profileAddress2" type="text" autocomplete="address-line2">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="profileCity">City <span style="color:var(--text-light);font-weight:500">(optional)</span></label>
+        <input class="form-control" id="profileCity" type="text" autocomplete="address-level2">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="profileZip">ZIP <span style="color:var(--text-light);font-weight:500">(optional)</span></label>
+        <input class="form-control" id="profileZip" type="text" autocomplete="postal-code">
+      </div>
+      <div class="account-actions full">
+        <button class="account-button" type="submit">Save Details</button>
+        <a class="account-button subtle" href="shop.html">Shop Now</a>
+      </div>
+    </form>
+  </section>
+
+  <section class="account-panel account-state" id="ordersPanel">
+    <h3>Purchase History</h3>
+    <div class="orders-list" id="ordersList">
+      <div class="empty-orders">Sign in to see your Shrish order history.</div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="footer-bottom">
+    <span>&copy; <span class="copy-year">2025</span> Shrish LLC. All rights reserved.</span>
+    <div class="footer-legal">
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="refund.html">Refund Policy</a>
+      <a href="terms.html">Terms &amp; Conditions</a>
+    </div>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="analytics.js?v=customer-accounts-1"></script>
+<script src="main.js?v=customer-accounts-1"></script>
+<script src="firebase-config.js"></script>
+<script type="module" src="account-firebase.js?v=customer-accounts-1"></script>
+
+</body>
+</html>

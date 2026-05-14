@@ -6,7 +6,8 @@ import {
   runTransaction   // â added for sequential order IDs
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 import {
-  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+  getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
+  signInWithEmailAndPassword, sendPasswordResetEmail, signOut
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
   getFunctions, httpsCallable
@@ -68,7 +69,8 @@ export {
   collection, doc, addDoc, getDocs, getDoc, setDoc, updateDoc, deleteDoc,
   query, where, orderBy, onSnapshot, limit,
   runTransaction,   // â exported
-  onAuthStateChanged, signInWithEmailAndPassword, signOut,
+  onAuthStateChanged, createUserWithEmailAndPassword,
+  signInWithEmailAndPassword, sendPasswordResetEmail, signOut,
   serverTimestamp, Timestamp,
   safeText, moneyNumber, escapeHtml,
   formatDate, formatDateInput, formatCurrency,

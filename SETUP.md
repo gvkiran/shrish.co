@@ -19,6 +19,20 @@ In your Shrish Firebase project enable:
 ## 3) Create admin login
 In Firebase Authentication create a user manually with your admin email and password.
 
+## 3a) Customer accounts
+Customer accounts use Firebase Authentication email/password login and store basic profile details in `user_profiles/{uid}`:
+- name
+- email
+- phone
+- optional address
+- preferred pickup location
+
+Passwords and card details are never stored in Firestore.
+
+Do not enable customer accounts on production until Firestore rules are migrated so customers can read only their own profile/orders and admins keep their existing access.
+
+The launch switch is `window.SHRISH_APP_CONFIG.customerAccountsEnabled` in `firebase-config.js`. Keep it `false` until the safe rules migration is ready.
+
 ## 4) Deploy Firestore rules
 From repo root:
 ```bash

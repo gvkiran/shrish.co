@@ -1,9 +1,12 @@
 import {
   db,
+  auth,
   collection,
   doc,
   getDoc,
+  setDoc,
   runTransaction,
+  onAuthStateChanged,
   serverTimestamp,
   normalizePhone,
   escapeHtml,
@@ -13,12 +16,18 @@ import {
 let cart = JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
 let selectedLoc = '';
 let isSubmitting = false;
+let currentCustomer = null;
+let currentCustomerProfile = null;
 const CONFIRMATION_WAIT_MS = 15000;
 const LOCATION_LABELS = {
   shortpump: 'Short Pump, VA',
   chesterfield: 'Chesterfield, VA',
   mechanicsville: 'Mechanicsville, VA'
 };
+
+function customerAccountsEnabled() {
+  return window.SHRISH_APP_CONFIG?.customerAccountsEnabled === true;
+}
 
 function trackCheckoutEvent(eventName, props = {}) {
   window.SHRISH_ANALYTICS?.track(eventName, props);
@@ -38,6 +47,10 @@ function cartAnalyticsSummary() {
 
 function pickupLocationLabel(locationId) {
   return LOCATION_LABELS[locationId] || locationId || '';
+}
+
+function customerProfileRef(uid) {
+  return doc(db, 'user_profiles', uid);
 }
 
 function updateNavCart() {
@@ -296,7 +309,8 @@ async function waitForOrderConfirmationNumber(orderRef) {
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < CONFIRMATION_WAIT_MS) {
-    const snap = await getDoc(orderRef);
+    const snap = await getDoc(orderRef).catch(() => null);
+    if (!snap?.exists()) return '';
     const orderNumber = snap.data()?.orderNumber;
     if (typeof orderNumber === 'string' && /^SHR-\d+$/.test(orderNumber)) {
       return orderNumber;
@@ -308,18 +322,105 @@ async function waitForOrderConfirmationNumber(orderRef) {
   return '';
 }
 
+function selectPickupLocation(locationId, shouldTrack = false) {
+  if (!locationId || !LOCATION_LABELS[locationId]) return;
+
+  selectedLoc = locationId;
+  document.querySelectorAll('.loc-card').forEach((entry) => {
+    entry.classList.toggle('selected', entry.dataset.loc === selectedLoc);
+  });
+
+  if (shouldTrack) {
+    trackCheckoutEvent('pickup_location_selected', {
+      pickup_location: selectedLoc
+    });
+  }
+
+  const errEl = document.getElementById('err-location');
+  if (errEl) errEl.style.display = 'none';
+  rebuildErrorBanner();
+}
+
+function setFieldValue(id, value) {
+  const el = document.getElementById(id);
+  if (el && value && !el.value) el.value = value;
+}
+
+function splitProfileName(profile = {}) {
+  const fullName = String(profile.fullName || '').trim();
+  if (profile.firstName || profile.lastName) {
+    return {
+      firstName: profile.firstName || '',
+      lastName: profile.lastName || ''
+    };
+  }
+
+  const parts = fullName.split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts[0] || '',
+    lastName: parts.slice(1).join(' ')
+  };
+}
+
+function applyCustomerDefaults(profile = {}) {
+  const names = splitProfileName(profile);
+  setFieldValue('firstName', names.firstName);
+  setFieldValue('lastName', names.lastName);
+  setFieldValue('phone', profile.phone);
+  setFieldValue('email', profile.email || currentCustomer?.email || '');
+
+  if (profile.preferredPickupLocation && !selectedLoc) {
+    selectPickupLocation(profile.preferredPickupLocation, false);
+  }
+}
+
+function bindCustomerProfile() {
+  if (!customerAccountsEnabled()) return;
+
+  onAuthStateChanged(auth, async (user) => {
+    currentCustomer = user || null;
+    currentCustomerProfile = null;
+
+    if (!user) return;
+
+    const emailInput = document.getElementById('email');
+    if (emailInput && !emailInput.value) emailInput.value = user.email || '';
+
+    const snap = await getDoc(customerProfileRef(user.uid)).catch(() => null);
+    if (!snap?.exists()) return;
+
+    currentCustomerProfile = snap.data() || {};
+    applyCustomerDefaults(currentCustomerProfile);
+  });
+}
+
+async function saveCheckoutDetailsToProfile(order) {
+  if (!customerAccountsEnabled()) return;
+  if (!currentCustomer) return;
+
+  await setDoc(customerProfileRef(currentCustomer.uid), {
+    uid: currentCustomer.uid,
+    email: order.email || currentCustomer.email || '',
+    firstName: order.firstName || '',
+    lastName: order.lastName || '',
+    fullName: order.fullName || '',
+    phone: order.phone || '',
+    phoneDigits: order.phoneDigits || '',
+    preferredPickupLocation: order.location || '',
+    preferredPickupLocationLabel: order.locationLabel || '',
+    addressLine1: currentCustomerProfile?.addressLine1 || '',
+    addressLine2: currentCustomerProfile?.addressLine2 || '',
+    city: currentCustomerProfile?.city || '',
+    state: currentCustomerProfile?.state || 'VA',
+    zip: currentCustomerProfile?.zip || '',
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+}
+
 function bindFormUi() {
   document.querySelectorAll('.loc-card').forEach((card) => {
     card.addEventListener('click', () => {
-      selectedLoc = card.dataset.loc;
-      document.querySelectorAll('.loc-card').forEach((entry) => entry.classList.remove('selected'));
-      card.classList.add('selected');
-      trackCheckoutEvent('pickup_location_selected', {
-        pickup_location: selectedLoc
-      });
-      const errEl = document.getElementById('err-location');
-      if (errEl) errEl.style.display = 'none';
-      rebuildErrorBanner();
+      selectPickupLocation(card.dataset.loc, true);
     });
 
     card.setAttribute('tabindex', '0');
@@ -521,6 +622,11 @@ async function submitOrder() {
       updatedAt: serverTimestamp()
     };
 
+    if (customerAccountsEnabled() && currentCustomer) {
+      order.customerUid = currentCustomer.uid;
+      order.customerEmail = currentCustomer.email || email;
+    }
+
     await runTransaction(db, async (transaction) => {
       const pendingLock = await transaction.get(lockRef);
       const pendingLockStatus = pendingLock.exists() ? (pendingLock.data()?.status || 'pending') : '';
@@ -541,6 +647,10 @@ async function submitOrder() {
         status: 'pending',
         updatedAt: serverTimestamp()
       });
+    });
+
+    await saveCheckoutDetailsToProfile(order).catch((error) => {
+      console.warn('Could not update customer profile from checkout', error);
     });
 
     const submittedOrderAnalytics = {
@@ -640,6 +750,7 @@ function init() {
   renderCartReview();
   updateNavCart();
   bindFormUi();
+  bindCustomerProfile();
   trackCheckoutEvent('checkout_viewed', {
     has_cart: Boolean(cart.length),
     ...cartAnalyticsSummary()

@@ -133,7 +133,7 @@ button.btn-primary:active {
 
 .nav-inner {
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr) 120px;
+  grid-template-columns: 200px minmax(0, 1fr) 220px;
   align-items: center;
   width: 100%;
   max-width: 1480px;
@@ -188,12 +188,33 @@ button.btn-primary:active {
   align-items: center;
   justify-self: end;
   justify-content: flex-end;
-  min-width: 120px;
+  gap: 10px;
+  min-width: 220px;
   margin-right: 0;
   padding-right: 0;
 }
 
 /* -- NAV CART BUTTON -- */
+.nav-account-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 15px;
+  border: 1px solid rgba(200,121,26,0.25);
+  border-radius: 50px;
+  color: var(--saffron);
+  background: rgba(255,255,255,0.55);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.nav-account-btn:hover {
+  background: rgba(200,121,26,0.12);
+  border-color: rgba(200,121,26,0.45);
+}
 .nav-cart-btn {
   display: flex;
   align-items: center;
@@ -289,7 +310,7 @@ button.btn-primary:active {
 
 @media (max-width: 1100px) {
   .nav-inner {
-    grid-template-columns: 230px 1fr 150px;
+    grid-template-columns: 230px 1fr 200px;
     padding: 0 18px 0 14px;
     column-gap: 12px;
   }
@@ -313,7 +334,7 @@ button.btn-primary:active {
   }
 
   .nav-cart-wrap {
-    min-width: 150px;
+    min-width: 200px;
     padding-right: 14px;
   }
 }
@@ -343,6 +364,10 @@ button.btn-primary:active {
     min-width: 0;
     padding-right: 0;
     justify-self: end;
+  }
+
+  .nav-account-btn {
+    display: none;
   }
 
   .nav-cart-btn {
