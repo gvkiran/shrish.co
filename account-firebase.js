@@ -185,6 +185,7 @@ function setAuthMode(mode) {
 
 function setAuthedUi(user) {
   const isAuthed = Boolean(user);
+  document.querySelector('.account-shell')?.classList.toggle('auth-only', !isAuthed);
   el('authPanel').style.display = isAuthed ? 'none' : 'block';
   el('profilePanel').classList.toggle('active', isAuthed);
   el('ordersPanel').classList.toggle('active', isAuthed);
@@ -193,6 +194,7 @@ function setAuthedUi(user) {
 }
 
 function setAdminUi(user) {
+  document.querySelector('.account-shell')?.classList.remove('auth-only');
   el('authPanel').style.display = 'none';
   el('profilePanel').classList.remove('active');
   el('ordersPanel').classList.remove('active');
