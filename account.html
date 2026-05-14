@@ -39,17 +39,38 @@
 .profile-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:20px}
 .profile-email{color:var(--text-light);font-size:14px;margin-top:5px}
 .orders-list{display:grid;gap:14px}
-.order-history-card{border:1px solid rgba(200,121,26,.18);border-radius:16px;padding:16px;background:#fffdf8}
+.account-insights{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 18px}
+.account-insight{border:1px solid rgba(200,121,26,.16);border-radius:14px;background:#fffdf8;padding:13px 14px}
+.account-insight strong{display:block;color:var(--dark);font-size:18px;line-height:1.2}
+.account-insight span{display:block;color:var(--text-light);font-size:12px;font-weight:700;margin-top:5px}
+.order-history-card{border:1px solid rgba(200,121,26,.18);border-radius:16px;padding:16px;background:#fffdf8;transition:border-color .2s,box-shadow .2s}
+.order-history-card.open{border-color:rgba(200,121,26,.45);box-shadow:0 8px 24px rgba(26,18,8,.08)}
 .order-history-top{display:flex;justify-content:space-between;gap:16px;margin-bottom:10px}
 .order-history-id{font-weight:800;color:var(--dark)}
 .order-history-date{font-size:13px;color:var(--text-light)}
 .order-history-status{display:inline-flex;border-radius:999px;background:var(--cream-d);color:var(--mid);padding:4px 10px;font-size:12px;font-weight:800;text-transform:capitalize}
 .order-history-items{font-size:14px;color:var(--text);line-height:1.55;margin:10px 0}
 .order-history-meta{display:flex;gap:14px;flex-wrap:wrap;color:var(--text-light);font-size:13px}
+.order-history-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.order-mini-btn{border:1.5px solid rgba(200,121,26,.25);border-radius:999px;background:#fff;color:var(--saffron);padding:8px 13px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none}
+.order-mini-btn:hover{background:var(--cream-d)}
+.order-mini-btn.primary{background:var(--saffron);border-color:var(--saffron);color:#fff}
+.order-detail-panel{display:none;border-top:1px solid rgba(200,121,26,.16);margin-top:14px;padding-top:14px}
+.order-history-card.open .order-detail-panel{display:block}
+.order-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.order-detail-cell{background:#fff;border:1px solid rgba(200,121,26,.14);border-radius:12px;padding:10px 12px}
+.order-detail-cell span{display:block;color:var(--text-light);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.order-detail-cell strong{display:block;color:var(--dark);font-size:14px;margin-top:3px}
+.order-items-table{border:1px solid rgba(200,121,26,.14);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.order-items-row{display:grid;grid-template-columns:minmax(0,1fr) 54px 90px;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(200,121,26,.1);font-size:13px;align-items:start}
+.order-items-row:last-child{border-bottom:0}
+.order-items-head{background:var(--cream-d);font-weight:800;color:var(--text-light);font-size:12px}
+.order-items-qty,.order-items-price{text-align:right}
+.order-note{background:#fff;border-left:4px solid var(--saffron);border-radius:10px;padding:11px 13px;color:var(--text-light);font-size:13px;line-height:1.55}
 .empty-orders{border:1px dashed rgba(200,121,26,.35);border-radius:16px;padding:24px;text-align:center;color:var(--text-light);background:#fffdf8}
 .admin-account-note{border:1px solid rgba(200,121,26,.22);border-radius:16px;background:#fffdf8;padding:18px;color:var(--text-light);font-size:15px;line-height:1.7;margin-bottom:18px}
 .admin-account-note strong{color:var(--dark)}
-@media(max-width:900px){.account-shell{grid-template-columns:1fr;padding:40px 20px 64px}.account-form.two-col{grid-template-columns:1fr}.profile-header{flex-direction:column}}
+@media(max-width:900px){.account-shell{grid-template-columns:1fr;padding:40px 20px 64px}.account-form.two-col,.account-insights,.order-detail-grid{grid-template-columns:1fr}.profile-header{flex-direction:column}}
 </style>
 <script>
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -233,6 +254,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 
   <section class="account-panel account-state" id="ordersPanel">
     <h3>Purchase History</h3>
+    <div class="account-insights" id="accountInsights" style="display:none"></div>
     <div class="orders-list" id="ordersList">
       <div class="empty-orders">Sign in to see your Shrish order history.</div>
     </div>

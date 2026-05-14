@@ -26,6 +26,7 @@ const LOCATION_LABELS = {
 };
 
 let unsubOrders = null;
+let currentOrders = [];
 
 function customerAccountsEnabled() {
   return window.SHRISH_APP_CONFIG?.customerAccountsEnabled === true;
@@ -222,25 +223,196 @@ function orderItemsText(items = []) {
   return items.map((item) => `${item.name || 'Item'} x ${item.qty || 1}`).join(', ');
 }
 
+function lineTotalValue(item = {}) {
+  const explicit = Number(item.lineTotal || 0);
+  if (explicit > 0) return explicit;
+  const price = parseFloat(String(item.price || '0').replace(/[^0-9.]/g, ''));
+  const qty = Number(item.qty || 1);
+  return Number.isFinite(price) ? price * qty : 0;
+}
+
+function orderTotalValue(order = {}) {
+  const explicit = Number(order.totalPrice || 0);
+  if (explicit > 0) return explicit;
+  return Array.isArray(order.items) ? order.items.reduce((sum, item) => sum + lineTotalValue(item), 0) : 0;
+}
+
+function orderPaymentLabel(order = {}) {
+  const method = String(order.paymentMethod || '').trim();
+  if (method) return method.charAt(0).toUpperCase() + method.slice(1);
+  if (order.paymentCollected) return 'Collected at pickup';
+  if ((order.payment || '').toLowerCase() === 'paid') return 'Paid';
+  return 'Pay at pickup';
+}
+
+function orderPaymentStatus(order = {}) {
+  if (order.paymentCollected || (order.payment || '').toLowerCase() === 'paid') return 'Paid';
+  return 'Pending';
+}
+
+function orderStatusMessage(order = {}) {
+  const status = String(order.status || 'pending').toLowerCase();
+  if (status === 'fulfilled') return 'Picked up. Thank you for ordering from Shrish.';
+  if (status === 'no_show') return 'Pickup was missed. If plans change next time, a quick WhatsApp note helps us offer the items to another customer.';
+  if (status === 'cancelled') return 'This order was cancelled. You can start a fresh order anytime.';
+  return 'Order received. Please follow WhatsApp updates for pickup timing and exact address details.';
+}
+
+function orderWhatsAppHref(order = {}) {
+  const number = order.orderNumber || order.id || 'my order';
+  const text = `Hi Shrish! I have a question about ${number}.`;
+  return `https://wa.me/17653255577?text=${encodeURIComponent(text)}`;
+}
+
+function normalizeCartItem(item = {}) {
+  return {
+    id: item.id || String(item.name || 'item').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    name: item.name || 'Item',
+    price: item.price || formatCurrency(lineTotalValue(item)),
+    unit: item.unit || '',
+    qty: Number(item.qty || 1)
+  };
+}
+
+function renderAccountInsights(orders = []) {
+  const panel = el('accountInsights');
+  if (!panel) return;
+
+  if (!orders.length) {
+    panel.style.display = 'none';
+    panel.innerHTML = '';
+    return;
+  }
+
+  const totalSpent = orders.reduce((sum, order) => sum + orderTotalValue(order), 0);
+  const pickupCounts = new Map();
+  const itemCounts = new Map();
+
+  orders.forEach((order) => {
+    const location = order.locationLabel || LOCATION_LABELS[order.location] || 'Pickup';
+    pickupCounts.set(location, (pickupCounts.get(location) || 0) + 1);
+    (order.items || []).forEach((item) => {
+      const name = item.name || 'Item';
+      itemCounts.set(name, (itemCounts.get(name) || 0) + Number(item.qty || 1));
+    });
+  });
+
+  const favoritePickup = [...pickupCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || 'Pickup';
+  const favoriteItem = [...itemCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || 'Shrish picks';
+
+  panel.style.display = 'grid';
+  panel.innerHTML = `
+    <div class="account-insight"><strong>${orders.length}</strong><span>Order${orders.length === 1 ? '' : 's'} placed</span></div>
+    <div class="account-insight"><strong>${escapeHtml(formatCurrency(totalSpent))}</strong><span>Estimated total</span></div>
+    <div class="account-insight"><strong>${escapeHtml(favoritePickup)}</strong><span>Favorite pickup</span></div>
+    <div class="account-insight"><strong>${escapeHtml(favoriteItem)}</strong><span>Most ordered</span></div>`;
+}
+
+function renderOrderItemsTable(items = []) {
+  if (!Array.isArray(items) || !items.length) {
+    return '<div class="order-note">Items are still being prepared for this order summary.</div>';
+  }
+
+  return `
+    <div class="order-items-table">
+      <div class="order-items-row order-items-head">
+        <div>Item</div><div class="order-items-qty">Qty</div><div class="order-items-price">Line</div>
+      </div>
+      ${items.map((item) => `
+        <div class="order-items-row">
+          <div><strong>${escapeHtml(item.name || 'Item')}</strong>${item.unit ? `<br><span>${escapeHtml(item.unit)}</span>` : ''}</div>
+          <div class="order-items-qty">${escapeHtml(String(item.qty || 1))}</div>
+          <div class="order-items-price">${escapeHtml(formatCurrency(lineTotalValue(item)))}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function bindOrderHistoryActions(orders = []) {
+  document.querySelectorAll('[data-order-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const card = button.closest('.order-history-card');
+      const isOpen = card?.classList.toggle('open');
+      button.textContent = isOpen ? 'Hide details' : 'View details';
+      button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+  });
+
+  document.querySelectorAll('[data-order-reorder]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const order = orders.find((item) => item.id === button.dataset.orderReorder);
+      if (!order?.items?.length) return;
+      sessionStorage.setItem('shrish_cart', JSON.stringify(order.items.map(normalizeCartItem)));
+      trackAccountEvent('customer_order_reordered', {
+        order_number: order.orderNumber || order.id || ''
+      });
+      window.location.href = 'order.html';
+    });
+  });
+
+  document.querySelectorAll('[data-order-print]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const order = orders.find((item) => item.id === button.dataset.orderPrint);
+      if (order) printOrderSummary(order);
+    });
+  });
+}
+
+function printOrderSummary(order = {}) {
+  const win = window.open('', '_blank', 'width=720,height=860');
+  if (!win) return;
+
+  const rows = (order.items || []).map((item) => `
+    <tr>
+      <td>${escapeHtml(item.name || 'Item')}</td>
+      <td>${escapeHtml(String(item.qty || 1))}</td>
+      <td>${escapeHtml(formatCurrency(lineTotalValue(item)))}</td>
+    </tr>`).join('');
+
+  win.document.write(`<!doctype html><html><head><title>${escapeHtml(order.orderNumber || 'Shrish Order')}</title>
+    <style>
+      body{font-family:Arial,sans-serif;color:#2b2218;padding:28px}
+      h1{font-size:24px;margin:0 0 8px} p{margin:5px 0;color:#66513a}
+      table{width:100%;border-collapse:collapse;margin-top:18px}
+      th,td{border-bottom:1px solid #e0d2bd;padding:10px;text-align:left}
+      th:last-child,td:last-child{text-align:right}
+    </style></head><body>
+      <h1>Shrish Order Summary</h1>
+      <p><strong>${escapeHtml(order.orderNumber || order.id || 'Order')}</strong></p>
+      <p>${escapeHtml(formatDateTime(order.createdAt))} - ${escapeHtml(order.locationLabel || LOCATION_LABELS[order.location] || 'Pickup')}</p>
+      <p>Payment: ${escapeHtml(orderPaymentLabel(order))} (${escapeHtml(orderPaymentStatus(order))})</p>
+      <table><thead><tr><th>Item</th><th>Qty</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table>
+      <p style="text-align:right;margin-top:18px"><strong>Total: ${escapeHtml(formatCurrency(orderTotalValue(order)))}</strong></p>
+    </body></html>`);
+  win.document.close();
+  win.print();
+}
+
 function renderOrders(orders = []) {
   const list = el('ordersList');
   if (!list) return;
 
   if (!orders.length) {
+    currentOrders = [];
+    renderAccountInsights([]);
     list.innerHTML = '<div class="empty-orders">No signed-in orders yet. Your next order will appear here after checkout.</div>';
     return;
   }
 
   const sorted = [...orders].sort((a, b) => dateValue(b.createdAt) - dateValue(a.createdAt));
+  currentOrders = sorted;
+  renderAccountInsights(sorted);
   list.innerHTML = sorted.map((order) => {
-    const total = Number(order.totalPrice || 0);
+    const total = orderTotalValue(order);
     const status = String(order.status || 'pending').replace(/_/g, ' ');
     const location = order.locationLabel || LOCATION_LABELS[order.location] || 'Pickup location pending';
+    const paymentMethod = orderPaymentLabel(order);
+    const paymentStatus = orderPaymentStatus(order);
+    const orderNumber = order.orderNumber || order.id || 'Order received';
     return `
-      <article class="order-history-card">
+      <article class="order-history-card" data-order-id="${escapeHtml(order.id)}">
         <div class="order-history-top">
           <div>
-            <div class="order-history-id">${escapeHtml(order.orderNumber || order.id || 'Order received')}</div>
+            <div class="order-history-id">${escapeHtml(orderNumber)}</div>
             <div class="order-history-date">${escapeHtml(formatDateTime(order.createdAt))}</div>
           </div>
           <span class="order-history-status">${escapeHtml(status)}</span>
@@ -249,10 +421,32 @@ function renderOrders(orders = []) {
         <div class="order-history-meta">
           <span>${escapeHtml(location)}</span>
           <span>${escapeHtml(formatCurrency(total))}</span>
-          <span>${escapeHtml(order.payment || 'pending')}</span>
+          <span>${escapeHtml(paymentMethod)}</span>
+        </div>
+        <div class="order-history-actions">
+          <button class="order-mini-btn primary" type="button" data-order-toggle="${escapeHtml(order.id)}" aria-expanded="false">View details</button>
+          <button class="order-mini-btn" type="button" data-order-reorder="${escapeHtml(order.id)}">Order again</button>
+          <a class="order-mini-btn" href="${escapeHtml(orderWhatsAppHref(order))}" target="_blank" rel="noopener">Ask about this</a>
+        </div>
+        <div class="order-detail-panel">
+          <div class="order-detail-grid">
+            <div class="order-detail-cell"><span>Order number</span><strong>${escapeHtml(orderNumber)}</strong></div>
+            <div class="order-detail-cell"><span>Pickup</span><strong>${escapeHtml(location)}</strong></div>
+            <div class="order-detail-cell"><span>Payment method</span><strong>${escapeHtml(paymentMethod)}</strong></div>
+            <div class="order-detail-cell"><span>Payment status</span><strong>${escapeHtml(paymentStatus)}</strong></div>
+            <div class="order-detail-cell"><span>Total boxes</span><strong>${escapeHtml(String(order.totalBoxes || (order.items || []).reduce((sum, item) => sum + Number(item.qty || 1), 0)))}</strong></div>
+            <div class="order-detail-cell"><span>Estimated total</span><strong>${escapeHtml(formatCurrency(total))}</strong></div>
+          </div>
+          ${renderOrderItemsTable(order.items || [])}
+          <div class="order-note">${escapeHtml(orderStatusMessage(order))}</div>
+          <div class="order-history-actions">
+            <button class="order-mini-btn" type="button" data-order-print="${escapeHtml(order.id)}">Print summary</button>
+            <a class="order-mini-btn" href="shop.html">Shop fresh arrivals</a>
+          </div>
         </div>
       </article>`;
   }).join('');
+  bindOrderHistoryActions(sorted);
 }
 
 function subscribeOrders(user) {
