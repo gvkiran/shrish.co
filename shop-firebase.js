@@ -59,6 +59,32 @@ const PRODUCT_IMAGES = {
   palm_jelly: ['images/products/jellysnacks/img_palm_jelly.webp']
 };
 
+const LEGACY_PRODUCT_IMAGE_PATHS = Object.fromEntries(
+  Object.values(PRODUCT_IMAGES)
+    .flat()
+    .map((path) => [path.split('/').pop(), path])
+);
+
+function normalizeCatalogImagePath(value = '', productId = '') {
+  const raw = String(value || '').trim().replace(/\\/g, '/').replace(/^\.\//, '');
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw) || raw.startsWith('images/') || raw === 'logo.png') return raw;
+  const fileName = raw.split('/').pop();
+  return LEGACY_PRODUCT_IMAGE_PATHS[fileName] || PRODUCT_IMAGES[productId]?.[0] || raw;
+}
+
+function normalizeCatalogProduct(product = {}) {
+  const next = {
+    ...product,
+    category: normalizeProductCategory(product.category)
+  };
+  next.image = normalizeCatalogImagePath(next.image, next.id);
+  if (Array.isArray(next.gallery)) {
+    next.gallery = next.gallery.map((image) => normalizeCatalogImagePath(image, next.id)).filter(Boolean);
+  }
+  return next;
+}
+
 const SHOP_CATEGORY_IDS = new Set(['mangoes', 'putharekulu', 'jellysnacks', 'snacks', 'picklespodi']);
 const SHOP_FILTERS = [
   { id: 'all', label: 'All Products', categories: ['mangoes', 'putharekulu', 'jellysnacks', 'snacks', 'picklespodi'] },
@@ -171,10 +197,11 @@ function saveCart() {
 }
 
 function mergeProducts(docs) {
-  const normalizedDocs = docs.map((item) => ({ ...item, category: normalizeProductCategory(item.category) }));
+  const normalizedBaseProducts = baseProducts.map(normalizeCatalogProduct);
+  const normalizedDocs = docs.map(normalizeCatalogProduct);
   const byId = new Map(normalizedDocs.map((item) => [item.id, item]));
-  const mergedBase = baseProducts.map((product) => {
-    const merged = { ...product, ...(byId.get(product.id) || {}) };
+  const mergedBase = normalizedBaseProducts.map((product) => {
+    const merged = normalizeCatalogProduct({ ...product, ...(byId.get(product.id) || {}) });
     const forcedFields = FORCE_BASE_PRODUCT_OVERRIDES[product.id] || [];
     forcedFields.forEach((field) => {
       merged[field] = product[field];
@@ -190,10 +217,10 @@ function mergeProducts(docs) {
       merged.unit = namedFallback.unit;
       merged.price = namedFallback.price;
     }
-    return merged;
+    return normalizeCatalogProduct(merged);
   });
   const extraProducts = normalizedDocs
-    .filter((item) => !baseProducts.some((product) => product.id === item.id))
+    .filter((item) => !normalizedBaseProducts.some((product) => product.id === item.id))
     .map((item) => {
       const fallback = getLegacyVariantFallback(item);
       if (!fallback) return { ...item };
@@ -250,8 +277,12 @@ function getCardSelectedVariant(product) {
 }
 
 function productImages(productId, product) {
-  if (Array.isArray(product?.gallery) && product.gallery.length) return product.gallery;
-  return PRODUCT_IMAGES[productId] || (product?.image ? [product.image] : []);
+  if (Array.isArray(product?.gallery) && product.gallery.length) {
+    return product.gallery.map((image) => normalizeCatalogImagePath(image, productId)).filter(Boolean);
+  }
+  if (PRODUCT_IMAGES[productId]) return PRODUCT_IMAGES[productId];
+  const image = normalizeCatalogImagePath(product?.image, productId);
+  return image ? [image] : [];
 }
 
 function updateCartUI() {
@@ -354,7 +385,7 @@ function addToCart(productId, qty, variantId = null) {
     name: selectedVariant.id === 'default' ? p.name : `${p.name} (${selectedVariant.label})`,
     price: selectedVariant.price || p.price,
     unit: selectedVariant.unit || p.unit,
-    image: p.image || null,
+    image: productImages(productId, p)[0] || p.image || null,
     qty
   });
   saveCart();
@@ -670,7 +701,7 @@ function renderCard(p) {
   const isSoon = p.displayOnly;
   const stripCls = isPreorder ? 'soon' : isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
   const stripText = isPreorder ? 'Preorder Only' : isSoon ? 'Coming Soon' : isAvail ? 'Available' : 'Not Available';
-  const imgSrc = p.image || productImages(p.id, p)[0] || null;
+  const imgSrc = productImages(p.id, p)[0] || null;
   const imgHtml = imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.onerror=null;this.src='logo.png'">` : '';
   const emojiStyle = imgSrc ? 'style="display:none"' : '';
   const shortDesc = (p.description || '').length > 90 ? `${p.description.slice(0, 90)}...` : (p.description || '');
