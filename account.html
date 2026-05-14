@@ -47,6 +47,8 @@
 .order-history-items{font-size:14px;color:var(--text);line-height:1.55;margin:10px 0}
 .order-history-meta{display:flex;gap:14px;flex-wrap:wrap;color:var(--text-light);font-size:13px}
 .empty-orders{border:1px dashed rgba(200,121,26,.35);border-radius:16px;padding:24px;text-align:center;color:var(--text-light);background:#fffdf8}
+.admin-account-note{border:1px solid rgba(200,121,26,.22);border-radius:16px;background:#fffdf8;padding:18px;color:var(--text-light);font-size:15px;line-height:1.7;margin-bottom:18px}
+.admin-account-note strong{color:var(--dark)}
 @media(max-width:900px){.account-shell{grid-template-columns:1fr;padding:40px 20px 64px}.account-form.two-col{grid-template-columns:1fr}.profile-header{flex-direction:column}}
 </style>
 <script>
@@ -209,6 +211,24 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
         <a class="account-button subtle" href="shop.html">Shop Now</a>
       </div>
     </form>
+  </section>
+
+  <section class="account-panel account-state" id="adminPanel">
+    <div class="profile-header">
+      <div>
+        <h2>Admin Account</h2>
+        <div class="profile-email" id="adminAccountEmail"></div>
+      </div>
+      <button class="account-button secondary" type="button" id="adminSignOutBtn">Sign Out</button>
+    </div>
+    <div class="admin-account-note">
+      <strong>This login is for the Shrish admin dashboard.</strong><br>
+      Customer profiles and purchase history are kept separate from admin access.
+    </div>
+    <div class="account-actions">
+      <a class="account-button" href="admin.html">Open Admin Dashboard</a>
+      <a class="account-button subtle" href="shop.html">Back to Shop</a>
+    </div>
   </section>
 
   <section class="account-panel account-state" id="ordersPanel">

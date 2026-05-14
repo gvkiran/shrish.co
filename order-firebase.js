@@ -29,6 +29,14 @@ function customerAccountsEnabled() {
   return window.SHRISH_APP_CONFIG?.customerAccountsEnabled === true;
 }
 
+function adminEmail() {
+  return String(window.SHRISH_APP_CONFIG?.adminEmailHint || 'contact@shrish.co').trim().toLowerCase();
+}
+
+function isCustomerUser(user) {
+  return Boolean(user?.uid) && String(user.email || '').trim().toLowerCase() !== adminEmail();
+}
+
 function trackCheckoutEvent(eventName, props = {}) {
   window.SHRISH_ANALYTICS?.track(eventName, props);
 }
@@ -378,15 +386,15 @@ function bindCustomerProfile() {
   if (!customerAccountsEnabled()) return;
 
   onAuthStateChanged(auth, async (user) => {
-    currentCustomer = user || null;
+    currentCustomer = isCustomerUser(user) ? user : null;
     currentCustomerProfile = null;
 
-    if (!user) return;
+    if (!currentCustomer) return;
 
     const emailInput = document.getElementById('email');
-    if (emailInput && !emailInput.value) emailInput.value = user.email || '';
+    if (emailInput && !emailInput.value) emailInput.value = currentCustomer.email || '';
 
-    const snap = await getDoc(customerProfileRef(user.uid)).catch(() => null);
+    const snap = await getDoc(customerProfileRef(currentCustomer.uid)).catch(() => null);
     if (!snap?.exists()) return;
 
     currentCustomerProfile = snap.data() || {};

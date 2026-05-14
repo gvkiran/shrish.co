@@ -31,6 +31,14 @@ function customerAccountsEnabled() {
   return window.SHRISH_APP_CONFIG?.customerAccountsEnabled === true;
 }
 
+function adminEmail() {
+  return normalizeEmail(window.SHRISH_APP_CONFIG?.adminEmailHint || 'contact@shrish.co');
+}
+
+function isAdminUser(user) {
+  return normalizeEmail(user?.email || '') === adminEmail();
+}
+
 function trackAccountEvent(eventName, props = {}) {
   window.SHRISH_ANALYTICS?.track(eventName, props);
 }
@@ -116,7 +124,16 @@ function setAuthedUi(user) {
   el('authPanel').style.display = isAuthed ? 'none' : 'block';
   el('profilePanel').classList.toggle('active', isAuthed);
   el('ordersPanel').classList.toggle('active', isAuthed);
+  el('adminPanel').classList.remove('active');
   if (user) el('profileEmail').textContent = user.email || '';
+}
+
+function setAdminUi(user) {
+  el('authPanel').style.display = 'none';
+  el('profilePanel').classList.remove('active');
+  el('ordersPanel').classList.remove('active');
+  el('adminPanel').classList.add('active');
+  el('adminAccountEmail').textContent = user?.email || '';
 }
 
 function profilePayloadFromSignup(user) {
@@ -313,6 +330,10 @@ function bindForms() {
     const button = event.submitter;
     const email = normalizeEmail(el('signupEmail').value);
     const password = el('signupPassword').value;
+    if (email === adminEmail()) {
+      showMessage('authMessage', 'error', 'Use the admin dashboard for this email.');
+      return;
+    }
     if (!validEmail(email)) {
       showMessage('authMessage', 'error', 'Enter a valid email address.');
       return;
@@ -383,6 +404,11 @@ function bindForms() {
     await signOut(auth);
     trackAccountEvent('customer_signed_out');
   });
+
+  el('adminSignOutBtn')?.addEventListener('click', async () => {
+    await signOut(auth);
+    trackAccountEvent('admin_account_signed_out');
+  });
 }
 
 function showDisabledState() {
@@ -403,16 +429,23 @@ function init() {
   setAuthMode('signin');
 
   onAuthStateChanged(auth, async (user) => {
-    setAuthedUi(user);
     clearMessage('authMessage');
     unsubOrders?.();
     unsubOrders = null;
 
     if (!user) {
+      setAuthedUi(null);
       renderOrders([]);
       return;
     }
 
+    if (isAdminUser(user)) {
+      setAdminUi(user);
+      renderOrders([]);
+      return;
+    }
+
+    setAuthedUi(user);
     await loadProfile(user);
     subscribeOrders(user);
   });
