@@ -39,25 +39,24 @@ function normalizeProductCategory(category) {
 }
 
 const PRODUCT_IMAGES = {
-  alphonso: ['img_alphonso.jpeg'],
-  kesar: ['img_kesar.jpeg'],
-  banganapalli: ['img_banganapalli.jpg'],
-  langra: ['img_langra.jpg'],
-  rasalu: ['img_rasalu.jpeg'],
-  himayat: ['img_himayath_real.jpg', 'img_himayat.jpg'],
-  payari: ['img_payari.jpg', 'img_payri.webp'],
-  puth_plain: ['img_puth_plain.jpeg'],
-  puth_sugar_kaju: ['img_puth_sugar_kaju.jpg'],
-  puth_sugar_kaju_pista: ['img_puth_sugar_kaju_pista.png'],
-  puth_jaggery_kaju: ['img_puth_jaggery_kaju_pista.png'],
-  puth_jaggery_kaju_badam: ['img_puth_jaggery_kaju_pista.png'],
-  puth_jaggery_kaju_pista: ['img_puth_jaggery_kaju_pista.png'],
-  puth_sugarfree: ['img_puth_sugarfree.jpg'],
-  puth_dates_kaju_badam_pista: ['img_puth_jaggery_kaju_pista.png'],
-  puth_organic_palm_kaju_badam_pista: ['img_puth_jaggery_kaju_pista.png'],
-  mango_jelly_sugar: ['img_mango_jelly.webp'],
-  mango_jelly_jaggery: ['img_mango_jelly.webp'],
-  palm_jelly: ['img_palm_jelly.webp']
+  alphonso: ['images/products/mangoes/img_alphonso.jpeg'],
+  kesar: ['images/products/mangoes/img_kesar.jpeg'],
+  banganapalli: ['images/products/mangoes/img_banganapalli.jpg'],
+  langra: ['images/products/mangoes/img_langra.jpg'],
+  rasalu: ['images/products/mangoes/img_rasalu.jpeg'],
+  himayat: ['images/products/mangoes/img_himayath_real.jpg'],
+  payari: ['images/products/mangoes/img_payari.jpg'],
+  puth_sugar_kaju: ['images/products/putharekulu/img_puth_sugar_kaju.jpg'],
+  puth_sugar_kaju_pista: ['images/products/putharekulu/img_puth_sugar_kaju_pista.png'],
+  puth_jaggery_kaju: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.png'],
+  puth_jaggery_kaju_badam: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.png'],
+  puth_jaggery_kaju_pista: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.png'],
+  puth_sugarfree: ['images/products/putharekulu/img_puth_sugarfree.jpg'],
+  puth_dates_kaju_badam_pista: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.png'],
+  puth_organic_palm_kaju_badam_pista: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.png'],
+  mango_jelly_sugar: ['images/products/jellysnacks/img_mango_jelly.webp'],
+  mango_jelly_jaggery: ['images/products/jellysnacks/img_mango_jelly.webp'],
+  palm_jelly: ['images/products/jellysnacks/img_palm_jelly.webp']
 };
 
 const SHOP_CATEGORY_IDS = new Set(['mangoes', 'putharekulu', 'jellysnacks', 'snacks', 'picklespodi']);
