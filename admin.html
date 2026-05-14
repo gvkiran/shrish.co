@@ -211,7 +211,7 @@
     .orders-table tr:hover td { background: rgba(200,121,26,0.025); }
     .customers-summary {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 12px;
       margin-bottom: 16px;
     }
@@ -251,6 +251,23 @@
     .customer-phone { color: var(--saffron); font-size: 12px; }
     .customer-email { font-size: 11px; color: var(--text-light); }
     .customer-profile-muted { color: var(--text-light); font-size: 12px; line-height: 1.45; }
+    .feedback-answer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 220px;
+      line-height: 1.35;
+    }
+    .feedback-answer-list span {
+      display: inline-flex;
+      color: var(--text);
+      font-size: 12px;
+    }
+    .feedback-answer-list strong {
+      color: var(--dark);
+      font-size: 12px;
+      line-height: 1.45;
+    }
 
     /* Items list in table */
     .items-list { display: flex; flex-direction: column; gap: 4px; }
@@ -1334,6 +1351,7 @@
           <div class="sidebar-divider"></div>
           <button class="admin-tab" onclick="switchTab('products',this)">🛒 Manage Products</button>
           <button class="admin-tab" onclick="switchTab('customers',this)">Customer Accounts</button>
+          <button class="admin-tab" onclick="switchTab('feedback',this)">Feedback</button>
           <button class="admin-tab" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
           <button class="admin-tab" onclick="switchTab('accounting',this)">📒 Accounting</button>
           <button class="admin-tab" onclick="switchTab('excel-calculations',this)">Excel Calculations</button>
@@ -1709,6 +1727,51 @@
                 </tr>
               </thead>
               <tbody id="customersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="tab-feedback" style="display:none;">
+          <div class="orders-toolbar">
+            <div>
+              <h2>Customer Feedback</h2>
+              <p class="orders-help">Review order feedback saved in Firestore. Use filters to spot product, pickup, or low-rating patterns.</p>
+            </div>
+            <div class="toolbar-actions">
+              <input type="search" id="feedbackSearch" class="filter-input" placeholder="Search order, item, email" oninput="renderFeedback()">
+              <select id="feedbackRating" class="filter-input" onchange="renderFeedback()">
+                <option value="all">All ratings</option>
+                <option value="low">Low ratings 1-3</option>
+                <option value="5">5 stars</option>
+                <option value="4">4 stars</option>
+                <option value="3">3 stars</option>
+                <option value="2">2 stars</option>
+                <option value="1">1 star</option>
+              </select>
+              <select id="feedbackLocation" class="filter-input" onchange="renderFeedback()">
+                <option value="all">All locations</option>
+                <option value="shortpump">Short Pump</option>
+                <option value="chesterfield">Chesterfield</option>
+                <option value="mechanicsville">Mechanicsville</option>
+              </select>
+              <button class="toolbar-btn" onclick="exportFeedbackCSV()">Export CSV</button>
+            </div>
+          </div>
+          <div class="customers-summary" id="feedbackSummary"></div>
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th>Rating</th>
+                  <th>Answers</th>
+                  <th>Items</th>
+                  <th>Pickup</th>
+                  <th>Submitted</th>
+                </tr>
+              </thead>
+              <tbody id="feedbackBody"></tbody>
             </table>
           </div>
         </div>

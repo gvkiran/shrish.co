@@ -61,6 +61,11 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    match /order_feedback/{feedbackId} {
+      allow get, list: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
     match /order_locks/{phoneDigits} {
       allow get: if true;
       allow list: if false;

@@ -36,6 +36,7 @@ const state = {
   orders: [],
   products: JSON.parse(JSON.stringify(BASE_PRODUCTS)),
   customers: [],
+  feedback: [],
   subscribers: [],
   accountingBatches: {},
   accounting2Records: {},
@@ -57,6 +58,7 @@ const state = {
   unsubOrders: null,
   unsubProducts: null,
   unsubCustomers: null,
+  unsubFeedback: null,
   unsubSubscribersGeneral: null,
   unsubSubscribersProduct: null,
   unsubAccountingBatches: null,
@@ -2171,6 +2173,145 @@ function exportCustomersCSV() {
   showToast('Customer accounts CSV downloaded');
 }
 
+function feedbackRatingValue(entry = {}) {
+  return Number(entry.responses?.overallRating || entry.feedbackRating || 0);
+}
+
+function feedbackItemSummary(entry = {}) {
+  const items = Array.isArray(entry.items) ? entry.items : [];
+  if (!items.length) return '--';
+  return items.map((item) => `${item.name || 'Item'} x ${item.qty || 1}`).join(', ');
+}
+
+function feedbackAnswerSummary(entry = {}) {
+  const responses = entry.responses || {};
+  return [
+    entry.hasMangoItems && responses.mangoSweetness ? `Sweetness: ${responses.mangoSweetness}` : '',
+    !entry.hasMangoItems && responses.itemCondition ? `Condition: ${responses.itemCondition}` : '',
+    responses.pickupExperience ? `Pickup: ${responses.pickupExperience}` : '',
+    responses.reorderIntent ? `Buy again: ${responses.reorderIntent}` : '',
+    responses.recommend ? `Recommend: ${responses.recommend}` : ''
+  ].filter(Boolean);
+}
+
+function filteredFeedback() {
+  const search = normalizeLookup(document.getElementById('feedbackSearch')?.value || '');
+  const ratingFilter = document.getElementById('feedbackRating')?.value || 'all';
+  const locationFilter = document.getElementById('feedbackLocation')?.value || 'all';
+
+  return [...state.feedback].filter((entry) => {
+    const rating = feedbackRatingValue(entry);
+    const location = entry.location || '';
+    if (ratingFilter === 'low' && rating > 3) return false;
+    if (ratingFilter !== 'all' && ratingFilter !== 'low' && rating !== Number(ratingFilter)) return false;
+    if (locationFilter !== 'all' && location !== locationFilter) return false;
+    if (!search) return true;
+
+    const haystack = [
+      entry.orderNumber,
+      entry.orderId,
+      entry.customerEmail,
+      entry.locationLabel,
+      locationLabel(entry.location),
+      feedbackItemSummary(entry),
+      feedbackAnswerSummary(entry).join(' '),
+      entry.responses?.comment
+    ].map(normalizeLookup).join(' ');
+    return haystack.includes(search);
+  });
+}
+
+function renderFeedbackSummary(entries) {
+  const summary = document.getElementById('feedbackSummary');
+  if (!summary) return;
+
+  const ratings = entries.map(feedbackRatingValue).filter(Boolean);
+  const average = ratings.length
+    ? (ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length).toFixed(1)
+    : '--';
+  const lowRatings = ratings.filter((rating) => rating <= 3).length;
+  const reorderLikely = entries.filter((entry) => ['Definitely', 'Probably'].includes(entry.responses?.reorderIntent)).length;
+  const recommendLikely = entries.filter((entry) => ['Very likely', 'Likely'].includes(entry.responses?.recommend)).length;
+
+  summary.innerHTML = `
+    <div class="customers-summary-card"><span>Total Feedback</span><strong>${entries.length}</strong></div>
+    <div class="customers-summary-card"><span>Average Rating</span><strong>${average}</strong></div>
+    <div class="customers-summary-card"><span>Low Ratings</span><strong>${lowRatings}</strong></div>
+    <div class="customers-summary-card"><span>Would Reorder</span><strong>${reorderLikely}</strong></div>
+    <div class="customers-summary-card"><span>Would Recommend</span><strong>${recommendLikely}</strong></div>
+  `;
+}
+
+function renderFeedback() {
+  const tbody = document.getElementById('feedbackBody');
+  if (!tbody) return;
+
+  const entries = filteredFeedback();
+  renderFeedbackSummary(entries);
+
+  if (!entries.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">F</div><p>No feedback found.</p></div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = entries.map((entry) => {
+    const rating = feedbackRatingValue(entry);
+    const ratingClass = rating && rating <= 3 ? 'status-cancelled' : 'status-fulfilled';
+    const comment = entry.responses?.comment || '';
+    const answers = feedbackAnswerSummary(entry);
+    const location = entry.locationLabel || locationLabel(entry.location) || '--';
+
+    return `<tr>
+      <td><div class="order-id">${escapeHtml(entry.orderNumber || entry.orderId || entry.id)}</div><div class="customer-profile-muted">${escapeHtml(entry.orderId || '')}</div></td>
+      <td><div class="customer-name">${escapeHtml(entry.customerEmail || '--')}</div><div class="customer-profile-muted">${escapeHtml(entry.customerUid || '')}</div></td>
+      <td><span class="status-badge ${ratingClass}">${rating ? `${rating}/5` : '--'}</span></td>
+      <td><div class="feedback-answer-list">${answers.map((answer) => `<span>${escapeHtml(answer)}</span>`).join('')}${comment ? `<strong>Note: ${escapeHtml(comment)}</strong>` : ''}</div></td>
+      <td><div class="customer-profile-muted">${escapeHtml(feedbackItemSummary(entry))}</div></td>
+      <td>${escapeHtml(location)}</td>
+      <td>${escapeHtml(formatDateTime(entry.createdAt))}</td>
+    </tr>`;
+  }).join('');
+}
+
+function exportFeedbackCSV() {
+  const entries = filteredFeedback();
+  if (!entries.length) {
+    showToast('No feedback to export');
+    return;
+  }
+
+  const rows = [[
+    'Submitted', 'Order Number', 'Order ID', 'Customer Email', 'Rating', 'Items', 'Pickup Location',
+    'Sweetness', 'Condition', 'Pickup Experience', 'Buy Again', 'Recommend', 'Comment'
+  ]];
+  entries.forEach((entry) => {
+    const responses = entry.responses || {};
+    rows.push([
+      formatDateTime(entry.createdAt),
+      entry.orderNumber || '',
+      entry.orderId || '',
+      entry.customerEmail || '',
+      feedbackRatingValue(entry),
+      feedbackItemSummary(entry),
+      entry.locationLabel || locationLabel(entry.location) || '',
+      responses.mangoSweetness || '',
+      responses.itemCondition || '',
+      responses.pickupExperience || '',
+      responses.reorderIntent || '',
+      responses.recommend || '',
+      responses.comment || ''
+    ]);
+  });
+
+  const csv = rows.map((row) => row.map((value) => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `shrish_feedback_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  showToast('Feedback CSV downloaded');
+}
+
 function renderSubscribers() {
   const tbody = document.getElementById('subscribersBody');
   if (!tbody) return;
@@ -3173,12 +3314,14 @@ function switchTab(tab, btn) {
   document.getElementById('tab-orders').style.display = tab === 'orders' ? 'block' : 'none';
   document.getElementById('tab-products').style.display = tab === 'products' ? 'block' : 'none';
   document.getElementById('tab-customers').style.display = tab === 'customers' ? 'block' : 'none';
+  document.getElementById('tab-feedback').style.display = tab === 'feedback' ? 'block' : 'none';
   document.getElementById('tab-subscribers').style.display = tab === 'subscribers' ? 'block' : 'none';
   document.getElementById('tab-accounting').style.display = tab === 'accounting' ? 'block' : 'none';
   document.getElementById('tab-excel-calculations').style.display = tab === 'excel-calculations' ? 'block' : 'none';
   if (tab === 'products') renderProducts();
   if (tab === 'orders') renderOrders();
   if (tab === 'customers') renderCustomers();
+  if (tab === 'feedback') renderFeedback();
   if (tab === 'subscribers') renderSubscribers();
   if (tab === 'accounting') renderAccounting();
   if (tab === 'excel-calculations') renderExcelCalculations();
@@ -3189,6 +3332,7 @@ function subscribeData() {
   state.unsubOrders?.();
   state.unsubProducts?.();
   state.unsubCustomers?.();
+  state.unsubFeedback?.();
   state.unsubSubscribersGeneral?.();
   state.unsubSubscribersProduct?.();
   state.unsubAccountingBatches?.();
@@ -3221,6 +3365,14 @@ function subscribeData() {
   }, (error) => {
     console.error(error);
     showToast('Customer accounts sync failed');
+  });
+
+  state.unsubFeedback = onSnapshot(query(collection(db, 'order_feedback'), orderBy('createdAt', 'desc')), (snapshot) => {
+    state.feedback = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
+    renderFeedback();
+  }, (error) => {
+    console.error(error);
+    showToast('Feedback sync failed');
   });
 
   const syncSubscribers = () => {
@@ -3322,6 +3474,7 @@ function initAuthWatch() {
       state.unsubOrders?.();
       state.unsubProducts?.();
       state.unsubCustomers?.();
+      state.unsubFeedback?.();
       state.unsubSubscribersGeneral?.();
       state.unsubSubscribersProduct?.();
       state.unsubAccountingBatches?.();
@@ -3365,6 +3518,8 @@ window.exportCSV = exportCSV;
 window.renderCustomers = renderCustomers;
 window.exportCustomersCSV = exportCustomersCSV;
 window.deleteCustomerAccountFromAdmin = deleteCustomerAccountFromAdmin;
+window.renderFeedback = renderFeedback;
+window.exportFeedbackCSV = exportFeedbackCSV;
 window.exportSubscribersCSV = exportSubscribersCSV;
 window.deleteSubscriber = deleteSubscriber;
 window.renderAccounting = renderAccounting;
