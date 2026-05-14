@@ -817,7 +817,7 @@ function injectGlobalUI() {
   style.textContent = `
     /* Product search in nav */
     body.nav-has-search .nav-inner {
-      grid-template-columns: 190px minmax(0, 1fr) minmax(190px, 260px) minmax(170px, 220px);
+      grid-template-columns: 190px minmax(0, 1fr) minmax(210px, 280px) minmax(230px, 280px);
       column-gap: 16px;
     }
     body.nav-has-search .nav-links {
@@ -827,7 +827,7 @@ function injectGlobalUI() {
     .nav-product-search {
       display: flex;
       align-items: center;
-      justify-self: end;
+      justify-self: start;
       width: min(260px, 100%);
       height: 42px;
       border: 1.5px solid rgba(200,121,26,.24);
@@ -957,7 +957,7 @@ function injectGlobalUI() {
     }
     @media (max-width: 1180px) {
       body.nav-has-search .nav-inner {
-        grid-template-columns: 176px minmax(0, 1fr) minmax(150px, 190px) minmax(150px, 180px);
+        grid-template-columns: 176px minmax(0, 1fr) minmax(145px, 190px) minmax(215px, 245px);
         column-gap: 12px;
       }
       body.nav-has-search .nav-links {
@@ -1385,29 +1385,14 @@ function renderAccountNavSignedOut(container) {
 
 function renderAccountNavSignedIn(container, authApi) {
   container.innerHTML = `
-    <div class="nav-account-menu">
-      <button class="nav-account-btn" type="button" aria-haspopup="true" aria-expanded="false">Account</button>
-      <div class="nav-account-menu-panel" role="menu">
-        <a href="account.html" role="menuitem">Account Details</a>
-        <button type="button" data-nav-sign-out role="menuitem">Log Out</button>
-      </div>
-    </div>
+    <a href="account.html" class="nav-account-btn" aria-label="Account details">Account</a>
+    <button class="nav-account-btn nav-logout-btn" type="button" data-nav-sign-out>Log Out</button>
   `;
-
-  const menu = container.querySelector('.nav-account-menu');
-  const button = container.querySelector('.nav-account-btn');
-  button?.addEventListener('click', (event) => {
-    event.preventDefault();
-    const isOpen = menu?.classList.toggle('open');
-    button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-  });
 
   container.querySelector('[data-nav-sign-out]')?.addEventListener('click', async () => {
     try {
       await authApi.signOut(authApi.auth);
       trackShrishEvent('customer_signed_out_nav');
-      menu?.classList.remove('open');
-      button?.setAttribute('aria-expanded', 'false');
       if (window.location.pathname.endsWith('/account.html') || window.location.pathname.endsWith('account.html')) {
         window.location.reload();
       }
@@ -1477,13 +1462,6 @@ function setupCustomerAccountNav(navCartWrap, navMobile) {
     .catch((error) => {
       console.warn('Customer account nav unavailable', error);
     });
-
-  document.addEventListener('click', (event) => {
-    const menu = accountSlot?.querySelector('.nav-account-menu');
-    if (!menu || menu.contains(event.target)) return;
-    menu.classList.remove('open');
-    menu.querySelector('.nav-account-btn')?.setAttribute('aria-expanded', 'false');
-  });
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -188,8 +188,8 @@ button.btn-primary:active {
   align-items: center;
   justify-self: end;
   justify-content: flex-end;
-  gap: 10px;
-  min-width: 220px;
+  gap: 8px;
+  min-width: 260px;
   margin-right: 0;
   padding-right: 0;
 }
@@ -214,6 +214,14 @@ button.btn-primary:active {
 .nav-account-btn:hover {
   background: rgba(200,121,26,0.12);
   border-color: rgba(200,121,26,0.45);
+}
+.nav-account-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-logout-btn {
+  color: #9f341f;
 }
 .nav-account-menu {
   position: relative;
@@ -389,8 +397,14 @@ button.btn-primary:active {
   }
 
   .nav-cart-wrap {
-    min-width: 200px;
+    min-width: 230px;
     padding-right: 14px;
+    gap: 6px;
+  }
+
+  .nav-account-btn {
+    padding-inline: 12px;
+    font-size: 13px;
   }
 }
 
