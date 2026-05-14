@@ -8,7 +8,7 @@ window.SHRISH_FIREBASE_CONFIG = {
 };
 
 window.SHRISH_APP_CONFIG = {
-  adminEmailHint: "admin@shrish.co",
+  adminEmailHint: "contact@shrish.co",
   businessName: "Shrish",
   supportEmail: "orders@shrish.co",
   supportPhone: "+1 (765) 325-5577",
