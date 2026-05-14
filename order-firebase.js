@@ -351,7 +351,11 @@ function selectPickupLocation(locationId, shouldTrack = false) {
 
 function setFieldValue(id, value) {
   const el = document.getElementById(id);
-  if (el && value && !el.value) el.value = value;
+  if (!el || !value) return;
+
+  const currentValue = String(el.value || '').trim();
+  const emptyPhonePlaceholder = id === 'phone' && /^\+?1?\s*$/.test(currentValue.replace(/[()\-]/g, ''));
+  if (!currentValue || emptyPhonePlaceholder) el.value = value;
 }
 
 function splitProfileName(profile = {}) {
