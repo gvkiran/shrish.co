@@ -44,7 +44,7 @@
 .account-insight strong{display:block;color:var(--dark);font-size:18px;line-height:1.2}
 .account-insight span{display:block;color:var(--text-light);font-size:12px;font-weight:700;margin-top:5px}
 .order-history-card{border:1px solid rgba(200,121,26,.18);border-radius:16px;padding:16px;background:#fffdf8;transition:border-color .2s,box-shadow .2s}
-.order-history-card.open{border-color:rgba(200,121,26,.45);box-shadow:0 8px 24px rgba(26,18,8,.08)}
+.order-history-card:hover{border-color:rgba(200,121,26,.38);box-shadow:0 8px 24px rgba(26,18,8,.06)}
 .order-history-top{display:flex;justify-content:space-between;gap:16px;margin-bottom:10px}
 .order-history-id{font-weight:800;color:var(--dark)}
 .order-history-date{font-size:13px;color:var(--text-light)}
@@ -55,8 +55,13 @@
 .order-mini-btn{border:1.5px solid rgba(200,121,26,.25);border-radius:999px;background:#fff;color:var(--saffron);padding:8px 13px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none}
 .order-mini-btn:hover{background:var(--cream-d)}
 .order-mini-btn.primary{background:var(--saffron);border-color:var(--saffron);color:#fff}
-.order-detail-panel{display:none;border-top:1px solid rgba(200,121,26,.16);margin-top:14px;padding-top:14px}
-.order-history-card.open .order-detail-panel{display:block}
+.order-modal{display:none;position:fixed;inset:0;z-index:4200;background:rgba(26,18,8,.56);padding:22px;align-items:center;justify-content:center}
+.order-modal.open{display:flex}
+.order-modal-card{position:relative;width:min(860px,100%);max-height:88vh;overflow:auto;background:#fff;border-radius:22px;box-shadow:0 30px 80px rgba(26,18,8,.28);padding:28px}
+.order-modal-close{position:absolute;top:16px;right:16px;width:38px;height:38px;border:0;border-radius:50%;background:rgba(26,18,8,.08);color:var(--dark);font-size:22px;line-height:1;cursor:pointer}
+.order-modal-close:hover{background:rgba(200,121,26,.16)}
+.order-modal-title{font-family:var(--font-display);font-size:30px;color:var(--dark);line-height:1.15;margin:0 48px 6px 0}
+.order-modal-sub{color:var(--text-light);font-size:14px;margin-bottom:18px}
 .order-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}
 .order-detail-cell{background:#fff;border:1px solid rgba(200,121,26,.14);border-radius:12px;padding:10px 12px}
 .order-detail-cell span{display:block;color:var(--text-light);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
@@ -70,7 +75,7 @@
 .empty-orders{border:1px dashed rgba(200,121,26,.35);border-radius:16px;padding:24px;text-align:center;color:var(--text-light);background:#fffdf8}
 .admin-account-note{border:1px solid rgba(200,121,26,.22);border-radius:16px;background:#fffdf8;padding:18px;color:var(--text-light);font-size:15px;line-height:1.7;margin-bottom:18px}
 .admin-account-note strong{color:var(--dark)}
-@media(max-width:900px){.account-shell{grid-template-columns:1fr;padding:40px 20px 64px}.account-form.two-col,.account-insights,.order-detail-grid{grid-template-columns:1fr}.profile-header{flex-direction:column}}
+@media(max-width:900px){.account-shell{grid-template-columns:1fr;padding:40px 20px 64px}.account-form.two-col,.account-insights,.order-detail-grid{grid-template-columns:1fr}.profile-header{flex-direction:column}.order-modal-card{padding:24px 18px}.order-items-row{grid-template-columns:minmax(0,1fr) 44px 76px}}
 </style>
 <script>
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -261,6 +266,13 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
   </section>
 </main>
 
+<div class="order-modal" id="orderDetailModal" aria-hidden="true" onclick="handleOrderModalOverlayClick(event)">
+  <div class="order-modal-card" role="dialog" aria-modal="true" aria-labelledby="orderDetailTitle">
+    <button class="order-modal-close" type="button" id="orderModalClose" aria-label="Close order details">&times;</button>
+    <div id="orderModalContent"></div>
+  </div>
+</div>
+
 <footer class="footer">
   <div class="footer-bottom">
     <span>&copy; <span class="copy-year">2025</span> Shrish LLC. All rights reserved.</span>
@@ -274,9 +286,9 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 
 <script src="data.js"></script>
 <script src="analytics.js?v=customer-accounts-1"></script>
-<script src="main.js?v=customer-accounts-1"></script>
+<script src="main.js?v=customer-accounts-2"></script>
 <script src="firebase-config.js"></script>
-<script type="module" src="account-firebase.js?v=customer-accounts-1"></script>
+<script type="module" src="account-firebase.js?v=customer-accounts-2"></script>
 
 </body>
 </html>

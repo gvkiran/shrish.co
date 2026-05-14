@@ -817,7 +817,7 @@ function injectGlobalUI() {
   style.textContent = `
     /* Product search in nav */
     body.nav-has-search .nav-inner {
-      grid-template-columns: 190px minmax(0, 1fr) minmax(190px, 260px) 88px;
+      grid-template-columns: 190px minmax(0, 1fr) minmax(190px, 260px) minmax(170px, 220px);
       column-gap: 16px;
     }
     body.nav-has-search .nav-links {
@@ -957,7 +957,7 @@ function injectGlobalUI() {
     }
     @media (max-width: 1180px) {
       body.nav-has-search .nav-inner {
-        grid-template-columns: 176px minmax(0, 1fr) minmax(160px, 210px) 78px;
+        grid-template-columns: 176px minmax(0, 1fr) minmax(150px, 190px) minmax(150px, 180px);
         column-gap: 12px;
       }
       body.nav-has-search .nav-links {
@@ -1425,7 +1425,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
   const accountHref = 'account.html';
   const navCartWrap = document.querySelector('.nav-cart-wrap');
-  const customerAccountsEnabled = window.SHRISH_APP_CONFIG?.customerAccountsEnabled === true;
+  const customerAccountsEnabled = window.SHRISH_APP_CONFIG?.customerAccountsEnabled !== false;
   if (customerAccountsEnabled && navCartWrap && !navCartWrap.querySelector('.nav-account-btn')) {
     const accountLink = document.createElement('a');
     accountLink.href = accountHref;

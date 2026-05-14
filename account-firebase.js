@@ -258,12 +258,6 @@ function orderStatusMessage(order = {}) {
   return 'Order received. Please follow WhatsApp updates for pickup timing and exact address details.';
 }
 
-function orderWhatsAppHref(order = {}) {
-  const number = order.orderNumber || order.id || 'my order';
-  const text = `Hi Shrish! I have a question about ${number}.`;
-  return `https://wa.me/17653255577?text=${encodeURIComponent(text)}`;
-}
-
 function normalizeCartItem(item = {}) {
   return {
     id: item.id || String(item.name || 'item').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
@@ -284,7 +278,6 @@ function renderAccountInsights(orders = []) {
     return;
   }
 
-  const totalSpent = orders.reduce((sum, order) => sum + orderTotalValue(order), 0);
   const pickupCounts = new Map();
   const itemCounts = new Map();
 
@@ -299,13 +292,15 @@ function renderAccountInsights(orders = []) {
 
   const favoritePickup = [...pickupCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || 'Pickup';
   const favoriteItem = [...itemCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || 'Shrish picks';
+  const latestOrder = [...orders].sort((a, b) => dateValue(b.createdAt) - dateValue(a.createdAt))[0];
+  const latestLabel = latestOrder?.orderNumber || latestOrder?.id || 'Recent order';
 
   panel.style.display = 'grid';
   panel.innerHTML = `
     <div class="account-insight"><strong>${orders.length}</strong><span>Order${orders.length === 1 ? '' : 's'} placed</span></div>
-    <div class="account-insight"><strong>${escapeHtml(formatCurrency(totalSpent))}</strong><span>Estimated total</span></div>
     <div class="account-insight"><strong>${escapeHtml(favoritePickup)}</strong><span>Favorite pickup</span></div>
-    <div class="account-insight"><strong>${escapeHtml(favoriteItem)}</strong><span>Most ordered</span></div>`;
+    <div class="account-insight"><strong>${escapeHtml(favoriteItem)}</strong><span>Most ordered</span></div>
+    <div class="account-insight"><strong>${escapeHtml(latestLabel)}</strong><span>Latest order</span></div>`;
 }
 
 function renderOrderItemsTable(items = []) {
@@ -327,13 +322,89 @@ function renderOrderItemsTable(items = []) {
     </div>`;
 }
 
+function buildOrderDetailHtml(order = {}) {
+  const total = orderTotalValue(order);
+  const location = order.locationLabel || LOCATION_LABELS[order.location] || 'Pickup location pending';
+  const orderNumber = order.orderNumber || order.id || 'Order received';
+  const paymentMethod = orderPaymentLabel(order);
+  const paymentStatus = orderPaymentStatus(order);
+  const totalBoxes = order.totalBoxes || (order.items || []).reduce((sum, item) => sum + Number(item.qty || 1), 0);
+
+  return `
+    <h2 class="order-modal-title" id="orderDetailTitle">${escapeHtml(orderNumber)}</h2>
+    <div class="order-modal-sub">${escapeHtml(formatDateTime(order.createdAt))} - ${escapeHtml(location)}</div>
+    <div class="order-detail-grid">
+      <div class="order-detail-cell"><span>Order number</span><strong>${escapeHtml(orderNumber)}</strong></div>
+      <div class="order-detail-cell"><span>Pickup</span><strong>${escapeHtml(location)}</strong></div>
+      <div class="order-detail-cell"><span>Payment method</span><strong>${escapeHtml(paymentMethod)}</strong></div>
+      <div class="order-detail-cell"><span>Payment status</span><strong>${escapeHtml(paymentStatus)}</strong></div>
+      <div class="order-detail-cell"><span>Total boxes</span><strong>${escapeHtml(String(totalBoxes))}</strong></div>
+      <div class="order-detail-cell"><span>Total price</span><strong>${escapeHtml(formatCurrency(total))}</strong></div>
+    </div>
+    ${renderOrderItemsTable(order.items || [])}
+    <div class="order-note">${escapeHtml(orderStatusMessage(order))}</div>
+    <div class="order-history-actions">
+      <button class="order-mini-btn primary" type="button" data-order-reorder="${escapeHtml(order.id)}">Order again</button>
+      <button class="order-mini-btn" type="button" data-order-print="${escapeHtml(order.id)}">Print summary</button>
+      <a class="order-mini-btn" href="shop.html">Shop fresh arrivals</a>
+    </div>`;
+}
+
+function openOrderModal(order = {}) {
+  const modal = el('orderDetailModal');
+  const content = el('orderModalContent');
+  if (!modal || !content) return;
+
+  content.innerHTML = buildOrderDetailHtml(order);
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  bindOrderModalActions();
+}
+
+function closeOrderModal() {
+  const modal = el('orderDetailModal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+function handleOrderModalOverlayClick(event) {
+  if (event.target?.id === 'orderDetailModal') closeOrderModal();
+}
+
+function findCurrentOrder(id) {
+  return currentOrders.find((item) => item.id === id);
+}
+
+function bindOrderModalActions() {
+  const modal = el('orderDetailModal');
+  modal?.querySelectorAll('[data-order-reorder]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const order = findCurrentOrder(button.dataset.orderReorder);
+      if (!order?.items?.length) return;
+      sessionStorage.setItem('shrish_cart', JSON.stringify(order.items.map(normalizeCartItem)));
+      trackAccountEvent('customer_order_reordered', {
+        order_number: order.orderNumber || order.id || ''
+      });
+      window.location.href = 'order.html';
+    });
+  });
+
+  modal?.querySelectorAll('[data-order-print]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const order = findCurrentOrder(button.dataset.orderPrint);
+      if (order) printOrderSummary(order);
+    });
+  });
+}
+
 function bindOrderHistoryActions(orders = []) {
   document.querySelectorAll('[data-order-toggle]').forEach((button) => {
     button.addEventListener('click', () => {
-      const card = button.closest('.order-history-card');
-      const isOpen = card?.classList.toggle('open');
-      button.textContent = isOpen ? 'Hide details' : 'View details';
-      button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      const order = orders.find((item) => item.id === button.dataset.orderToggle);
+      if (order) openOrderModal(order);
     });
   });
 
@@ -349,12 +420,7 @@ function bindOrderHistoryActions(orders = []) {
     });
   });
 
-  document.querySelectorAll('[data-order-print]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const order = orders.find((item) => item.id === button.dataset.orderPrint);
-      if (order) printOrderSummary(order);
-    });
-  });
+  el('orderModalClose')?.addEventListener('click', closeOrderModal);
 }
 
 function printOrderSummary(order = {}) {
@@ -406,7 +472,6 @@ function renderOrders(orders = []) {
     const status = String(order.status || 'pending').replace(/_/g, ' ');
     const location = order.locationLabel || LOCATION_LABELS[order.location] || 'Pickup location pending';
     const paymentMethod = orderPaymentLabel(order);
-    const paymentStatus = orderPaymentStatus(order);
     const orderNumber = order.orderNumber || order.id || 'Order received';
     return `
       <article class="order-history-card" data-order-id="${escapeHtml(order.id)}">
@@ -424,25 +489,8 @@ function renderOrders(orders = []) {
           <span>${escapeHtml(paymentMethod)}</span>
         </div>
         <div class="order-history-actions">
-          <button class="order-mini-btn primary" type="button" data-order-toggle="${escapeHtml(order.id)}" aria-expanded="false">View details</button>
+          <button class="order-mini-btn primary" type="button" data-order-toggle="${escapeHtml(order.id)}">View details</button>
           <button class="order-mini-btn" type="button" data-order-reorder="${escapeHtml(order.id)}">Order again</button>
-          <a class="order-mini-btn" href="${escapeHtml(orderWhatsAppHref(order))}" target="_blank" rel="noopener">Ask about this</a>
-        </div>
-        <div class="order-detail-panel">
-          <div class="order-detail-grid">
-            <div class="order-detail-cell"><span>Order number</span><strong>${escapeHtml(orderNumber)}</strong></div>
-            <div class="order-detail-cell"><span>Pickup</span><strong>${escapeHtml(location)}</strong></div>
-            <div class="order-detail-cell"><span>Payment method</span><strong>${escapeHtml(paymentMethod)}</strong></div>
-            <div class="order-detail-cell"><span>Payment status</span><strong>${escapeHtml(paymentStatus)}</strong></div>
-            <div class="order-detail-cell"><span>Total boxes</span><strong>${escapeHtml(String(order.totalBoxes || (order.items || []).reduce((sum, item) => sum + Number(item.qty || 1), 0)))}</strong></div>
-            <div class="order-detail-cell"><span>Estimated total</span><strong>${escapeHtml(formatCurrency(total))}</strong></div>
-          </div>
-          ${renderOrderItemsTable(order.items || [])}
-          <div class="order-note">${escapeHtml(orderStatusMessage(order))}</div>
-          <div class="order-history-actions">
-            <button class="order-mini-btn" type="button" data-order-print="${escapeHtml(order.id)}">Print summary</button>
-            <a class="order-mini-btn" href="shop.html">Shop fresh arrivals</a>
-          </div>
         </div>
       </article>`;
   }).join('');
@@ -603,6 +651,10 @@ function bindForms() {
     await signOut(auth);
     trackAccountEvent('admin_account_signed_out');
   });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeOrderModal();
+  });
 }
 
 function showDisabledState() {
@@ -644,5 +696,7 @@ function init() {
     subscribeOrders(user);
   });
 }
+
+window.handleOrderModalOverlayClick = handleOrderModalOverlayClick;
 
 init();
