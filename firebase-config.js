@@ -13,5 +13,5 @@ window.SHRISH_APP_CONFIG = {
   supportEmail: "orders@shrish.co",
   supportPhone: "+1 (765) 325-5577",
   defaultOrderStatus: "pending",
-  customerAccountsEnabled: false
+  customerAccountsEnabled: true
 };
