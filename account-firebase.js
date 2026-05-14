@@ -65,6 +65,23 @@ function showMessage(id, type, text) {
   node.textContent = text;
 }
 
+function showEmailExistsMessage(email) {
+  const node = el('authMessage');
+  if (!node) return;
+  node.className = 'account-message show error';
+  node.textContent = 'An account already exists for that email.';
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'account-message-action';
+  button.textContent = 'Sign in';
+  button.addEventListener('click', () => {
+    setAuthMode('signin');
+    if (el('signinEmail')) el('signinEmail').value = email || el('signupEmail')?.value || '';
+    el('signinPassword')?.focus();
+  });
+  node.appendChild(button);
+}
+
 function clearMessage(id) {
   const node = el(id);
   if (!node) return;
@@ -107,7 +124,7 @@ function validPhone(value) {
 
 function authErrorMessage(error) {
   const code = String(error?.code || '');
-  if (code.includes('email-already-in-use')) return 'An account already exists for that email. Try signing in.';
+  if (code.includes('email-already-in-use')) return 'An account already exists for that email.';
   if (code.includes('invalid-email')) return 'Enter a valid email address.';
   if (code.includes('weak-password')) return 'Use a password with at least 6 characters.';
   if (code.includes('wrong-password') || code.includes('invalid-credential') || code.includes('user-not-found')) {
@@ -786,7 +803,11 @@ function bindForms() {
       await signInWithEmailAndPassword(auth, email, password);
       trackAccountEvent('customer_signed_in');
     } catch (error) {
-      showMessage('authMessage', 'error', authErrorMessage(error));
+      if (String(error?.code || '').includes('email-already-in-use')) {
+        showEmailExistsMessage(email);
+      } else {
+        showMessage('authMessage', 'error', authErrorMessage(error));
+      }
     } finally {
       setButtonBusy(button, false);
     }
