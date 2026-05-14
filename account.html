@@ -42,6 +42,13 @@
 .account-state.active{display:block}
 .profile-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:20px}
 .profile-email{color:var(--text-light);font-size:14px;margin-top:5px}
+.profile-view{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.profile-view-card{border:1px solid rgba(200,121,26,.16);border-radius:14px;background:#fffdf8;padding:13px 14px;min-height:70px}
+.profile-view-card.full{grid-column:1/-1}
+.profile-view-card span{display:block;color:var(--text-light);font-size:12px;font-weight:800;margin-bottom:6px}
+.profile-view-card strong{display:block;color:var(--dark);font-size:16px;line-height:1.35;font-weight:600;word-break:break-word}
+.profile-view-card .empty{color:var(--text-light);font-weight:500}
+.profile-form-wrap[hidden],.profile-view[hidden]{display:none}
 .profile-email-edit{border:1px solid rgba(200,121,26,.18);border-radius:14px;background:#fffdf8;padding:14px;margin-bottom:18px}
 .profile-email-edit .account-muted{margin-bottom:12px}
 .orders-list{display:grid;gap:14px}
@@ -100,7 +107,7 @@
 .empty-orders{border:1px dashed rgba(200,121,26,.35);border-radius:16px;padding:24px;text-align:center;color:var(--text-light);background:#fffdf8}
 .admin-account-note{border:1px solid rgba(200,121,26,.22);border-radius:16px;background:#fffdf8;padding:18px;color:var(--text-light);font-size:15px;line-height:1.7;margin-bottom:18px}
 .admin-account-note strong{color:var(--dark)}
-@media(max-width:900px){.account-shell{grid-template-columns:1fr;padding:40px 20px 64px}.account-form.two-col,.account-insights,.order-detail-grid{grid-template-columns:1fr}.profile-header{flex-direction:column}.order-modal-card{padding:24px 18px}.order-items-row{grid-template-columns:minmax(0,1fr) 44px 76px}.order-edit-heading{display:block}.order-edit-heading span{text-align:left;margin-top:4px}.order-edit-row{grid-template-columns:minmax(0,1fr);align-items:start}.order-edit-line{text-align:left}}
+@media(max-width:900px){.account-shell{grid-template-columns:1fr;padding:40px 20px 64px}.account-form.two-col,.account-insights,.order-detail-grid,.profile-view{grid-template-columns:1fr}.profile-header{flex-direction:column}.order-modal-card{padding:24px 18px}.order-items-row{grid-template-columns:minmax(0,1fr) 44px 76px}.order-edit-heading{display:block}.order-edit-heading span{text-align:left;margin-top:4px}.order-edit-row{grid-template-columns:minmax(0,1fr);align-items:start}.order-edit-line{text-align:left}}
 </style>
 <script>
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -220,7 +227,9 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 
     <div class="account-message" id="profileMessage"></div>
 
-    <form class="account-form two-col" id="profileForm">
+    <div class="profile-view" id="profileView"></div>
+
+    <form class="account-form two-col profile-form-wrap" id="profileForm" hidden>
       <div class="form-group full">
         <label class="form-label" for="profileEmailInput">Email Address</label>
         <input class="form-control" id="profileEmailInput" type="email" autocomplete="email" required disabled>
@@ -267,12 +276,15 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
         <input class="form-control" id="profileZip" type="text" autocomplete="postal-code" disabled>
       </div>
       <div class="account-actions full">
-        <button class="account-button" type="button" id="editProfileBtn">Edit Profile</button>
         <button class="account-button" type="submit" id="saveProfileBtn" hidden>Save Changes</button>
         <button class="account-button subtle" type="button" id="cancelProfileEditBtn" hidden>Cancel</button>
         <a class="account-button subtle" href="shop.html">Shop Now</a>
       </div>
     </form>
+    <div class="account-actions">
+      <button class="account-button" type="button" id="editProfileBtn">Edit Profile</button>
+      <a class="account-button subtle" href="shop.html">Shop Now</a>
+    </div>
   </section>
 
   <section class="account-panel account-state" id="adminPanel">
@@ -324,7 +336,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="analytics.js?v=customer-accounts-1"></script>
 <script src="main.js?v=account-menu-2"></script>
 <script src="firebase-config.js"></script>
-<script type="module" src="account-firebase.js?v=customer-order-account-3"></script>
+<script type="module" src="account-firebase.js?v=customer-order-account-4"></script>
 
 </body>
 </html>

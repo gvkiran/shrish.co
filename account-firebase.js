@@ -290,6 +290,30 @@ function fillProfile(profile = {}, user) {
   el('profileCity').value = profile.city || '';
   el('profileZip').value = profile.zip || '';
   latestProfileSnapshot = { ...profile, email };
+  renderProfileView(latestProfileSnapshot);
+}
+
+function profileValue(value) {
+  const text = String(value || '').trim();
+  return text ? escapeHtml(text) : '<span class="empty">Not added yet</span>';
+}
+
+function renderProfileView(profile = {}) {
+  const view = el('profileView');
+  if (!view) return;
+  const name = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
+  const pickup = profile.preferredPickupLocationLabel || LOCATION_LABELS[profile.preferredPickupLocation] || '';
+  const address = [profile.addressLine1, profile.addressLine2, profile.city, profile.zip]
+    .filter(Boolean)
+    .join(', ');
+  view.innerHTML = `
+    <div class="profile-view-card full"><span>Email</span><strong>${profileValue(profile.email)}</strong></div>
+    <div class="profile-view-card"><span>Name</span><strong>${profileValue(name)}</strong></div>
+    <div class="profile-view-card"><span>Phone</span><strong>${profileValue(profile.phone)}</strong></div>
+    <div class="profile-view-card"><span>Preferred Pickup</span><strong>${profileValue(pickup)}</strong></div>
+    <div class="profile-view-card"><span>City</span><strong>${profileValue(profile.city)}</strong></div>
+    <div class="profile-view-card full"><span>Address</span><strong>${profileValue(address)}</strong></div>
+  `;
 }
 
 function setProfileEditing(editing) {
@@ -304,6 +328,8 @@ function setProfileEditing(editing) {
   el('editProfileBtn').hidden = editing;
   el('saveProfileBtn').hidden = !editing;
   el('cancelProfileEditBtn').hidden = !editing;
+  el('profileView').hidden = editing;
+  form.hidden = !editing;
   form.classList.toggle('is-editing', editing);
   if (!editing) el('profileCurrentPassword').value = '';
 }
@@ -967,6 +993,7 @@ function bindForms() {
       savedProfile.email = savedEmail;
       latestProfileSnapshot = savedProfile;
       el('profileEmail').textContent = savedEmail;
+      renderProfileView(savedProfile);
       setProfileEditing(false);
       showMessage('profileMessage', 'ok', 'Profile changes saved.');
       trackAccountEvent('customer_profile_saved');
