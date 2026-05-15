@@ -118,6 +118,19 @@ function trackShopViewedOnce() {
 applyInitialShopFiltersFromUrl();
 
 const FORCE_BASE_PRODUCT_OVERRIDES = {};
+const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
+
+function applyCatalogFieldOverrides(product = {}) {
+  const override = CATALOG_FIELD_OVERRIDES[product.id];
+  if (!override) return product;
+  return {
+    ...product,
+    ...override,
+    variants: Array.isArray(override.variants)
+      ? override.variants.map((variant) => ({ ...variant }))
+      : product.variants
+  };
+}
 
 const LEGACY_VARIANT_FALLBACKS = {
   puth_plain: {
@@ -198,17 +211,17 @@ function mergeProducts(docs) {
       merged.unit = namedFallback.unit;
       merged.price = namedFallback.price;
     }
-    return merged;
+    return applyCatalogFieldOverrides(merged);
   });
   const extraProducts = normalizedDocs
     .filter((item) => !baseProducts.some((product) => product.id === item.id))
     .map((item) => {
       const fallback = getLegacyVariantFallback(item);
-      if (!fallback) return { ...item };
+      if (!fallback) return applyCatalogFieldOverrides({ ...item });
       const hasVariants = Array.isArray(item.variants) && item.variants.length;
       return hasVariants
-        ? { ...item }
-        : { ...item, ...fallback };
+        ? applyCatalogFieldOverrides({ ...item })
+        : applyCatalogFieldOverrides({ ...item, ...fallback });
     });
   window.SHRISH_DATA.products = sortCatalogProducts(
     [...mergedBase, ...extraProducts]

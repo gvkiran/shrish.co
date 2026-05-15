@@ -74,6 +74,20 @@ function cartItemId(productId, variantId = 'default') {
   return variantId === 'default' ? productId : `${productId}__${variantId}`;
 }
 
+const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
+
+function applyCatalogFieldOverrides(product = {}) {
+  const override = CATALOG_FIELD_OVERRIDES[product.id];
+  if (!override) return product;
+  return {
+    ...product,
+    ...override,
+    variants: Array.isArray(override.variants)
+      ? override.variants.map((variant) => ({ ...variant }))
+      : product.variants
+  };
+}
+
 function liveProductVariants(product = {}) {
   if (Array.isArray(product.variants) && product.variants.length) {
     return product.variants
@@ -157,7 +171,7 @@ async function verifyCartAgainstLiveProducts() {
       continue;
     }
 
-    const product = { id: productId, ...productSnap.data() };
+    const product = applyCatalogFieldOverrides({ id: productId, ...productSnap.data() });
     if (product.hidden || !product.available || product.displayOnly) {
       cartChanged = true;
       messages.push(`${product.name || itemName} is currently not available and was removed from your cart.`);
