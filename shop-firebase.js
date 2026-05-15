@@ -740,7 +740,7 @@ function renderCard(p) {
         ${p.localName ? `<div class="pc-local">${escapeHtml(p.localName)}</div>` : ''}
         <div class="pc-short-desc">${escapeHtml(shortDesc)}</div>
         ${recommendationTagHtml ? `<div class="pc-rec-tags">${recommendationTagHtml}</div>` : ''}
-        <div class="pc-footer"><div class="pc-price-wrap"><div class="pc-price">${escapeHtml(selectedCardVariant.price || p.price)}</div></div></div>
+        <div class="pc-footer"><div class="pc-price-wrap"><div class="pc-price" id="card-price-${escapeHtml(p.id)}">${escapeHtml(selectedCardVariant.price || p.price)}</div></div></div>
         ${actionHtml}
       </div>
     </div>`;
@@ -768,6 +768,11 @@ function cardVariantChanged(productId, variantId) {
   renderCardQty(productId);
 }
 
+function updateCardDisplayedPrice(productId, price) {
+  const priceEl = document.getElementById(`card-price-${productId}`);
+  if (priceEl) priceEl.textContent = price || '';
+}
+
 function renderCardQty(productId) {
   const wrap = document.getElementById(`card-actions-${productId}`);
   if (!wrap) return;
@@ -782,6 +787,7 @@ function renderCardQty(productId) {
   if (usesVariantUI(product)) {
     const variants = getProductVariants(product);
     const selectedVariant = getCardSelectedVariant(product);
+    updateCardDisplayedPrice(product.id, selectedVariant.price || product.price);
     const cartItemId = buildCartItemId(product.id, selectedVariant.id);
     const item = cart.find((x) => x.id === cartItemId);
     const qty = item ? item.qty : 0;
@@ -794,6 +800,7 @@ function renderCardQty(productId) {
     wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><div class="pc-variant-list"><select class="pc-variant-select" onchange="cardVariantChanged('${escapeHtml(product.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === selectedVariant.id ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select><div class="card-qty-wrap"><button class="card-qty-btn remove-btn" onclick="cardVariantQtyChange('${escapeHtml(product.id)}','${escapeHtml(selectedVariant.id)}',-1)" title="Remove one">-</button><div class="card-qty-mid"><span class="cqn">${qty}</span><span style="font-size:11px;opacity:.85">${escapeHtml(selectedVariant.label)}</span></div><button class="card-qty-btn" onclick="cardVariantQtyChange('${escapeHtml(product.id)}','${escapeHtml(selectedVariant.id)}',1)" title="Add one">+</button></div></div>`;
     return;
   }
+  updateCardDisplayedPrice(product.id, product.price);
   const item = cart.find((x) => x.id === productId);
   const qty = item ? item.qty : 0;
   if (qty === 0) {
