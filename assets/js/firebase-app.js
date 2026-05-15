@@ -18,7 +18,7 @@ const required = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagi
 const config = window.SHRISH_FIREBASE_CONFIG || {};
 const missing = required.filter((key) => !config[key] || String(config[key]).includes('REPLACE_ME'));
 if (missing.length) {
-  console.warn('Firebase config is incomplete. Update firebase-config.js:', missing.join(', '));
+  console.warn('Firebase config is incomplete. Update assets/js/firebase-config.js:', missing.join(', '));
 }
 
 const app = initializeApp(config);

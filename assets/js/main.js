@@ -16,6 +16,18 @@ function trackShrishEvent(eventName, props = {}) {
 // ââ INJECT GLOBAL UI (runs on every page) âââââââââââââââââ
 const GEET_SESSION_KEY = 'shrish_geet_conversation_v1';
 let productDataLoadPromise = null;
+const SHRISH_MAIN_SCRIPT_BASE = (() => {
+  const script = document.currentScript;
+  if (!script?.src) return '';
+  try {
+    return new URL('.', script.src).href;
+  } catch (error) {
+    return '';
+  }
+})();
+function shrishScriptAsset(fileName) {
+  return SHRISH_MAIN_SCRIPT_BASE ? new URL(fileName, SHRISH_MAIN_SCRIPT_BASE).href : `assets/js/${fileName}`;
+}
 
 const GEET_RESPONSES = {
   sweet: {
@@ -288,7 +300,7 @@ function ensureProductSearchData() {
       return;
     }
     const script = document.createElement('script');
-    script.src = 'data.js';
+    script.src = shrishScriptAsset('data.js');
     script.defer = true;
     script.onload = () => resolve();
     script.onerror = () => resolve();
@@ -1426,7 +1438,7 @@ function setupCustomerAccountNav(navCartWrap, navMobile) {
 
   if (!window.SHRISH_FIREBASE_CONFIG?.apiKey) return;
 
-  import('./firebase-app.js')
+  import(shrishScriptAsset('firebase-app.js'))
     .then(({ auth, onAuthStateChanged, signOut }) => {
       const authApi = { auth, signOut };
       onAuthStateChanged(auth, (user) => {

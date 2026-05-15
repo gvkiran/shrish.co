@@ -1,7 +1,7 @@
 /* ============================================================
    SHRISH LLC — Site Enhancements v1.0
-   Add this script tag AFTER main.js in every HTML page:
-   <script src="enhancements.js"></script>
+   Add this script tag AFTER assets/js/main.js in every HTML page:
+   <script src="assets/js/enhancements.js"></script>
    ============================================================ */
 
 (function () {

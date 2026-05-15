@@ -23,10 +23,10 @@ const SHOP_FILTER_BY_CATEGORY = {
 };
 
 function readData() {
-  const code = fs.readFileSync(path.join(ROOT, 'data.js'), 'utf8') + '\n;globalThis.__SHRISH_DATA = SHRISH_DATA;';
+  const code = fs.readFileSync(path.join(ROOT, 'assets/js/data.js'), 'utf8') + '\n;globalThis.__SHRISH_DATA = SHRISH_DATA;';
   const context = { console };
   context.window = context;
-  vm.runInNewContext(code, context, { filename: 'data.js' });
+  vm.runInNewContext(code, context, { filename: 'assets/js/data.js' });
   return context.__SHRISH_DATA;
 }
 
@@ -201,7 +201,7 @@ function renderProductPage(product) {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="${ROOT_PREFIX}images/brand/logo.png" type="image/png">
-  <link rel="stylesheet" href="${ROOT_PREFIX}styles.css">
+  <link rel="stylesheet" href="${ROOT_PREFIX}assets/css/styles.css">
   <style>
     .product-page { background: var(--cream); min-height: 100vh; }
     .product-nav { border-bottom: 1px solid rgba(200,121,26,.14); background: rgba(253,246,236,.96); }
@@ -310,7 +310,7 @@ function renderProductsIndex(products) {
   <meta name="description" content="Browse Shrish product pages by category.">
   <link rel="canonical" href="${SITE_URL}/shop/products/">
   <link rel="icon" href="../../images/brand/logo.png" type="image/png">
-  <link rel="stylesheet" href="../../styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
   <style>
     .directory { max-width: 1120px; margin: 0 auto; padding: 56px 24px; }
     .directory h1 { font-family: var(--font-display); color: var(--dark); font-size: clamp(2.4rem,5vw,4rem); }
