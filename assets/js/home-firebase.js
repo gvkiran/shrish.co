@@ -297,7 +297,6 @@ function renderHomeProducts(products) {
           <div class="product-card-footer">
             <div>
               <div class="product-price">${escapeHtml(p.price)}</div>
-              <div class="product-unit">${escapeHtml(p.unit)}</div>
             </div>
             <span class="product-status-badge ${p.available ? 'available' : 'unavailable'}">
               ${p.available ? 'Available' : 'Sold Out'}
@@ -318,7 +317,21 @@ function renderHomeProducts(products) {
 
 function mergeProducts(baseProducts, docs) {
   const byId = new Map(docs.map((doc) => [doc.id, doc]));
-  return baseProducts.map((product) => ({ ...product, ...(byId.get(product.id) || {}) }));
+  return baseProducts.map((product) => applyCatalogFieldOverrides({ ...product, ...(byId.get(product.id) || {}) }));
+}
+
+const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
+
+function applyCatalogFieldOverrides(product = {}) {
+  const override = CATALOG_FIELD_OVERRIDES[product.id];
+  if (!override) return product;
+  return {
+    ...product,
+    ...override,
+    variants: Array.isArray(override.variants)
+      ? override.variants.map((variant) => ({ ...variant }))
+      : product.variants
+  };
 }
 
 function init() {

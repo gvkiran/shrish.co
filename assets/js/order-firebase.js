@@ -122,13 +122,17 @@ function trackCheckoutEvent(eventName, props = {}) {
 function cartAnalyticsSummary() {
   const totalItems = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
   const totalValue = cart.reduce((sum, item) => {
-    const num = parseFloat(String(item.price || '0').replace(/[^0-9.]/g, ''));
-    return sum + (Number.isNaN(num) ? 0 : num * (item.qty || 1));
+    return sum + (moneyValue(item.price) * (item.qty || 1));
   }, 0);
   return {
     cart_total_items: totalItems,
     cart_estimated_total: Number(totalValue.toFixed(2))
   };
+}
+
+function moneyValue(value) {
+  const num = parseFloat(String(value ?? '0').replace(/[^0-9.]/g, ''));
+  return Number.isFinite(num) ? num : 0;
 }
 
 function pickupLocationLabel(locationId) {
@@ -155,6 +159,172 @@ function saveCart() {
   sessionStorage.setItem('shrish_cart', JSON.stringify(cart));
 }
 
+function cartItemProductId(item = {}) {
+  return item.productId || String(item.id || '').split('__')[0] || '';
+}
+
+function cartItemVariantId(item = {}) {
+  if (item.variantId) return item.variantId;
+  const id = String(item.id || '');
+  return id.includes('__') ? id.split('__')[1] : 'default';
+}
+
+function cartItemId(productId, variantId = 'default') {
+  return variantId === 'default' ? productId : `${productId}__${variantId}`;
+}
+
+const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
+
+function applyCatalogFieldOverrides(product = {}) {
+  const override = CATALOG_FIELD_OVERRIDES[product.id];
+  if (!override) return product;
+  return {
+    ...product,
+    ...override,
+    variants: Array.isArray(override.variants)
+      ? override.variants.map((variant) => ({ ...variant }))
+      : product.variants
+  };
+}
+
+function liveProductVariants(product = {}) {
+  if (Array.isArray(product.variants) && product.variants.length) {
+    return product.variants
+      .filter((variant) => variant?.label)
+      .map((variant, index) => ({
+        id: variant.id || `opt${index + 1}`,
+        label: variant.label,
+        price: variant.price || product.price || '',
+        unit: variant.label || product.unit || ''
+      }));
+  }
+
+  return [{
+    id: 'default',
+    label: product.unit || 'Default',
+    price: product.price || '',
+    unit: product.unit || ''
+  }];
+}
+
+function liveCartItemFromProduct(product, cartItem) {
+  const productId = cartItemProductId(cartItem);
+  const variantId = cartItemVariantId(cartItem);
+  const variants = liveProductVariants(product);
+  const selectedVariant = variants.find((variant) => variant.id === variantId);
+  if (!selectedVariant) return null;
+
+  const price = selectedVariant.price || product.price || '';
+  if (moneyValue(price) <= 0) return null;
+
+  const qty = Math.max(1, parseInt(cartItem.qty, 10) || 1);
+
+  return {
+    id: cartItemId(productId, selectedVariant.id),
+    productId,
+    variantId: selectedVariant.id,
+    name: selectedVariant.id === 'default' ? (product.name || cartItem.name || 'Item') : `${product.name || cartItem.name || 'Item'} (${selectedVariant.label})`,
+    price,
+    unit: selectedVariant.unit || product.unit || '',
+    image: product.image || cartItem.image || null,
+    qty
+  };
+}
+
+function showCartValidationMessage(messages = []) {
+  const banner = document.getElementById('errorBanner');
+  const list = document.getElementById('errorList');
+  if (!banner || !list) return;
+
+  list.innerHTML = messages.map((message) => `<li>${escapeHtml(message)}</li>`).join('');
+  banner.className = 'error-banner show hard-error';
+  banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function verifyCartAgainstLiveProducts() {
+  const messages = [];
+  const verifiedCart = [];
+  let cartChanged = false;
+
+  for (const item of cart) {
+    const productId = cartItemProductId(item);
+    const itemName = item.name || 'This item';
+
+    if (!productId) {
+      cartChanged = true;
+      messages.push(`${itemName} could not be verified and was removed from your cart.`);
+      continue;
+    }
+
+    let productSnap;
+    try {
+      productSnap = await getDoc(doc(db, 'products', productId));
+    } catch (error) {
+      console.error('Live product check failed', error);
+      throw new Error('LIVE_PRODUCT_CHECK_FAILED');
+    }
+
+    if (!productSnap.exists()) {
+      cartChanged = true;
+      messages.push(`${itemName} is no longer in the live catalog and was removed from your cart.`);
+      continue;
+    }
+
+    const product = applyCatalogFieldOverrides({ id: productId, ...productSnap.data() });
+    if (product.hidden || !product.available || product.displayOnly) {
+      cartChanged = true;
+      messages.push(`${product.name || itemName} is currently not available and was removed from your cart.`);
+      continue;
+    }
+
+    const liveItem = liveCartItemFromProduct(product, item);
+    if (!liveItem) {
+      cartChanged = true;
+      messages.push(`${product.name || itemName} is no longer available in the selected option and was removed from your cart.`);
+      continue;
+    }
+
+    const oldPrice = moneyValue(item.price);
+    const newPrice = moneyValue(liveItem.price);
+    if (oldPrice !== newPrice) {
+      cartChanged = true;
+      messages.push(`${liveItem.name} price changed from ${formatCurrency(oldPrice)} to ${formatCurrency(newPrice)}. Please review your cart and place the order again.`);
+    }
+
+    if (
+      liveItem.id !== item.id ||
+      liveItem.name !== item.name ||
+      liveItem.price !== item.price ||
+      liveItem.unit !== item.unit ||
+      liveItem.image !== item.image ||
+      liveItem.qty !== item.qty
+    ) {
+      cartChanged = true;
+    }
+
+    verifiedCart.push(liveItem);
+  }
+
+  if (cartChanged) {
+    cart = verifiedCart;
+    saveCart();
+    renderCartReview();
+    updateNavCart();
+  }
+
+  if (messages.length) {
+    showCartValidationMessage(messages);
+    trackCheckoutEvent('checkout_cart_revalidated', {
+      changed_count: messages.length,
+      cart_remaining_items: cart.reduce((sum, item) => sum + (item.qty || 0), 0),
+      ...cartAnalyticsSummary()
+    });
+    return false;
+  }
+
+  return true;
+}
+
 function renderCartReview() {
   const container = document.getElementById('cartReviewContainer');
   if (!container) return;
@@ -166,8 +336,7 @@ function renderCartReview() {
 
   const totalQty = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
   const totalPrice = cart.reduce((sum, item) => {
-    const num = parseFloat(String(item.price || '0').replace(/[^0-9.]/g, ''));
-    return sum + (Number.isNaN(num) ? 0 : num * (item.qty || 1));
+    return sum + (moneyValue(item.price) * (item.qty || 1));
   }, 0);
 
   container.innerHTML =
@@ -181,8 +350,7 @@ function renderCartReview() {
     cart
       .map((item) => {
         const qty = Number(item.qty || 0);
-        const unitPrice = parseFloat(String(item.price || '0').replace(/[^0-9.]/g, ''));
-        const lineTotal = Number.isNaN(unitPrice) ? 0 : unitPrice * qty;
+        const lineTotal = moneyValue(item.price) * qty;
         const unitLabel = String(item.unit || '').trim();
 
         return `<div class="review-item">
@@ -678,6 +846,9 @@ async function submitOrder() {
       submitBtn.textContent = 'Submitting...';
     }
 
+    const cartIsCurrent = await verifyCartAgainstLiveProducts();
+    if (!cartIsCurrent) return;
+
     const lockRef = orderLockRef(phoneDigits);
     const lockSnap = await getDoc(lockRef);
     const lockStatus = lockSnap.exists() ? (lockSnap.data()?.status || 'pending') : '';
@@ -713,12 +884,11 @@ async function submitOrder() {
         price: item.price || 'TBD',
         unit: item.unit || '',
         qty: item.qty || 1,
-        lineTotal: parseFloat(String(item.price || '0').replace(/[^0-9.]/g, '')) * (item.qty || 1)
+        lineTotal: moneyValue(item.price) * (item.qty || 1)
       })),
       totalBoxes: cart.reduce((sum, item) => sum + (item.qty || 1), 0),
       totalPrice: cart.reduce((sum, item) => {
-        const num = parseFloat(String(item.price || '0').replace(/[^0-9.]/g, ''));
-        return sum + (Number.isNaN(num) ? 0 : num * (item.qty || 1));
+        return sum + (moneyValue(item.price) * (item.qty || 1));
       }, 0),
       payment: 'pending',
       status: 'pending',
@@ -821,7 +991,11 @@ async function submitOrder() {
   } catch (error) {
     console.error('Order submit failed', error);
     trackCheckoutEvent('order_submit_failed', {
-      reason: error?.message === 'DUPLICATE_PENDING_ORDER' ? 'duplicate_pending_order' : (error?.code || 'submit_error'),
+      reason: error?.message === 'DUPLICATE_PENDING_ORDER'
+        ? 'duplicate_pending_order'
+        : error?.message === 'LIVE_PRODUCT_CHECK_FAILED'
+          ? 'live_product_check_failed'
+          : (error?.code || 'submit_error'),
       ...cartAnalyticsSummary(),
       pickup_location: selectedLoc || ''
     });
@@ -841,6 +1015,9 @@ async function submitOrder() {
 
       setErrorBannerTitle('You already have a pending order');
       list.innerHTML = '<li>Please sign in to your Shrish account to modify your existing pending order, or contact us on WhatsApp if you need help.</li>';
+    } else if (error?.message === 'LIVE_PRODUCT_CHECK_FAILED') {
+      setErrorBannerTitle('Please refresh before placing your order');
+      list.innerHTML = '<li>We could not verify live product availability right now. Please refresh and try again before placing the order.</li>';
     } else {
       setErrorBannerTitle('Please fix the following before placing your order:');
       list.innerHTML = '<li>We could not submit your order right now. Please try again in a minute.</li>';

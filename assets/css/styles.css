@@ -665,7 +665,6 @@ button.btn-primary:active {
 .product-card-body p  { font-size: 15px; color: var(--text-light); line-height: 1.6; margin-bottom: 16px; }
 .product-card-footer  { display: flex; align-items: center; justify-content: space-between; }
 .product-price  { font-size: 18px; font-weight: 700; color: var(--saffron); }
-.product-unit   { font-size: 13px; color: var(--text-light); margin-top: 2px; }
 .product-status-badge {
   display: inline-block; padding: 4px 12px; border-radius: 50px;
   font-size: 12px; font-weight: 600;

@@ -39,8 +39,8 @@ const SHRISH_DATA = {
     {
       id: "kesar", category: "mangoes",
       name: "Kesar", localName: "કેસર", origin: "Junagadh, Gujarat",
-      price: "$40", unit: "per box (~3 kg)",
-      available: true, displayOnly: false, tag: "Sweet & Aromatic",
+      price: "$55", unit: "per box (~3 kg)",
+      available: false, displayOnly: false, tag: "Sweet & Aromatic",
       image: "images/products/mangoes/img_kesar.jpeg",
       description: "Gujarat's pride and the 'Queen of Mangoes'. Named for its saffron-coloured pulp, Kesar delivers a honey-sweet richness with a floral aroma. Round, medium-sized with nearly fiberless flesh. A household favourite across India.",
       season: "May - June", taste: "Honey-Sweet  -  Floral  -  Aromatic",
@@ -367,8 +367,8 @@ const SHRISH_DATA = {
     },
     {
       id: "picklespodi-chintakaya-pachadi-tamarind-pickle", category: "picklespodi",
-      name: "Chintakaya Pachadi / Tamarind Pickle", localName: "250g", origin: "Veg Pickle",
-      price: "$7.99", unit: "250g",
+      name: "Chintakaya Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
+      price: "$7.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/chintakaya-pachadi.jpg",
       description: "Traditional tamarind-style pickle with sharp tangy flavor and South Indian spice. Excellent with rice, dal, curd rice, and breakfast items.",
@@ -382,7 +382,8 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Hot",
       bestFor: "Hot rice - curd rice - dal - pesarattu - dosa",
       variants: [
-        { id: "pickle-chintakaya-250g", label: "250g", price: "$7.99", sku: "pickle-chintakaya-250g" }
+        { id: "pickle-chintakaya-250g", label: "250g", price: "$7.99", sku: "pickle-chintakaya-250g" },
+        { id: "pickle-chintakaya-500g", label: "500g", price: "$14.99", sku: "pickle-chintakaya-500g" }
       ]
     },
     {
@@ -408,8 +409,8 @@ const SHRISH_DATA = {
     },
     {
       id: "picklespodi-garlic-pickle", category: "picklespodi",
-      name: "Garlic Pickle", localName: "250g", origin: "Veg Pickle",
-      price: "$7.99", unit: "250g",
+      name: "Garlic Pickle", localName: "250g or 500g", origin: "Veg Pickle",
+      price: "$7.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/garlic-pickle.jpg",
       description: "Bold garlic pickle with strong spice and deep flavor. Best for customers who love a punchy pickle with rice, dosa, or chapati.",
@@ -423,13 +424,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Dal rice - curd rice - chapati - dosa - idli",
       variants: [
-        { id: "pickle-garlic-250g", label: "250g", price: "$7.99", sku: "pickle-garlic-250g" }
+        { id: "pickle-garlic-250g", label: "250g", price: "$7.99", sku: "pickle-garlic-250g" },
+        { id: "pickle-garlic-500g", label: "500g", price: "$14.99", sku: "pickle-garlic-500g" }
       ]
     },
     {
       id: "picklespodi-gongura-pickle", category: "picklespodi",
-      name: "Gongura Pickle", localName: "250g", origin: "Veg Pickle",
-      price: "$7.99", unit: "250g",
+      name: "Gongura Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
+      price: "$7.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/gongura-pickle.jpg",
       description: "Tangy gongura pickle with bold South Indian spice. A Telugu favorite that pairs beautifully with hot rice and ghee.",
@@ -443,13 +445,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Hot",
       bestFor: "Hot rice with ghee - dal rice - curd rice - dosa - chapati",
       variants: [
-        { id: "pickle-gongura-250g", label: "250g", price: "$7.99", sku: "pickle-gongura-250g" }
+        { id: "pickle-gongura-250g", label: "250g", price: "$7.99", sku: "pickle-gongura-250g" },
+        { id: "pickle-gongura-500g", label: "500g", price: "$14.99", sku: "pickle-gongura-500g" }
       ]
     },
     {
       id: "picklespodi-karivepaku-pachadi-curry-leaf-pickle", category: "picklespodi",
-      name: "Karivepaku Pachadi / Curry Leaf Pickle", localName: "200g", origin: "Veg Pickle",
-      price: "$7.99", unit: "200g",
+      name: "Karivepaku / Curry Leaf Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
+      price: "$8.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/karivepaku-pachadi.jpg",
       description: "Aromatic curry leaf pickle with earthy South Indian flavor and medium spice. Good with rice, idli, dosa, and curd rice.",
@@ -463,12 +466,13 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Hot rice - idli - dosa - curd rice",
       variants: [
-        { id: "pickle-karivepaku-pachadi-200g", label: "200g", price: "$7.99", sku: "pickle-karivepaku-pachadi-200g" }
+        { id: "pickle-karivepaku-pachadi-250g", label: "250g", price: "$8.99", sku: "pickle-karivepaku-pachadi-250g" },
+        { id: "pickle-karivepaku-pachadi-500g", label: "500g", price: "$16.99", sku: "pickle-karivepaku-pachadi-500g" }
       ]
     },
     {
       id: "picklespodi-kothimeera-coriander-pickle", category: "picklespodi",
-      name: "Kothimeera / Coriander Pickle", localName: "250g or 500g", origin: "Veg Pickle",
+      name: "Kothimeera Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$7.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/kothimeera-pickle.jpg",
@@ -484,7 +488,7 @@ const SHRISH_DATA = {
       bestFor: "Idli - dosa - curd rice - chapati - upma",
       variants: [
         { id: "pickle-kothimeera-250g", label: "250g", price: "$7.99", sku: "pickle-kothimeera-250g" },
-        { id: "pickle-kothimeera-500g", label: "500g", price: "$15.99", sku: "pickle-kothimeera-500g" }
+        { id: "pickle-kothimeera-500g", label: "500g", price: "$14.99", sku: "pickle-kothimeera-500g" }
       ]
     },
     {
@@ -505,13 +509,13 @@ const SHRISH_DATA = {
       bestFor: "Hot rice with ghee - curd rice - dosa - idli - chapati - dal rice",
       variants: [
         { id: "pickle-mango-avakai-250g", label: "250g", price: "$9.99", sku: "pickle-mango-avakai-250g" },
-        { id: "pickle-mango-avakai-500g", label: "500g", price: "$17.99", sku: "pickle-mango-avakai-500g" }
+        { id: "pickle-mango-avakai-500g", label: "500g", price: "$16.99", sku: "pickle-mango-avakai-500g" }
       ]
     },
     {
       id: "picklespodi-mango-ginger-pickle", category: "picklespodi",
-      name: "Mango Ginger Pickle", localName: "250g", origin: "Veg Pickle",
-      price: "$8.99", unit: "250g",
+      name: "Mango Ginger Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
+      price: "$8.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/mango-ginger-pickle.jpg",
       description: "A rare and flavorful pickle made with mango ginger. Fresh, aromatic, mildly tangy, and different from regular mango pickle.",
@@ -525,7 +529,8 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Curd rice - lemon rice - dosa - upma - chapati",
       variants: [
-        { id: "pickle-mango-ginger-250g", label: "250g", price: "$8.99", sku: "pickle-mango-ginger-250g" }
+        { id: "pickle-mango-ginger-250g", label: "250g", price: "$8.99", sku: "pickle-mango-ginger-250g" },
+        { id: "pickle-mango-ginger-500g", label: "500g", price: "$16.99", sku: "pickle-mango-ginger-500g" }
       ]
     },
     {
@@ -572,8 +577,8 @@ const SHRISH_DATA = {
     },
     {
       id: "picklespodi-pandu-mirchi-pickle", category: "picklespodi",
-      name: "Pandu Mirchi Pickle", localName: "500g", origin: "Veg Pickle",
-      price: "$17.99", unit: "500g",
+      name: "Pandu Mirchi Pickle", localName: "250g or 500g", origin: "Veg Pickle",
+      price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/pandu-mirchi-pickle.jpg",
       description: "Spicy red chilli pickle for customers who love serious heat. Strong, flavorful, and best with hot rice, dosa, idli, and curd rice.",
@@ -587,13 +592,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Very Hot",
       bestFor: "Hot rice with ghee - idli - dosa - pappu rice - curd rice",
       variants: [
+        { id: "pickle-pandu-mirchi-250g", label: "250g", price: "$9.99", sku: "pickle-pandu-mirchi-250g" },
         { id: "pickle-pandu-mirchi-500g", label: "500g", price: "$17.99", sku: "pickle-pandu-mirchi-500g" }
       ]
     },
     {
       id: "picklespodi-tomato-pickle", category: "picklespodi",
-      name: "Tomato Pickle", localName: "250g", origin: "Veg Pickle",
-      price: "$7.99", unit: "250g",
+      name: "Tomato Pickle", localName: "250g or 500g", origin: "Veg Pickle",
+      price: "$7.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/tomato-pickle.jpg",
       description: "Rich and spicy tomato pickle with a deep, tangy flavor. Great with rice, dosa, upma, idli, chapati, and curd rice.",
@@ -607,13 +613,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Idli - dosa - curd rice - chapati - upma - hot rice",
       variants: [
-        { id: "pickle-tomato-250g", label: "250g", price: "$7.99", sku: "pickle-tomato-250g" }
+        { id: "pickle-tomato-250g", label: "250g", price: "$7.99", sku: "pickle-tomato-250g" },
+        { id: "pickle-tomato-500g", label: "500g", price: "$14.99", sku: "pickle-tomato-500g" }
       ]
     },
     {
       id: "picklespodi-boneless-chicken-pickle", category: "picklespodi",
-      name: "Boneless Chicken Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
-      price: "$15.99", unit: "250g or 500g",
+      name: "Chicken Boneless", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      price: "$14.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/chicken-boneless-pickle.jpg",
       description: "Spicy Andhra-style boneless chicken pickle with bold masala and rich flavor. Best with rice, roti, dosa, and curd rice.",
@@ -627,13 +634,13 @@ const SHRISH_DATA = {
       season: "Preorder Only", taste: "Spice: Hot",
       bestFor: "Hot rice - chapati - dosa - curd rice - travel meals",
       variants: [
-        { id: "pickle-chicken-boneless-250g", label: "250g", price: "$15.99", sku: "pickle-chicken-boneless-250g" },
-        { id: "pickle-chicken-boneless-500g", label: "500g", price: "$27.99", sku: "pickle-chicken-boneless-500g" }
+        { id: "pickle-chicken-boneless-250g", label: "250g", price: "$14.99", sku: "pickle-chicken-boneless-250g" },
+        { id: "pickle-chicken-boneless-500g", label: "500g", price: "$26.99", sku: "pickle-chicken-boneless-500g" }
       ]
     },
     {
       id: "picklespodi-boneless-mutton-pickle", category: "picklespodi",
-      name: "Boneless Mutton Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      name: "Mutton Boneless", localName: "250g or 500g", origin: "Non-Veg Pickle",
       price: "$18.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/mutton-boneless-pickle.jpg",
@@ -649,12 +656,12 @@ const SHRISH_DATA = {
       bestFor: "Hot rice - chapati - dosa - curd rice",
       variants: [
         { id: "pickle-mutton-boneless-250g", label: "250g", price: "$18.99", sku: "pickle-mutton-boneless-250g" },
-        { id: "pickle-mutton-boneless-500g", label: "500g", price: "$31.99", sku: "pickle-mutton-boneless-500g" }
+        { id: "pickle-mutton-boneless-500g", label: "500g", price: "$32.99", sku: "pickle-mutton-boneless-500g" }
       ]
     },
     {
       id: "picklespodi-fish-pickle-koramenu-pickle", category: "picklespodi",
-      name: "Fish Pickle / Koramenu Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      name: "Fish Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
       price: "$17.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/fish-koramenu-pickle.jpg",
@@ -670,12 +677,12 @@ const SHRISH_DATA = {
       bestFor: "Hot rice - chapati - dosa - curd rice",
       variants: [
         { id: "pickle-fish-koramenu-250g", label: "250g", price: "$17.99", sku: "pickle-fish-koramenu-250g" },
-        { id: "pickle-fish-koramenu-500g", label: "500g", price: "$31.99", sku: "pickle-fish-koramenu-500g" }
+        { id: "pickle-fish-koramenu-500g", label: "500g", price: "$32.99", sku: "pickle-fish-koramenu-500g" }
       ]
     },
     {
       id: "picklespodi-gongura-chicken-pickle", category: "picklespodi",
-      name: "Gongura Chicken Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      name: "Gongura Chicken", localName: "250g or 500g", origin: "Non-Veg Pickle",
       price: "$15.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/gongura-chicken-pickle.jpg",
@@ -696,7 +703,7 @@ const SHRISH_DATA = {
     },
     {
       id: "picklespodi-gongura-mutton-pickle", category: "picklespodi",
-      name: "Gongura Mutton Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      name: "Gongura Mutton", localName: "250g or 500g", origin: "Non-Veg Pickle",
       price: "$18.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/gongura-mutton-pickle.jpg",
@@ -717,7 +724,7 @@ const SHRISH_DATA = {
     },
     {
       id: "picklespodi-gongura-prawn-pickle", category: "picklespodi",
-      name: "Gongura Prawn Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      name: "Prawn Gongura", localName: "250g or 500g", origin: "Non-Veg Pickle",
       price: "$18.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/gongura-prawn-pickle.jpg",
@@ -738,7 +745,7 @@ const SHRISH_DATA = {
     },
     {
       id: "picklespodi-natu-kodi-country-chicken-pickle", category: "picklespodi",
-      name: "Natu Kodi / Country Chicken Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      name: "Natu Kodi/Country Chicken Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
       price: "$17.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/natu-kodi-pickle.jpg",
@@ -759,7 +766,7 @@ const SHRISH_DATA = {
     },
     {
       id: "picklespodi-prawns-pickle", category: "picklespodi",
-      name: "Prawns Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      name: "Prawns/Shrimp Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
       price: "$17.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/prawns-pickle.jpg",
@@ -978,6 +985,39 @@ SHRISH_DATA.products.forEach((product) => {
   ].filter(Boolean)));
 });
 
+const SHRISH_CATALOG_FIELD_OVERRIDE_IDS = new Set([
+  "picklespodi-boneless-chicken-pickle",
+  "picklespodi-boneless-mutton-pickle",
+  "picklespodi-chintakaya-pachadi-tamarind-pickle",
+  "picklespodi-fish-pickle-koramenu-pickle",
+  "picklespodi-garlic-pickle",
+  "picklespodi-gongura-chicken-pickle",
+  "picklespodi-gongura-mutton-pickle",
+  "picklespodi-gongura-pickle",
+  "picklespodi-gongura-prawn-pickle",
+  "picklespodi-karivepaku-pachadi-curry-leaf-pickle",
+  "picklespodi-kothimeera-coriander-pickle",
+  "picklespodi-mango-avakai-pickle",
+  "picklespodi-mango-ginger-pickle",
+  "picklespodi-natu-kodi-country-chicken-pickle",
+  "picklespodi-pandu-mirchi-pickle",
+  "picklespodi-prawns-pickle",
+  "picklespodi-tomato-pickle"
+]);
+
+const SHRISH_CATALOG_FIELD_OVERRIDES = Object.fromEntries(
+  SHRISH_DATA.products
+    .filter((product) => SHRISH_CATALOG_FIELD_OVERRIDE_IDS.has(product.id))
+    .map((product) => [product.id, {
+      name: product.name,
+      localName: product.localName,
+      price: product.price,
+      unit: product.unit,
+      variants: (product.variants || []).map((variant) => ({ ...variant }))
+    }])
+);
+
 window.SHRISH_RECOMMENDATION_TAGS = SHRISH_RECOMMENDATION_TAGS;
+window.SHRISH_CATALOG_FIELD_OVERRIDES = SHRISH_CATALOG_FIELD_OVERRIDES;
 window.SHRISH_DATA = SHRISH_DATA;
 
