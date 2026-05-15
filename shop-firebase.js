@@ -71,7 +71,8 @@ const LEGACY_PRODUCT_IMAGE_PATHS = Object.fromEntries(
 function normalizeCatalogImagePath(value = '', productId = '') {
   const raw = String(value || '').trim().replace(/\\/g, '/').replace(/^\.\//, '');
   if (!raw) return '';
-  if (/^https?:\/\//i.test(raw) || raw.startsWith('images/') || raw === 'logo.png') return raw;
+  if (raw === 'logo.png') return 'images/brand/logo.png';
+  if (/^https?:\/\//i.test(raw) || raw.startsWith('images/')) return raw;
   const fileName = raw.split('/').pop();
   return LEGACY_PRODUCT_IMAGE_PATHS[fileName] || PRODUCT_IMAGES[productId]?.[0] || raw;
 }
@@ -454,14 +455,14 @@ function openModal(productId) {
   const mainWrap = document.getElementById('modalMainImgWrap');
   if (mainWrap) {
     mainWrap.innerHTML = imgs.length
-      ? `<img class="modal-main-img" id="modalMainImg" src="${escapeHtml(imgs[0])}" alt="${escapeHtml(p.name)}" onerror="this.onerror=null;this.src='logo.png'">`
+      ? `<img class="modal-main-img" id="modalMainImg" src="${escapeHtml(imgs[0])}" alt="${escapeHtml(p.name)}" onerror="this.onerror=null;this.src='images/brand/logo.png'">`
       : `<div class="modal-img-placeholder">No Image</div>`;
   }
 
   const thumbs = document.getElementById('modalThumbs');
   if (thumbs) {
     if (imgs.length) {
-      thumbs.innerHTML = imgs.map((src, i) => `<img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(p.name)} ${i + 1}" onclick="switchModalImg('${escapeHtml(src)}',this)" onerror="this.onerror=null;this.src='logo.png'">`).join('');
+      thumbs.innerHTML = imgs.map((src, i) => `<img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(p.name)} ${i + 1}" onclick="switchModalImg('${escapeHtml(src)}',this)" onerror="this.onerror=null;this.src='images/brand/logo.png'">`).join('');
       thumbs.style.display = 'flex';
     } else {
       thumbs.innerHTML = '';
@@ -705,7 +706,7 @@ function renderCard(p) {
   const stripCls = isPreorder ? 'soon' : isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
   const stripText = isPreorder ? 'Preorder Only' : isSoon ? 'Coming Soon' : isAvail ? 'Available' : 'Not Available';
   const imgSrc = productImages(p.id, p)[0] || null;
-  const imgHtml = imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.onerror=null;this.src='logo.png'">` : '';
+  const imgHtml = imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.onerror=null;this.src='images/brand/logo.png'">` : '';
   const emojiStyle = imgSrc ? 'style="display:none"' : '';
   const shortDesc = (p.description || '').length > 90 ? `${p.description.slice(0, 90)}...` : (p.description || '');
   const recommendationTagHtml = (p.recommendationTags || [])

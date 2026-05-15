@@ -21,7 +21,7 @@ const SHRISH_ADMIN_EMAIL = "contact@shrish.co";
 const SHRISH_SUPPORT_PHONE = "+1 (765) 325-5577";
 const SHRISH_INSTAGRAM_URL = "https://www.instagram.com/shrish_llc/";
 const SHRISH_WHATSAPP_URL = "https://wa.me/17653255577";
-const SHRISH_LOGO_URL = "https://gvkiran.github.io/shrish.co/logo.png";
+const SHRISH_LOGO_URL = "https://gvkiran.github.io/shrish.co/images/brand/logo.png";
 const ORDER_COUNTER_START = 671499;
 const MAX_REMINDER_EMAILS_PER_SEND = 50;
 

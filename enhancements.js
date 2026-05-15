@@ -176,7 +176,7 @@
       url: 'https://shrish.co',
       telephone: '+1-765-325-5577',
       email: 'contact@shrish.co',
-      image: 'https://gvkiran.github.io/shrish.co/logo.png',
+      image: 'https://gvkiran.github.io/shrish.co/images/brand/logo.png',
       address: [
         {
           '@type': 'PostalAddress',

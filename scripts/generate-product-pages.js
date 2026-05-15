@@ -71,8 +71,8 @@ function productImage(product) {
     };
   }
   return {
-    local: `${ROOT_PREFIX}logo.png`,
-    absolute: `${SITE_URL}/logo.png`
+    local: `${ROOT_PREFIX}images/brand/logo.png`,
+    absolute: `${SITE_URL}/images/brand/logo.png`
   };
 }
 
@@ -200,7 +200,7 @@ function renderProductPage(product) {
   <meta name="theme-color" content="#C8791A">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="icon" href="${ROOT_PREFIX}logo.png" type="image/png">
+  <link rel="icon" href="${ROOT_PREFIX}images/brand/logo.png" type="image/png">
   <link rel="stylesheet" href="${ROOT_PREFIX}styles.css">
   <style>
     .product-page { background: var(--cream); min-height: 100vh; }
@@ -252,7 +252,7 @@ function renderProductPage(product) {
 <body class="product-page">
   <header class="product-nav">
     <div class="product-nav-inner">
-      <a class="product-nav-logo" href="${ROOT_PREFIX}index.html" aria-label="Shrish home"><img src="${ROOT_PREFIX}logo.png" alt="Shrish"></a>
+      <a class="product-nav-logo" href="${ROOT_PREFIX}index.html" aria-label="Shrish home"><img src="${ROOT_PREFIX}images/brand/logo.png" alt="Shrish"></a>
       <nav class="product-nav-links" aria-label="Product page navigation">
         <a href="${ROOT_PREFIX}index.html">Home</a>
         <a href="${ROOT_PREFIX}about.html">About</a>
@@ -309,7 +309,7 @@ function renderProductsIndex(products) {
   <title>Shrish Product Pages</title>
   <meta name="description" content="Browse Shrish product pages by category.">
   <link rel="canonical" href="${SITE_URL}/shop/products/">
-  <link rel="icon" href="../../logo.png" type="image/png">
+  <link rel="icon" href="../../images/brand/logo.png" type="image/png">
   <link rel="stylesheet" href="../../styles.css">
   <style>
     .directory { max-width: 1120px; margin: 0 auto; padding: 56px 24px; }
