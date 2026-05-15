@@ -297,7 +297,6 @@ function renderHomeProducts(products) {
           <div class="product-card-footer">
             <div>
               <div class="product-price">${escapeHtml(p.price)}</div>
-              <div class="product-unit">${escapeHtml(p.unit)}</div>
             </div>
             <span class="product-status-badge ${p.available ? 'available' : 'unavailable'}">
               ${p.available ? 'Available' : 'Sold Out'}

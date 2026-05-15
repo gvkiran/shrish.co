@@ -740,7 +740,7 @@ function renderCard(p) {
         ${p.localName ? `<div class="pc-local">${escapeHtml(p.localName)}</div>` : ''}
         <div class="pc-short-desc">${escapeHtml(shortDesc)}</div>
         ${recommendationTagHtml ? `<div class="pc-rec-tags">${recommendationTagHtml}</div>` : ''}
-        <div class="pc-footer"><div class="pc-price-wrap"><div class="pc-price">${escapeHtml(selectedCardVariant.price || p.price)}</div><div class="pc-unit">${escapeHtml(selectedCardVariant.unit || p.unit)}</div></div></div>
+        <div class="pc-footer"><div class="pc-price-wrap"><div class="pc-price">${escapeHtml(selectedCardVariant.price || p.price)}</div></div></div>
         ${actionHtml}
       </div>
     </div>`;
