@@ -16,6 +16,8 @@ let productSearchQuery = '';
 let shopViewedTracked = false;
 let searchTrackTimer = null;
 let lastTrackedSearch = '';
+let catalogSyncReady = false;
+let catalogSyncFailed = false;
 
 function trackShopEvent(eventName, props = {}) {
   window.SHRISH_ANALYTICS?.track(eventName, props);
@@ -175,7 +177,12 @@ function mergeProducts(docs) {
   const normalizedDocs = docs.map((item) => ({ ...item, category: normalizeProductCategory(item.category) }));
   const byId = new Map(normalizedDocs.map((item) => [item.id, item]));
   const mergedBase = baseProducts.map((product) => {
-    const merged = { ...product, ...(byId.get(product.id) || {}) };
+    const liveProduct = byId.get(product.id);
+    const merged = { ...product, ...(liveProduct || {}) };
+    if (!liveProduct) {
+      merged.available = false;
+      merged.preorderOnly = false;
+    }
     const forcedFields = FORCE_BASE_PRODUCT_OVERRIDES[product.id] || [];
     forcedFields.forEach((field) => {
       merged[field] = product[field];
@@ -342,8 +349,12 @@ function cartRemove(id) {
 }
 
 function addToCart(productId, qty, variantId = null) {
+  if (!catalogSyncReady || catalogSyncFailed) {
+    showToast(catalogSyncFailed ? 'Live availability is unavailable. Please refresh before ordering.' : 'Checking live availability. Please wait a moment.');
+    return false;
+  }
   const p = window.SHRISH_DATA.products.find((x) => x.id === productId);
-  if (!p || !p.available || p.displayOnly) return;
+  if (!p || !p.available || p.displayOnly) return false;
   const selectedVariant = getSelectedVariant(p, variantId);
   const cartItemId = buildCartItemId(productId, selectedVariant.id);
   const existing = cart.find((x) => x.id === cartItemId);
@@ -367,6 +378,7 @@ function addToCart(productId, qty, variantId = null) {
     quantity: qty,
     ...cartAnalyticsSummary()
   });
+  return true;
 }
 
 function openCart() {
@@ -411,9 +423,10 @@ function openModal(productId) {
   modalQty = 1;
   modalVariantId = getSelectedVariant(p, modalVariantId).id;
 
-  const isPreorder = Boolean(p.preorderOnly);
-  const isAvail = p.available && !p.displayOnly;
-  const isSoon = p.displayOnly;
+  const liveReady = catalogSyncReady && !catalogSyncFailed;
+  const isPreorder = liveReady && Boolean(p.preorderOnly);
+  const isAvail = liveReady && p.available && !p.displayOnly;
+  const isSoon = liveReady && p.displayOnly;
   const imgs = productImages(productId, p);
   const selectedVariant = getSelectedVariant(p, modalVariantId);
   trackShopEvent('product_details_opened', productEventProps(p, selectedVariant));
@@ -421,14 +434,14 @@ function openModal(productId) {
   const mainWrap = document.getElementById('modalMainImgWrap');
   if (mainWrap) {
     mainWrap.innerHTML = imgs.length
-      ? `<img class="modal-main-img" id="modalMainImg" src="${escapeHtml(imgs[0])}" alt="${escapeHtml(p.name)}" onerror="this.onerror=null;this.src='logo.png'">`
+      ? `<img class="modal-main-img" id="modalMainImg" src="${escapeHtml(imgs[0])}" alt="${escapeHtml(p.name)}" onerror="this.onerror=null;this.src='logo-small.png'">`
       : `<div class="modal-img-placeholder">No Image</div>`;
   }
 
   const thumbs = document.getElementById('modalThumbs');
   if (thumbs) {
     if (imgs.length) {
-      thumbs.innerHTML = imgs.map((src, i) => `<img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(p.name)} ${i + 1}" onclick="switchModalImg('${escapeHtml(src)}',this)" onerror="this.onerror=null;this.src='logo.png'">`).join('');
+      thumbs.innerHTML = imgs.map((src, i) => `<img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(p.name)} ${i + 1}" onclick="switchModalImg('${escapeHtml(src)}',this)" onerror="this.onerror=null;this.src='logo-small.png'">`).join('');
       thumbs.style.display = 'flex';
     } else {
       thumbs.innerHTML = '';
@@ -436,8 +449,8 @@ function openModal(productId) {
     }
   }
 
-  const statusCls = isPreorder ? 'soon' : isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
-  const statusText = isPreorder ? 'Preorder Only' : isSoon ? 'Coming Soon' : isAvail ? 'Available Now' : 'Currently Not Available';
+  const statusCls = !liveReady ? 'soon' : isPreorder ? 'soon' : isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
+  const statusText = !liveReady ? (catalogSyncFailed ? 'Refresh Required' : 'Checking Availability') : isPreorder ? 'Preorder Only' : isSoon ? 'Coming Soon' : isAvail ? 'Available Now' : 'Currently Not Available';
   const recommendationChips = (p.recommendationTags || []).slice(0, 8).map((tag) => `Tag: ${tag}`);
   const chips = [p.season && `Season: ${p.season}`, p.taste && `Taste: ${p.taste}`, ...recommendationChips]
     .filter(Boolean)
@@ -453,7 +466,9 @@ function openModal(productId) {
   }).join('');
 
   let actionHtml = '';
-  if (isSoon) {
+  if (!liveReady) {
+    actionHtml = `<button class="modal-add-btn" style="background:#ccc;cursor:not-allowed" disabled>${catalogSyncFailed ? 'Refresh Required' : 'Checking Availability'}</button>`;
+  } else if (isSoon) {
     actionHtml = `<button class="modal-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify Me</button>`;
   } else if (isAvail) {
     const variants = getProductVariants(p);
@@ -526,7 +541,8 @@ function modalAddToCart() {
   const product = window.SHRISH_DATA.products.find((entry) => entry.id === modalProductId);
   const addedLabel = product?.preorderOnly ? 'Preorder Added' : 'Added!';
   const resetLabel = product?.preorderOnly ? 'Preorder' : 'Add to Cart';
-  addToCart(modalProductId, modalQty, modalVariantId);
+  const added = addToCart(modalProductId, modalQty, modalVariantId);
+  if (!added) return;
   const btn = document.getElementById('modalAddBtn');
   if (!btn) return;
   btn.textContent = addedLabel;
@@ -666,13 +682,14 @@ function tagClass(tag) {
 }
 
 function renderCard(p) {
-  const isPreorder = Boolean(p.preorderOnly);
-  const isAvail = p.available && !p.displayOnly;
-  const isSoon = p.displayOnly;
-  const stripCls = isPreorder ? 'soon' : isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
-  const stripText = isPreorder ? 'Preorder Only' : isSoon ? 'Coming Soon' : isAvail ? 'Available' : 'Not Available';
+  const liveReady = catalogSyncReady && !catalogSyncFailed;
+  const isPreorder = liveReady && Boolean(p.preorderOnly);
+  const isAvail = liveReady && p.available && !p.displayOnly;
+  const isSoon = liveReady && p.displayOnly;
+  const stripCls = !liveReady ? 'soon' : isPreorder ? 'soon' : isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
+  const stripText = !liveReady ? (catalogSyncFailed ? 'Refresh Required' : 'Checking') : isPreorder ? 'Preorder Only' : isSoon ? 'Coming Soon' : isAvail ? 'Available' : 'Not Available';
   const imgSrc = p.image || productImages(p.id, p)[0] || null;
-  const imgHtml = imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.onerror=null;this.src='logo.png'">` : '';
+  const imgHtml = imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.onerror=null;this.src='logo-small.png'">` : '';
   const emojiStyle = imgSrc ? 'style="display:none"' : '';
   const shortDesc = (p.description || '').length > 90 ? `${p.description.slice(0, 90)}...` : (p.description || '');
   const recommendationTagHtml = (p.recommendationTags || [])
@@ -684,7 +701,9 @@ function renderCard(p) {
   const selectedCardVariant = getCardSelectedVariant(p);
 
   let actionHtml = '';
-  if (isSoon) {
+  if (!liveReady) {
+    actionHtml = `<div class="pc-card-actions" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" disabled>${catalogSyncFailed ? 'Refresh Required' : 'Checking...'}</button></div>`;
+  } else if (isSoon) {
     actionHtml = `<button class="pc-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify Me</button>`;
   } else if (isAvail && hasChoices) {
     actionHtml = `<div class="pc-card-actions pc-card-actions-variant" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><div class="pc-variant-list"><select class="pc-variant-select" onchange="cardVariantChanged('${escapeHtml(p.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === selectedCardVariant.id ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select><button class="pc-add-btn" onclick="quickAddSelectedVariant('${escapeHtml(p.id)}')">${isPreorder ? '+ Preorder' : '+ Add to Cart'}</button></div></div>`;
@@ -694,7 +713,7 @@ function renderCard(p) {
     actionHtml = `<div class="pc-card-actions"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" disabled>Not Available</button></div>`;
   }
 
-  return `<div class="pc ${isSoon ? 'display-only' : ''} ${!isAvail && !isSoon ? 'sold-out' : ''}">
+  return `<div class="pc ${isSoon ? 'display-only' : ''} ${liveReady && !isAvail && !isSoon ? 'sold-out' : ''}">
       ${p.tag ? `<div class="pc-tag ${tagClass(p.tag)}">${escapeHtml(p.tag)}</div>` : ''}
       <div class="pc-img" onclick="openModal('${escapeHtml(p.id)}')">
         ${imgHtml}
@@ -741,6 +760,11 @@ function renderCardQty(productId) {
   if (!wrap) return;
   const product = window.SHRISH_DATA.products.find((entry) => entry.id === productId);
   if (!product) return;
+  const liveReady = catalogSyncReady && !catalogSyncFailed;
+  if (!liveReady) {
+    wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><button class="pc-add-btn" disabled>${catalogSyncFailed ? 'Refresh Required' : 'Checking...'}</button>`;
+    return;
+  }
   const addLabel = product.preorderOnly ? '+ Preorder' : '+ Add to Cart';
   if (usesVariantUI(product)) {
     const variants = getProductVariants(product);
@@ -1025,6 +1049,18 @@ function openInitialProductFromUrl() {
 
 function subscribeCatalog() {
   onSnapshot(collection(db, 'products'), (snapshot) => {
+    if (!snapshot.docs.length) {
+      catalogSyncReady = false;
+      catalogSyncFailed = true;
+      showToast('Live catalog unavailable. Please refresh before ordering.');
+      buildFilters();
+      renderShop();
+      updateCartUI();
+      trackShopViewedOnce();
+      return;
+    }
+    catalogSyncReady = true;
+    catalogSyncFailed = false;
     const docs = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
     mergeProducts(docs);
     buildFilters();
@@ -1034,7 +1070,9 @@ function subscribeCatalog() {
     trackShopViewedOnce();
   }, (error) => {
     console.error('Catalog sync failed', error);
-    showToast('Using website catalog. Live sync failed.');
+    catalogSyncReady = false;
+    catalogSyncFailed = true;
+    showToast('Live catalog unavailable. Please refresh before ordering.');
     buildFilters();
     renderShop();
     openInitialProductFromUrl();
@@ -1067,6 +1105,10 @@ function init() {
   bindNotifyForm();
   bindLiveSearchEvents();
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeCart(); closeNotifyModal(); } });
+  buildFilters();
+  renderShop();
+  updateCartUI();
+  trackShopViewedOnce();
   subscribeCatalog();
 }
 
