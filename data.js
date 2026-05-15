@@ -39,8 +39,8 @@ const SHRISH_DATA = {
     {
       id: "kesar", category: "mangoes",
       name: "Kesar", localName: "કેસર", origin: "Junagadh, Gujarat",
-      price: "$40", unit: "per box (~3 kg)",
-      available: true, displayOnly: false, tag: "Sweet & Aromatic",
+      price: "$55", unit: "per box (~3 kg)",
+      available: false, displayOnly: false, tag: "Sweet & Aromatic",
       image: "img_kesar.jpeg",
       description: "Gujarat's pride and the 'Queen of Mangoes'. Named for its saffron-coloured pulp, Kesar delivers a honey-sweet richness with a floral aroma. Round, medium-sized with nearly fiberless flesh. A household favourite across India.",
       season: "May - June", taste: "Honey-Sweet  -  Floral  -  Aromatic",
