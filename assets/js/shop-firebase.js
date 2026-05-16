@@ -51,6 +51,8 @@ const PRODUCT_IMAGES = {
   dasheri: ['images/products/mangoes/img_dasheri.jpg', 'images/products/mangoes/img_dasheri1.jpg'],
   malgova: ['images/products/mangoes/img_malgova.jpg', 'images/products/mangoes/img_malgova1.jpg'],
   neelam: ['images/products/mangoes/img_neelam.jpg', 'images/products/mangoes/img_neelam1.jpg'],
+  rajapuri: ['images/products/mangoes/img_banganapalli.jpg'],
+  puth_plain: ['images/products/putharekulu/img_puth_sugar_kaju.jpg'],
   puth_sugar_kaju: ['images/products/putharekulu/img_puth_sugar_kaju.jpg'],
   puth_sugar_kaju_pista: ['images/products/putharekulu/img_puth_sugar_kaju_pista.png'],
   puth_jaggery_kaju: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.png'],
@@ -59,6 +61,8 @@ const PRODUCT_IMAGES = {
   puth_sugarfree: ['images/products/putharekulu/img_puth_sugarfree.jpg'],
   puth_dates_kaju_badam_pista: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.png'],
   puth_organic_palm_kaju_badam_pista: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.png'],
+  sonpari: ['images/products/snacks/img_sonpari.png'],
+  sonpari_ghee: ['images/products/snacks/img_sonpari1.png'],
   mango_jelly_sugar: ['images/products/jellysnacks/img_mango_jelly.webp'],
   mango_jelly_jaggery: ['images/products/jellysnacks/img_mango_jelly.webp'],
   palm_jelly: ['images/products/jellysnacks/img_palm_jelly.webp']
@@ -75,9 +79,15 @@ function normalizeCatalogImagePath(value = '', productId = '') {
   if (!raw) return '';
   if (raw === 'logo.png') return 'images/brand/logo.png';
   if (raw === 'logo-small.png') return 'images/brand/logo-small.png';
-  if (/^https?:\/\//i.test(raw) || raw.startsWith('images/')) return raw;
   const fileName = raw.split('/').pop();
-  return LEGACY_PRODUCT_IMAGE_PATHS[fileName] || PRODUCT_IMAGES[productId]?.[0] || raw;
+  const mapped = LEGACY_PRODUCT_IMAGE_PATHS[fileName] || PRODUCT_IMAGES[productId]?.[0];
+  if (mapped) return mapped;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith('images/products/pickles/') || raw.startsWith('images/products/podi/')) {
+    return 'images/brand/logo-small.png';
+  }
+  if (raw.startsWith('images/')) return raw;
+  return raw || 'images/brand/logo-small.png';
 }
 
 function normalizeCatalogProduct(product = {}) {

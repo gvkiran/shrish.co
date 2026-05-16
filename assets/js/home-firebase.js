@@ -3,6 +3,45 @@ import { db, collection, doc, getDoc, onSnapshot, setDoc, serverTimestamp, escap
 let homeModalProductId = null;
 let homeModalQty = 1;
 
+const HOME_PRODUCT_IMAGES = {
+  alphonso: ['images/products/mangoes/img_alphonso.jpeg'],
+  kesar: ['images/products/mangoes/img_kesar.jpeg'],
+  banganapalli: ['images/products/mangoes/img_banganapalli.jpg'],
+  langra: ['images/products/mangoes/img_langra.jpg'],
+  rasalu: ['images/products/mangoes/img_rasalu.jpeg'],
+  himayat: ['images/products/mangoes/img_himayath_real.jpg'],
+  payari: ['images/products/mangoes/img_payari.jpg'],
+  dasheri: ['images/products/mangoes/img_dasheri.jpg'],
+  malgova: ['images/products/mangoes/img_malgova.jpg'],
+  neelam: ['images/products/mangoes/img_neelam.jpg'],
+  rajapuri: ['images/products/mangoes/img_banganapalli.jpg']
+};
+
+const HOME_LEGACY_IMAGE_PATHS = Object.fromEntries(
+  Object.values(HOME_PRODUCT_IMAGES)
+    .flat()
+    .map((path) => [path.split('/').pop(), path])
+);
+
+function normalizeHomeImagePath(value = '', productId = '') {
+  const raw = String(value || '').trim().replace(/\\/g, '/').replace(/^\.\//, '');
+  if (!raw) return '';
+  if (raw === 'logo.png') return 'images/brand/logo.png';
+  if (raw === 'logo-small.png') return 'images/brand/logo-small.png';
+  const fileName = raw.split('/').pop();
+  const mapped = HOME_LEGACY_IMAGE_PATHS[fileName] || HOME_PRODUCT_IMAGES[productId]?.[0];
+  if (mapped) return mapped;
+  if (/^https?:\/\//i.test(raw) || raw.startsWith('images/')) return raw;
+  return raw;
+}
+
+function normalizeHomeProduct(product = {}) {
+  return {
+    ...product,
+    image: normalizeHomeImagePath(product.image, product.id)
+  };
+}
+
 function trackHomeEvent(eventName, props = {}) {
   window.SHRISH_ANALYTICS?.track(eventName, props);
 }
@@ -316,8 +355,12 @@ function renderHomeProducts(products) {
 }
 
 function mergeProducts(baseProducts, docs) {
-  const byId = new Map(docs.map((doc) => [doc.id, doc]));
-  return baseProducts.map((product) => applyCatalogFieldOverrides({ ...product, ...(byId.get(product.id) || {}) }));
+  const normalizedDocs = docs.map(normalizeHomeProduct);
+  const byId = new Map(normalizedDocs.map((doc) => [doc.id, doc]));
+  return baseProducts.map((product) => normalizeHomeProduct(applyCatalogFieldOverrides({
+    ...normalizeHomeProduct(product),
+    ...(byId.get(product.id) || {})
+  })));
 }
 
 const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
