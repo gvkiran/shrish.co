@@ -1542,9 +1542,13 @@ function mergeProductsWithBase(docs = []) {
 
 const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
 
+function hasAdminManagedCatalogFields(product = {}) {
+  return Boolean(product.catalogManagedAt);
+}
+
 function applyCatalogFieldOverrides(product = {}) {
   const override = CATALOG_FIELD_OVERRIDES[product.id];
-  if (!override) return product;
+  if (!override || hasAdminManagedCatalogFields(product)) return product;
   return {
     ...product,
     ...override,
@@ -1894,6 +1898,7 @@ async function submitAddProduct(event) {
     ? state.products.find((product) => product.id === editingProductId)
     : null;
   const baseUnit = usesVariants ? (unit || applyCategoryDefaults()) : unit;
+  const nowIso = new Date().toISOString();
   const payload = {
     id,
     category,
@@ -1917,9 +1922,10 @@ async function submitAddProduct(event) {
     sortOrder: editingProductId
       ? (existingProduct?.sortOrder ?? getNextSortOrder())
       : getNextSortOrder(),
-    updatedAt: new Date().toISOString()
+    catalogManagedAt: nowIso,
+    updatedAt: nowIso
   };
-  if (!editingProductId) payload.createdAt = new Date().toISOString();
+  if (!editingProductId) payload.createdAt = nowIso;
 
   if (!auth.currentUser) {
     showToast('Admin session expired. Refresh, log in again, and retry.');

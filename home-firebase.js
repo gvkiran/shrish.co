@@ -322,9 +322,13 @@ function mergeProducts(baseProducts, docs) {
 
 const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
 
+function hasAdminManagedCatalogFields(product = {}) {
+  return Boolean(product.catalogManagedAt);
+}
+
 function applyCatalogFieldOverrides(product = {}) {
   const override = CATALOG_FIELD_OVERRIDES[product.id];
-  if (!override) return product;
+  if (!override || hasAdminManagedCatalogFields(product)) return product;
   return {
     ...product,
     ...override,
