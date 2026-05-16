@@ -721,7 +721,7 @@ const SHRISH_DATA = {
     },
     {
       id: "picklespodi-gongura-prawn-pickle", category: "picklespodi",
-      name: "Prawn Gongura", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      name: "Prawns/Shrimp Gongura Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
       price: "$18.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/gongura-prawn-pickle.jpg",
