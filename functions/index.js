@@ -1095,7 +1095,12 @@ exports.sendCustomerPasswordReset = onCall(
     let resetLink = "";
     try {
       await admin.auth().getUserByEmail(email);
-      resetLink = await admin.auth().generatePasswordResetLink(email);
+      const firebaseResetLink = await admin.auth().generatePasswordResetLink(email);
+      const parsedLink = new URL(firebaseResetLink);
+      const oobCode = parsedLink.searchParams.get("oobCode");
+      resetLink = oobCode
+        ? `https://shrish.co/account.html?mode=resetPassword&oobCode=${encodeURIComponent(oobCode)}`
+        : firebaseResetLink;
     } catch (error) {
       if (error?.code !== "auth/user-not-found") {
         console.error("Could not generate password reset link", error);

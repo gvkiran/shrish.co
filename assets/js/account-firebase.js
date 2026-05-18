@@ -16,6 +16,8 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   updateEmail,
+  verifyPasswordResetCode,
+  confirmPasswordReset,
   onAuthStateChanged,
   serverTimestamp,
   normalizePhone,
@@ -65,6 +67,20 @@ function el(id) {
 
 function showMessage(id, type, text) {
   const node = el(id);
+  if (!node) return;
+  node.className = `account-message show ${type}`;
+  node.textContent = text;
+}
+
+function clearPasswordResetActionMessage() {
+  const node = el('passwordResetActionMessage');
+  if (!node) return;
+  node.className = 'account-message';
+  node.textContent = '';
+}
+
+function showPasswordResetActionMessage(type, text) {
+  const node = el('passwordResetActionMessage');
   if (!node) return;
   node.className = `account-message show ${type}`;
   node.textContent = text;
@@ -217,6 +233,71 @@ function setResetPasswordVisible(show) {
     const email = normalizeEmail(el('signinEmail')?.value || el('resetEmail')?.value || '');
     if (email && el('resetEmail')) el('resetEmail').value = email;
     window.setTimeout(() => el('resetEmail')?.focus(), 0);
+  }
+}
+
+function closePasswordResetActionModal({ cleanUrl = false } = {}) {
+  el('passwordResetActionModal')?.classList.remove('open');
+  document.body.style.overflow = '';
+  if (cleanUrl) {
+    window.history.replaceState({}, '', 'account.html?mode=signin');
+  }
+}
+
+async function openPasswordResetActionModal(oobCode) {
+  const modal = el('passwordResetActionModal');
+  if (!modal || !oobCode) return;
+
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  clearPasswordResetActionMessage();
+  el('passwordResetActionForm')?.querySelectorAll('input, button').forEach((field) => {
+    field.disabled = true;
+  });
+
+  try {
+    const email = await verifyPasswordResetCode(auth, oobCode);
+    if (el('passwordResetActionEmail')) el('passwordResetActionEmail').value = email;
+    el('passwordResetActionForm')?.querySelectorAll('input, button').forEach((field) => {
+      field.disabled = false;
+    });
+    window.setTimeout(() => el('passwordResetNewPassword')?.focus(), 0);
+  } catch (error) {
+    console.error('Password reset link check failed', error);
+    showPasswordResetActionMessage('error', 'This reset link is expired or already used. Please request a new password reset link.');
+  }
+}
+
+async function submitPasswordResetAction(event) {
+  event.preventDefault();
+  clearPasswordResetActionMessage();
+  const params = new URLSearchParams(window.location.search);
+  const oobCode = params.get('oobCode') || params.get('code') || '';
+  const password = el('passwordResetNewPassword')?.value || '';
+  const confirm = el('passwordResetConfirmPassword')?.value || '';
+  const button = event.submitter || event.currentTarget?.querySelector('button[type="submit"]');
+
+  if (password.length < 6) {
+    showPasswordResetActionMessage('error', 'Use a password with at least 6 characters.');
+    return;
+  }
+  if (password !== confirm) {
+    showPasswordResetActionMessage('error', 'Both password fields must match.');
+    return;
+  }
+
+  try {
+    setButtonBusy(button, true, 'Saving...');
+    await confirmPasswordReset(auth, oobCode, password);
+    closePasswordResetActionModal({ cleanUrl: true });
+    setAuthMode('signin');
+    showMessage('authMessage', 'ok', 'Password changed. Please sign in with your new password.');
+    trackAccountEvent('customer_password_reset_completed');
+  } catch (error) {
+    console.error('Password reset failed', error);
+    showPasswordResetActionMessage('error', 'Could not reset password. This link may be expired. Please request a new reset link.');
+  } finally {
+    setButtonBusy(button, false);
   }
 }
 
@@ -1127,6 +1208,9 @@ function bindForms() {
     clearMessage('authMessage');
   });
 
+  el('passwordResetActionClose')?.addEventListener('click', () => closePasswordResetActionModal());
+  el('passwordResetActionForm')?.addEventListener('submit', submitPasswordResetAction);
+
   el('resetPasswordForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     clearMessage('authMessage');
@@ -1228,7 +1312,10 @@ function bindForms() {
   });
 
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closeOrderModal();
+    if (event.key === 'Escape') {
+      closeOrderModal();
+      closePasswordResetActionModal();
+    }
   });
 }
 
@@ -1249,6 +1336,10 @@ function init() {
   bindForms();
   setAuthMode('signin');
   const params = new URLSearchParams(window.location.search);
+  const resetCode = params.get('oobCode') || params.get('code');
+  if (params.get('mode') === 'resetPassword' && resetCode) {
+    openPasswordResetActionModal(resetCode);
+  }
   if (params.get('claim') === 'recent' || readRecentOrderClaim()) {
     prepareRecentOrderSignup(params.get('mode'));
   }

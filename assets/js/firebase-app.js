@@ -8,7 +8,8 @@ import {
 import {
   getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
   signInWithEmailAndPassword, sendPasswordResetEmail, signOut,
-  EmailAuthProvider, reauthenticateWithCredential, updateEmail
+  EmailAuthProvider, reauthenticateWithCredential, updateEmail,
+  verifyPasswordResetCode, confirmPasswordReset
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
   getFunctions, httpsCallable
@@ -73,6 +74,7 @@ export {
   onAuthStateChanged, createUserWithEmailAndPassword,
   signInWithEmailAndPassword, sendPasswordResetEmail, signOut,
   EmailAuthProvider, reauthenticateWithCredential, updateEmail,
+  verifyPasswordResetCode, confirmPasswordReset,
   serverTimestamp, Timestamp,
   safeText, moneyNumber, escapeHtml,
   formatDate, formatDateInput, formatCurrency,
