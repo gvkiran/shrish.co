@@ -19,6 +19,39 @@ let lastTrackedSearch = '';
 let catalogSyncReady = false;
 let catalogSyncFailed = false;
 
+function productFilterId(product) {
+  if (!product) return 'all';
+  if (product.category === 'putharekulu' || product.category === 'jellysnacks') return 'sweets';
+  return SHOP_CATEGORY_IDS.has(product.category) ? product.category : 'all';
+}
+
+function updateModalProductUrl(product, mode = 'push') {
+  if (!product || !window.history?.[`${mode}State`]) return;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const filterId = activeFilter && activeFilter !== 'all' ? activeFilter : productFilterId(product);
+    if (filterId && filterId !== 'all') params.set('category', filterId);
+    params.set('product', product.id);
+    const nextUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history[`${mode}State`]({ shrishProductModal: product.id }, '', nextUrl);
+  } catch (error) {
+    console.warn('Unable to update product URL', error);
+  }
+}
+
+function clearModalProductUrl(mode = 'push') {
+  if (!window.history?.[`${mode}State`]) return;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    params.delete('product');
+    const query = params.toString();
+    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ''}`;
+    window.history[`${mode}State`]({ shrishProductModal: null }, '', nextUrl);
+  } catch (error) {
+    console.warn('Unable to clear product URL', error);
+  }
+}
+
 function trackShopEvent(eventName, props = {}) {
   window.SHRISH_ANALYTICS?.track(eventName, props);
 }
@@ -474,7 +507,7 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-function openModal(productId) {
+function openModal(productId, options = {}) {
   const p = window.SHRISH_DATA.products.find((x) => x.id === productId);
   if (!p) return;
   modalProductId = productId;
@@ -570,6 +603,9 @@ function openModal(productId) {
 
   document.getElementById('productModal')?.classList.add('open');
   document.body.style.overflow = 'hidden';
+  if (options.updateUrl !== false) {
+    updateModalProductUrl(p, options.historyMode || 'push');
+  }
 }
 
 function switchModalImg(src, thumb) {
@@ -579,9 +615,15 @@ function switchModalImg(src, thumb) {
   thumb.classList.add('active');
 }
 
-function closeModal() {
-  document.getElementById('productModal')?.classList.remove('open');
+function closeModal(options = {}) {
+  const modal = document.getElementById('productModal');
+  const wasOpen = Boolean(modal?.classList.contains('open'));
+  modal?.classList.remove('open');
   document.body.style.overflow = '';
+  modalProductId = null;
+  if (wasOpen && options.updateUrl !== false) {
+    clearModalProductUrl(options.historyMode || 'push');
+  }
 }
 
 function handleModalOverlayClick(e) {
@@ -613,7 +655,7 @@ function modalAddToCart() {
 
 function modalSelectVariant(productId, variantId) {
   modalVariantId = variantId;
-  openModal(productId);
+  openModal(productId, { historyMode: 'replace' });
 }
 
 async function notifyMe(productId, productName) {
@@ -1106,9 +1148,25 @@ function openInitialProductFromUrl() {
     const product = window.SHRISH_DATA.products.find((entry) => entry.id === productId);
     if (!product) return;
     initialProductOpened = true;
-    window.setTimeout(() => openModal(product.id), 150);
+    window.setTimeout(() => openModal(product.id, { updateUrl: false }), 150);
   } catch (error) {
     console.warn('Unable to open product from URL', error);
+  }
+}
+
+function handleShopHistoryChange() {
+  try {
+    const productId = new URLSearchParams(window.location.search).get('product');
+    if (productId) {
+      const product = window.SHRISH_DATA.products.find((entry) => entry.id === productId);
+      if (product) {
+        openModal(product.id, { updateUrl: false });
+        return;
+      }
+    }
+    closeModal({ updateUrl: false });
+  } catch (error) {
+    console.warn('Unable to sync product modal with URL', error);
   }
 }
 
@@ -1169,6 +1227,7 @@ function init() {
 
   bindNotifyForm();
   bindLiveSearchEvents();
+  window.addEventListener('popstate', handleShopHistoryChange);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeCart(); closeNotifyModal(); } });
   buildFilters();
   renderShop();
