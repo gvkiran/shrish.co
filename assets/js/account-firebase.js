@@ -12,7 +12,6 @@ import {
   onSnapshot,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  sendPasswordResetEmail,
   signOut,
   EmailAuthProvider,
   reauthenticateWithCredential,
@@ -36,6 +35,7 @@ let latestProfileSnapshot = null;
 const updateCustomerPendingOrder = httpsCallable(cloudFunctions, 'updateCustomerPendingOrder');
 const claimCustomerOrder = httpsCallable(cloudFunctions, 'claimCustomerOrder');
 const submitOrderFeedback = httpsCallable(cloudFunctions, 'submitOrderFeedback');
+const sendCustomerPasswordReset = httpsCallable(cloudFunctions, 'sendCustomerPasswordReset');
 const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
 const RECENT_ORDER_CLAIM_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -1139,10 +1139,10 @@ function bindForms() {
 
     try {
       setButtonBusy(button, true, 'Sending...');
-      await sendPasswordResetEmail(auth, email);
+      await sendCustomerPasswordReset({ email });
       if (el('signinEmail')) el('signinEmail').value = email;
       setResetPasswordVisible(false);
-      showMessage('authMessage', 'ok', 'Password reset link sent. Open the email, click the link, and create your new password.');
+      showMessage('authMessage', 'ok', 'If that email has a Shrish account, a reset link has been sent from Shrish. Please check inbox and spam.');
       trackAccountEvent('customer_password_reset_requested');
     } catch (error) {
       showMessage('authMessage', 'error', authErrorMessage(error));
