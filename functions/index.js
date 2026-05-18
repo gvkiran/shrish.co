@@ -965,6 +965,8 @@ exports.submitOrderFeedback = onCall(
         feedbackSubmitted: true,
         feedbackSubmittedAt: admin.firestore.FieldValue.serverTimestamp(),
         feedbackRating: overallRating,
+        feedbackResponses: payload.responses,
+        feedbackHasMangoItems: payload.hasMangoItems,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 

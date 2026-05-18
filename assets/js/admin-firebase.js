@@ -2208,12 +2208,40 @@ function feedbackAnswerSummary(entry = {}) {
   ].filter(Boolean);
 }
 
+function orderFeedbackFallbacks() {
+  const feedbackIds = new Set(state.feedback.map((entry) => entry.orderId).filter(Boolean));
+  return state.orders
+    .filter((order) => order.feedbackSubmitted || order.feedbackRating || order.feedbackResponses)
+    .filter((order) => !feedbackIds.has(order.id))
+    .map((order) => ({
+      id: `order-${order.id}`,
+      orderId: order.id,
+      orderNumber: order.orderNumber || '',
+      customerUid: order.customerUid || '',
+      customerEmail: order.customerEmail || order.email || '',
+      location: order.location || '',
+      locationLabel: order.locationLabel || '',
+      items: Array.isArray(order.items) ? order.items : [],
+      hasMangoItems: Boolean(order.feedbackHasMangoItems),
+      responses: {
+        ...(order.feedbackResponses || {}),
+        overallRating: order.feedbackResponses?.overallRating || order.feedbackRating || ''
+      },
+      feedbackRating: order.feedbackRating || '',
+      createdAt: order.feedbackSubmittedAt || order.updatedAt || order.createdAt || ''
+    }));
+}
+
+function feedbackEntries() {
+  return [...state.feedback, ...orderFeedbackFallbacks()];
+}
+
 function filteredFeedback() {
   const search = normalizeLookup(document.getElementById('feedbackSearch')?.value || '');
   const ratingFilter = document.getElementById('feedbackRating')?.value || 'all';
   const locationFilter = document.getElementById('feedbackLocation')?.value || 'all';
 
-  return [...state.feedback].filter((entry) => {
+  return feedbackEntries().filter((entry) => {
     const rating = feedbackRatingValue(entry);
     const location = entry.location || '';
     if (ratingFilter === 'low' && rating > 3) return false;
@@ -3357,6 +3385,7 @@ function subscribeData() {
     renderOrders();
     renderCustomers();
     renderAccounting();
+    renderFeedback();
   }, (error) => {
     console.error(error);
     showToast('Orders sync failed');

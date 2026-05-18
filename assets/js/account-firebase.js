@@ -135,6 +135,7 @@ function authErrorMessage(error) {
   if (code.includes('wrong-password') || code.includes('invalid-credential') || code.includes('user-not-found')) {
     return 'Email or password did not match.';
   }
+  if (code.includes('unauthorized-continue-uri')) return 'Password reset is not allowed from this preview link yet. Please try again.';
   if (code.includes('too-many-requests')) return 'Too many attempts. Please wait a bit and try again.';
   return 'Something went wrong. Please try again.';
 }
@@ -1138,10 +1139,7 @@ function bindForms() {
 
     try {
       setButtonBusy(button, true, 'Sending...');
-      await sendPasswordResetEmail(auth, email, {
-        url: `${window.location.origin}/account.html?mode=signin`,
-        handleCodeInApp: false
-      });
+      await sendPasswordResetEmail(auth, email);
       if (el('signinEmail')) el('signinEmail').value = email;
       setResetPasswordVisible(false);
       showMessage('authMessage', 'ok', 'Password reset link sent. Open the email, click the link, and create your new password.');
