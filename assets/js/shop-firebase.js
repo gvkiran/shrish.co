@@ -28,11 +28,8 @@ function productFilterId(product) {
 function updateModalProductUrl(product, mode = 'push') {
   if (!product || !window.history?.[`${mode}State`]) return;
   try {
-    const params = new URLSearchParams(window.location.search);
-    const filterId = activeFilter && activeFilter !== 'all' ? activeFilter : productFilterId(product);
-    if (filterId && filterId !== 'all') params.set('category', filterId);
-    params.set('product', product.id);
-    const nextUrl = `${window.location.pathname}?${params.toString()}`;
+    const filterId = activeFilter || productFilterId(product);
+    const nextUrl = shopUrlForFilter(filterId, { productId: product.id });
     window.history[`${mode}State`]({ shrishProductModal: product.id }, '', nextUrl);
   } catch (error) {
     console.warn('Unable to update product URL', error);
@@ -42,10 +39,7 @@ function updateModalProductUrl(product, mode = 'push') {
 function clearModalProductUrl(mode = 'push') {
   if (!window.history?.[`${mode}State`]) return;
   try {
-    const params = new URLSearchParams(window.location.search);
-    params.delete('product');
-    const query = params.toString();
-    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ''}`;
+    const nextUrl = shopUrlForFilter(activeFilter, { clearProduct: true });
     window.history[`${mode}State`]({ shrishProductModal: null }, '', nextUrl);
   } catch (error) {
     console.warn('Unable to clear product URL', error);
@@ -144,10 +138,77 @@ const SHOP_FILTERS = [
   { id: 'picklespodi', label: 'Pickles & Podi', categories: ['picklespodi'] }
 ];
 
+const SHOP_FILTER_PATHS = {
+  all: '/shop/all-products/',
+  mangoes: '/shop/mangoes/',
+  sweets: '/shop/sweets/',
+  snacks: '/shop/snacks/',
+  picklespodi: '/shop/pickles-podi/'
+};
+
+const SHOP_FILTERS_BY_PATH = Object.fromEntries(
+  Object.entries(SHOP_FILTER_PATHS).map(([filterId, path]) => [path, filterId])
+);
+
+function normalizeShopPath(pathname = window.location.pathname) {
+  const path = pathname.replace(/\/index\.html$/i, '/');
+  return path.endsWith('/') ? path : `${path}/`;
+}
+
+function filterFromShopPath(pathname = window.location.pathname) {
+  return SHOP_FILTERS_BY_PATH[normalizeShopPath(pathname)] || null;
+}
+
+function filterFromCurrentLocation() {
+  const pathFilter = filterFromShopPath();
+  if (pathFilter) return pathFilter;
+  const params = new URLSearchParams(window.location.search);
+  const queryFilter = params.get('category') || params.get('filter');
+  if (queryFilter && SHOP_FILTERS.some((filter) => filter.id === queryFilter)) return queryFilter;
+  if (window.location.pathname.endsWith('/shop.html')) return 'all';
+  return null;
+}
+
+function shopUrlForFilter(filterId = activeFilter, overrides = {}) {
+  const safeFilterId = SHOP_FILTER_PATHS[filterId] ? filterId : 'all';
+  const params = new URLSearchParams(window.location.search);
+  params.delete('category');
+  params.delete('filter');
+  if (safeFilterId !== 'picklespodi' || overrides.clearPickleType) params.delete('type');
+  if (overrides.clearSearch) {
+    params.delete('search');
+    params.delete('q');
+  }
+  if (overrides.searchQuery !== undefined) {
+    params.delete('q');
+    const nextSearch = String(overrides.searchQuery || '').trim();
+    if (nextSearch) params.set('search', nextSearch);
+    else params.delete('search');
+  }
+  if (overrides.productId !== undefined) {
+    const nextProductId = String(overrides.productId || '').trim();
+    if (nextProductId) params.set('product', nextProductId);
+    else params.delete('product');
+  } else if (overrides.clearProduct) {
+    params.delete('product');
+  }
+  const query = params.toString();
+  return `${SHOP_FILTER_PATHS[safeFilterId]}${query ? `?${query}` : ''}`;
+}
+
+function updateShopCategoryUrl(filterId, mode = 'push') {
+  if (!window.history?.[`${mode}State`]) return;
+  try {
+    window.history[`${mode}State`]({ shrishShopCategory: filterId }, '', shopUrlForFilter(filterId, { clearProduct: true }));
+  } catch (error) {
+    console.warn('Unable to update shop category URL', error);
+  }
+}
+
 function applyInitialShopFiltersFromUrl() {
   try {
     const params = new URLSearchParams(window.location.search);
-    const category = params.get('category') || params.get('filter');
+    const category = filterFromCurrentLocation();
     const pickleType = params.get('type');
     const productId = params.get('product');
     productSearchQuery = (params.get('search') || params.get('q') || '').trim();
@@ -962,6 +1023,7 @@ function buildFilters() {
       btn.classList.add('active');
       activeFilter = normalizedCatId;
       if (normalizedCatId !== 'picklespodi') picklePodiFilter = 'all';
+      updateShopCategoryUrl(normalizedCatId);
       trackShopEvent('shop_category_filter_clicked', {
         filter_id: normalizedCatId,
         filter_label: cat.label
@@ -1002,6 +1064,11 @@ function renderPicklesPodiFilters(items) {
 
 function setPicklesPodiFilter(filterId) {
   picklePodiFilter = filterId;
+  const url = new URL(window.location.href);
+  if (filterId === 'all') url.searchParams.delete('type');
+  else url.searchParams.set('type', filterId);
+  url.searchParams.delete('product');
+  window.history.replaceState({ shrishPicklesPodiFilter: filterId }, '', url);
   trackShopEvent('pickles_podi_filter_clicked', {
     filter_id: filterId
   });
@@ -1039,11 +1106,10 @@ function updateProductSearch(query, { updateUrl = true } = {}) {
     if (input.value !== productSearchQuery) input.value = productSearchQuery;
   });
   if (updateUrl) {
-    const url = new URL(window.location.href);
-    if (productSearchQuery) url.searchParams.set('search', productSearchQuery);
-    else url.searchParams.delete('search');
-    url.searchParams.delete('product');
-    window.history.replaceState({}, '', url);
+    window.history.replaceState({}, '', shopUrlForFilter(activeFilter, {
+      clearProduct: true,
+      searchQuery: productSearchQuery
+    }));
   }
   renderShop();
   window.clearTimeout(searchTrackTimer);
@@ -1118,7 +1184,7 @@ function renderShop() {
       sectionSub = 'Traditional Andhra-style pickles and podi. Non-veg pickles are preorder only and depend on supplier batch and pickup timing.';
     }
     const subFilters = catId === 'picklespodi' ? renderPicklesPodiFilters(allCatItems) : '';
-    const searchNote = productSearchQuery ? `<div class="shop-search-note">Showing matches for <strong>${escapedSearchQuery}</strong>. <a href="shop.html${activeFilter !== 'all' ? `?category=${encodeURIComponent(activeFilter)}` : ''}">Clear search</a></div>` : '';
+    const searchNote = productSearchQuery ? `<div class="shop-search-note">Showing matches for <strong>${escapedSearchQuery}</strong>. <a href="${escapeHtml(shopUrlForFilter(activeFilter, { clearSearch: true, clearProduct: true }))}">Clear search</a></div>` : '';
     let html = `<div class="shop-section"><div class="shop-section-head"><div><div class="shop-section-title">${m.title} <em>${m.em}</em></div><div class="section-divider"></div></div>${subFilters}</div>${searchNote}<p style="color:var(--text-light);font-size:14px;margin-bottom:24px">${sectionSub}</p>`;
     const showBanner = m.banner && (!hasLiveItems || activeFilter === catId);
     if (showBanner) {
@@ -1156,6 +1222,13 @@ function openInitialProductFromUrl() {
 
 function handleShopHistoryChange() {
   try {
+    const pathFilter = filterFromCurrentLocation();
+    if (pathFilter && pathFilter !== activeFilter) {
+      activeFilter = pathFilter;
+      if (pathFilter !== 'picklespodi') picklePodiFilter = 'all';
+      buildFilters();
+      renderShop();
+    }
     const productId = new URLSearchParams(window.location.search).get('product');
     if (productId) {
       const product = window.SHRISH_DATA.products.find((entry) => entry.id === productId);

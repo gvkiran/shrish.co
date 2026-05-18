@@ -1521,12 +1521,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Active nav link
+  const currentPath = window.location.pathname.replace(/\/+$/, '/') || '/';
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  const isShopRoute = currentPage === 'shop.html' || currentPath.startsWith('/shop/');
   const navCartWrap = document.querySelector('.nav-cart-wrap');
   setupCustomerAccountNav(navCartWrap, navMobile);
   document.querySelectorAll('.nav-link').forEach(link => {
     const href = link.getAttribute('href');
-    link.classList.toggle('active', href === currentPage || (currentPage === '' && href === 'index.html'));
+    const hrefPage = (href || '').split('?')[0].split('/').pop();
+    const isShopLink = hrefPage === 'shop.html';
+    link.classList.toggle('active', (isShopLink && isShopRoute) || href === currentPage || hrefPage === currentPage || (currentPath === '/' && hrefPage === 'index.html'));
   });
 
   // ââ Homepage product grid (with real images) âââââââââââââââ

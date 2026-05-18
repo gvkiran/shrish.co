@@ -1,0 +1,14 @@
+{
+  "rewrites": [
+    { "source": "/shop/all-products", "destination": "/shop.html" },
+    { "source": "/shop/all-products/", "destination": "/shop.html" },
+    { "source": "/shop/mangoes", "destination": "/shop.html" },
+    { "source": "/shop/mangoes/", "destination": "/shop.html" },
+    { "source": "/shop/sweets", "destination": "/shop.html" },
+    { "source": "/shop/sweets/", "destination": "/shop.html" },
+    { "source": "/shop/snacks", "destination": "/shop.html" },
+    { "source": "/shop/snacks/", "destination": "/shop.html" },
+    { "source": "/shop/pickles-podi", "destination": "/shop.html" },
+    { "source": "/shop/pickles-podi/", "destination": "/shop.html" }
+  ]
+}
