@@ -509,7 +509,10 @@ async function isActivePendingLock(lockSnap) {
   if ((lock.status || 'pending') !== 'pending') return false;
   if (!lock.orderId) return false;
 
-  const orderSnap = await getDoc(doc(db, 'orders', lock.orderId)).catch(() => null);
+  const orderSnap = await getDoc(doc(db, 'orders', lock.orderId)).catch((error) => {
+    if (error?.code === 'permission-denied') return { exists: () => true, data: () => ({ status: 'pending' }) };
+    return null;
+  });
   return orderSnap?.exists() && (orderSnap.data()?.status || 'pending') === 'pending';
 }
 
@@ -577,7 +580,11 @@ async function waitForOrderConfirmationNumber(orderRef) {
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < CONFIRMATION_WAIT_MS) {
-    const snap = await getDoc(orderRef).catch(() => null);
+    const snap = await getDoc(orderRef).catch((error) => {
+      if (error?.code === 'permission-denied') return null;
+      console.warn('Could not read order confirmation number yet', error);
+      return null;
+    });
     if (!snap?.exists()) return '';
     const orderNumber = snap.data()?.orderNumber;
     if (typeof orderNumber === 'string' && /^SHR-\d+$/.test(orderNumber)) {

@@ -52,7 +52,11 @@ service cloud.firestore {
 
     match /orders/{orderId} {
       allow create: if newOrderCustomerIsValid();
-      allow get: if true;
+      allow get: if isAdmin()
+        || (
+          isSignedIn()
+          && resource.data.customerUid == request.auth.uid
+        );
       allow list: if isAdmin()
         || (
           isSignedIn()

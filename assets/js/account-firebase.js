@@ -204,7 +204,19 @@ function setAuthMode(mode) {
   el('signupForm').style.display = isSignup ? 'grid' : 'none';
   el('signinTab').classList.toggle('active', !isSignup);
   el('signupTab').classList.toggle('active', isSignup);
+  setResetPasswordVisible(false);
   clearMessage('authMessage');
+}
+
+function setResetPasswordVisible(show) {
+  const panel = el('resetPasswordForm');
+  if (!panel) return;
+  panel.classList.toggle('active', Boolean(show));
+  if (show) {
+    const email = normalizeEmail(el('signinEmail')?.value || el('resetEmail')?.value || '');
+    if (email && el('resetEmail')) el('resetEmail').value = email;
+    window.setTimeout(() => el('resetEmail')?.focus(), 0);
+  }
 }
 
 function setAuthedUi(user) {
@@ -935,15 +947,19 @@ function printOrderSummary(order = {}) {
 function renderOrders(orders = []) {
   const list = el('ordersList');
   if (!list) return;
+  const currentUid = auth.currentUser?.uid || '';
+  const ownedOrders = currentUid
+    ? orders.filter((order) => order.customerUid === currentUid)
+    : [];
 
-  if (!orders.length) {
+  if (!ownedOrders.length) {
     currentOrders = [];
     renderAccountInsights([]);
     list.innerHTML = '<div class="empty-orders">No signed-in orders yet. Your next order will appear here after checkout.</div>';
     return;
   }
 
-  const sorted = [...orders].sort((a, b) => dateValue(b.createdAt) - dateValue(a.createdAt));
+  const sorted = [...ownedOrders].sort((a, b) => dateValue(b.createdAt) - dateValue(a.createdAt));
   currentOrders = sorted;
   renderAccountInsights(sorted);
   list.innerHTML = sorted.map((order) => {
@@ -1099,18 +1115,41 @@ function bindForms() {
     }
   });
 
-  el('resetPasswordBtn')?.addEventListener('click', async () => {
-    const email = normalizeEmail(el('signinEmail').value);
+  el('resetPasswordBtn')?.addEventListener('click', () => {
+    clearMessage('authMessage');
+    setAuthMode('signin');
+    setResetPasswordVisible(true);
+  });
+
+  el('cancelResetPasswordBtn')?.addEventListener('click', () => {
+    setResetPasswordVisible(false);
+    clearMessage('authMessage');
+  });
+
+  el('resetPasswordForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearMessage('authMessage');
+    const button = event.submitter || event.currentTarget?.querySelector('button[type="submit"]');
+    const email = normalizeEmail(el('resetEmail')?.value || el('signinEmail')?.value);
     if (!validEmail(email)) {
-      showMessage('authMessage', 'error', 'Enter your email first, then reset password.');
+      showMessage('authMessage', 'error', 'Enter a valid email address for password reset.');
       return;
     }
 
     try {
-      await sendPasswordResetEmail(auth, email);
-      showMessage('authMessage', 'ok', 'Password reset email sent.');
+      setButtonBusy(button, true, 'Sending...');
+      await sendPasswordResetEmail(auth, email, {
+        url: `${window.location.origin}/account.html?mode=signin`,
+        handleCodeInApp: false
+      });
+      if (el('signinEmail')) el('signinEmail').value = email;
+      setResetPasswordVisible(false);
+      showMessage('authMessage', 'ok', 'Password reset link sent. Open the email, click the link, and create your new password.');
+      trackAccountEvent('customer_password_reset_requested');
     } catch (error) {
       showMessage('authMessage', 'error', authErrorMessage(error));
+    } finally {
+      setButtonBusy(button, false);
     }
   });
 

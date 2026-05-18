@@ -23,6 +23,8 @@
 .account-form{display:grid;gap:15px}
 .account-form.two-col{grid-template-columns:repeat(2,minmax(0,1fr))}
 .account-form .full{grid-column:1/-1}
+.reset-panel{display:none;border:1px solid rgba(200,121,26,.18);border-radius:16px;background:#fffdf8;padding:16px;margin-top:16px}
+.reset-panel.active{display:grid;gap:12px}
 .account-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px}
 .account-button{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:999px;background:var(--saffron);color:#fff;padding:13px 24px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:var(--transition)}
 .account-button:hover{background:var(--saffron-d);transform:translateY(-1px)}
@@ -195,6 +197,18 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
       </div>
     </form>
 
+    <form class="reset-panel" id="resetPasswordForm" aria-label="Reset password form">
+      <p class="account-muted">Enter your account email and we will send a secure link to create a new password.</p>
+      <div class="form-group">
+        <label class="form-label" for="resetEmail">Email Address</label>
+        <input class="form-control" id="resetEmail" type="email" autocomplete="email">
+      </div>
+      <div class="account-actions">
+        <button class="account-button" type="submit">Send Reset Link</button>
+        <button class="account-button subtle" type="button" id="cancelResetPasswordBtn">Cancel</button>
+      </div>
+    </form>
+
     <form class="account-form two-col" id="signupForm" style="display:none">
       <div class="form-group">
         <label class="form-label" for="signupFirstName">First Name</label>
@@ -350,7 +364,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="assets/js/analytics.js?v=customer-accounts-1"></script>
 <script src="assets/js/main.js?v=account-menu-2"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/account-firebase.js?v=customer-order-account-5"></script>
+<script type="module" src="assets/js/account-firebase.js?v=password-reset-20260518"></script>
 
 </body>
 </html>
