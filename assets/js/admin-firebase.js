@@ -77,28 +77,63 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2800);
 }
 
+function isAuthorizedAdmin(user) {
+  return normalizeLookup(user?.email || '') === ADMIN_EMAIL;
+}
+
+function showLoginError(message) {
+  const errorEl = document.getElementById('loginErr');
+  if (!errorEl) return;
+  errorEl.textContent = message;
+  errorEl.style.display = 'block';
+}
+
+function clearLoginError() {
+  const errorEl = document.getElementById('loginErr');
+  if (errorEl) errorEl.style.display = 'none';
+}
+
+function unsubscribeAdminData() {
+  state.unsubOrders?.();
+  state.unsubProducts?.();
+  state.unsubCustomers?.();
+  state.unsubFeedback?.();
+  state.unsubSubscribersGeneral?.();
+  state.unsubSubscribersProduct?.();
+  state.unsubAccountingBatches?.();
+  state.unsubAccounting2Records?.();
+
+  state.unsubOrders = null;
+  state.unsubProducts = null;
+  state.unsubCustomers = null;
+  state.unsubFeedback = null;
+  state.unsubSubscribersGeneral = null;
+  state.unsubSubscribersProduct = null;
+  state.unsubAccountingBatches = null;
+  state.unsubAccounting2Records = null;
+  state.selectedReminderOrderIds.clear();
+}
+
 async function doLogin() {
   const email = document.getElementById('adminEmail')?.value?.trim();
   const password = document.getElementById('adminPw')?.value || '';
-  const errorEl = document.getElementById('loginErr');
 
   if (!email || !password) {
-    if (errorEl) {
-      errorEl.textContent = 'Enter admin email and password.';
-      errorEl.style.display = 'block';
-    }
+    showLoginError('Enter admin email and password.');
+    return;
+  }
+
+  if (normalizeLookup(email) !== ADMIN_EMAIL) {
+    showLoginError(`Admin access is only available for ${ADMIN_EMAIL}.`);
     return;
   }
 
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    if (errorEl) errorEl.style.display = 'none';
+    clearLoginError();
   } catch (error) {
     console.error(error);
-    if (errorEl) {
-      errorEl.textContent = 'Login failed. Check your Firebase Auth admin user.';
-      errorEl.style.display = 'block';
-    }
+    showLoginError('Login failed. Check your Firebase Auth admin user.');
   }
 }
 
@@ -3520,19 +3555,20 @@ function bindUi() {
 function initAuthWatch() {
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
-      state.unsubOrders?.();
-      state.unsubProducts?.();
-      state.unsubCustomers?.();
-      state.unsubFeedback?.();
-      state.unsubSubscribersGeneral?.();
-      state.unsubSubscribersProduct?.();
-      state.unsubAccountingBatches?.();
-      state.unsubAccounting2Records?.();
-      state.selectedReminderOrderIds.clear();
+      unsubscribeAdminData();
       setLoggedInUi(false);
       return;
     }
 
+    if (!isAuthorizedAdmin(user)) {
+      unsubscribeAdminData();
+      setLoggedInUi(false);
+      showLoginError(`Admin access is only available for ${ADMIN_EMAIL}.`);
+      await signOut(auth);
+      return;
+    }
+
+    clearLoginError();
     setLoggedInUi(true, user.email || '');
     await seedProductsIfNeeded();
     subscribeData();
