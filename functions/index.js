@@ -1,9 +1,10 @@
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const { Resend } = require("resend");
 const { PostHog } = require("posthog-node");
+const Stripe = require("stripe");
 
 admin.initializeApp();
 
@@ -15,6 +16,8 @@ const posthog = new PostHog(process.env.POSTHOG_API_KEY, {
 });
 
 const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
+const STRIPE_SECRET_KEY = defineSecret("STRIPE_SECRET_KEY");
+const STRIPE_WEBHOOK_SECRET = defineSecret("STRIPE_WEBHOOK_SECRET");
 
 const SHRISH_FROM_EMAIL = "Shrish Orders <contact@shrish.co>";
 const SHRISH_ADMIN_EMAIL = "contact@shrish.co";
@@ -22,11 +25,38 @@ const SHRISH_SUPPORT_PHONE = "+1 (765) 325-5577";
 const SHRISH_INSTAGRAM_URL = "https://www.instagram.com/shrish_llc/";
 const SHRISH_WHATSAPP_URL = "https://wa.me/17653255577";
 const SHRISH_LOGO_URL = "https://gvkiran.github.io/shrish.co/images/brand/logo-small.png";
+const SHRISH_SITE_URL = "https://shrish.co";
 const ORDER_COUNTER_START = 671499;
 const MAX_REMINDER_EMAILS_PER_SEND = 50;
 
 function isAdminRequest(request) {
   return String(request.auth?.token?.email || "").trim().toLowerCase() === SHRISH_ADMIN_EMAIL;
+}
+
+function stripeClient() {
+  return new Stripe(STRIPE_SECRET_KEY.value());
+}
+
+function allowedCheckoutOrigin(value = "") {
+  const fallback = SHRISH_SITE_URL;
+  try {
+    const url = new URL(String(value || fallback));
+    const hostname = url.hostname.toLowerCase();
+    const isAllowed =
+      hostname === "shrish.co" ||
+      hostname === "www.shrish.co" ||
+      hostname.endsWith(".vercel.app") ||
+      hostname === "localhost" ||
+      hostname === "127.0.0.1";
+
+    return isAllowed ? url.origin : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function toStripeAmount(value) {
+  return Math.max(0, Math.round(Number(value || 0) * 100));
 }
 
 function currency(value) {
@@ -152,6 +182,8 @@ function buildCustomerEmail(order) {
   const pickupLocation = escapeHtml(
     order.locationLabel || order.pickupLocation || "Chesterfield, VA"
   );
+  const isPaidOnline = order.paymentMethod === "stripe" || order.paymentStatus === "paid";
+  const paymentMessage = isPaidOnline ? "Payment was completed online." : "Payment is collected at pickup.";
 
   const { totalBoxes, estimatedTotal } = getOrderTotals(order);
   const itemRows = buildItemsRows(items);
@@ -185,7 +217,7 @@ function buildCustomerEmail(order) {
 
             <p style="margin:0 0 22px; font-size:15px; line-height:1.7;">
               We have your order <strong>${orderNumber}</strong> for pickup in <strong>${pickupLocation}</strong>.
-              Payment is collected at pickup.
+              ${paymentMessage}
             </p>
 
             <table style="width:100%; border-collapse:collapse; margin:0 0 24px;">
@@ -261,6 +293,10 @@ function buildAdminEmail(order) {
   const pickupLocation = escapeHtml(
     order.locationLabel || order.pickupLocation || "Chesterfield, VA"
   );
+  const paymentLabel = escapeHtml(
+    order.paymentMethodLabel ||
+    (order.paymentMethod === "stripe" || order.paymentStatus === "paid" ? "Paid online" : "Pay at pickup")
+  );
   const notes = escapeHtml(order.notes || "");
 
   const { totalBoxes, estimatedTotal } = getOrderTotals(order);
@@ -304,6 +340,10 @@ function buildAdminEmail(order) {
               <tr>
                 <td style="padding:8px 0; font-size:14px;"><strong>Pickup:</strong></td>
                 <td style="padding:8px 0; font-size:14px;">${pickupLocation}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0; font-size:14px;"><strong>Payment:</strong></td>
+                <td style="padding:8px 0; font-size:14px;">${paymentLabel}</td>
               </tr>
             </table>
 
@@ -358,6 +398,71 @@ function buildAdminEmail(order) {
     </body>
   </html>
   `;
+}
+
+async function sendOrderConfirmationEmails(orderRef, order, source = "order_created") {
+  if (!order || !order.email || order.confirmationEmailSentAt) return;
+
+  const finalOrderNumber = await assignSequentialOrderNumber(
+    orderRef,
+    order.orderNumber
+  );
+
+  const finalOrder = {
+    ...order,
+    orderNumber: finalOrderNumber,
+  };
+
+  const resend = new Resend(RESEND_API_KEY.value());
+
+  const customerSubject = `Shrish order confirmation — ${finalOrder.orderNumber || "Order received"}`;
+  const adminSubject = `New Shrish order — ${finalOrder.orderNumber || "Order received"}`;
+
+  await resend.emails.send({
+    from: SHRISH_FROM_EMAIL,
+    to: [finalOrder.email],
+    subject: customerSubject,
+    html: buildCustomerEmail(finalOrder),
+  });
+
+  await resend.emails.send({
+    from: SHRISH_FROM_EMAIL,
+    to: [SHRISH_ADMIN_EMAIL],
+    subject: adminSubject,
+    html: buildAdminEmail(finalOrder),
+  });
+
+  await orderRef.set({
+    confirmationEmailSentAt: admin.firestore.FieldValue.serverTimestamp(),
+    confirmationEmailSource: source,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+
+  const { totalBoxes, estimatedTotal } = getOrderTotals(finalOrder);
+  posthog.identify({
+    distinctId: finalOrder.email,
+    properties: {
+      $set: {
+        name: `${finalOrder.firstName || ""} ${finalOrder.lastName || ""}`.trim() || undefined,
+        email: finalOrder.email,
+        phone: finalOrder.phone || undefined,
+      },
+    },
+  });
+  posthog.capture({
+    distinctId: finalOrder.email,
+    event: "order_confirmed",
+    properties: {
+      order_number: finalOrder.orderNumber,
+      pickup_location: finalOrder.locationLabel || finalOrder.pickupLocation || "Chesterfield, VA",
+      total_boxes: totalBoxes,
+      estimated_total: estimatedTotal,
+      item_count: Array.isArray(finalOrder.items) ? finalOrder.items.length : 0,
+      payment_method: finalOrder.paymentMethod || finalOrder.payment || "pay_at_pickup",
+      source,
+    },
+  });
+  await posthog.flush();
 }
 
 function buildPasswordResetEmail(email, resetLink) {
@@ -681,6 +786,135 @@ exports.sendOrderReminderEmails = onCall(
   }
 );
 
+exports.createStripeCheckoutSession = onCall(
+  {
+    region: "us-central1",
+    secrets: [STRIPE_SECRET_KEY],
+  },
+  async (request) => {
+    const orderId = String(request.data?.orderId || "").trim();
+    if (!orderId) {
+      throw new HttpsError("invalid-argument", "Order ID is required.");
+    }
+
+    const db = admin.firestore();
+    const orderRef = db.collection("orders").doc(orderId);
+    const orderSnap = await orderRef.get();
+    if (!orderSnap.exists) {
+      throw new HttpsError("not-found", "Order not found.");
+    }
+
+    const order = orderSnap.data() || {};
+    if (order.customerUid && order.customerUid !== request.auth?.uid) {
+      throw new HttpsError("permission-denied", "You can only pay for your own order.");
+    }
+    if (String(order.paymentMethod || "") !== "stripe") {
+      throw new HttpsError("failed-precondition", "This order is not set for online payment.");
+    }
+    if (String(order.paymentStatus || "") === "paid") {
+      throw new HttpsError("failed-precondition", "This order is already paid.");
+    }
+    if (!Array.isArray(order.items) || !order.items.length) {
+      throw new HttpsError("failed-precondition", "This order has no items.");
+    }
+
+    const stripe = stripeClient();
+    const origin = allowedCheckoutOrigin(request.data?.origin);
+    const saveCard = Boolean(request.data?.saveCard && request.auth?.uid);
+    const customerEmail = String(order.email || request.auth?.token?.email || "").trim().toLowerCase();
+    const metadata = {
+      orderId,
+      orderNumber: order.orderNumber || "",
+      customerUid: order.customerUid || request.auth?.uid || "",
+      source: "shrish_checkout",
+    };
+
+    let stripeCustomerId = "";
+    if (request.auth?.uid && saveCard) {
+      const profileRef = db.collection("user_profiles").doc(request.auth.uid);
+      const profileSnap = await profileRef.get();
+      const profile = profileSnap.exists ? profileSnap.data() || {} : {};
+      stripeCustomerId = String(profile.stripeCustomerId || "").trim();
+      if (!stripeCustomerId) {
+        const customer = await stripe.customers.create({
+          email: customerEmail || undefined,
+          name: order.fullName || `${order.firstName || ""} ${order.lastName || ""}`.trim() || undefined,
+          phone: order.phone || undefined,
+          metadata: {
+            customerUid: request.auth.uid,
+            source: "shrish_account",
+          },
+        });
+        stripeCustomerId = customer.id;
+        await profileRef.set({
+          stripeCustomerId,
+          stripeCustomerCreatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      }
+    }
+
+    const lineItems = order.items.map((item) => {
+      const qty = normalizeQty(item);
+      const unitAmount = Math.max(50, toStripeAmount(customerOrderUnitPrice(item)));
+      return {
+        quantity: qty,
+        price_data: {
+          currency: "usd",
+          unit_amount: unitAmount,
+          product_data: {
+            name: String(item.name || "Shrish item").slice(0, 180),
+          },
+        },
+      };
+    });
+
+    const sessionConfig = {
+      mode: "payment",
+      payment_method_types: ["card"],
+      line_items: lineItems,
+      success_url: `${origin}/order.html?payment=success&orderId=${encodeURIComponent(orderId)}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/order.html?payment=cancelled&orderId=${encodeURIComponent(orderId)}`,
+      metadata,
+      payment_intent_data: {
+        metadata,
+      },
+    };
+
+    if (stripeCustomerId) {
+      sessionConfig.customer = stripeCustomerId;
+      if (saveCard) sessionConfig.payment_intent_data.setup_future_usage = "off_session";
+    } else if (customerEmail) {
+      sessionConfig.customer_email = customerEmail;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
+    await orderRef.set({
+      stripeCheckoutSessionId: session.id,
+      stripeCustomerId: stripeCustomerId || "",
+      saveCardRequested: saveCard,
+      paymentStatus: "checkout_started",
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    posthog.capture({
+      distinctId: customerEmail || request.auth?.uid || orderId,
+      event: "stripe_checkout_started",
+      properties: {
+        order_id: orderId,
+        save_card_requested: saveCard,
+        amount_total: session.amount_total || 0,
+      },
+    });
+    await posthog.flush();
+
+    return {
+      url: session.url,
+      sessionId: session.id,
+    };
+  }
+);
+
 function customerOrderUnitPrice(item = {}) {
   const qty = normalizeQty(item);
   const lineTotal = normalizeLineTotal(item);
@@ -730,6 +964,9 @@ exports.updateCustomerPendingOrder = onCall(
       }
       if (String(order.status || "pending").toLowerCase() !== "pending") {
         throw new HttpsError("failed-precondition", "Only pending orders can be changed.");
+      }
+      if (order.paymentMethod === "stripe" || order.paymentStatus === "paid") {
+        throw new HttpsError("failed-precondition", "Online paid orders cannot be edited online yet. Please contact Shrish for help.");
       }
 
       if (action === "cancel") {
@@ -1128,6 +1365,106 @@ exports.sendCustomerPasswordReset = onCall(
   }
 );
 
+exports.stripeWebhook = onRequest(
+  {
+    region: "us-central1",
+    secrets: [STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, RESEND_API_KEY],
+  },
+  async (request, response) => {
+    const signature = request.headers["stripe-signature"];
+    if (!signature) {
+      response.status(400).send("Missing Stripe signature");
+      return;
+    }
+
+    let event;
+    try {
+      event = stripeClient().webhooks.constructEvent(
+        request.rawBody,
+        signature,
+        STRIPE_WEBHOOK_SECRET.value()
+      );
+    } catch (error) {
+      console.error("Stripe webhook signature verification failed", error);
+      response.status(400).send("Invalid Stripe signature");
+      return;
+    }
+
+    const db = admin.firestore();
+
+    try {
+      if (event.type === "checkout.session.completed") {
+        const session = event.data.object;
+        const orderId = String(session.metadata?.orderId || "").trim();
+        if (!orderId) {
+          response.json({ received: true, skipped: "missing_order_id" });
+          return;
+        }
+
+        const orderRef = db.collection("orders").doc(orderId);
+        const orderSnap = await orderRef.get();
+        if (!orderSnap.exists) {
+          response.json({ received: true, skipped: "missing_order" });
+          return;
+        }
+
+        const order = orderSnap.data() || {};
+        await orderRef.set({
+          payment: "paid",
+          paymentMethod: "stripe",
+          paymentMethodLabel: "Paid online",
+          paymentStatus: "paid",
+          stripeCheckoutSessionId: session.id,
+          stripePaymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : "",
+          stripeCustomerId: typeof session.customer === "string" ? session.customer : (order.stripeCustomerId || ""),
+          paidAt: admin.firestore.FieldValue.serverTimestamp(),
+          status: "pending",
+          skipCustomerEmail: false,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+
+        if (order.phoneDigits) {
+          await db.collection("order_locks").doc(order.phoneDigits).set({
+            phoneDigits: order.phoneDigits,
+            orderId,
+            status: "pending",
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+        }
+
+        await sendOrderConfirmationEmails(orderRef, {
+          ...order,
+          payment: "paid",
+          paymentMethod: "stripe",
+          paymentMethodLabel: "Paid online",
+          paymentStatus: "paid",
+        }, "stripe_paid");
+      }
+
+      if (event.type === "checkout.session.expired") {
+        const session = event.data.object;
+        const orderId = String(session.metadata?.orderId || "").trim();
+        if (orderId) {
+          await db.collection("orders").doc(orderId).set({
+            paymentStatus: "expired",
+            status: "payment_expired",
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+        }
+      }
+
+      response.json({ received: true });
+    } catch (error) {
+      console.error("Stripe webhook handling failed", error);
+      posthog.captureException(error, "stripe_webhook", {
+        event_type: event.type,
+      });
+      await posthog.flush();
+      response.status(500).send("Webhook handler failed");
+    }
+  }
+);
+
 exports.sendOrderEmails = onDocumentCreated(
   {
     document: "orders/{orderId}",
@@ -1143,57 +1480,6 @@ exports.sendOrderEmails = onDocumentCreated(
     if (order?.source === "admin_manual" || order?.skipCustomerEmail) return;
     if (!order || !order.email) return;
 
-    const finalOrderNumber = await assignSequentialOrderNumber(
-      orderRef,
-      order.orderNumber
-    );
-
-    const finalOrder = {
-      ...order,
-      orderNumber: finalOrderNumber,
-    };
-
-    const resend = new Resend(RESEND_API_KEY.value());
-
-    const customerSubject = `Shrish order confirmation — ${finalOrder.orderNumber || "Order received"}`;
-    const adminSubject = `New Shrish order — ${finalOrder.orderNumber || "Order received"}`;
-
-    await resend.emails.send({
-      from: SHRISH_FROM_EMAIL,
-      to: [finalOrder.email],
-      subject: customerSubject,
-      html: buildCustomerEmail(finalOrder),
-    });
-
-    await resend.emails.send({
-      from: SHRISH_FROM_EMAIL,
-      to: [SHRISH_ADMIN_EMAIL],
-      subject: adminSubject,
-      html: buildAdminEmail(finalOrder),
-    });
-
-    const { totalBoxes, estimatedTotal } = getOrderTotals(finalOrder);
-    posthog.identify({
-      distinctId: finalOrder.email,
-      properties: {
-        $set: {
-          name: `${finalOrder.firstName || ""} ${finalOrder.lastName || ""}`.trim() || undefined,
-          email: finalOrder.email,
-          phone: finalOrder.phone || undefined,
-        },
-      },
-    });
-    posthog.capture({
-      distinctId: finalOrder.email,
-      event: "order_confirmed",
-      properties: {
-        order_number: finalOrder.orderNumber,
-        pickup_location: finalOrder.locationLabel || finalOrder.pickupLocation || "Chesterfield, VA",
-        total_boxes: totalBoxes,
-        estimated_total: estimatedTotal,
-        item_count: Array.isArray(finalOrder.items) ? finalOrder.items.length : 0,
-      },
-    });
-    await posthog.flush();
+    await sendOrderConfirmationEmails(orderRef, order, "order_created");
   }
 );

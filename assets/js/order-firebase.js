@@ -7,6 +7,8 @@ import {
   setDoc,
   runTransaction,
   onAuthStateChanged,
+  cloudFunctions,
+  httpsCallable,
   serverTimestamp,
   normalizePhone,
   escapeHtml,
@@ -18,8 +20,10 @@ let selectedLoc = '';
 let isSubmitting = false;
 let currentCustomer = null;
 let currentCustomerProfile = null;
+let selectedPaymentMethod = 'pickup';
 const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
 const CONFIRMATION_WAIT_MS = 15000;
+const createStripeCheckoutSession = httpsCallable(cloudFunctions, 'createStripeCheckoutSession');
 const LOCATION_LABELS = {
   shortpump: 'Short Pump, VA',
   chesterfield: 'Chesterfield, VA',
@@ -113,6 +117,49 @@ function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
       <a href="${signinHref}" class="btn-outline">Sign In</a>
       <span class="success-account-note">Use ${escapeHtml(order.email || 'the same email')} to link ${escapeHtml(displayNumber)}.</span>
     </div>`;
+}
+
+function renderStripeReturnMessage() {
+  const params = new URLSearchParams(window.location.search);
+  const paymentState = params.get('payment');
+  if (!paymentState) return false;
+
+  const orderId = params.get('orderId') || '';
+  if (paymentState === 'success') {
+    sessionStorage.removeItem('shrish_cart');
+    cart = [];
+    updateNavCart();
+
+    document.getElementById('checkoutWrap').style.display = 'none';
+    document.getElementById('successScreen').style.display = 'block';
+    document.getElementById('successOrderNum').textContent = orderId
+      ? `Payment received - Order Ref ${orderId}`
+      : 'Payment received';
+    document.querySelector('#successScreen > p')?.replaceChildren(document.createTextNode('Your online payment was received. Watch the WhatsApp group for pickup details.'));
+    const paymentCopy = document.querySelectorAll('#successScreen > p')[1];
+    if (paymentCopy) paymentCopy.textContent = 'Payment is already completed online.';
+    const summary = document.getElementById('successSummary');
+    if (summary) {
+      summary.innerHTML = `
+        <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Paid online</span></div>
+        <div class="ss-row"><span>Order Ref</span><span>${escapeHtml(orderId || 'Stripe confirmation')}</span></div>`;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return true;
+  }
+
+  if (paymentState === 'cancelled') {
+    setErrorBannerTitle('Online payment was cancelled');
+    const banner = document.getElementById('errorBanner');
+    const list = document.getElementById('errorList');
+    if (banner && list) {
+      list.innerHTML = '<li>Your card was not charged. You can try online payment again or switch to pay at pickup.</li>';
+      banner.className = 'error-banner show';
+    }
+    return false;
+  }
+
+  return false;
 }
 
 function trackCheckoutEvent(eventName, props = {}) {
@@ -657,12 +704,66 @@ function applyCustomerDefaults(profile = {}) {
   }
 }
 
+function updatePaymentUi() {
+  document.querySelectorAll('.payment-option').forEach((option) => {
+    const isSelected = option.dataset.payment === selectedPaymentMethod;
+    option.classList.toggle('selected', isSelected);
+    const input = option.querySelector('input[type="radio"]');
+    if (input) input.checked = isSelected;
+  });
+
+  const saveCardRow = document.getElementById('saveCardRow');
+  const saveCardInput = document.getElementById('saveCardForFuture');
+  const canSaveCard = selectedPaymentMethod === 'stripe' && Boolean(currentCustomer);
+  if (saveCardRow) saveCardRow.classList.toggle('show', selectedPaymentMethod === 'stripe');
+  if (saveCardInput) {
+    saveCardInput.disabled = !canSaveCard;
+    if (!canSaveCard) saveCardInput.checked = false;
+  }
+
+  const submitBtn = document.getElementById('submitBtn');
+  if (submitBtn) {
+    submitBtn.textContent = selectedPaymentMethod === 'stripe'
+      ? 'Continue to Secure Payment'
+      : 'Place Order - Pay at Pickup';
+  }
+
+  const note = document.getElementById('paymentNote');
+  if (note) {
+    note.textContent = selectedPaymentMethod === 'stripe'
+      ? (currentCustomer ? 'You will be redirected to Stripe. Signed-in customers can save a card for future purchases.' : 'You will be redirected to Stripe. Sign in first if you want to save a card for future purchases.')
+      : 'No payment needed now. Pay when you pick up.';
+  }
+}
+
+function bindPaymentUi() {
+  document.querySelectorAll('.payment-option').forEach((option) => {
+    option.addEventListener('click', () => {
+      selectedPaymentMethod = option.dataset.payment === 'stripe' ? 'stripe' : 'pickup';
+      updatePaymentUi();
+      trackCheckoutEvent('checkout_payment_method_selected', {
+        payment_method: selectedPaymentMethod
+      });
+    });
+
+    option.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        option.click();
+      }
+    });
+  });
+
+  updatePaymentUi();
+}
+
 function bindCustomerProfile() {
   if (!customerAccountsEnabled()) return;
 
   onAuthStateChanged(auth, async (user) => {
     currentCustomer = isCustomerUser(user) ? user : null;
     currentCustomerProfile = null;
+    updatePaymentUi();
 
     if (!currentCustomer) return;
 
@@ -674,6 +775,7 @@ function bindCustomerProfile() {
 
     currentCustomerProfile = snap.data() || {};
     applyCustomerDefaults(currentCustomerProfile);
+    updatePaymentUi();
   });
 }
 
@@ -794,12 +896,16 @@ async function submitOrder() {
   const email = document.getElementById('email').value.trim().toLowerCase();
   const referral = document.getElementById('referral').value;
   const notes = document.getElementById('notes').value.trim();
+  const payOnline = selectedPaymentMethod === 'stripe';
+  const saveCard = Boolean(document.getElementById('saveCardForFuture')?.checked && currentCustomer);
   const phoneDigits = extractUsPhoneDigits(phone);
   const emailValid = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email);
   trackCheckoutEvent('order_submit_attempted', {
     ...cartAnalyticsSummary(),
     pickup_location: selectedLoc || '',
-    referral: referral || 'Not specified'
+    referral: referral || 'Not specified',
+    payment_method: selectedPaymentMethod,
+    save_card_requested: saveCard
   });
 
   if (phoneInput) phoneInput.value = phone;
@@ -854,7 +960,7 @@ async function submitOrder() {
     isSubmitting = true;
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Submitting...';
+      submitBtn.textContent = payOnline ? 'Preparing secure payment...' : 'Submitting...';
     }
 
     const cartIsCurrent = await verifyCartAgainstLiveProducts();
@@ -901,9 +1007,14 @@ async function submitOrder() {
       totalPrice: cart.reduce((sum, item) => {
         return sum + (moneyValue(item.price) * (item.qty || 1));
       }, 0),
-      payment: 'pending',
-      status: 'pending',
+      payment: payOnline ? 'online_pending' : 'pending',
+      paymentMethod: payOnline ? 'stripe' : 'pay_at_pickup',
+      paymentMethodLabel: payOnline ? 'Pay online' : 'Pay at pickup',
+      paymentStatus: payOnline ? 'awaiting_payment' : 'pay_at_pickup',
+      saveCardRequested: saveCard,
+      status: payOnline ? 'awaiting_payment' : 'pending',
       source: 'website',
+      skipCustomerEmail: payOnline,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
@@ -927,22 +1038,42 @@ async function submitOrder() {
       }
 
       transaction.set(orderRef, order);
-      transaction.set(lockRef, {
-        phoneDigits,
-        orderId: orderRef.id,
-        status: 'pending',
-        updatedAt: serverTimestamp()
-      });
+      if (!payOnline) {
+        transaction.set(lockRef, {
+          phoneDigits,
+          orderId: orderRef.id,
+          status: 'pending',
+          updatedAt: serverTimestamp()
+        });
+      }
     });
 
     await saveCheckoutDetailsToProfile(order).catch((error) => {
       console.warn('Could not update customer profile from checkout', error);
     });
 
+    if (payOnline) {
+      trackCheckoutEvent('stripe_checkout_redirect_started', {
+        ...cartAnalyticsSummary(),
+        pickup_location: selectedLoc,
+        save_card_requested: saveCard
+      });
+      const session = await createStripeCheckoutSession({
+        orderId: orderRef.id,
+        saveCard,
+        origin: window.location.origin
+      });
+      const checkoutUrl = session?.data?.url;
+      if (!checkoutUrl) throw new Error('STRIPE_CHECKOUT_URL_MISSING');
+      window.location.href = checkoutUrl;
+      return;
+    }
+
     const submittedOrderAnalytics = {
       ...cartAnalyticsSummary(),
       pickup_location: selectedLoc,
-      referral: referral || 'Not specified'
+      referral: referral || 'Not specified',
+      payment_method: selectedPaymentMethod
     };
 
     sessionStorage.removeItem('shrish_cart');
@@ -1039,15 +1170,17 @@ async function submitOrder() {
     isSubmitting = false;
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Place Order - Pay at Pickup';
+      updatePaymentUi();
     }
   }
 }
 
 function init() {
+  if (renderStripeReturnMessage()) return;
   renderCartReview();
   updateNavCart();
   bindFormUi();
+  bindPaymentUi();
   bindCustomerProfile();
   trackCheckoutEvent('checkout_viewed', {
     has_cart: Boolean(cart.length),

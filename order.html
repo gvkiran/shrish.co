@@ -87,6 +87,19 @@
 .submit-btn:hover:not(:disabled){background:var(--saffron-d);transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,121,26,.35)}
 .submit-btn:disabled{background:#ccc;cursor:not-allowed;transform:none}
 .pay-note-small{font-size:13px;color:var(--text-light);text-align:center;margin-top:10px}
+.payment-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0 14px}
+.payment-option{border:2px solid #E0D0B8;border-radius:14px;padding:16px;cursor:pointer;transition:border-color .25s,background .25s;position:relative}
+.payment-option:hover{border-color:var(--saffron);background:rgba(200,121,26,.03)}
+.payment-option.selected{border-color:var(--saffron);background:rgba(200,121,26,.06)}
+.payment-option input{position:absolute;opacity:0;pointer-events:none}
+.payment-title{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:800;color:var(--dark);margin-bottom:5px}
+.payment-pill{font-size:11px;font-weight:800;color:var(--saffron);background:var(--cream-d);border-radius:999px;padding:4px 8px}
+.payment-copy{font-size:13px;line-height:1.55;color:var(--text-light)}
+.save-card-row{display:none;align-items:flex-start;gap:10px;background:#fffdf8;border:1px solid rgba(200,121,26,.22);border-radius:12px;padding:12px 14px;margin:8px 0 14px}
+.save-card-row.show{display:flex}
+.save-card-row input{margin-top:3px}
+.save-card-row label{font-size:13px;line-height:1.55;color:var(--text-light);cursor:pointer}
+.save-card-row strong{color:var(--dark)}
 .checkout-safety-note{background:#fff8ec;border:1px solid rgba(200,121,26,.22);border-left:4px solid var(--saffron);border-radius:10px;color:var(--text-light);font-size:12.5px;line-height:1.55;padding:12px 14px;margin:12px 0 16px}
 .checkout-safety-note strong{color:var(--dark)}
 
@@ -144,7 +157,7 @@
 .comm-note{font-size:12px;color:rgba(255,255,255,.4);margin-top:16px}
 
 @media(max-width:900px){.checkout-wrap{grid-template-columns:1fr;padding:40px 20px 60px}}
-@media(max-width:480px){.loc-cards{grid-template-columns:1fr}.community-btns{flex-direction:column;align-items:center}}
+@media(max-width:480px){.loc-cards,.payment-options{grid-template-columns:1fr}.community-btns{flex-direction:column;align-items:center}}
 </style>
 <script>
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -191,7 +204,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 
 <div class="page-hero">
   <h1>Cart <em>Checkout</em></h1>
-  <p>Review your order, choose pickup, and submit. Pay at pickup.</p>
+  <p>Review your order, choose pickup, and submit. Pay at pickup or online.</p>
 </div>
 
 <div class="checkout-wrap" id="checkoutWrap">
@@ -288,6 +301,28 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
         <textarea class="form-control" id="notes" rows="3" placeholder="Any special requests or notes for your order..."></textarea>
       </div>
 
+      <div class="form-divider"></div>
+      <div class="step-label">Step 4 - Payment</div>
+      <div class="payment-options" id="paymentOptions">
+        <label class="payment-option selected" data-payment="pickup">
+          <input type="radio" name="paymentMethod" value="pickup" checked>
+          <span class="payment-title">Pay at pickup <span class="payment-pill">Default</span></span>
+          <span class="payment-copy">Pay with cash, Zelle, or card when you pick up.</span>
+        </label>
+        <label class="payment-option" data-payment="stripe">
+          <input type="radio" name="paymentMethod" value="stripe">
+          <span class="payment-title">Pay online now <span class="payment-pill">Stripe</span></span>
+          <span class="payment-copy">Use a card securely through Stripe before pickup.</span>
+        </label>
+      </div>
+      <div class="save-card-row" id="saveCardRow">
+        <input type="checkbox" id="saveCardForFuture">
+        <label for="saveCardForFuture">
+          <strong>Save this card for future Shrish purchases.</strong><br>
+          Available only when signed in. Stripe stores the card securely; Shrish never sees your full card number.
+        </label>
+      </div>
+
       <div class="checkout-safety-note">
         <strong>Food allergy and spice notice:</strong> Products may contain or be prepared with peanut/groundnut oil and other major allergens. Ingredients, spice level, labels, and packaging may vary by batch. Product images are for illustration only. If you have allergies, sensitivities, or medical dietary restrictions, contact us before ordering.
       </div>
@@ -295,7 +330,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
       <button class="submit-btn" id="submitBtn">
         Place Order - Pay at Pickup
       </button>
-      <p class="pay-note-small">No payment needed now. pay when you pick up.</p>
+      <p class="pay-note-small" id="paymentNote">No payment needed now. Pay when you pick up.</p>
     </div>
   </div>
 
@@ -308,9 +343,9 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
     </div>
     <div class="info-card">
       <h4>How It Works</h4>
-      <div class="ir"><span class="ir-icon">1</span><div><strong>Place order online</strong><span>No payment needed now</span></div></div>
+      <div class="ir"><span class="ir-icon">1</span><div><strong>Place order online</strong><span>Pay now by card or pay at pickup</span></div></div>
       <div class="ir"><span class="ir-icon">2</span><div><strong>Follow whatsApp for pickup updates</strong><span><a href="tel:+17653255577" style="color:var(--saffron)">+1 (765) 325-5577</a></span></div></div>
-      <div class="ir"><span class="ir-icon">3</span><div><strong>Pay at pickup</strong><span>We accepts Cash, Zelle and Card</span></div></div>
+      <div class="ir"><span class="ir-icon">3</span><div><strong>Choose payment</strong><span>Online card payment or pay at pickup</span></div></div>
     </div>
     <div class="info-card" style="background:var(--dark)">
       <h4 style="color:var(--gold-l)">Need Help?</h4>
