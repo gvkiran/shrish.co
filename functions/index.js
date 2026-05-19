@@ -818,84 +818,95 @@ exports.createStripeCheckoutSession = onCall(
       throw new HttpsError("failed-precondition", "This order has no items.");
     }
 
-    const stripe = stripeClient();
-    const origin = allowedCheckoutOrigin(request.data?.origin);
+    let session;
+    let stripeCustomerId = "";
     const saveCard = Boolean(request.data?.saveCard && request.auth?.uid);
     const customerEmail = String(order.email || request.auth?.token?.email || "").trim().toLowerCase();
-    const metadata = {
-      orderId,
-      orderNumber: order.orderNumber || "",
-      customerUid: order.customerUid || request.auth?.uid || "",
-      source: "shrish_checkout",
-    };
+    try {
+      const stripe = stripeClient();
+      const origin = allowedCheckoutOrigin(request.data?.origin);
+      const metadata = {
+        orderId,
+        orderNumber: order.orderNumber || "",
+        customerUid: order.customerUid || request.auth?.uid || "",
+        source: "shrish_checkout",
+      };
 
-    let stripeCustomerId = "";
-    if (request.auth?.uid && saveCard) {
-      const profileRef = db.collection("user_profiles").doc(request.auth.uid);
-      const profileSnap = await profileRef.get();
-      const profile = profileSnap.exists ? profileSnap.data() || {} : {};
-      stripeCustomerId = String(profile.stripeCustomerId || "").trim();
-      if (!stripeCustomerId) {
-        const customer = await stripe.customers.create({
-          email: customerEmail || undefined,
-          name: order.fullName || `${order.firstName || ""} ${order.lastName || ""}`.trim() || undefined,
-          phone: order.phone || undefined,
-          metadata: {
-            customerUid: request.auth.uid,
-            source: "shrish_account",
-          },
-        });
-        stripeCustomerId = customer.id;
-        await profileRef.set({
-          stripeCustomerId,
-          stripeCustomerCreatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        }, { merge: true });
+      if (request.auth?.uid && saveCard) {
+        const profileRef = db.collection("user_profiles").doc(request.auth.uid);
+        const profileSnap = await profileRef.get();
+        const profile = profileSnap.exists ? profileSnap.data() || {} : {};
+        stripeCustomerId = String(profile.stripeCustomerId || "").trim();
+        if (!stripeCustomerId) {
+          const customer = await stripe.customers.create({
+            email: customerEmail || undefined,
+            name: order.fullName || `${order.firstName || ""} ${order.lastName || ""}`.trim() || undefined,
+            phone: order.phone || undefined,
+            metadata: {
+              customerUid: request.auth.uid,
+              source: "shrish_account",
+            },
+          });
+          stripeCustomerId = customer.id;
+          await profileRef.set({
+            stripeCustomerId,
+            stripeCustomerCreatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+        }
       }
-    }
 
-    const lineItems = order.items.map((item) => {
-      const qty = normalizeQty(item);
-      const unitAmount = Math.max(50, toStripeAmount(customerOrderUnitPrice(item)));
-      return {
-        quantity: qty,
-        price_data: {
-          currency: "usd",
-          unit_amount: unitAmount,
-          product_data: {
-            name: String(item.name || "Shrish item").slice(0, 180),
+      const lineItems = order.items.map((item) => {
+        const qty = normalizeQty(item);
+        const unitAmount = Math.max(50, toStripeAmount(customerOrderUnitPrice(item)));
+        return {
+          quantity: qty,
+          price_data: {
+            currency: "usd",
+            unit_amount: unitAmount,
+            product_data: {
+              name: String(item.name || "Shrish item").slice(0, 180),
+            },
           },
+        };
+      });
+
+      const sessionConfig = {
+        mode: "payment",
+        payment_method_types: ["card"],
+        line_items: lineItems,
+        success_url: `${origin}/order.html?payment=success&orderId=${encodeURIComponent(orderId)}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/order.html?payment=cancelled&orderId=${encodeURIComponent(orderId)}`,
+        metadata,
+        payment_intent_data: {
+          metadata,
         },
       };
-    });
 
-    const sessionConfig = {
-      mode: "payment",
-      payment_method_types: ["card"],
-      line_items: lineItems,
-      success_url: `${origin}/order.html?payment=success&orderId=${encodeURIComponent(orderId)}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/order.html?payment=cancelled&orderId=${encodeURIComponent(orderId)}`,
-      metadata,
-      payment_intent_data: {
-        metadata,
-      },
-    };
+      if (stripeCustomerId) {
+        sessionConfig.customer = stripeCustomerId;
+        if (saveCard) sessionConfig.payment_intent_data.setup_future_usage = "off_session";
+      } else if (customerEmail) {
+        sessionConfig.customer_email = customerEmail;
+      }
 
-    if (stripeCustomerId) {
-      sessionConfig.customer = stripeCustomerId;
-      if (saveCard) sessionConfig.payment_intent_data.setup_future_usage = "off_session";
-    } else if (customerEmail) {
-      sessionConfig.customer_email = customerEmail;
+      session = await stripe.checkout.sessions.create(sessionConfig);
+      await orderRef.set({
+        stripeCheckoutSessionId: session.id,
+        stripeCustomerId: stripeCustomerId || "",
+        saveCardRequested: saveCard,
+        paymentStatus: "checkout_started",
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    } catch (error) {
+      console.error("Stripe checkout session creation failed", {
+        orderId,
+        code: error?.code || "",
+        type: error?.type || "",
+        message: error?.message || String(error),
+      });
+      throw new HttpsError("internal", error?.message || "Could not start Stripe checkout.");
     }
-
-    const session = await stripe.checkout.sessions.create(sessionConfig);
-    await orderRef.set({
-      stripeCheckoutSessionId: session.id,
-      stripeCustomerId: stripeCustomerId || "",
-      saveCardRequested: saveCard,
-      paymentStatus: "checkout_started",
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    }, { merge: true });
 
     posthog.capture({
       distinctId: customerEmail || request.auth?.uid || orderId,

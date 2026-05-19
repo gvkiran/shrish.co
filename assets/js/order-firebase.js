@@ -714,11 +714,19 @@ function updatePaymentUi() {
 
   const saveCardRow = document.getElementById('saveCardRow');
   const saveCardInput = document.getElementById('saveCardForFuture');
+  const saveCardLabel = saveCardRow?.querySelector('label');
   const canSaveCard = selectedPaymentMethod === 'stripe' && Boolean(currentCustomer);
   if (saveCardRow) saveCardRow.classList.toggle('show', selectedPaymentMethod === 'stripe');
   if (saveCardInput) {
     saveCardInput.disabled = !canSaveCard;
     if (!canSaveCard) saveCardInput.checked = false;
+  }
+  if (saveCardLabel) {
+    saveCardLabel.innerHTML = currentCustomer
+      ? `<strong>Save this card for future Shrish purchases.</strong><br>
+          Stripe stores the card securely; Shrish never sees your full card number.`
+      : `<strong>Sign in to save a card for future purchases.</strong><br>
+          You can still pay online as a guest. To save this card, <a href="account.html?mode=signin">sign in</a> or <a href="account.html?mode=signup">create an account</a> first.`;
   }
 
   const submitBtn = document.getElementById('submitBtn');
@@ -1160,6 +1168,10 @@ async function submitOrder() {
     } else if (error?.message === 'LIVE_PRODUCT_CHECK_FAILED') {
       setErrorBannerTitle('Please refresh before placing your order');
       list.innerHTML = '<li>We could not verify live product availability right now. Please refresh and try again before placing the order.</li>';
+    } else if (payOnline) {
+      setErrorBannerTitle('Online payment could not start');
+      const detail = error?.message || error?.code || '';
+      list.innerHTML = `<li>Your order was not charged. Please try again, switch to pay at pickup, or contact us on WhatsApp.</li>${detail ? `<li style="font-size:12px">Payment setup detail: ${escapeHtml(detail)}</li>` : ''}`;
     } else {
       setErrorBannerTitle('Please fix the following before placing your order:');
       list.innerHTML = '<li>We could not submit your order right now. Please try again in a minute.</li>';
