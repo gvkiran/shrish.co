@@ -119,6 +119,63 @@ function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
     </div>`;
 }
 
+function readRecentOrderClaim() {
+  try {
+    return JSON.parse(sessionStorage.getItem(RECENT_ORDER_CLAIM_KEY) || 'null');
+  } catch {
+    return null;
+  }
+}
+
+function renderStripeSuccessAccountPrompt(orderId, orderNumber, customer) {
+  const prompt = document.getElementById('successAccountPrompt');
+  if (!prompt || !customerAccountsEnabled()) return;
+
+  const displayNumber = orderNumber || 'this order';
+  const claim = readRecentOrderClaim() || {};
+  if (customer) {
+    prompt.classList.add('show');
+    prompt.innerHTML = `
+      <strong>Track this order in your account</strong>
+      <p>Your paid order is linked to your Shrish account. You can view order history, pickup details, and eligible pending order changes from one place.</p>
+      <div class="success-account-actions">
+        <a href="account.html" class="btn-primary">View My Orders</a>
+        <span class="success-account-note">${escapeHtml(displayNumber)} is ready in your account.</span>
+      </div>`;
+    return;
+  }
+
+  const signupHref = 'account.html?claim=recent&mode=signup';
+  const signinHref = 'account.html?claim=recent&mode=signin';
+  prompt.classList.add('show');
+  prompt.innerHTML = `
+    <strong>Create an account to track this order</strong>
+    <p>Save ${escapeHtml(displayNumber)} to see your purchase history, keep pickup details handy, and modify eligible pending orders before pickup is confirmed.</p>
+    <div class="success-account-actions">
+      <a href="${signupHref}" class="btn-primary">Create Account</a>
+      <a href="${signinHref}" class="btn-outline">Sign In</a>
+      <span class="success-account-note">Use ${escapeHtml(claim.email || 'the same checkout email')} and phone to link the order.</span>
+    </div>`;
+}
+
+function waitForCustomerAuthState() {
+  if (auth.currentUser) return Promise.resolve(isCustomerUser(auth.currentUser) ? auth.currentUser : null);
+
+  return new Promise((resolve) => {
+    let settled = false;
+    let unsubscribe = () => {};
+    const finish = (user) => {
+      if (settled) return;
+      settled = true;
+      unsubscribe();
+      resolve(isCustomerUser(user) ? user : null);
+    };
+
+    unsubscribe = onAuthStateChanged(auth, finish);
+    setTimeout(() => finish(null), 1000);
+  });
+}
+
 async function resolveStripeOrderNumber(orderId, params) {
   const urlOrderNumber = params.get('orderNumber') || '';
   if (/^SHR-\d+$/.test(urlOrderNumber)) return urlOrderNumber;
@@ -133,6 +190,8 @@ async function renderStripeReturnMessage() {
 
   const orderId = params.get('orderId') || '';
   if (paymentState === 'success') {
+    const customer = await waitForCustomerAuthState();
+    currentCustomer = customer;
     const orderNumber = await resolveStripeOrderNumber(orderId, params);
     sessionStorage.removeItem('shrish_cart');
     cart = [];
@@ -152,6 +211,7 @@ async function renderStripeReturnMessage() {
         <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Paid online</span></div>
         <div class="ss-row"><span>Order Confirmation No</span><span>${escapeHtml(orderNumber || 'Your confirmation email will include it')}</span></div>`;
     }
+    renderStripeSuccessAccountPrompt(orderId, orderNumber, customer);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return true;
   }
@@ -1081,6 +1141,7 @@ async function submitOrder() {
       });
       const checkoutUrl = session?.data?.url;
       if (!checkoutUrl) throw new Error('STRIPE_CHECKOUT_URL_MISSING');
+      rememberRecentOrderForAccount(orderRef, order, session?.data?.orderNumber || orderRef.id);
       window.location.href = checkoutUrl;
       return;
     }
