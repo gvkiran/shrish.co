@@ -19,6 +19,11 @@ let lastTrackedSearch = '';
 let catalogSyncReady = false;
 let catalogSyncFailed = false;
 
+const SHOP_ALLERGEN_NOTICE = window.SHRISH_MAJOR_ALLERGEN_NOTICE || 'Allergen notice: Please review ingredients and contact us before ordering if you have allergies or dietary restrictions.';
+const SHOP_SPICE_NOTICE = window.SHRISH_SPICE_NOTICE || 'Spice caution: Many items may be spicy or very spicy.';
+const SHOP_IMAGE_DISCLAIMER = window.SHRISH_PRODUCT_IMAGE_DISCLAIMER || 'Product images are for illustration only and may vary by batch.';
+const CARD_SAFETY_NOTE = 'Allergy/spice caution: may contain peanut oil and other allergens; ingredients may vary by batch.';
+
 function productFilterId(product) {
   if (!product) return 'all';
   if (product.category === 'putharekulu' || product.category === 'jellysnacks') return 'sweets';
@@ -254,9 +259,13 @@ applyInitialShopFiltersFromUrl();
 const FORCE_BASE_PRODUCT_OVERRIDES = {};
 const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
 
+function hasAdminManagedCatalogFields(product = {}) {
+  return Boolean(product.catalogManagedAt);
+}
+
 function applyCatalogFieldOverrides(product = {}) {
   const override = CATALOG_FIELD_OVERRIDES[product.id];
-  if (!override) return product;
+  if (!override || hasAdminManagedCatalogFields(product)) return product;
   return {
     ...product,
     ...override,
@@ -647,6 +656,12 @@ function openModal(productId, options = {}) {
     const picklesPodiDetails = picklesPodiFacts.length
       ? `<div class="modal-detail-list">${picklesPodiFacts.map(([label, value]) => `<div><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</div>`).join('')}</div>`
       : '';
+    const productSafetyNotes = [
+      ['Allergen notice', p.allergenNote || SHOP_ALLERGEN_NOTICE],
+      ['Spice caution', p.spiceNotice || SHOP_SPICE_NOTICE],
+      ['Image disclaimer', p.imageDisclaimer || SHOP_IMAGE_DISCLAIMER]
+    ];
+    const productSafetyHtml = `<div class="modal-safety-note">${productSafetyNotes.map(([label, value]) => `<p><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</p>`).join('')}</div>`;
     info.innerHTML = `
       <div class="modal-origin">${escapeHtml(p.origin)}</div>
       <div class="modal-name">${escapeHtml(p.name)}</div>
@@ -657,6 +672,7 @@ function openModal(productId, options = {}) {
       ${badges ? `<div class="modal-badges">${badges}</div>` : ''}
       ${p.details && !isPicklesPodi ? `<div class="modal-note">Info: ${escapeHtml(p.details)}</div>` : ''}
       ${picklesPodiDetails}
+      ${productSafetyHtml}
       ${p.bestFor ? `<div class="modal-best"><strong>Best for:</strong> ${escapeHtml(p.bestFor)}</div>` : ''}
       <div class="modal-price-row"><div><div class="modal-price">${escapeHtml(selectedVariant.price || p.price)}</div><div class="modal-unit">${escapeHtml(selectedVariant.unit || p.unit)}</div></div></div>
       ${actionHtml}`;
@@ -887,6 +903,7 @@ function renderCard(p) {
         <div class="pc-name" onclick="openModal('${escapeHtml(p.id)}')">${escapeHtml(p.name)}</div>
         ${p.localName ? `<div class="pc-local">${escapeHtml(p.localName)}</div>` : ''}
         <div class="pc-short-desc">${escapeHtml(shortDesc)}</div>
+        <div class="pc-safety-note">${escapeHtml(CARD_SAFETY_NOTE)}</div>
         ${recommendationTagHtml ? `<div class="pc-rec-tags">${recommendationTagHtml}</div>` : ''}
         <div class="pc-footer"><div class="pc-price-wrap"><div class="pc-price" id="card-price-${escapeHtml(p.id)}">${escapeHtml(selectedCardVariant.price || p.price)}</div></div></div>
         ${actionHtml}
@@ -1185,7 +1202,8 @@ function renderShop() {
     }
     const subFilters = catId === 'picklespodi' ? renderPicklesPodiFilters(allCatItems) : '';
     const searchNote = productSearchQuery ? `<div class="shop-search-note">Showing matches for <strong>${escapedSearchQuery}</strong>. <a href="${escapeHtml(shopUrlForFilter(activeFilter, { clearSearch: true, clearProduct: true }))}">Clear search</a></div>` : '';
-    let html = `<div class="shop-section"><div class="shop-section-head"><div><div class="shop-section-title">${m.title} <em>${m.em}</em></div><div class="section-divider"></div></div>${subFilters}</div>${searchNote}<p style="color:var(--text-light);font-size:14px;margin-bottom:24px">${sectionSub}</p>`;
+    const safetyNotice = `<div class="shop-safety-notice"><strong>Food allergy and spice notice:</strong> ${escapeHtml(SHOP_ALLERGEN_NOTICE)} ${escapeHtml(SHOP_SPICE_NOTICE)}</div>`;
+    let html = `<div class="shop-section"><div class="shop-section-head"><div><div class="shop-section-title">${m.title} <em>${m.em}</em></div><div class="section-divider"></div></div>${subFilters}</div>${searchNote}<p style="color:var(--text-light);font-size:14px;margin-bottom:14px">${sectionSub}</p>${safetyNotice}`;
     const showBanner = m.banner && (!hasLiveItems || activeFilter === catId);
     if (showBanner) {
       const bannerTitle = m.bannerTitle || 'Coming Soon to Shrish!';

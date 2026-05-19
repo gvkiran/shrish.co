@@ -5,6 +5,13 @@
 //  Putharekulu & Jelly & Snacks items can be displayOnly until ready to sell
 // ============================================================
 
+const SHRISH_MAJOR_ALLERGEN_NOTICE = "Allergen notice: Products may contain or be prepared with peanut/groundnut oil and other major allergens, including milk, egg, fish, crustacean shellfish, tree nuts, peanuts, wheat, soy, and sesame. If you have food allergies, sensitivities, pregnancy-related concerns, or medical dietary restrictions, review ingredients and contact us before ordering.";
+const SHRISH_SPICE_NOTICE = "Spice caution: Many pickles, podi, and specialty items are spicy or very spicy. Start with a small portion and stop eating if you notice discomfort or any reaction.";
+const SHRISH_PICKLE_PODI_SHELF_LIFE_DISPLAY = "Best taste: 30-45 days. Refrigerate after opening, use a clean dry spoon, keep airtight, and follow the package Best Before date as final.";
+const SHRISH_PICKLE_PODI_STORAGE_NOTE = "Refrigerate after opening. Use a clean, dry spoon, keep the container tightly closed, and consume within 30-45 days for best taste. Follow the package Best Before date and storage instructions as final.";
+const SHRISH_PICKLE_PODI_FOOD_SAFETY_NOTE = "Ingredients, spice level, oil coverage, and shelf life may vary by supplier batch. Contact us before ordering if you have allergies or ingredient concerns.";
+const SHRISH_PRODUCT_IMAGE_DISCLAIMER = "Product images are for illustration only. Actual product, packaging, label, color, texture, and batch details may vary.";
+
 const SHRISH_DATA = {
 
   locations: [
@@ -309,7 +316,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/brinjal-amla-pickle.jpg",
       description: "Unique brinjal and amla pickle with tangy, spicy, and earthy flavors. Good rare variety for customers who want something different.",
-      ingredientsText: "Brinjal, amla, red chilli powder, mustard, fenugreek, salt, turmeric, oil, tamarind optional",
+      ingredientsText: "Brinjal, amla, red chilli powder, mustard, fenugreek, salt, turmeric, peanut/groundnut oil, lemon",
       storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Unopened: 3-6 months. After opening: refrigerate and use within 30-60 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -330,7 +337,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/carrot.jpg",
       description: "Andhra-style carrot pickle made with firm carrot pieces, chilli, mustard, fenugreek, turmeric, salt, and oil. Slightly sweet, spicy, and kid-friendly compared with very hot avakai.",
-      ingredientsText: "Carrot pieces, red chilli powder, mustard powder, fenugreek, turmeric, salt, oil, lemon or vinegar depending on supplier recipe",
+      ingredientsText: "Carrot pieces, red chilli powder, mustard powder, fenugreek, turmeric, salt, peanut/groundnut oil, lemon",
       storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Unopened: 3-6 months. After opening: refrigerate and use within 30-60 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -351,7 +358,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/cauliflower.jpg",
       description: "Andhra-style cauliflower pickle with crunchy cauliflower florets coated in red chilli, mustard, fenugreek, turmeric, salt, and oil. Tangy, spicy, and great as a rice or tiffin side.",
-      ingredientsText: "Cauliflower florets, red chilli powder, mustard powder, fenugreek, turmeric, salt, oil, lemon or vinegar depending on supplier recipe",
+      ingredientsText: "Cauliflower florets, red chilli powder, mustard powder, fenugreek, turmeric, salt, peanut/groundnut oil, lemon",
       storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Unopened: 3-6 months. After opening: refrigerate and use within 30-60 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -367,12 +374,12 @@ const SHRISH_DATA = {
     },
     {
       id: "picklespodi-chintakaya-pachadi-tamarind-pickle", category: "picklespodi",
-      name: "Chintakaya Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
+      name: "Chintakaya Pachadi / Tamarind Pickle", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$7.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/chintakaya-pachadi.jpg",
       description: "Traditional tamarind-style pickle with sharp tangy flavor and South Indian spice. Excellent with rice, dal, curd rice, and breakfast items.",
-      ingredientsText: "Raw tamarind, green or red chilli, mustard, fenugreek, turmeric, salt, oil, tempering spices",
+      ingredientsText: "Raw tamarind, green or red chilli, mustard, fenugreek, turmeric, salt, peanut/groundnut oil, tempering spices, jaggery",
       storageNote: "Refrigerate after opening and use within 60-90 days for best taste and safety. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Unopened: 6-12 months. After opening: refrigerate and use within 60-90 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -393,7 +400,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/drumstick-pickle.jpg",
       description: "Traditional drumstick pickle with spicy, tangy flavor. A good South Indian side for rice and dal.",
-      ingredientsText: "Drumstick pieces, red chilli powder, mustard, fenugreek, tamarind or lemon, salt, turmeric, oil",
+      ingredientsText: "Drumstick pieces, red chilli powder, mustard, fenugreek, lemon, salt, turmeric, peanut/groundnut oil",
       storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Unopened: 3-6 months. After opening: refrigerate and use within 30-60 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -414,7 +421,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/garlic-pickle.jpg",
       description: "Bold garlic pickle with strong spice and deep flavor. Best for customers who love a punchy pickle with rice, dosa, or chapati.",
-      ingredientsText: "Garlic cloves, red chilli powder, mustard, fenugreek, turmeric, salt, oil, tamarind optional",
+      ingredientsText: "Garlic cloves, red chilli powder, mustard, fenugreek, turmeric, salt, peanut/groundnut oil, lemon",
       storageNote: "Refrigerate after opening and use within 60-90 days for best taste and safety. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Unopened: 6-12 months. After opening: refrigerate and use within 60-90 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -430,7 +437,7 @@ const SHRISH_DATA = {
     },
     {
       id: "picklespodi-gongura-pickle", category: "picklespodi",
-      name: "Gongura Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
+      name: "Gongura Pickle/Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$7.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/gongura-pickle.jpg",
@@ -472,12 +479,12 @@ const SHRISH_DATA = {
     },
     {
       id: "picklespodi-kothimeera-coriander-pickle", category: "picklespodi",
-      name: "Kothimeera Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
+      name: "Kothimeera Pachadi / Coriander Pickle", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$7.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/kothimeera-pickle.jpg",
       description: "Fresh coriander-style pickle with a herby, spicy, and tangy taste. A good everyday pickle for rice, dosa, idli, and chapati.",
-      ingredientsText: "Fresh coriander leaves, green chilli or red chilli, garlic, tamarind, mustard, salt, oil, tempering spices",
+      ingredientsText: "Fresh coriander leaves, green chilli or red chilli, garlic, tamarind, mustard, salt, peanut/groundnut oil, tempering spices, jaggery",
       storageNote: "Refrigerate after opening and use within 30 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Unopened: 2-4 months. After opening: refrigerate and use within 30 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -498,7 +505,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/mango-avakai.jpg",
       description: "Traditional Andhra-style raw mango avakai with mustard, red chilli, spices, and oil. Spicy, tangy, and perfect with hot rice, curd rice, dosa, idli, and chapati.",
-      ingredientsText: "Raw mango pieces, mustard powder, red chilli powder, salt, turmeric, fenugreek, sesame or groundnut oil, garlic optional",
+      ingredientsText: "Raw mango pieces, mustard powder, red chilli powder, salt, turmeric, fenugreek, peanut/groundnut oil, garlic",
       storageNote: "Refrigerate after opening and use within 60-90 days for best taste and safety. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Unopened: 6-12 months. After opening: refrigerate and use within 60-90 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -514,7 +521,7 @@ const SHRISH_DATA = {
     },
     {
       id: "picklespodi-mango-ginger-pickle", category: "picklespodi",
-      name: "Mango Ginger Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
+      name: "Mango Ginger Pickle / Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$8.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/mango-ginger-pickle.jpg",
@@ -561,7 +568,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/mixed-vegetable.jpg",
       description: "Andhra-style mixed vegetable pickle with carrot, cauliflower, green chilli, and seasonal vegetables in a bold chilli-mustard spice mix. A colorful, crunchy side for rice and tiffins.",
-      ingredientsText: "Mixed vegetables such as carrot, cauliflower, green chilli, and seasonal vegetables, red chilli powder, mustard powder, fenugreek, turmeric, salt, oil, lemon or vinegar depending on supplier recipe",
+      ingredientsText: "Mixed vegetables such as beans, carrot, cauliflower, green chilli, and seasonal vegetables, red chilli powder, mustard powder, fenugreek, turmeric, salt, peanut/groundnut oil, lemon",
       storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Unopened: 3-6 months. After opening: refrigerate and use within 30-60 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -582,7 +589,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/pandu-mirchi-pickle.jpg",
       description: "Spicy red chilli pickle for customers who love serious heat. Strong, flavorful, and best with hot rice, dosa, idli, and curd rice.",
-      ingredientsText: "Red ripe chillies, tamarind, mustard, fenugreek, salt, turmeric, oil, garlic optional",
+      ingredientsText: "Red ripe chillies, tamarind, mustard, fenugreek, salt, turmeric, peanut/groundnut oil, garlic",
       storageNote: "Refrigerate after opening and use within 60-90 days for best taste and safety. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Unopened: 6-12 months. After opening: refrigerate and use within 60-90 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -603,7 +610,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/tomato-pickle.jpg",
       description: "Rich and spicy tomato pickle with a deep, tangy flavor. Great with rice, dosa, upma, idli, chapati, and curd rice.",
-      ingredientsText: "Tomatoes, red chilli powder, tamarind optional, mustard, fenugreek, salt, oil, garlic optional",
+      ingredientsText: "Tomatoes, turmeric, red chilli powder, tamarind, mustard, fenugreek, salt, peanut/groundnut oil, garlic",
       storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Unopened: 3-6 months. After opening: refrigerate and use within 30-60 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -624,7 +631,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/chicken-boneless-pickle.jpg",
       description: "Spicy Andhra-style boneless chicken pickle with bold masala and rich flavor. Best with rice, roti, dosa, and curd rice.",
-      ingredientsText: "Boneless chicken, red chilli powder, ginger garlic, garam masala, mustard, fenugreek, salt, oil, lemon or vinegar depending on supplier recipe",
+      ingredientsText: "Boneless chicken, red chilli powder, ginger garlic, garam masala, salt, peanut/groundnut oil, lemon, spices",
       storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Preorder only. Follow package Best Before date. After opening: refrigerate and use within 15-30 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -645,7 +652,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/mutton-boneless-pickle.jpg",
       description: "Premium boneless mutton pickle with rich spice, deep flavor, and strong Andhra-style masala.",
-      ingredientsText: "Boneless mutton, red chilli powder, ginger garlic, garam masala, mustard, fenugreek, salt, oil, lemon or vinegar depending on supplier recipe",
+      ingredientsText: "Boneless mutton, red chilli powder, ginger garlic, garam masala, salt, peanut/groundnut oil, lemon, spices",
       storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Preorder only. Follow package Best Before date. After opening: refrigerate and use within 15-30 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -661,12 +668,12 @@ const SHRISH_DATA = {
     },
     {
       id: "picklespodi-fish-pickle-koramenu-pickle", category: "picklespodi",
-      name: "Fish Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      name: "Fish Pickle / Koramenu Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
       price: "$17.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/fish-koramenu-pickle.jpg",
       description: "Spicy fish pickle with Andhra-style masala. Premium seafood pickle for preorder customers.",
-      ingredientsText: "Fish pieces, red chilli powder, ginger garlic, mustard, fenugreek, salt, oil, lemon or vinegar depending on supplier recipe, spices",
+      ingredientsText: "Fish pieces, red chilli powder, ginger garlic, mustard, fenugreek, salt, peanut/groundnut oil, lemon, garam masala, spices. Fish variety may be Koramenu or Chanduva based on availability.",
       storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Preorder only. Follow package Best Before date. After opening: refrigerate and use within 15-30 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -687,7 +694,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/gongura-chicken-pickle.jpg",
       description: "Tangy gongura chicken pickle with spicy masala and bold Telugu flavor. A high-demand non-veg variety.",
-      ingredientsText: "Chicken, gongura leaves, red chilli powder, ginger garlic, mustard, fenugreek, salt, oil, spices",
+      ingredientsText: "Chicken, gongura leaves, red chilli powder, ginger garlic, mustard, fenugreek, salt, peanut/groundnut oil, spices, garam masala, lemon",
       storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Preorder only. Follow package Best Before date. After opening: refrigerate and use within 15-30 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -708,7 +715,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/gongura-mutton-pickle.jpg",
       description: "Premium gongura mutton pickle with tangy gongura and rich mutton masala. Strong Telugu demand item.",
-      ingredientsText: "Mutton, gongura leaves, red chilli powder, ginger garlic, mustard, fenugreek, salt, oil, spices",
+      ingredientsText: "Mutton, gongura leaves, red chilli powder, ginger garlic, mustard, fenugreek, salt, peanut/groundnut oil, spices, garam masala, lemon",
       storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Preorder only. Follow package Best Before date. After opening: refrigerate and use within 15-30 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -724,12 +731,12 @@ const SHRISH_DATA = {
     },
     {
       id: "picklespodi-gongura-prawn-pickle", category: "picklespodi",
-      name: "Prawn Gongura", localName: "250g or 500g", origin: "Non-Veg Pickle",
+      name: "Prawns/Shrimp Gongura Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
       price: "$18.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/gongura-prawn-pickle.jpg",
       description: "Premium gongura prawn pickle with tangy gongura and spicy seafood masala.",
-      ingredientsText: "Prawns, gongura leaves, red chilli powder, ginger garlic, mustard, fenugreek, salt, oil, spices",
+      ingredientsText: "Prawns, gongura leaves, red chilli powder, ginger garlic, mustard, fenugreek, salt, peanut/groundnut oil, spices, garam masala, lemon",
       storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Preorder only. Follow package Best Before date. After opening: refrigerate and use within 15-30 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -750,7 +757,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/natu-kodi-pickle.jpg",
       description: "Country chicken pickle with strong traditional flavor and spicy masala. Preorder-only specialty item.",
-      ingredientsText: "Country chicken, red chilli powder, ginger garlic, garam masala, mustard, fenugreek, salt, oil, spices",
+      ingredientsText: "Country chicken, red chilli powder, ginger garlic, garam masala, salt, peanut/groundnut oil, spices",
       storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Preorder only. Follow package Best Before date. After opening: refrigerate and use within 15-30 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -771,7 +778,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/prawns-pickle.jpg",
       description: "Spicy prawns pickle with rich seafood flavor and strong Andhra-style masala. Premium preorder item.",
-      ingredientsText: "Prawns, red chilli powder, ginger garlic, mustard, fenugreek, salt, oil, lemon or vinegar depending on supplier recipe",
+      ingredientsText: "Prawns, red chilli powder, ginger garlic, mustard, fenugreek, salt, peanut/groundnut oil, lemon, garam masala",
       storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Preorder only. Follow package Best Before date. After opening: refrigerate and use within 15-30 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -812,7 +819,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/drumstick-leaf-podi.jpg",
       description: "Andhra-style munagaku podi made with roasted drumstick leaves, dals, chillies, garlic, and spices. Nutty, earthy, and excellent with hot rice, ghee, idli, and dosa.",
-      ingredientsText: "Drumstick leaves, chana dal, urad dal, red chillies, garlic optional, cumin, tamarind optional, salt",
+      ingredientsText: "Drumstick leaves, chana dal, red chillies, garlic optional, cumin, salt",
       storageNote: "Use within 45-60 days after opening for best aroma. Keep airtight; refrigerate if humid. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Unopened: 3-4 months. After opening: keep airtight and use within 45-60 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -832,7 +839,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/idli-podi.jpg",
       description: "Classic South Indian idli karam podi. Mix with ghee or oil and serve with idli, dosa, uttapam, or hot rice.",
-      ingredientsText: "Chana dal, urad dal, red chillies, sesame seeds optional, curry leaves optional, garlic optional, salt",
+      ingredientsText: "Chana dal, red chillies, curry leaves optional, garlic, salt, tamarind, cumin seeds",
       storageNote: "Use within 60-90 days after opening for best aroma. Keep airtight; refrigerate if your kitchen is humid. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Unopened: 4-6 months. After opening: keep airtight and use within 60-90 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -872,7 +879,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/karapu-podi-garlic.jpg",
       description: "Spicy garlic karam podi with bold flavor. Perfect with hot rice and ghee, idli, dosa, or as a spicy side for everyday meals.",
-      ingredientsText: "Garlic cloves, red chilli powder, mustard, fenugreek, turmeric, salt, oil, tamarind optional",
+      ingredientsText: "Garlic cloves, red chilli powder, mustard, turmeric, salt, peanut/groundnut oil, tamarind",
       storageNote: "Refrigerate after opening and use within 60-90 days for best taste and safety. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Unopened: 6-12 months. After opening: refrigerate and use within 60-90 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -892,7 +899,7 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/karivepaku-podi.jpg",
       description: "Aromatic curry leaf podi with traditional South Indian spices. Mix with hot rice and ghee or enjoy with idli, dosa, and upma.",
-      ingredientsText: "Curry leaves, red chillies, urad dal, chana dal, cumin, garlic optional, tamarind optional, salt",
+      ingredientsText: "Curry leaves, red chillies, chana dal, cumin, garlic optional, tamarind optional, salt",
       storageNote: "Use within 45-60 days after opening for best aroma. Keep airtight; refrigerate if humid. Store unopened packs cool, dry, and away from sunlight.",
       shelfLifeDisplay: "Unopened: 3-4 months. After opening: keep airtight and use within 45-60 days.",
       foodSafetyNote: "Shelf life depends on supplier recipe, acidity, oil coverage, packaging, and storage. Use the package Best Before date as final.",
@@ -913,6 +920,17 @@ const SHRISH_DATA = {
     confirmationMessage: "🥭 Thank you! Your order has been placed. Please watch for my updates on the WhatsApp group for pickup details. If you’re not part of the group yet, please join using the link below. Payment collected at pickup"
   }
 };
+
+SHRISH_DATA.products.forEach((product) => {
+  product.allergenNote = SHRISH_MAJOR_ALLERGEN_NOTICE;
+  product.spiceNotice = SHRISH_SPICE_NOTICE;
+  product.imageDisclaimer = SHRISH_PRODUCT_IMAGE_DISCLAIMER;
+  if (product.category === "picklespodi") {
+    product.storageNote = SHRISH_PICKLE_PODI_STORAGE_NOTE;
+    product.shelfLifeDisplay = SHRISH_PICKLE_PODI_SHELF_LIFE_DISPLAY;
+    product.foodSafetyNote = SHRISH_PICKLE_PODI_FOOD_SAFETY_NOTE;
+  }
+});
 
 const SHRISH_RECOMMENDATION_TAGS = {
   alphonso: ["Sweet", "Rich", "Aromatic", "Fiberless", "Creamy", "Cut and eat", "Dessert mango", "Aamras", "Lassi", "Shrikhand", "Premium"],
@@ -985,25 +1003,11 @@ SHRISH_DATA.products.forEach((product) => {
   ].filter(Boolean)));
 });
 
-const SHRISH_CATALOG_FIELD_OVERRIDE_IDS = new Set([
-  "picklespodi-boneless-chicken-pickle",
-  "picklespodi-boneless-mutton-pickle",
-  "picklespodi-chintakaya-pachadi-tamarind-pickle",
-  "picklespodi-fish-pickle-koramenu-pickle",
-  "picklespodi-garlic-pickle",
-  "picklespodi-gongura-chicken-pickle",
-  "picklespodi-gongura-mutton-pickle",
-  "picklespodi-gongura-pickle",
-  "picklespodi-gongura-prawn-pickle",
-  "picklespodi-karivepaku-pachadi-curry-leaf-pickle",
-  "picklespodi-kothimeera-coriander-pickle",
-  "picklespodi-mango-avakai-pickle",
-  "picklespodi-mango-ginger-pickle",
-  "picklespodi-natu-kodi-country-chicken-pickle",
-  "picklespodi-pandu-mirchi-pickle",
-  "picklespodi-prawns-pickle",
-  "picklespodi-tomato-pickle"
-]);
+const SHRISH_CATALOG_FIELD_OVERRIDE_IDS = new Set(
+  SHRISH_DATA.products
+    .filter((product) => product.category === "picklespodi")
+    .map((product) => product.id)
+);
 
 const SHRISH_CATALOG_FIELD_OVERRIDES = Object.fromEntries(
   SHRISH_DATA.products
@@ -1013,11 +1017,21 @@ const SHRISH_CATALOG_FIELD_OVERRIDES = Object.fromEntries(
       localName: product.localName,
       price: product.price,
       unit: product.unit,
+      ingredientsText: product.ingredientsText,
+      storageNote: product.storageNote,
+      shelfLifeDisplay: product.shelfLifeDisplay,
+      foodSafetyNote: product.foodSafetyNote,
+      allergenNote: product.allergenNote,
+      spiceNotice: product.spiceNotice,
+      imageDisclaimer: product.imageDisclaimer,
       variants: (product.variants || []).map((variant) => ({ ...variant }))
     }])
 );
 
 window.SHRISH_RECOMMENDATION_TAGS = SHRISH_RECOMMENDATION_TAGS;
 window.SHRISH_CATALOG_FIELD_OVERRIDES = SHRISH_CATALOG_FIELD_OVERRIDES;
+window.SHRISH_MAJOR_ALLERGEN_NOTICE = SHRISH_MAJOR_ALLERGEN_NOTICE;
+window.SHRISH_SPICE_NOTICE = SHRISH_SPICE_NOTICE;
+window.SHRISH_PRODUCT_IMAGE_DISCLAIMER = SHRISH_PRODUCT_IMAGE_DISCLAIMER;
 window.SHRISH_DATA = SHRISH_DATA;
 

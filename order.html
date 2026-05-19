@@ -87,6 +87,8 @@
 .submit-btn:hover:not(:disabled){background:var(--saffron-d);transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,121,26,.35)}
 .submit-btn:disabled{background:#ccc;cursor:not-allowed;transform:none}
 .pay-note-small{font-size:13px;color:var(--text-light);text-align:center;margin-top:10px}
+.checkout-safety-note{background:#fff8ec;border:1px solid rgba(200,121,26,.22);border-left:4px solid var(--saffron);border-radius:10px;color:var(--text-light);font-size:12.5px;line-height:1.55;padding:12px 14px;margin:12px 0 16px}
+.checkout-safety-note strong{color:var(--dark)}
 
 /* Sidebar */
 .checkout-sidebar{display:flex;flex-direction:column;gap:20px}
@@ -286,6 +288,10 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
         <textarea class="form-control" id="notes" rows="3" placeholder="Any special requests or notes for your order..."></textarea>
       </div>
 
+      <div class="checkout-safety-note">
+        <strong>Food allergy and spice notice:</strong> Products may contain or be prepared with peanut/groundnut oil and other major allergens. Ingredients, spice level, labels, and packaging may vary by batch. Product images are for illustration only. If you have allergies, sensitivities, or medical dietary restrictions, contact us before ordering.
+      </div>
+
       <button class="submit-btn" id="submitBtn">
         Place Order - Pay at Pickup
       </button>
@@ -360,9 +366,9 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 
 <script src="assets/js/data.js?v=pickles-20260515"></script>
 <script src="assets/js/analytics.js?v=owner-insights-1"></script>
-  <script src="assets/js/main.js?v=account-menu-2"></script>
+<script src="assets/js/main.js?v=account-menu-2"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/order-firebase.js?v=private-order-reads-20260518"></script>
+<script type="module" src="assets/js/order-firebase.js?v=prod-merge-20260518"></script>
 
 </body>
 </html>
