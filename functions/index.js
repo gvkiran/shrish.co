@@ -829,9 +829,11 @@ exports.createStripeCheckoutSession = onCall(
     try {
       const stripe = stripeClient();
       const origin = allowedCheckoutOrigin(request.data?.origin);
+      const orderNumber = await assignSequentialOrderNumber(orderRef, order.orderNumber);
+      order.orderNumber = orderNumber;
       const metadata = {
         orderId,
-        orderNumber: order.orderNumber || "",
+        orderNumber,
         customerUid: order.customerUid || request.auth?.uid || "",
         source: "shrish_checkout",
       };
@@ -879,7 +881,7 @@ exports.createStripeCheckoutSession = onCall(
         mode: "payment",
         payment_method_types: ["card"],
         line_items: lineItems,
-        success_url: `${origin}/order.html?payment=success&orderId=${encodeURIComponent(orderId)}&session_id={CHECKOUT_SESSION_ID}`,
+        success_url: `${origin}/order.html?payment=success&orderId=${encodeURIComponent(orderId)}&orderNumber=${encodeURIComponent(orderNumber)}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/order.html?payment=cancelled&orderId=${encodeURIComponent(orderId)}`,
         metadata,
         payment_intent_data: {
@@ -926,6 +928,7 @@ exports.createStripeCheckoutSession = onCall(
     return {
       url: session.url,
       sessionId: session.id,
+      orderNumber: order.orderNumber || "",
     };
   }
 );

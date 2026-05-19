@@ -119,21 +119,29 @@ function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
     </div>`;
 }
 
-function renderStripeReturnMessage() {
+async function resolveStripeOrderNumber(orderId, params) {
+  const urlOrderNumber = params.get('orderNumber') || '';
+  if (/^SHR-\d+$/.test(urlOrderNumber)) return urlOrderNumber;
+  if (!orderId) return '';
+  return waitForOrderConfirmationNumber(doc(db, 'orders', orderId));
+}
+
+async function renderStripeReturnMessage() {
   const params = new URLSearchParams(window.location.search);
   const paymentState = params.get('payment');
   if (!paymentState) return false;
 
   const orderId = params.get('orderId') || '';
   if (paymentState === 'success') {
+    const orderNumber = await resolveStripeOrderNumber(orderId, params);
     sessionStorage.removeItem('shrish_cart');
     cart = [];
     updateNavCart();
 
     document.getElementById('checkoutWrap').style.display = 'none';
     document.getElementById('successScreen').style.display = 'block';
-    document.getElementById('successOrderNum').textContent = orderId
-      ? `Payment received - Order Ref ${orderId}`
+    document.getElementById('successOrderNum').textContent = orderNumber
+      ? `Payment received - Order Confirmation No: ${orderNumber}`
       : 'Payment received';
     document.querySelector('#successScreen > p')?.replaceChildren(document.createTextNode('Your online payment was received. Watch the WhatsApp group for pickup details.'));
     const paymentCopy = document.querySelectorAll('#successScreen > p')[1];
@@ -142,7 +150,7 @@ function renderStripeReturnMessage() {
     if (summary) {
       summary.innerHTML = `
         <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Paid online</span></div>
-        <div class="ss-row"><span>Order Ref</span><span>${escapeHtml(orderId || 'Stripe confirmation')}</span></div>`;
+        <div class="ss-row"><span>Order Confirmation No</span><span>${escapeHtml(orderNumber || 'Your confirmation email will include it')}</span></div>`;
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return true;
@@ -1187,8 +1195,8 @@ async function submitOrder() {
   }
 }
 
-function init() {
-  if (renderStripeReturnMessage()) return;
+async function init() {
+  if (await renderStripeReturnMessage()) return;
   renderCartReview();
   updateNavCart();
   bindFormUi();
