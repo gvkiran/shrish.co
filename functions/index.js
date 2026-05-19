@@ -33,8 +33,12 @@ function isAdminRequest(request) {
   return String(request.auth?.token?.email || "").trim().toLowerCase() === SHRISH_ADMIN_EMAIL;
 }
 
+function normalizedSecret(secret) {
+  return String(secret.value() || "").trim().replace(/[\r\n]+/g, "");
+}
+
 function stripeClient() {
-  return new Stripe(STRIPE_SECRET_KEY.value());
+  return new Stripe(normalizedSecret(STRIPE_SECRET_KEY));
 }
 
 function allowedCheckoutOrigin(value = "") {
@@ -1393,7 +1397,7 @@ exports.stripeWebhook = onRequest(
       event = stripeClient().webhooks.constructEvent(
         request.rawBody,
         signature,
-        STRIPE_WEBHOOK_SECRET.value()
+        normalizedSecret(STRIPE_WEBHOOK_SECRET)
       );
     } catch (error) {
       console.error("Stripe webhook signature verification failed", error);
