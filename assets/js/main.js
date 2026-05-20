@@ -1541,7 +1541,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toShow = (available.length ? available : mangoes).slice(0, 3);
     toShow.forEach(p => {
       const imgHtml = p.image
-        ? `<img src="${p.image}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        ? `<img src="${p.image}" alt="${p.name}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
         : '';
       const fallbackStyle = p.image ? 'style="display:none"' : '';
       productsGrid.innerHTML += `

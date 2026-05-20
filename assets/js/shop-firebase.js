@@ -93,8 +93,8 @@ const PRODUCT_IMAGES = {
   puth_sugarfree: ['images/products/putharekulu/img_puth_sugarfree.jpg'],
   puth_dates_kaju_badam_pista: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.png'],
   puth_organic_palm_kaju_badam_pista: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.png'],
-  sonpari: ['images/products/snacks/img_sonpari.png'],
-  sonpari_ghee: ['images/products/snacks/img_sonpari1.png'],
+  sonpari: ['images/products/snacks/img_sonpari.jpg'],
+  sonpari_ghee: ['images/products/snacks/img_sonpari1.jpg'],
   mango_jelly_sugar: ['images/products/jellysnacks/img_mango_jelly.webp'],
   mango_jelly_jaggery: ['images/products/jellysnacks/img_mango_jelly.webp'],
   palm_jelly: ['images/products/jellysnacks/img_palm_jelly.webp']
@@ -459,7 +459,7 @@ function renderCartDrawer() {
   const totalQty = cart.reduce((s, i) => s + i.qty, 0);
   totalEl.textContent = `${totalQty} box${totalQty !== 1 ? 'es' : ''}`;
   list.innerHTML = cart.map((item) => {
-    const imgHtml = item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" onerror="this.parentElement.textContent='No Image'">` : 'No Image';
+    const imgHtml = item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" onerror="this.parentElement.textContent='No Image'">` : 'No Image';
     return `<div class="cart-item">
       <div class="ci-img">${imgHtml}</div>
       <div class="ci-info">
@@ -595,14 +595,14 @@ function openModal(productId, options = {}) {
   const mainWrap = document.getElementById('modalMainImgWrap');
   if (mainWrap) {
     mainWrap.innerHTML = imgs.length
-      ? `<img class="modal-main-img" id="modalMainImg" src="${escapeHtml(imgs[0])}" alt="${escapeHtml(p.name)}" onerror="this.onerror=null;this.src='images/brand/logo-small.png'">`
+      ? `<img class="modal-main-img" id="modalMainImg" src="${escapeHtml(imgs[0])}" alt="${escapeHtml(p.name)}" loading="eager" decoding="async" onerror="this.onerror=null;this.src='images/brand/logo-small.png'">`
       : `<div class="modal-img-placeholder">No Image</div>`;
   }
 
   const thumbs = document.getElementById('modalThumbs');
   if (thumbs) {
     if (imgs.length) {
-      thumbs.innerHTML = imgs.map((src, i) => `<img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(p.name)} ${i + 1}" onclick="switchModalImg('${escapeHtml(src)}',this)" onerror="this.onerror=null;this.src='images/brand/logo-small.png'">`).join('');
+      thumbs.innerHTML = imgs.map((src, i) => `<img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(p.name)} ${i + 1}" loading="lazy" decoding="async" onclick="switchModalImg('${escapeHtml(src)}',this)" onerror="this.onerror=null;this.src='images/brand/logo-small.png'">`).join('');
       thumbs.style.display = 'flex';
     } else {
       thumbs.innerHTML = '';
@@ -866,7 +866,7 @@ function renderCard(p) {
   const stripCls = !liveReady ? 'soon' : isPreorder ? 'soon' : isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
   const stripText = !liveReady ? (catalogSyncFailed ? 'Refresh Required' : 'Checking') : isPreorder ? 'Preorder Only' : isSoon ? 'Coming Soon' : isAvail ? 'Available' : 'Not Available';
   const imgSrc = productImages(p.id, p)[0] || p.image || null;
-  const imgHtml = imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.onerror=null;this.src='images/brand/logo-small.png'">` : '';
+  const imgHtml = imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='images/brand/logo-small.png'">` : '';
   const emojiStyle = imgSrc ? 'style="display:none"' : '';
   const shortDesc = (p.description || '').length > 90 ? `${p.description.slice(0, 90)}...` : (p.description || '');
   const recommendationTagHtml = (p.recommendationTags || [])
