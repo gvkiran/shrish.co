@@ -794,8 +794,8 @@ const SHRISH_DATA = {
     },
     {
       id: "picklespodi-dhaniyalu-podi-coriander-spice-powder", category: "picklespodi",
-      name: "Dhaniyalu Podi / Coriander Spice Powder", localName: "200g", origin: "Spice Powder",
-      price: "$6.99", unit: "200g",
+      name: "Dhaniyalu Podi / Coriander Spice Powder", localName: "100g or 200g", origin: "Spice Powder",
+      price: "$6.99", unit: "100g or 200g",
       available: true, displayOnly: false, hidden: true, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/dhaniyalu-podi.jpg",
       description: "Andhra-style dhaniyalu podi made with roasted coriander seeds, chillies, cumin, and traditional spices. Aromatic, earthy, and perfect for mixing with hot rice and ghee or sprinkling on tiffins.",
@@ -809,13 +809,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Hot rice with ghee - idli - dosa - upma - curd rice - vegetable stir-fries",
       variants: [
-        { id: "podi-dhaniyalu-200g", label: "200g", price: "$6.99", sku: "podi-dhaniyalu-200g" }
+        { id: "podi-dhaniyalu-100g", label: "100g", price: "$6.99", sku: "podi-dhaniyalu-100g" },
+        { id: "podi-dhaniyalu-200g", label: "200g", price: "$12.99", sku: "podi-dhaniyalu-200g" }
       ]
     },
     {
       id: "picklespodi-drumstick-leaf-podi-munagaku-podi", category: "picklespodi",
       name: "Drumstick Leaf Podi / Munagaku Podi", localName: "100g or 200g", origin: "Spice Powder",
-      price: "$6.99", unit: "100g or 200g",
+      price: "$7.99", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/drumstick-leaf-podi.jpg",
       description: "Andhra-style munagaku podi made with roasted drumstick leaves, dals, chillies, garlic, and spices. Nutty, earthy, and excellent with hot rice, ghee, idli, and dosa.",
@@ -829,14 +830,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Hot rice with ghee - idli - dosa - upma - curd rice",
       variants: [
-        { id: "podi-drumstick-leaf-100g", label: "100g", price: "$6.99", sku: "podi-drumstick-leaf-100g" },
-        { id: "podi-drumstick-leaf-200g", label: "200g", price: "$13.99", sku: "podi-drumstick-leaf-200g" }
+        { id: "podi-drumstick-leaf-100g", label: "100g", price: "$7.99", sku: "podi-drumstick-leaf-100g" },
+        { id: "podi-drumstick-leaf-200g", label: "200g", price: "$14.99", sku: "podi-drumstick-leaf-200g" }
       ]
     },
     {
       id: "picklespodi-idli-podi", category: "picklespodi",
-      name: "Idli Podi", localName: "200g", origin: "Spice Powder",
-      price: "$6.99", unit: "200g",
+      name: "Idli Podi", localName: "100g or 200g", origin: "Spice Powder",
+      price: "$6.99", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/idli-podi.jpg",
       description: "Classic South Indian idli karam podi. Mix with ghee or oil and serve with idli, dosa, uttapam, or hot rice.",
@@ -850,13 +851,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Idli with ghee - dosa - uttapam - upma",
       variants: [
-        { id: "podi-idli-200g", label: "200g", price: "$6.99", sku: "podi-idli-200g" }
+        { id: "podi-idli-100g", label: "100g", price: "$6.99", sku: "podi-idli-100g" },
+        { id: "podi-idli-200g", label: "200g", price: "$12.99", sku: "podi-idli-200g" }
       ]
     },
     {
       id: "picklespodi-kandi-podi", category: "picklespodi",
-      name: "Kandi Podi", localName: "200g", origin: "Spice Powder",
-      price: "$7.99", unit: "200g",
+      name: "Kandi Podi", localName: "100g or 200g", origin: "Spice Powder",
+      price: "$7.49", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/kandi-podi.jpg",
       description: "Traditional dal-based kandi podi with rich South Indian flavor. Best mixed with hot rice and ghee or served with breakfast items.",
@@ -870,13 +872,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Hot rice with ghee - idli - dosa - upma",
       variants: [
-        { id: "podi-kandi-200g", label: "200g", price: "$7.99", sku: "podi-kandi-200g" }
+        { id: "podi-kandi-100g", label: "100g", price: "$7.49", sku: "podi-kandi-100g" },
+        { id: "podi-kandi-200g", label: "200g", price: "$13.99", sku: "podi-kandi-200g" }
       ]
     },
     {
       id: "picklespodi-karapu-podi-with-garlic", category: "picklespodi",
-      name: "Karapu Podi with Garlic", localName: "200g", origin: "Spice Powder",
-      price: "$6.99", unit: "200g",
+      name: "Karapu Podi with Garlic", localName: "100g or 200g", origin: "Spice Powder",
+      price: "$6.99", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/karapu-podi-garlic.jpg",
       description: "Spicy garlic karam podi with bold flavor. Perfect with hot rice and ghee, idli, dosa, or as a spicy side for everyday meals.",
@@ -890,13 +893,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Dal rice - curd rice - chapati - dosa - idli",
       variants: [
-        { id: "podi-karapu-garlic-200g", label: "200g", price: "$6.99", sku: "podi-karapu-garlic-200g" }
+        { id: "podi-karapu-garlic-100g", label: "100g", price: "$6.99", sku: "podi-karapu-garlic-100g" },
+        { id: "podi-karapu-garlic-200g", label: "200g", price: "$12.99", sku: "podi-karapu-garlic-200g" }
       ]
     },
     {
       id: "picklespodi-karivepaku-podi-curry-leaf-powder", category: "picklespodi",
       name: "Karivepaku Podi / Curry Leaf Powder", localName: "100g or 200g", origin: "Spice Powder",
-      price: "$4.99", unit: "100g or 200g",
+      price: "$7.49", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/karivepaku-podi.jpg",
       description: "Aromatic curry leaf podi with traditional South Indian spices. Mix with hot rice and ghee or enjoy with idli, dosa, and upma.",
@@ -910,8 +914,8 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Hot rice with ghee - idli - dosa - upma - curd rice",
       variants: [
-        { id: "podi-karivepaku-100g", label: "100g", price: "$4.99", sku: "podi-karivepaku-100g" },
-        { id: "podi-karivepaku-200g", label: "200g", price: "$6.99", sku: "podi-karivepaku-200g" }
+        { id: "podi-karivepaku-100g", label: "100g", price: "$7.49", sku: "podi-karivepaku-100g" },
+        { id: "podi-karivepaku-200g", label: "200g", price: "$13.99", sku: "podi-karivepaku-200g" }
       ]
     }
   ],
