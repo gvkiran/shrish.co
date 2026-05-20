@@ -312,7 +312,7 @@ const SHRISH_DATA = {
     {
       id: "picklespodi-brinjal-amla-pickle", category: "picklespodi",
       name: "Brinjal Amla Pickle", localName: "250g or 500g", origin: "Veg Pickle",
-      price: "$8.99", unit: "250g or 500g",
+      price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/brinjal-amla-pickle.jpg",
       description: "Unique brinjal and amla pickle with tangy, spicy, and earthy flavors. Good rare variety for customers who want something different.",
@@ -326,14 +326,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Hot rice - curd rice - chapati - dosa",
       variants: [
-        { id: "pickle-brinjal-amla-250g", label: "250g", price: "$8.99", sku: "pickle-brinjal-amla-250g" },
-        { id: "pickle-brinjal-amla-500g", label: "500g", price: "$16.99", sku: "pickle-brinjal-amla-500g" }
+        { id: "pickle-brinjal-amla-250g", label: "250g", price: "$9.99", sku: "pickle-brinjal-amla-250g" },
+        { id: "pickle-brinjal-amla-500g", label: "500g", price: "$18.99", sku: "pickle-brinjal-amla-500g" }
       ]
     },
     {
       id: "picklespodi-carrot-pickle", category: "picklespodi",
       name: "Carrot Pickle", localName: "250g or 500g", origin: "Veg Pickle",
-      price: "$8.99", unit: "250g or 500g",
+      price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/carrot.jpg",
       description: "Andhra-style carrot pickle made with firm carrot pieces, chilli, mustard, fenugreek, turmeric, salt, and oil. Slightly sweet, spicy, and kid-friendly compared with very hot avakai.",
@@ -347,14 +347,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Curd rice - chapati - dosa - idli - upma - lemon rice",
       variants: [
-        { id: "pickle-carrot-250g", label: "250g", price: "$8.99", sku: "pickle-carrot-250g" },
-        { id: "pickle-carrot-500g", label: "500g", price: "$16.99", sku: "pickle-carrot-500g" }
+        { id: "pickle-carrot-250g", label: "250g", price: "$9.99", sku: "pickle-carrot-250g" },
+        { id: "pickle-carrot-500g", label: "500g", price: "$18.99", sku: "pickle-carrot-500g" }
       ]
     },
     {
       id: "picklespodi-cauliflower-pickle", category: "picklespodi",
       name: "Cauliflower Pickle", localName: "250g or 500g", origin: "Veg Pickle",
-      price: "$8.99", unit: "250g or 500g",
+      price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/cauliflower.jpg",
       description: "Andhra-style cauliflower pickle with crunchy cauliflower florets coated in red chilli, mustard, fenugreek, turmeric, salt, and oil. Tangy, spicy, and great as a rice or tiffin side.",
@@ -368,14 +368,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Curd rice - hot rice with ghee - dosa - idli - chapati - upma",
       variants: [
-        { id: "pickle-cauliflower-250g", label: "250g", price: "$8.99", sku: "pickle-cauliflower-250g" },
-        { id: "pickle-cauliflower-500g", label: "500g", price: "$16.99", sku: "pickle-cauliflower-500g" }
+        { id: "pickle-cauliflower-250g", label: "250g", price: "$10.99", sku: "pickle-cauliflower-250g" },
+        { id: "pickle-cauliflower-500g", label: "500g", price: "$20.99", sku: "pickle-cauliflower-500g" }
       ]
     },
     {
       id: "picklespodi-chintakaya-pachadi-tamarind-pickle", category: "picklespodi",
       name: "Chintakaya Pachadi / Tamarind Pickle", localName: "250g or 500g", origin: "Veg Pickle",
-      price: "$7.99", unit: "250g or 500g",
+      price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/chintakaya-pachadi.jpg",
       description: "Traditional tamarind-style pickle with sharp tangy flavor and South Indian spice. Excellent with rice, dal, curd rice, and breakfast items.",
@@ -389,14 +389,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Hot",
       bestFor: "Hot rice - curd rice - dal - pesarattu - dosa",
       variants: [
-        { id: "pickle-chintakaya-250g", label: "250g", price: "$7.99", sku: "pickle-chintakaya-250g" },
-        { id: "pickle-chintakaya-500g", label: "500g", price: "$14.99", sku: "pickle-chintakaya-500g" }
+        { id: "pickle-chintakaya-250g", label: "250g", price: "$9.99", sku: "pickle-chintakaya-250g" },
+        { id: "pickle-chintakaya-500g", label: "500g", price: "$18.99", sku: "pickle-chintakaya-500g" }
       ]
     },
     {
       id: "picklespodi-drumstick-pickle", category: "picklespodi",
       name: "Drumstick Pickle", localName: "250g or 500g", origin: "Veg Pickle",
-      price: "$8.99", unit: "250g or 500g",
+      price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/drumstick-pickle.jpg",
       description: "Traditional drumstick pickle with spicy, tangy flavor. A good South Indian side for rice and dal.",
@@ -410,14 +410,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Hot rice - curd rice - dal rice - chapati",
       variants: [
-        { id: "pickle-drumstick-250g", label: "250g", price: "$8.99", sku: "pickle-drumstick-250g" },
-        { id: "pickle-drumstick-500g", label: "500g", price: "$16.99", sku: "pickle-drumstick-500g" }
+        { id: "pickle-drumstick-250g", label: "250g", price: "$10.99", sku: "pickle-drumstick-250g" },
+        { id: "pickle-drumstick-500g", label: "500g", price: "$20.99", sku: "pickle-drumstick-500g" }
       ]
     },
     {
       id: "picklespodi-garlic-pickle", category: "picklespodi",
       name: "Garlic Pickle", localName: "250g or 500g", origin: "Veg Pickle",
-      price: "$7.99", unit: "250g or 500g",
+      price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/garlic-pickle.jpg",
       description: "Bold garlic pickle with strong spice and deep flavor. Best for customers who love a punchy pickle with rice, dosa, or chapati.",
@@ -431,14 +431,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Dal rice - curd rice - chapati - dosa - idli",
       variants: [
-        { id: "pickle-garlic-250g", label: "250g", price: "$7.99", sku: "pickle-garlic-250g" },
-        { id: "pickle-garlic-500g", label: "500g", price: "$14.99", sku: "pickle-garlic-500g" }
+        { id: "pickle-garlic-250g", label: "250g", price: "$9.99", sku: "pickle-garlic-250g" },
+        { id: "pickle-garlic-500g", label: "500g", price: "$18.99", sku: "pickle-garlic-500g" }
       ]
     },
     {
       id: "picklespodi-gongura-pickle", category: "picklespodi",
       name: "Gongura Pickle/Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
-      price: "$7.99", unit: "250g or 500g",
+      price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/gongura-pickle.jpg",
       description: "Tangy gongura pickle with bold South Indian spice. A Telugu favorite that pairs beautifully with hot rice and ghee.",
@@ -452,14 +452,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Hot",
       bestFor: "Hot rice with ghee - dal rice - curd rice - dosa - chapati",
       variants: [
-        { id: "pickle-gongura-250g", label: "250g", price: "$7.99", sku: "pickle-gongura-250g" },
-        { id: "pickle-gongura-500g", label: "500g", price: "$14.99", sku: "pickle-gongura-500g" }
+        { id: "pickle-gongura-250g", label: "250g", price: "$10.99", sku: "pickle-gongura-250g" },
+        { id: "pickle-gongura-500g", label: "500g", price: "$20.99", sku: "pickle-gongura-500g" }
       ]
     },
     {
       id: "picklespodi-karivepaku-pachadi-curry-leaf-pickle", category: "picklespodi",
       name: "Karivepaku / Curry Leaf Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
-      price: "$8.99", unit: "250g or 500g",
+      price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/karivepaku-pachadi.jpg",
       description: "Aromatic curry leaf pickle with earthy South Indian flavor and medium spice. Good with rice, idli, dosa, and curd rice.",
@@ -473,14 +473,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Hot rice - idli - dosa - curd rice",
       variants: [
-        { id: "pickle-karivepaku-pachadi-250g", label: "250g", price: "$8.99", sku: "pickle-karivepaku-pachadi-250g" },
-        { id: "pickle-karivepaku-pachadi-500g", label: "500g", price: "$16.99", sku: "pickle-karivepaku-pachadi-500g" }
+        { id: "pickle-karivepaku-pachadi-250g", label: "250g", price: "$9.99", sku: "pickle-karivepaku-pachadi-250g" },
+        { id: "pickle-karivepaku-pachadi-500g", label: "500g", price: "$18.99", sku: "pickle-karivepaku-pachadi-500g" }
       ]
     },
     {
       id: "picklespodi-kothimeera-coriander-pickle", category: "picklespodi",
       name: "Kothimeera Pachadi / Coriander Pickle", localName: "250g or 500g", origin: "Veg Pickle",
-      price: "$7.99", unit: "250g or 500g",
+      price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/kothimeera-pickle.jpg",
       description: "Fresh coriander-style pickle with a herby, spicy, and tangy taste. A good everyday pickle for rice, dosa, idli, and chapati.",
@@ -494,14 +494,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Idli - dosa - curd rice - chapati - upma",
       variants: [
-        { id: "pickle-kothimeera-250g", label: "250g", price: "$7.99", sku: "pickle-kothimeera-250g" },
-        { id: "pickle-kothimeera-500g", label: "500g", price: "$14.99", sku: "pickle-kothimeera-500g" }
+        { id: "pickle-kothimeera-250g", label: "250g", price: "$9.99", sku: "pickle-kothimeera-250g" },
+        { id: "pickle-kothimeera-500g", label: "500g", price: "$18.99", sku: "pickle-kothimeera-500g" }
       ]
     },
     {
       id: "picklespodi-mango-avakai-pickle", category: "picklespodi",
       name: "Mango Avakai Pickle", localName: "250g or 500g", origin: "Veg Pickle",
-      price: "$9.99", unit: "250g or 500g",
+      price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/mango-avakai.jpg",
       description: "Traditional Andhra-style raw mango avakai with mustard, red chilli, spices, and oil. Spicy, tangy, and perfect with hot rice, curd rice, dosa, idli, and chapati.",
@@ -515,14 +515,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Hot",
       bestFor: "Hot rice with ghee - curd rice - dosa - idli - chapati - dal rice",
       variants: [
-        { id: "pickle-mango-avakai-250g", label: "250g", price: "$9.99", sku: "pickle-mango-avakai-250g" },
-        { id: "pickle-mango-avakai-500g", label: "500g", price: "$16.99", sku: "pickle-mango-avakai-500g" }
+        { id: "pickle-mango-avakai-250g", label: "250g", price: "$10.99", sku: "pickle-mango-avakai-250g" },
+        { id: "pickle-mango-avakai-500g", label: "500g", price: "$20.99", sku: "pickle-mango-avakai-500g" }
       ]
     },
     {
       id: "picklespodi-mango-ginger-pickle", category: "picklespodi",
       name: "Mango Ginger Pickle / Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
-      price: "$8.99", unit: "250g or 500g",
+      price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/mango-ginger-pickle.jpg",
       description: "A rare and flavorful pickle made with mango ginger. Fresh, aromatic, mildly tangy, and different from regular mango pickle.",
@@ -536,8 +536,8 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Curd rice - lemon rice - dosa - upma - chapati",
       variants: [
-        { id: "pickle-mango-ginger-250g", label: "250g", price: "$8.99", sku: "pickle-mango-ginger-250g" },
-        { id: "pickle-mango-ginger-500g", label: "500g", price: "$16.99", sku: "pickle-mango-ginger-500g" }
+        { id: "pickle-mango-ginger-250g", label: "250g", price: "$9.99", sku: "pickle-mango-ginger-250g" },
+        { id: "pickle-mango-ginger-500g", label: "500g", price: "$18.99", sku: "pickle-mango-ginger-500g" }
       ]
     },
     {
@@ -558,13 +558,13 @@ const SHRISH_DATA = {
       bestFor: "Curd rice - dosa - idli - upma - chapati - hot rice",
       variants: [
         { id: "pickle-mango-thokku-magai-250g", label: "250g", price: "$9.99", sku: "pickle-mango-thokku-magai-250g" },
-        { id: "pickle-mango-thokku-magai-500g", label: "500g", price: "$16.99", sku: "pickle-mango-thokku-magai-500g" }
+        { id: "pickle-mango-thokku-magai-500g", label: "500g", price: "$18.99", sku: "pickle-mango-thokku-magai-500g" }
       ]
     },
     {
       id: "picklespodi-mixed-vegetable-pickle", category: "picklespodi",
       name: "Mixed Vegetable Pickle", localName: "250g or 500g", origin: "Veg Pickle",
-      price: "$8.99", unit: "250g or 500g",
+      price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/mixed-vegetable.jpg",
       description: "Andhra-style mixed vegetable pickle with carrot, cauliflower, green chilli, and seasonal vegetables in a bold chilli-mustard spice mix. A colorful, crunchy side for rice and tiffins.",
@@ -578,8 +578,8 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Curd rice - hot rice - chapati - dosa - idli - upma",
       variants: [
-        { id: "pickle-mixed-vegetable-250g", label: "250g", price: "$8.99", sku: "pickle-mixed-vegetable-250g" },
-        { id: "pickle-mixed-vegetable-500g", label: "500g", price: "$16.99", sku: "pickle-mixed-vegetable-500g" }
+        { id: "pickle-mixed-vegetable-250g", label: "250g", price: "$9.99", sku: "pickle-mixed-vegetable-250g" },
+        { id: "pickle-mixed-vegetable-500g", label: "500g", price: "$18.99", sku: "pickle-mixed-vegetable-500g" }
       ]
     },
     {
@@ -600,13 +600,13 @@ const SHRISH_DATA = {
       bestFor: "Hot rice with ghee - idli - dosa - pappu rice - curd rice",
       variants: [
         { id: "pickle-pandu-mirchi-250g", label: "250g", price: "$9.99", sku: "pickle-pandu-mirchi-250g" },
-        { id: "pickle-pandu-mirchi-500g", label: "500g", price: "$17.99", sku: "pickle-pandu-mirchi-500g" }
+        { id: "pickle-pandu-mirchi-500g", label: "500g", price: "$18.99", sku: "pickle-pandu-mirchi-500g" }
       ]
     },
     {
       id: "picklespodi-tomato-pickle", category: "picklespodi",
       name: "Tomato Pickle", localName: "250g or 500g", origin: "Veg Pickle",
-      price: "$7.99", unit: "250g or 500g",
+      price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/tomato-pickle.jpg",
       description: "Rich and spicy tomato pickle with a deep, tangy flavor. Great with rice, dosa, upma, idli, chapati, and curd rice.",
@@ -620,8 +620,8 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Idli - dosa - curd rice - chapati - upma - hot rice",
       variants: [
-        { id: "pickle-tomato-250g", label: "250g", price: "$7.99", sku: "pickle-tomato-250g" },
-        { id: "pickle-tomato-500g", label: "500g", price: "$14.99", sku: "pickle-tomato-500g" }
+        { id: "pickle-tomato-250g", label: "250g", price: "$9.99", sku: "pickle-tomato-250g" },
+        { id: "pickle-tomato-500g", label: "500g", price: "$18.99", sku: "pickle-tomato-500g" }
       ]
     },
     {
