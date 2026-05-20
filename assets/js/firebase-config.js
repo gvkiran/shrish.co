@@ -13,5 +13,7 @@ window.SHRISH_APP_CONFIG = {
   supportEmail: "orders@shrish.co",
   supportPhone: "+1 (765) 325-5577",
   defaultOrderStatus: "pending",
-  customerAccountsEnabled: true
+  customerAccountsEnabled: true,
+  // Fill after registering shrish.co in Firebase App Check. Leave blank until tested.
+  appCheckSiteKey: ""
 };

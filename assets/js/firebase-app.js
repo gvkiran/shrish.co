@@ -1,5 +1,8 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js';
 import {
+  initializeAppCheck, ReCaptchaEnterpriseProvider
+} from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app-check.js';
+import {
   getFirestore, serverTimestamp, Timestamp,
   collection, doc, addDoc, getDocs, getDoc, setDoc, updateDoc, deleteDoc,
   query, where, orderBy, onSnapshot, limit,
@@ -23,6 +26,13 @@ if (missing.length) {
 }
 
 const app = initializeApp(config);
+const appCheckSiteKey = String(window.SHRISH_APP_CONFIG?.appCheckSiteKey || '').trim();
+if (appCheckSiteKey) {
+  initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
+    isTokenAutoRefreshEnabled: true
+  });
+}
 const db = getFirestore(app);
 const auth = getAuth(app);
 const cloudFunctions = getFunctions(app, 'us-central1');

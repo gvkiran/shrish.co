@@ -37,6 +37,14 @@ function normalizedSecret(secret) {
   return String(secret.value() || "").trim().replace(/[\r\n]+/g, "");
 }
 
+function callableOptions(options = {}) {
+  return {
+    region: "us-central1",
+    enforceAppCheck: process.env.SHRISH_ENFORCE_APP_CHECK === "true",
+    ...options,
+  };
+}
+
 function stripeClient() {
   return new Stripe(normalizedSecret(STRIPE_SECRET_KEY));
 }
@@ -674,10 +682,9 @@ function buildReminderEmail(order, messageText) {
 }
 
 exports.sendOrderReminderEmails = onCall(
-  {
-    region: "us-central1",
+  callableOptions({
     secrets: [RESEND_API_KEY],
-  },
+  }),
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Sign in as admin before sending reminders.");
@@ -791,10 +798,9 @@ exports.sendOrderReminderEmails = onCall(
 );
 
 exports.createStripeCheckoutSession = onCall(
-  {
-    region: "us-central1",
+  callableOptions({
     secrets: [STRIPE_SECRET_KEY],
-  },
+  }),
   async (request) => {
     const orderId = String(request.data?.orderId || "").trim();
     if (!orderId) {
@@ -952,9 +958,7 @@ function normalizeOrderPhone(value) {
 }
 
 exports.updateCustomerPendingOrder = onCall(
-  {
-    region: "us-central1",
-  },
+  callableOptions(),
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Sign in before editing your order.");
@@ -1065,9 +1069,7 @@ exports.updateCustomerPendingOrder = onCall(
 );
 
 exports.claimCustomerOrder = onCall(
-  {
-    region: "us-central1",
-  },
+  callableOptions(),
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Sign in to link this order.");
@@ -1141,9 +1143,7 @@ function cleanFeedbackRating(value) {
 }
 
 exports.submitOrderFeedback = onCall(
-  {
-    region: "us-central1",
-  },
+  callableOptions(),
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Sign in to submit order feedback.");
@@ -1277,9 +1277,7 @@ exports.submitOrderFeedback = onCall(
 );
 
 exports.deleteCustomerAccount = onCall(
-  {
-    region: "us-central1",
-  },
+  callableOptions(),
   async (request) => {
     if (!request.auth || !isAdminRequest(request)) {
       throw new HttpsError("permission-denied", "Admin access is required.");
@@ -1337,10 +1335,9 @@ exports.deleteCustomerAccount = onCall(
 );
 
 exports.sendCustomerPasswordReset = onCall(
-  {
-    region: "us-central1",
+  callableOptions({
     secrets: [RESEND_API_KEY],
-  },
+  }),
   async (request) => {
     const email = String(request.data?.email || "").trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
