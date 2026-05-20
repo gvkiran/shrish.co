@@ -49,3 +49,20 @@ Safe rollout:
 6. Redeploy callable functions and test again.
 
 Do not enable enforcement before step 4 passes, or customer checkout/account actions can fail with App Check errors.
+
+## Firebase Functions Runtime
+
+Firebase Functions are configured for Node.js 22 in `functions/package.json`.
+
+When promoting this change:
+1. Deploy to `developement`/preview branch first.
+2. Smoke-test callable functions:
+   - Stripe checkout start
+   - account login/order claim
+   - pending order edit/cancel
+   - feedback submit
+   - admin customer delete
+   - admin reminder email
+3. Deploy Firebase functions to production only during a planned release window.
+
+This avoids the Node.js 20 runtime decommission date of October 30, 2026.
