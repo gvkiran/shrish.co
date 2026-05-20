@@ -2463,8 +2463,13 @@ async function saveProductPrice(id) {
   const product = state.products.find((item) => item.id === id);
   if (!product) return;
 
+  const nowIso = new Date().toISOString();
   const price = `$${value}`;
-  await updateDoc(doc(db, 'products', id), { price, updatedAt: new Date().toISOString() });
+  await updateDoc(doc(db, 'products', id), {
+    price,
+    catalogManagedAt: nowIso,
+    updatedAt: nowIso
+  });
   showToast(`${product.name} price updated`);
 }
 

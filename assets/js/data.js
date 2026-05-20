@@ -814,8 +814,8 @@ const SHRISH_DATA = {
     },
     {
       id: "picklespodi-drumstick-leaf-podi-munagaku-podi", category: "picklespodi",
-      name: "Drumstick Leaf Podi / Munagaku Podi", localName: "200g", origin: "Spice Powder",
-      price: "$7.99", unit: "200g",
+      name: "Drumstick Leaf Podi / Munagaku Podi", localName: "100g or 200g", origin: "Spice Powder",
+      price: "$6.99", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/drumstick-leaf-podi.jpg",
       description: "Andhra-style munagaku podi made with roasted drumstick leaves, dals, chillies, garlic, and spices. Nutty, earthy, and excellent with hot rice, ghee, idli, and dosa.",
@@ -829,7 +829,8 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Hot rice with ghee - idli - dosa - upma - curd rice",
       variants: [
-        { id: "podi-drumstick-leaf-200g", label: "200g", price: "$7.99", sku: "podi-drumstick-leaf-200g" }
+        { id: "podi-drumstick-leaf-100g", label: "100g", price: "$6.99", sku: "podi-drumstick-leaf-100g" },
+        { id: "podi-drumstick-leaf-200g", label: "200g", price: "$13.99", sku: "podi-drumstick-leaf-200g" }
       ]
     },
     {
