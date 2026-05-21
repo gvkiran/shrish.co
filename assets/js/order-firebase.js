@@ -309,6 +309,37 @@ function applyCatalogFieldOverrides(product = {}) {
   };
 }
 
+function staticCatalogProduct(productId) {
+  return window.SHRISH_DATA?.products?.find((product) => product.id === productId) || null;
+}
+
+function variantIdForOption(variant, index) {
+  return variant?.id || `opt${index + 1}`;
+}
+
+function hasVariantId(product = {}, variantId = 'default') {
+  if (variantId === 'default') return true;
+  return Array.isArray(product.variants)
+    && product.variants.some((variant, index) => variantIdForOption(variant, index) === variantId);
+}
+
+function applyStaticVariantFallback(product = {}, cartItem = {}) {
+  const productId = cartItemProductId(cartItem);
+  const variantId = cartItemVariantId(cartItem);
+  if (!productId || hasVariantId(product, variantId)) return product;
+
+  const staticProduct = staticCatalogProduct(productId);
+  if (!staticProduct || !hasVariantId(staticProduct, variantId)) return product;
+
+  return applyCatalogFieldOverrides({
+    ...staticProduct,
+    ...product,
+    unit: staticProduct.unit || product.unit,
+    price: staticProduct.price || product.price,
+    variants: staticProduct.variants
+  });
+}
+
 function liveProductVariants(product = {}) {
   if (Array.isArray(product.variants) && product.variants.length) {
     return product.variants
@@ -392,7 +423,10 @@ async function verifyCartAgainstLiveProducts() {
       continue;
     }
 
-    const product = applyCatalogFieldOverrides({ id: productId, ...productSnap.data() });
+    const product = applyStaticVariantFallback(
+      applyCatalogFieldOverrides({ id: productId, ...productSnap.data() }),
+      item
+    );
     if (product.hidden || !product.available || product.displayOnly) {
       cartChanged = true;
       messages.push(`${product.name || itemName} is currently not available and was removed from your cart.`);
