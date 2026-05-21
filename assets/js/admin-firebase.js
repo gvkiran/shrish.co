@@ -1486,11 +1486,19 @@ function renderOrders() {
     const fallbackBatch = batchNameFromDate(todayDateInputValue());
     const canSelect = state.orderSheet === 'active' && status === 'pending';
     const checked = state.selectedReminderOrderIds.has(order.id) ? 'checked' : '';
+    const quickPaymentButtons = status === 'fulfilled'
+      ? `<div class="payment-quick-actions" aria-label="Quick payment method">
+          <button type="button" class="payment-quick-btn ${paymentMethod === 'cash' && paymentCollected ? 'active' : ''}" title="Cash collected" onclick="setQuickPaymentMethod('${escapeHtml(order.id)}','cash')">C</button>
+          <button type="button" class="payment-quick-btn ${paymentMethod === 'zelle' && paymentCollected ? 'active' : ''}" title="Zelle collected" onclick="setQuickPaymentMethod('${escapeHtml(order.id)}','zelle')">Z</button>
+          <button type="button" class="payment-quick-btn ${paymentMethod === 'card' && paymentCollected ? 'active' : ''}" title="Card collected" onclick="setQuickPaymentMethod('${escapeHtml(order.id)}','card')">CD</button>
+        </div>`
+      : '';
     const paymentCellHtml = status === 'no_show'
       ? `<div class="payment-note">No show. Accounting total is $0.</div>`
       : state.orderSheet === 'active'
       ? `<div class="payment-note">Collect at pickup. Add method after processing.</div>`
       : `<div class="payment-cell">
+          ${quickPaymentButtons}
           <select class="payment-select" onchange="updatePaymentMethod('${escapeHtml(order.id)}', this.value)">
             <option value="" ${paymentMethod === '' ? 'selected' : ''}>Select method</option>
             <option value="cash" ${paymentMethod === 'cash' ? 'selected' : ''}>Cash</option>
@@ -2582,6 +2590,27 @@ async function updatePaymentMethod(id, paymentMethod) {
   showToast(paymentMethod ? 'Payment method updated' : 'Payment method cleared');
 }
 
+async function setQuickPaymentMethod(id, paymentMethod) {
+  const order = state.orders.find((item) => item.id === id);
+  if (!order || !['cash', 'zelle', 'card'].includes(paymentMethod)) return;
+
+  const methodLabels = {
+    cash: 'Cash',
+    zelle: 'Zelle',
+    card: 'Card'
+  };
+  const nowIso = new Date().toISOString();
+  await updateDoc(doc(db, 'orders', id), {
+    paymentMethod,
+    payment: 'paid',
+    paymentCollected: true,
+    paymentCollectedAt: nowIso,
+    accountingBatch: order.accountingBatch || batchNameFromDate(todayDateInputValue()),
+    updatedAt: nowIso
+  });
+  showToast(`${methodLabels[paymentMethod]} payment marked collected`);
+}
+
 async function togglePaymentCollected(id, collected) {
   const order = state.orders.find((item) => item.id === id);
   if (!order) return;
@@ -3595,6 +3624,7 @@ window.toggleProductHidden = toggleProductHidden;
 window.setStatus = setStatus;
 window.updatePickupDate = updatePickupDate;
 window.updatePaymentMethod = updatePaymentMethod;
+window.setQuickPaymentMethod = setQuickPaymentMethod;
 window.togglePaymentCollected = togglePaymentCollected;
 window.clearFulfilled = clearFulfilled;
 window.setOrderSheet = setOrderSheet;
