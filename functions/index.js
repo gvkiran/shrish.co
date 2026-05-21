@@ -998,6 +998,15 @@ exports.updateCustomerPendingOrder = onCall(
           customerCancelReason: String(request.data?.reason || "").trim().slice(0, 280),
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
+        const phoneDigits = normalizeOrderPhone(order.phoneDigits || order.phone || "");
+        if (phoneDigits) {
+          tx.set(db.collection("order_locks").doc(phoneDigits), {
+            phoneDigits,
+            orderId,
+            status: "cancelled",
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+        }
 
         return { status: "cancelled" };
       }

@@ -21,7 +21,9 @@ let isSubmitting = false;
 let currentCustomer = null;
 let currentCustomerProfile = null;
 let selectedPaymentMethod = 'pickup';
+let guestStripeConfirmed = false;
 const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
+const CHECKOUT_ACCOUNT_PREFILL_KEY = 'shrish_checkout_account_prefill';
 const CONFIRMATION_WAIT_MS = 15000;
 const createStripeCheckoutSession = httpsCallable(cloudFunctions, 'createStripeCheckoutSession');
 const LOCATION_LABELS = {
@@ -88,6 +90,23 @@ function rememberExistingOrderForAccount(orderId, displayNumber) {
       createdAt: Date.now()
     })
   );
+}
+
+function rememberCheckoutAccountPrefill(details = {}) {
+  if (!customerAccountsEnabled()) return;
+  sessionStorage.setItem(CHECKOUT_ACCOUNT_PREFILL_KEY, JSON.stringify({
+    email: details.email || '',
+    phone: details.phone || '',
+    phoneDigits: details.phoneDigits || '',
+    firstName: details.firstName || '',
+    lastName: details.lastName || '',
+    location: selectedLoc || '',
+    createdAt: Date.now()
+  }));
+}
+
+function accountCheckoutHref(mode) {
+  return `account.html?mode=${encodeURIComponent(mode)}&return=checkout`;
 }
 
 function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
@@ -874,10 +893,56 @@ function updatePaymentUi() {
   }
 }
 
+function closeCheckoutAccountModal(resolve, value = 'close') {
+  const modal = document.getElementById('checkoutAccountModal');
+  if (modal) modal.remove();
+  document.body.style.overflow = '';
+  resolve(value);
+}
+
+function showCheckoutAccountChoice(details = {}) {
+  rememberCheckoutAccountPrefill(details);
+  document.getElementById('checkoutAccountModal')?.remove();
+
+  return new Promise((resolve) => {
+    const modal = document.createElement('div');
+    modal.id = 'checkoutAccountModal';
+    modal.className = 'checkout-account-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.innerHTML = `
+      <div class="checkout-account-card">
+        <button type="button" class="checkout-account-close" aria-label="Close">&times;</button>
+        <h3>Pay online securely</h3>
+        <p>You can pay with card as a guest, or sign in first to save this order to your Shrish account.</p>
+        <div class="checkout-account-benefits">
+          <span>View purchase history and pickup details anytime.</span>
+          <span>Edit eligible pending orders before pickup is confirmed.</span>
+          <span>Save checkout details for faster ordering next time.</span>
+        </div>
+        <div class="checkout-account-actions">
+          <a class="primary" href="${accountCheckoutHref('signin')}">Sign In</a>
+          <a class="secondary" href="${accountCheckoutHref('signup')}">Create Account</a>
+          <button type="button" class="guest" id="continueAsGuestBtn">Checkout as Guest</button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+
+    modal.querySelector('.checkout-account-close')?.addEventListener('click', () => closeCheckoutAccountModal(resolve));
+    modal.querySelector('#continueAsGuestBtn')?.addEventListener('click', () => closeCheckoutAccountModal(resolve, 'guest'));
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) closeCheckoutAccountModal(resolve);
+    });
+  });
+}
+
 function bindPaymentUi() {
   document.querySelectorAll('.payment-option').forEach((option) => {
     option.addEventListener('click', () => {
       selectedPaymentMethod = option.dataset.payment === 'stripe' ? 'stripe' : 'pickup';
+      if (selectedPaymentMethod !== 'stripe') guestStripeConfirmed = false;
       updatePaymentUi();
       trackCheckoutEvent('checkout_payment_method_selected', {
         payment_method: selectedPaymentMethod
@@ -1094,6 +1159,16 @@ async function submitOrder() {
     return;
   }
 
+  if (payOnline && !currentCustomer && !guestStripeConfirmed) {
+    const choice = await showCheckoutAccountChoice({ firstName, lastName, phone, phoneDigits, email });
+    if (choice !== 'guest') return;
+    guestStripeConfirmed = true;
+    trackCheckoutEvent('checkout_guest_payment_confirmed', {
+      ...cartAnalyticsSummary(),
+      pickup_location: selectedLoc || ''
+    });
+  }
+
   try {
     isSubmitting = true;
     if (submitBtn) {
@@ -1165,7 +1240,7 @@ async function submitOrder() {
     await runTransaction(db, async (transaction) => {
       const pendingLock = await transaction.get(lockRef);
       const pendingLockStatus = pendingLock.exists() ? (pendingLock.data()?.status || 'pending') : '';
-      if (pendingLockStatus === 'pending') {
+      if (!currentCustomer && pendingLockStatus === 'pending') {
         const pendingLockData = pendingLock.data() || {};
         if (pendingLockData.orderId) {
           const linkedOrder = await transaction.get(doc(db, 'orders', pendingLockData.orderId));
@@ -1285,7 +1360,7 @@ async function submitOrder() {
     const list = document.getElementById('errorList');
     if (
       error?.message === 'DUPLICATE_PENDING_ORDER' ||
-      error?.code === 'permission-denied'
+      (!currentCustomer && error?.code === 'permission-denied')
     ) {
       const lockRef = orderLockRef(phoneDigits);
       const existingLock = await getDoc(lockRef).catch(() => null);
@@ -1296,6 +1371,9 @@ async function submitOrder() {
 
       setErrorBannerTitle('You already have a pending order');
       list.innerHTML = '<li>Please sign in to your Shrish account to modify your existing pending order, or contact us on WhatsApp if you need help.</li>';
+    } else if (currentCustomer && error?.code === 'permission-denied') {
+      setErrorBannerTitle('Could not verify this checkout');
+      list.innerHTML = '<li>Please refresh and try again. If this keeps happening, contact us on WhatsApp and we can help clean up the old order status.</li>';
     } else if (error?.message === 'LIVE_PRODUCT_CHECK_FAILED') {
       setErrorBannerTitle('Please refresh before placing your order');
       list.innerHTML = '<li>We could not verify live product availability right now. Please refresh and try again before placing the order.</li>';

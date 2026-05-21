@@ -39,7 +39,9 @@ const claimCustomerOrder = httpsCallable(cloudFunctions, 'claimCustomerOrder');
 const submitOrderFeedback = httpsCallable(cloudFunctions, 'submitOrderFeedback');
 const sendCustomerPasswordReset = httpsCallable(cloudFunctions, 'sendCustomerPasswordReset');
 const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
+const CHECKOUT_ACCOUNT_PREFILL_KEY = 'shrish_checkout_account_prefill';
 const RECENT_ORDER_CLAIM_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const CHECKOUT_ACCOUNT_PREFILL_MAX_AGE_MS = 60 * 60 * 1000;
 const FIREBASE_OPERATION_TIMEOUT_MS = 20000;
 
 function customerAccountsEnabled() {
@@ -185,6 +187,33 @@ function readRecentOrderClaim() {
   }
 }
 
+function readCheckoutAccountPrefill() {
+  try {
+    const raw = sessionStorage.getItem(CHECKOUT_ACCOUNT_PREFILL_KEY);
+    if (!raw) return null;
+    const prefill = JSON.parse(raw);
+    if (Date.now() - Number(prefill.createdAt || 0) > CHECKOUT_ACCOUNT_PREFILL_MAX_AGE_MS) {
+      sessionStorage.removeItem(CHECKOUT_ACCOUNT_PREFILL_KEY);
+      return null;
+    }
+    return prefill;
+  } catch {
+    sessionStorage.removeItem(CHECKOUT_ACCOUNT_PREFILL_KEY);
+    return null;
+  }
+}
+
+function shouldReturnToCheckout() {
+  return new URLSearchParams(window.location.search).get('return') === 'checkout';
+}
+
+function returnToCheckoutIfRequested() {
+  if (!shouldReturnToCheckout()) return false;
+  sessionStorage.removeItem(CHECKOUT_ACCOUNT_PREFILL_KEY);
+  window.location.href = 'order.html';
+  return true;
+}
+
 function prepareRecentOrderSignup(mode = 'signup') {
   const claim = readRecentOrderClaim();
   if (!claim) return;
@@ -196,6 +225,19 @@ function prepareRecentOrderSignup(mode = 'signup') {
   if (el('signupFirstName')) el('signupFirstName').value = claim.firstName || '';
   if (el('signupLastName')) el('signupLastName').value = claim.lastName || '';
   showMessage('authMessage', 'info', 'Sign in or create an account with the same email and phone from checkout to modify your pending order.');
+}
+
+function prepareCheckoutAccountPrefill(mode = 'signin') {
+  const prefill = readCheckoutAccountPrefill();
+  if (!prefill) return;
+  const authMode = mode === 'signup' ? 'signup' : 'signin';
+  setAuthMode(authMode);
+  if (el('signinEmail')) el('signinEmail').value = prefill.email || '';
+  if (el('signupEmail')) el('signupEmail').value = prefill.email || '';
+  if (el('signupPhone')) el('signupPhone').value = formatPhone(prefill.phone || prefill.phoneDigits || '');
+  if (el('signupFirstName')) el('signupFirstName').value = prefill.firstName || '';
+  if (el('signupLastName')) el('signupLastName').value = prefill.lastName || '';
+  showMessage('authMessage', 'info', 'Sign in or create an account, then we will bring you back to checkout.');
 }
 
 async function claimRecentOrderForUser(user) {
@@ -1362,6 +1404,8 @@ function init() {
   }
   if (params.get('claim') === 'recent' || readRecentOrderClaim()) {
     prepareRecentOrderSignup(params.get('mode'));
+  } else if (params.get('return') === 'checkout' || readCheckoutAccountPrefill()) {
+    prepareCheckoutAccountPrefill(params.get('mode'));
   }
 
   onAuthStateChanged(auth, async (user) => {
@@ -1385,6 +1429,7 @@ function init() {
     await loadProfile(user);
     setProfileEditing(false);
     await claimRecentOrderForUser(user);
+    if (returnToCheckoutIfRequested()) return;
     subscribeOrders(user);
   });
 }
