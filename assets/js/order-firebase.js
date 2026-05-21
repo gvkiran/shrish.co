@@ -690,6 +690,7 @@ async function isActivePendingLock(lockSnap) {
   if (!lock.orderId) return false;
 
   const orderSnap = await getDoc(doc(db, 'orders', lock.orderId)).catch((error) => {
+    if (error?.code === 'permission-denied' && currentCustomer) return null;
     if (error?.code === 'permission-denied') return { exists: () => true, data: () => ({ status: 'pending' }) };
     return null;
   });

@@ -223,7 +223,8 @@ async function claimRecentOrderForUser(user) {
     });
   } catch (error) {
     console.warn('Could not link recent order', error);
-    showMessage('profileMessage', 'info', 'Account created, but we could not link the recent order automatically. Please use the same checkout email and phone, or contact Shrish.');
+    sessionStorage.removeItem(RECENT_ORDER_CLAIM_KEY);
+    clearMessage('profileMessage');
   }
 }
 
