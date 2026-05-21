@@ -96,10 +96,10 @@ function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
     prompt.classList.add('show');
     prompt.innerHTML = `
       <strong>Track or edit this order</strong>
-      <p>This order is saved to your Shrish account. You can view history, print the summary, change pending quantities, or cancel before pickup is confirmed.</p>
+      <p>This order is saved to your Shrish account. You can <strong>view history</strong>, <strong>change pending quantities</strong>, or <strong>cancel before pickup is confirmed</strong>.</p>
       <div class="success-account-actions">
         <a href="account.html" class="btn-primary">View My Orders</a>
-        <span class="success-account-note">${escapeHtml(displayNumber)} is ready in your account.</span>
+        <span class="success-account-note"><strong>${escapeHtml(displayNumber)}</strong> is ready in your account.</span>
       </div>`;
     return;
   }
@@ -107,11 +107,11 @@ function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
   prompt.classList.add('show');
   prompt.innerHTML = `
     <strong>Want to edit this order later?</strong>
-    <p>Create or sign in to a Shrish account with the same email and phone from checkout. Your recent order will link automatically so you can see purchase history, update pending boxes, or cancel before pickup is confirmed.</p>
+    <p>Create or sign in with the <strong>same email and phone from checkout</strong>. Your recent order will link automatically so you can <strong>see purchase history</strong>, <strong>update pending boxes</strong>, or <strong>cancel before pickup is confirmed</strong>.</p>
     <div class="success-account-actions">
       <a href="${signupHref}" class="btn-primary">Create Account</a>
       <a href="${signinHref}" class="btn-outline">Sign In</a>
-      <span class="success-account-note">Use ${escapeHtml(order.email || 'the same email')} to link ${escapeHtml(displayNumber)}.</span>
+      <span class="success-account-note">Use <strong>${escapeHtml(order.email || 'the same email')}</strong> to link <strong>${escapeHtml(displayNumber)}</strong>.</span>
     </div>`;
 }
 

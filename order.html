@@ -104,7 +104,7 @@
 .success-icon-big{font-size:72px;margin-bottom:20px}
 .success-screen h2{font-family:var(--font-display);font-size:36px;color:var(--dark);margin-bottom:12px}
 .success-screen>p{color:var(--text-light);font-size:15px;line-height:1.7;margin-bottom:6px}
-.order-badge{display:inline-block;background:var(--cream-d);border-radius:50px;padding:10px 24px;font-size:18px;font-weight:700;color:var(--saffron);margin:16px 0 20px}
+.order-badge{display:inline-block;background:var(--cream-d);border-radius:50px;padding:10px 24px;font-size:18px;font-weight:700;color:var(--saffron);margin:16px 0 14px}
 .success-summary{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(26,18,8,.08);margin-bottom:24px;text-align:left}
 .ss-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--cream-d);font-size:14px}
 .ss-row:last-child{border-bottom:none}
@@ -119,13 +119,15 @@
 .ss-item-qty,.ss-item-price,.ss-total-qty,.ss-total-price{text-align:right}
 .ss-total{font-size:15px;font-weight:700;color:var(--dark);padding-top:12px}
 .ss-total-price{color:var(--saffron)}
-.success-account-prompt{display:none;background:#fff;border:1px solid rgba(200,121,26,.18);border-radius:18px;padding:20px;margin:0 auto 22px;text-align:left;box-shadow:0 8px 28px rgba(26,18,8,.08)}
+.success-account-prompt{display:none;background:#fff;border:1px solid rgba(200,121,26,.26);border-left:5px solid var(--saffron);border-radius:18px;padding:20px;margin:0 auto 22px;text-align:left;box-shadow:0 10px 30px rgba(26,18,8,.1)}
 .success-account-prompt.show{display:block}
 .success-account-prompt strong{display:block;font-family:var(--font-display);font-size:24px;line-height:1.15;color:var(--dark);margin-bottom:8px}
 .success-account-prompt p{color:var(--text-light);font-size:14px;line-height:1.65;margin:0 0 14px}
+.success-account-prompt p strong{display:inline;font-family:var(--font-body);font-size:inherit;line-height:inherit;color:var(--dark);margin:0;font-weight:800}
 .success-account-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .success-account-actions .btn-primary,.success-account-actions .btn-outline{padding:10px 18px;font-size:14px}
 .success-account-note{font-size:12px;color:var(--text-light);line-height:1.5}
+.success-account-note strong{display:inline;font-family:var(--font-body);font-size:inherit;color:var(--dark);margin:0;font-weight:800}
 .success-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:32px}
 
 /* Community section */
@@ -324,10 +326,10 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
   <div class="success-icon-big">&#127881;</div>
   <h2>Order Placed!</h2>
   <div class="order-badge" id="successOrderNum"></div>
+  <div class="success-account-prompt" id="successAccountPrompt"></div>
   <p>Thank you! Please watch for updates on the WhatsApp group for pickup details. If you're not part of the group yet, please join using the link below.</p>
   <p>Payment is collected at pickup.</p>
   <div class="success-summary" id="successSummary"></div>
-  <div class="success-account-prompt" id="successAccountPrompt"></div>
   <div class="success-actions">
     <a href="shop.html" class="btn-primary">Continue Shopping</a>
     <a href="index.html" class="btn-outline">Back to Home</a>
@@ -368,7 +370,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="assets/js/analytics.js?v=owner-insights-1"></script>
 <script src="assets/js/main.js?v=account-menu-2"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/order-firebase.js?v=prod-merge-20260518"></script>
+<script type="module" src="assets/js/order-firebase.js?v=order-account-prompt-20260520"></script>
 
 </body>
 </html>
