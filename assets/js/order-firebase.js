@@ -174,6 +174,9 @@ function cartItemId(productId, variantId = 'default') {
 }
 
 const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
+const FORCE_CATALOG_FIELD_OVERRIDE_IDS = new Set([
+  'picklespodi-drumstick-leaf-podi-munagaku-podi'
+]);
 
 function hasAdminManagedCatalogFields(product = {}) {
   return Boolean(product.catalogManagedAt);
@@ -181,7 +184,7 @@ function hasAdminManagedCatalogFields(product = {}) {
 
 function applyCatalogFieldOverrides(product = {}) {
   const override = CATALOG_FIELD_OVERRIDES[product.id];
-  if (!override || hasAdminManagedCatalogFields(product)) return product;
+  if (!override || (hasAdminManagedCatalogFields(product) && !FORCE_CATALOG_FIELD_OVERRIDE_IDS.has(product.id))) return product;
   return {
     ...product,
     ...override,
