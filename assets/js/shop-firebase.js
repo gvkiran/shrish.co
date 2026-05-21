@@ -404,6 +404,10 @@ function usesVariantUI(product) {
   return Array.isArray(product?.variants) && product.variants.length > 0;
 }
 
+function usesDirectVariantButtons(product) {
+  return normalizeProductCategory(product?.category) === 'picklespodi' && usesVariantUI(product);
+}
+
 function buildCartItemId(productId, variantId = 'default') {
   return variantId === 'default' ? productId : `${productId}__${variantId}`;
 }
@@ -879,12 +883,17 @@ function renderCard(p) {
   const variants = getProductVariants(p);
   const hasChoices = usesVariantUI(p);
   const selectedCardVariant = getCardSelectedVariant(p);
+  const cardPriceText = usesDirectVariantButtons(p)
+    ? (getVariantPriceRange(variants) || selectedCardVariant.price || p.price)
+    : (selectedCardVariant.price || p.price);
 
   let actionHtml = '';
   if (!liveReady) {
     actionHtml = `<div class="pc-card-actions" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" disabled>${catalogSyncFailed ? 'Refresh Required' : 'Checking...'}</button></div>`;
   } else if (isSoon) {
     actionHtml = `<button class="pc-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify Me</button>`;
+  } else if (isAvail && hasChoices && usesDirectVariantButtons(p)) {
+    actionHtml = `<div class="pc-card-actions pc-card-actions-variant pc-card-actions-direct" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button>${renderDirectVariantButtons(p, variants)}</div>`;
   } else if (isAvail && hasChoices) {
     actionHtml = `<div class="pc-card-actions pc-card-actions-variant" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><div class="pc-variant-list"><select class="pc-variant-select" onchange="cardVariantChanged('${escapeHtml(p.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === selectedCardVariant.id ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select><button class="pc-add-btn" onclick="quickAddSelectedVariant('${escapeHtml(p.id)}')">${isPreorder ? '+ Preorder' : '+ Add to Cart'}</button></div></div>`;
   } else if (isAvail) {
@@ -908,7 +917,7 @@ function renderCard(p) {
         <div class="pc-short-desc">${escapeHtml(shortDesc)}</div>
         <div class="pc-safety-note">${escapeHtml(CARD_SAFETY_NOTE)}</div>
         ${recommendationTagHtml ? `<div class="pc-rec-tags">${recommendationTagHtml}</div>` : ''}
-        <div class="pc-footer"><div class="pc-price-wrap"><div class="pc-price" id="card-price-${escapeHtml(p.id)}">${escapeHtml(selectedCardVariant.price || p.price)}</div></div></div>
+        <div class="pc-footer"><div class="pc-price-wrap"><div class="pc-price" id="card-price-${escapeHtml(p.id)}">${escapeHtml(cardPriceText)}</div></div></div>
         ${actionHtml}
       </div>
     </div>`;
@@ -921,6 +930,7 @@ function quickAdd(productId) {
 
 function quickAddVariant(productId, variantId) {
   addToCart(productId, 1, variantId);
+  renderCardQty(productId);
 }
 
 function quickAddSelectedVariant(productId) {
@@ -941,6 +951,33 @@ function updateCardDisplayedPrice(productId, price) {
   if (priceEl) priceEl.textContent = price || '';
 }
 
+function getVariantPriceRange(variants) {
+  const prices = variants.map((variant) => variant.price).filter(Boolean);
+  const uniquePrices = [...new Set(prices)];
+  if (uniquePrices.length <= 1) return uniquePrices[0] || '';
+  return `${uniquePrices[0]} - ${uniquePrices[uniquePrices.length - 1]}`;
+}
+
+function getCartVariantQty(productId, variantId) {
+  const cartItemId = buildCartItemId(productId, variantId);
+  const item = cart.find((entry) => entry.id === cartItemId);
+  return item ? item.qty : 0;
+}
+
+function renderDirectVariantButtons(product, variants) {
+  return `<div class="pc-direct-variants">${variants.map((variant) => {
+    const qty = getCartVariantQty(product.id, variant.id);
+    const safeProductId = escapeHtml(product.id);
+    const safeVariantId = escapeHtml(variant.id);
+    const safeLabel = escapeHtml(variant.label);
+    const safePrice = escapeHtml(variant.price || product.price || '');
+    if (qty > 0) {
+      return `<div class="pc-size-qty"><button type="button" class="pc-size-qty-btn remove-btn" onclick="cardVariantQtyChange('${safeProductId}','${safeVariantId}',-1)" title="Remove one">-</button><div class="pc-size-qty-mid"><span class="pc-size-label">${safeLabel}</span><span class="pc-size-count">${qty}</span><span class="pc-size-price">${safePrice}</span></div><button type="button" class="pc-size-qty-btn" onclick="cardVariantQtyChange('${safeProductId}','${safeVariantId}',1)" title="Add one">+</button></div>`;
+    }
+    return `<button type="button" class="pc-size-add-btn" onclick="quickAddVariant('${safeProductId}','${safeVariantId}')"><span>${safeLabel}</span><strong>${safePrice}</strong></button>`;
+  }).join('')}</div>`;
+}
+
 function renderCardQty(productId) {
   const wrap = document.getElementById(`card-actions-${productId}`);
   if (!wrap) return;
@@ -954,6 +991,11 @@ function renderCardQty(productId) {
   const addLabel = product.preorderOnly ? '+ Preorder' : '+ Add to Cart';
   if (usesVariantUI(product)) {
     const variants = getProductVariants(product);
+    if (usesDirectVariantButtons(product)) {
+      updateCardDisplayedPrice(product.id, getVariantPriceRange(variants) || product.price);
+      wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button>${renderDirectVariantButtons(product, variants)}`;
+      return;
+    }
     const selectedVariant = getCardSelectedVariant(product);
     updateCardDisplayedPrice(product.id, selectedVariant.price || product.price);
     const cartItemId = buildCartItemId(product.id, selectedVariant.id);
