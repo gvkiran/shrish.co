@@ -644,19 +644,43 @@ function showDuplicateOrderMessage(phone, existingOrderId = '') {
   if (!banner || !list) return;
 
   rememberExistingOrderForAccount(existingOrderId, existingOrderId);
-  setErrorBannerTitle('You already have a pending order');
+  banner.className = 'error-banner';
+  list.innerHTML = '';
+
+  document.getElementById('duplicateOrderModal')?.remove();
   const accountHref = existingOrderId ? 'account.html?claim=recent&mode=signin' : 'account.html?mode=signin';
   const primaryLabel = currentCustomer ? 'Open My Orders' : 'Login to Modify Order';
-  list.innerHTML = `
-    <li>You already have an active order for <strong>${escapeHtml(phone)}</strong>.</li>
-    <li>To change boxes, cancel, or view details, sign in or create a Shrish account using the same email and phone from your order.</li>
-    <li class="duplicate-order-actions">
-      <a class="primary" href="${accountHref}">${primaryLabel}</a>
-      <a class="secondary" href="account.html?claim=recent&mode=signup">Create Account</a>
-      <a class="secondary" href="https://wa.me/17653255577" target="_blank" rel="noopener">WhatsApp Help</a>
-    </li>`;
-  banner.className = 'error-banner show account-action';
-  banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  const modal = document.createElement('div');
+  modal.id = 'duplicateOrderModal';
+  modal.className = 'duplicate-order-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.innerHTML = `
+    <div class="duplicate-order-card">
+      <button type="button" class="duplicate-order-close" aria-label="Close">&times;</button>
+      <h3>You already have a pending order</h3>
+      <p>You already have an active order for <strong>${escapeHtml(phone)}</strong>.</p>
+      <p>To change boxes, cancel, or view details, log in or create a Shrish account using the same email and phone from your order.</p>
+      <div class="duplicate-order-actions">
+        <a class="primary" href="${accountHref}">${primaryLabel}</a>
+        <a class="secondary" href="account.html?claim=recent&mode=signup">Create Account</a>
+        <a class="secondary" href="https://wa.me/17653255577" target="_blank" rel="noopener">WhatsApp Help</a>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+  document.body.style.overflow = 'hidden';
+  modal.querySelector('.duplicate-order-close')?.addEventListener('click', () => {
+    modal.remove();
+    document.body.style.overflow = '';
+  });
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) {
+      modal.remove();
+      document.body.style.overflow = '';
+    }
+  });
 }
 
 async function isActivePendingLock(lockSnap) {
