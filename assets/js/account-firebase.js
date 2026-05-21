@@ -40,6 +40,7 @@ const submitOrderFeedback = httpsCallable(cloudFunctions, 'submitOrderFeedback')
 const sendCustomerPasswordReset = httpsCallable(cloudFunctions, 'sendCustomerPasswordReset');
 const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
 const RECENT_ORDER_CLAIM_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const FIREBASE_OPERATION_TIMEOUT_MS = 20000;
 
 function customerAccountsEnabled() {
   return window.SHRISH_APP_CONFIG?.customerAccountsEnabled === true;
@@ -117,6 +118,14 @@ function setButtonBusy(button, busy, label) {
   button.textContent = busy ? label : button.dataset.idleText;
 }
 
+function withTimeout(promise, message = 'Request timed out') {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(message)), FIREBASE_OPERATION_TIMEOUT_MS);
+  });
+  return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timeoutId));
+}
+
 function phoneDigits(value) {
   const digits = normalizePhone(value);
   if (digits.startsWith('1')) return digits.slice(1, 11);
@@ -153,6 +162,9 @@ function authErrorMessage(error) {
   }
   if (code.includes('unauthorized-continue-uri')) return 'Password reset is not allowed from this preview link yet. Please try again.';
   if (code.includes('too-many-requests')) return 'Too many attempts. Please wait a bit and try again.';
+  if (String(error?.message || '').includes('timed out')) {
+    return 'This is taking longer than expected. Please refresh and try again, or sign in if the account was created.';
+  }
   return 'Something went wrong. Please try again.';
 }
 
@@ -196,10 +208,10 @@ async function claimRecentOrderForUser(user) {
   }
 
   try {
-    const result = await claimCustomerOrder({
+    const result = await withTimeout(claimCustomerOrder({
       orderId: claim.orderId,
       phoneDigits: claim.phoneDigits
-    });
+    }), 'Recent order link timed out');
     sessionStorage.removeItem(RECENT_ORDER_CLAIM_KEY);
     const message = result?.data?.status === 'already_linked'
       ? 'Your recent order is already saved in your account.'
@@ -1186,11 +1198,18 @@ function bindForms() {
 
     try {
       setButtonBusy(button, true, 'Creating...');
-      const credential = await createUserWithEmailAndPassword(auth, email, password);
-      await setDoc(profileRef(credential.user.uid), profilePayloadFromSignup(credential.user), { merge: true });
+      const credential = await withTimeout(
+        createUserWithEmailAndPassword(auth, email, password),
+        'Account creation timed out'
+      );
+      await withTimeout(
+        setDoc(profileRef(credential.user.uid), profilePayloadFromSignup(credential.user), { merge: true }),
+        'Profile save timed out'
+      );
       showMessage('profileMessage', 'ok', 'Account created. Your checkout details are saved.');
       trackAccountEvent('customer_account_created');
     } catch (error) {
+      console.error('Customer account signup failed', error);
       showMessage('authMessage', 'error', authErrorMessage(error));
     } finally {
       setButtonBusy(button, false);
