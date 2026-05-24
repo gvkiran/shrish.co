@@ -36,7 +36,7 @@ const SHRISH_DATA = {
     {
       id: "alphonso", category: "mangoes",
       name: "Alphonso (Hapus)", localName: "हापुस", origin: "Ratnagiri, Maharashtra",
-      price: "$45", unit: "per box (~2.5 kg)",
+      price: "$56", unit: "per box (~3kgs) (9 to 12)",
       available: true, displayOnly: false, tag: "Most Popular",
       image: "images/products/mangoes/img_alphonso.jpeg",
       description: "The undisputed King of Mangoes. Intensely sweet, saffron-yellow flesh with zero fibre and an intoxicating aroma. Sourced directly from Ratnagiri - the only region that produces the true Hapus. Limited seasonal availability.",
@@ -46,8 +46,8 @@ const SHRISH_DATA = {
     {
       id: "kesar", category: "mangoes",
       name: "Kesar", localName: "કેસર", origin: "Junagadh, Gujarat",
-      price: "$55", unit: "per box (~3 kg)",
-      available: false, displayOnly: false, tag: "Sweet & Aromatic",
+      price: "$55", unit: "per box (~3kgs) (9 to 12)",
+      available: true, displayOnly: false, tag: "Sweet & Aromatic",
       image: "images/products/mangoes/img_kesar.jpeg",
       description: "Gujarat's pride and the 'Queen of Mangoes'. Named for its saffron-coloured pulp, Kesar delivers a honey-sweet richness with a floral aroma. Round, medium-sized with nearly fiberless flesh. A household favourite across India.",
       season: "May - June", taste: "Honey-Sweet  -  Floral  -  Aromatic",
@@ -56,8 +56,8 @@ const SHRISH_DATA = {
     {
       id: "banganapalli", category: "mangoes",
       name: "Banganapalli (Safeda)", localName: "బంగినపల్లి", origin: "Andhra Pradesh",
-      price: "$37", unit: "per box (~3 kg)",
-      available: false, displayOnly: false, tag: "",
+      price: "$56", unit: "per box (~4kgs) (7 to 12)",
+      available: true, displayOnly: false, tag: "",
       image: "images/products/mangoes/img_banganapalli.jpg",
       description: "A large, golden-yellow beauty from Andhra Pradesh with a GI tag. Tender, fiberless flesh with a mild, sweet flavour and thin skin. One of the most widely consumed mangoes across South India - perfect for families who prefer a mild, non-overpowering sweetness.",
       season: "April - June", taste: "Mild Sweet  -  Tender  -  Fiberless",
@@ -66,7 +66,7 @@ const SHRISH_DATA = {
     {
       id: "langra", category: "mangoes",
       name: "Langra", localName: "लंगड़ा", origin: "Varanasi, Uttar Pradesh",
-      price: "$38", unit: "per box (~3 kg)",
+      price: "$55", unit: "per box (~3kgs) (9 to 12)",
       available: false, displayOnly: false, tag: "",
       image: "images/products/mangoes/img_langra.jpg",
       description: "Langra stays green even when fully ripe - don't let the colour fool you! Inside is a tangy-sweet, incredibly juicy flesh with a distinctive bold character. Prized across North India and beloved by mango connoisseurs for its unique flavour profile.",
@@ -76,8 +76,8 @@ const SHRISH_DATA = {
     {
       id: "rasalu", category: "mangoes",
       name: "Rasalu", localName: "రసాలు", origin: "Andhra Pradesh & Telangana",
-      price: "$40", unit: "per box (~2.5 kg)",
-      available: false, displayOnly: false, tag: "Rare & Seasonal",
+      price: "$55", unit: "per box (~3kgs) (8 to 12)",
+      available: true, displayOnly: false, tag: "Rare & Seasonal",
       image: "images/products/mangoes/img_rasalu.jpeg",
       description: "A rare South Indian gem - small, round, deeply sweet with an almost candy-like richness. Rasalu is incredibly juicy with thin fibre and a melt-in-mouth texture. Very seasonal and hard to find outside India. When available, it sells out fast!",
       season: "May - June", taste: "Very Sweet  -  Juicy  -  Candy-like",
@@ -86,8 +86,8 @@ const SHRISH_DATA = {
     {
       id: "himayat", category: "mangoes",
       name: "Himayat (Imam Pasand)", localName: "హిమాయత్", origin: "Hyderabad, Telangana",
-      price: "$42", unit: "per box (~2.5 kg)",
-      available: false, displayOnly: false, tag: "Premium",
+      price: "$58", unit: "per box (~4kgs) (6 to 9)",
+      available: true, displayOnly: false, tag: "Premium",
       image: "images/products/mangoes/img_himayath_real.jpg",
       description: "Known as the 'Mango of the King' - Imam Pasand means 'King's favourite'. Large, oval fruit with creamy, fiberless pulp that melts in your mouth. Exceptionally sweet with a mild aroma. A prized Hyderabadi variety, incredibly rare outside Andhra Pradesh and Telangana.",
       season: "June - July", taste: "Creamy  -  Sweet  -  Fiberless  -  Melt-in-mouth",
@@ -96,7 +96,7 @@ const SHRISH_DATA = {
     {
       id: "payari", category: "mangoes",
       name: "Payari (Paheri)", localName: "पहेरी", origin: "Gujarat & Maharashtra",
-      price: "$36", unit: "per box (~3 kg)",
+      price: "$55", unit: "per box (~3kgs) (9 to 12)",
       available: false, displayOnly: false, tag: "",
       image: "images/products/mangoes/img_payari.jpg",
       description: "A popular summer mango known for its round shape, sweet flavour, and vibrant golden-yellow skin. Payari has rich, pulpy flesh perfect for mango pulp and traditional Gujarati recipes. A childhood favourite - its sweetness is pure and uncomplicated.",
@@ -106,7 +106,7 @@ const SHRISH_DATA = {
     {
       id: "dasheri", category: "mangoes",
       name: "Dasheri", localName: "दशहरी", origin: "Malihabad, Uttar Pradesh",
-      price: "$38", unit: "per box (~3 kg)",
+      price: "$55", unit: "per box (~3kgs) (9 to 12)",
       available: false, displayOnly: false, tag: "",
       image: "images/products/mangoes/img_dasheri.jpg",
       gallery: ["images/products/mangoes/img_dasheri.jpg", "images/products/mangoes/img_dasheri1.jpg"],
@@ -117,7 +117,7 @@ const SHRISH_DATA = {
     {
       id: "malgova", category: "mangoes",
       name: "Malgova", localName: "மல்கோவா", origin: "Tamil Nadu & Karnataka",
-      price: "$40", unit: "per box (~2 kg)",
+      price: "$55", unit: "per box (~3kgs) (9 to 12)",
       available: false, displayOnly: false, tag: "",
       image: "images/products/mangoes/img_malgova.jpg",
       gallery: ["images/products/mangoes/img_malgova.jpg", "images/products/mangoes/img_malgova1.jpg"],
@@ -128,7 +128,7 @@ const SHRISH_DATA = {
     {
       id: "neelam", category: "mangoes",
       name: "Neelam", localName: "నీలం", origin: "South India (AP, TN, Karnataka)",
-      price: "$36", unit: "per box (~3 kg)",
+      price: "$56", unit: "per box (~3kgs) (9 to 12)",
       available: false, displayOnly: false, tag: "",
       image: "images/products/mangoes/img_neelam.jpg",
       gallery: ["images/products/mangoes/img_neelam.jpg", "images/products/mangoes/img_neelam1.jpg"],
