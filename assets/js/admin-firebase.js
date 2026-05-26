@@ -2981,241 +2981,287 @@ function renderExcelCalculations() {
 
   const computed = accounting2ComputedTotals(batchName);
   batchNameEl.textContent = batchName;
-  const savedSheetNames = accounting2SavedSheetNames();
-  const sheetProducts = accounting2SheetProducts(computed.products);
-  const balanceLeft = computed.batchOrderTotal - computed.receivedTotal;
-  const countedTotal = computed.cashCountTotal + computed.zelleAmount;
 
+  const savedSheetNames = accounting2SavedSheetNames();
   savedSheetSelect.innerHTML = [
     `<option value="" ${savedSheetNames.includes(batchName) ? '' : 'selected'}>Current Sheet</option>`,
     ...savedSheetNames.map((name) => `<option value="${escapeHtml(name)}" ${name === batchName ? 'selected' : ''}>${escapeHtml(name)}</option>`)
   ].join('');
 
-  const columnHeaders = sheetProducts.map(({ product, code }) => `
-    <th title="${escapeHtml(product.name || '')}">${escapeHtml(code)}</th>
-  `).join('');
+  // Variety definitions: id, label, code, default price
+  const VARIETIES = [
+    { id: 'alphonso',      label: 'Alphonso',      code: 'A', price: 54 },
+    { id: 'kesar',         label: 'Kesar',         code: 'K', price: 52 },
+    { id: 'banganapalli',  label: 'Banganapalli',  code: 'B', price: 53 },
+    { id: 'himayat',       label: 'Himayat',       code: 'H', price: 56 },
+    { id: 'rasalu',        label: 'Rasalu',        code: 'R', price: 52 },
+    { id: 'payari',        label: 'Payari',        code: 'P', price: 50 },
+    { id: 'langra',        label: 'Langra',        code: 'L', price: 50 },
+  ];
 
-  const extraValueCells = sheetProducts.map(({ product }) => `
-    <td><input type="number" min="0" step="1" value="${computed.extraBoxes[product.id] || ''}" onchange="setExcelCalcProductMap('extraBoxes','${escapeHtml(product.id)}', this.value)"></td>
-  `).join('');
+  // Get values from record
+  const extraBoxes   = accounting2MutableMap(record, 'extraBoxes');
+  const boxCount     = accounting2MutableMap(record, 'orderedBoxes');
+  const remainingQty = accounting2MutableMap(record, 'remainingQty');
+  const productPrices = accounting2MutableMap(record, 'productPrices');
+  const cashCounts   = accounting2MutableMap(record, 'cashCounts');
+  const zelleEntries = record.zelleEntries || [{ name: '', amount: '' }, { name: '', amount: '' }];
 
-  const orderedValueCells = sheetProducts.map(({ product }) => `
-    <td><input type="number" min="0" step="1" value="${computed.orderedCounts[product.id] ?? ''}" onchange="setExcelCalcProductMap('orderedBoxes','${escapeHtml(product.id)}', this.value)"></td>
-  `).join('');
+  const priceOf = (v) => Number(productPrices[v.id] || v.price || 0);
 
-  const priceRows = sheetProducts.map(({ product, code }) => `
-    <tr>
-      <td title="${escapeHtml(product.name || '')}">${escapeHtml(code)}</td>
-      <td><input type="text" inputmode="decimal" value="${computed.productPrices[product.id] ?? accounting2ProductPrice(product)}" onchange="setExcelCalcProductMap('productPrices','${escapeHtml(product.id)}', this.value)"></td>
-    </tr>
-  `).join('');
+  // Computed totals
+  const totalExtraBoxes = VARIETIES.reduce((s, v) => s + (Number(extraBoxes[v.id]) || 0), 0);
+  const totalExtraValue = VARIETIES.reduce((s, v) => s + (Number(extraBoxes[v.id]) || 0) * priceOf(v), 0);
+  const totalBoxCount   = VARIETIES.reduce((s, v) => s + (Number(boxCount[v.id]) || 0), 0);
+  const totalInvoice    = VARIETIES.reduce((s, v) => s + (Number(boxCount[v.id]) || 0) * priceOf(v), 0)
+                        + totalExtraValue;
 
-  const cashRows = accounting2DefaultDenominations().map((denomination) => {
-    const count = computed.cashCounts[denomination] || '';
-    return `
-      <tr>
-        <td>${formatCurrency(denomination)}</td>
-        <td><input type="number" min="0" step="1" value="${count}" onchange="setExcelCalcCashCount('${denomination}', this.value)"></td>
-        <td>${formatCurrency(Number(denomination) * Number(count || 0))}</td>
-      </tr>
-    `;
-  }).join('');
+  const DENOMS = [1, 5, 10, 20, 50, 100];
+  const cashTotal = DENOMS.reduce((s, d) => s + d * (Number(cashCounts[d]) || 0), 0);
+  const cashFromHand = Number(record.cashFromHand || 300);
+  const cashSales = cashTotal - cashFromHand;
 
-  const remainingRows = sheetProducts.map(({ product }) => {
-    const count = computed.remainingQty[product.id] ?? '';
-    const amount = excelCalcCountValue(count) * accounting2ProductUnitPrice(product, computed.productPrices);
-    return `
-      <tr>
-        <td>${escapeHtml(product.name || '')}</td>
-        <td><input type="number" min="0" step="1" value="${count}" onchange="setExcelCalcProductMap('remainingQty','${escapeHtml(product.id)}', this.value)"></td>
-        <td>${formatCurrency(amount)}</td>
-      </tr>
-    `;
-  }).join('');
+  const zelleTotal = zelleEntries.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+  const unknownAmt = totalInvoice - cashSales - zelleTotal;
+
+  const totalReceived = cashSales + zelleTotal;
+  const balanceCash   = (record.totalCashHeld || 0) - cashSales;
+  const balanceZelle  = (record.totalZelleHeld || 0) - zelleTotal;
+
+  const remainingValue = VARIETIES.reduce((s, v) => {
+    const qty = Number(remainingQty[v.id]) || 0;
+    return s + qty * priceOf(v);
+  }, 0);
+  const damagedCount = Number(record.damagedCount || 0);
+  const damagedValue = damagedCount * (Number(record.damagedPrice || 56));
+  const totalRemDamaged = remainingValue + damagedValue;
+
+  const tally = totalInvoice - totalReceived - totalRemDamaged;
+  const tallyOk = Math.abs(tally) < 1;
+
+  // Walk-up orders
+  const batchDate = record.batchDate || dateInput.value || '';
+  const walkupOrders = state.orders.filter(o =>
+    o.manualBatchDate === batchDate && (o.status === 'fulfilled' || o.paymentCollected)
+  );
+  const walkupRevenue = walkupOrders.reduce((s, o) => s + (moneyNumber(o.totalPrice) || 0), 0);
+  const walkupBoxes   = walkupOrders.reduce((s, o) => s + (o.totalBoxes || 0), 0);
+
+  const invoiceBalance = totalInvoice - (record.invoiceTotal || 0);
 
   sheetEl.innerHTML = `
-    <div class="excel-spreadsheet">
-      <div class="excel-sheet-meta">
-        <span>Saved Sheets: <strong>${savedSheetNames.length}</strong></span>
-        <span>Sheet: <strong>${escapeHtml(batchName)}</strong></span>
-      </div>
+  <div class="ptally-wrap">
 
-      <table class="excel-sheet-table excel-sheet-table-top">
-        <tbody>
-          <tr>
-            <th class="excel-sheet-label">Extra Box's</th>
-            ${columnHeaders}
-            <th class="excel-sheet-money-head">Total Extra</th>
-          </tr>
-          <tr>
-            <td></td>
-            ${extraValueCells}
-            <td class="excel-sheet-money">${formatCurrency(computed.extraBoxesValue)}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <table class="excel-sheet-table excel-sheet-table-top">
-        <tbody>
-          <tr>
-            <th class="excel-sheet-label">Box Count</th>
-            ${columnHeaders}
-          </tr>
-          <tr>
-            <td></td>
-            ${orderedValueCells}
-          </tr>
-        </tbody>
-      </table>
-
-      <table class="excel-sheet-table excel-sheet-summary-head">
-        <tbody>
-          <tr>
-            <th>Date</th>
-            <th>Total Box count</th>
-            <th>Total</th>
-          </tr>
-          <tr>
-            <td>${formatDate(dateInput.value)}</td>
-            <td>${computed.totalBoxesCount} ordered + ${computed.walkupBoxes || 0} walk-up = <strong>${(computed.totalBoxesCount || 0) + (computed.walkupBoxes || 0)} total distributed</strong></td>
-            <td>${formatCurrency(computed.batchOrderTotal)}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="excel-sheet-workarea">
-        <div class="excel-sheet-left">
-          <div class="excel-sheet-panel">
-            <div class="excel-sheet-panel-title">Cash</div>
-            <table class="excel-sheet-table">
-              <tbody>
-                <tr>
-                  <th></th>
-                  <th>Count</th>
-                  <th>Sum</th>
-                </tr>
-                ${cashRows}
-                <tr class="excel-calc-total-row">
-                  <td>Total</td>
-                  <td></td>
-                  <td>${formatCurrency(computed.cashCountTotal)}</td>
-                </tr>
-                <tr>
-                  <td>Cash from hand</td>
-                  <td colspan="2"><input type="text" inputmode="decimal" value="${record.cashFromHand ?? ''}" onchange="setExcelCalcValue('cashFromHand', this.value)"></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="excel-sheet-panel">
-            <div class="excel-sheet-panel-title">Zelle</div>
-            <table class="excel-sheet-table">
-              <tbody>
-                <tr>
-                  <td>Amount</td>
-                  <td><input type="text" inputmode="decimal" value="${record.zelleAmount ?? ''}" onchange="setExcelCalcValue('zelleAmount', this.value)"></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="excel-sheet-panel">
-            <table class="excel-sheet-table">
-              <tbody>
-                <tr>
-                  <th></th>
-                  <th>Cash</th>
-                  <th>Zelle</th>
-                  <th>Unknown</th>
-                  <th>Total</th>
-                </tr>
-                <tr>
-                  <td>Total</td>
-                  <td>${formatCurrency(computed.cashSales)}</td>
-                  <td>${formatCurrency(computed.zelleAmount)}</td>
-                  <td>${formatCurrency(computed.unknownAmount)}</td>
-                  <td>${formatCurrency(computed.batchOrderTotal)}</td>
-                </tr>
-                <tr>
-                  <td>Received</td>
-                  <td>${formatCurrency(computed.cashCountTotal)}</td>
-                  <td>${formatCurrency(computed.zelleAmount)}</td>
-                  <td></td>
-                  <td>${formatCurrency(countedTotal)}</td>
-                </tr>
-                <tr>
-                  <td>Balance left</td>
-                  <td>${formatCurrency(computed.cashFromHand)}</td>
-                  <td></td>
-                  <td>${formatCurrency(computed.unknownAmount)}</td>
-                  <td class="${balanceLeft < 0 ? 'warn' : ''}">${formatCurrency(balanceLeft)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+    <!-- ─── SECTION 1: EXTRA BOXES (from vendor above pre-orders) ─── -->
+    <div class="ptally-section">
+      <div class="ptally-section-head">📦 Extra Boxes from Vendor <span class="ptally-hint">(boxes received above what was pre-ordered)</span></div>
+      <div class="ptally-variety-row">
+        ${VARIETIES.map(v => `
+          <div class="ptally-variety-cell">
+            <div class="ptally-vcell-label">${v.code} — ${v.label}</div>
+            <input class="ptally-num-input" type="number" min="0" step="1"
+              value="${extraBoxes[v.id] || ''}"
+              placeholder="0"
+              onchange="setExcelCalcProductMap('extraBoxes','${escapeHtml(v.id)}',this.value)">
+          </div>`).join('')}
+        <div class="ptally-variety-cell ptally-total-cell">
+          <div class="ptally-vcell-label">Total Extra</div>
+          <div class="ptally-total-val">${totalExtraBoxes}</div>
         </div>
-
-        <div class="excel-sheet-right">
-          <div class="excel-sheet-panel excel-sheet-panel-narrow">
-            <table class="excel-sheet-table">
-              <tbody>
-                <tr>
-                  <td>Invoice</td>
-                  <td><input type="text" inputmode="decimal" value="${record.invoiceTotal ?? ''}" onchange="setExcelCalcValue('invoiceTotal', this.value)"></td>
-                </tr>
-                <tr>
-                  <td>Balance</td>
-                  <td class="${computed.invoiceBalance < 0 ? 'warn' : ''}">${formatCurrency(computed.invoiceBalance)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="excel-sheet-panel excel-sheet-panel-narrow">
-            <table class="excel-sheet-table">
-              <tbody>
-                ${priceRows}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="excel-sheet-panel excel-sheet-panel-bottom">
-        <div class="excel-sheet-panel-title">Remaining and Damaged:</div>
-        <table class="excel-sheet-table excel-sheet-table-remaining">
-          <tbody>
-            <tr>
-              <th>Item</th>
-              <th>Count</th>
-              <th>Amount</th>
-            </tr>
-            ${remainingRows}
-            <tr>
-              <td>Damaged/Spoiled ($${DAMAGED_BOX_UNIT_PRICE}/box)</td>
-              <td><input type="number" min="0" step="1" value="${computed.damagedCount || ''}" onchange="setExcelCalcValue('damagedCount', this.value)"></td>
-              <td>${formatCurrency(computed.damagedAmount)}</td>
-            </tr>
-            <tr class="walkup-tally-row">
-              <td colspan="2">Walk-up Sales (${computed.walkupOrderCount || 0} extra orders · ${computed.walkupBoxes || 0} boxes)</td>
-              <td style="color:#1565C0;font-weight:700">+${formatCurrency(computed.walkupRevenue || 0)}</td>
-            </tr>
-            <tr class="excel-calc-total-row">
-              <td>Total</td>
-              <td></td>
-              <td>${formatCurrency(computed.totalLossValue)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="excel-sheet-tally">
-        <span>Tally</span>
-        <strong class="${computed.tallyValue < 0 ? 'warn' : ''}">${formatCurrency(computed.tallyValue)}</strong>
       </div>
     </div>
-  `;
+
+    <!-- ─── SECTION 2: BOX COUNT DISTRIBUTED ─── -->
+    <div class="ptally-section">
+      <div class="ptally-section-head">🤝 Boxes Distributed <span class="ptally-hint">(pre-orders fulfilled + walk-up; enter per variety)</span></div>
+      <div class="ptally-variety-row">
+        ${VARIETIES.map(v => `
+          <div class="ptally-variety-cell">
+            <div class="ptally-vcell-label">${v.code} — ${v.label}</div>
+            <input class="ptally-num-input" type="number" min="0" step="1"
+              value="${boxCount[v.id] || ''}"
+              placeholder="0"
+              onchange="setExcelCalcProductMap('orderedBoxes','${escapeHtml(v.id)}',this.value)">
+          </div>`).join('')}
+        <div class="ptally-variety-cell ptally-total-cell">
+          <div class="ptally-vcell-label">Total Boxes</div>
+          <div class="ptally-total-val">${totalBoxCount}</div>
+        </div>
+      </div>
+      ${walkupBoxes > 0 ? `<div class="ptally-walkup-note">🚶 Includes ${walkupBoxes} walk-up boxes logged today (${walkupOrders.length} manual orders = ${formatCurrency(walkupRevenue)})</div>` : ''}
+    </div>
+
+    <!-- ─── SECTION 3: PRICES + INVOICE ─── -->
+    <div class="ptally-section ptally-two-col">
+      <div>
+        <div class="ptally-section-head">💰 Price per Box <span class="ptally-hint">(edit if prices changed this season)</span></div>
+        <table class="ptally-table">
+          <tr><th>Variety</th><th>$/box</th></tr>
+          ${VARIETIES.map(v => `
+            <tr>
+              <td>${v.label}</td>
+              <td><input class="ptally-price-input" type="number" min="0" step="1"
+                value="${priceOf(v)}"
+                onchange="setExcelCalcProductMap('productPrices','${escapeHtml(v.id)}',this.value)"></td>
+            </tr>`).join('')}
+        </table>
+      </div>
+      <div>
+        <div class="ptally-section-head">🧾 Invoice</div>
+        <table class="ptally-table">
+          <tr><td>Total boxes × price</td><td class="ptally-num">${formatCurrency(totalInvoice - totalExtraValue)}</td></tr>
+          <tr><td>Extra boxes value</td><td class="ptally-num">${formatCurrency(totalExtraValue)}</td></tr>
+          <tr class="ptally-subtotal"><td><strong>Total Invoice</strong></td><td class="ptally-num"><strong>${formatCurrency(totalInvoice)}</strong></td></tr>
+          <tr><td>Entered invoice amount</td>
+            <td><input class="ptally-price-input" type="number" min="0" step="0.01"
+              value="${record.invoiceTotal || ''}" placeholder="0.00"
+              onchange="setExcelCalcValue('invoiceTotal',this.value)"></td></tr>
+          <tr class="ptally-balance-row"><td>Balance</td><td class="ptally-num ${invoiceBalance < 0 ? 'ptally-neg' : ''}">${formatCurrency(invoiceBalance)}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── SECTION 4: CASH COUNTING ─── -->
+    <div class="ptally-section ptally-two-col">
+      <div>
+        <div class="ptally-section-head">💵 Cash Count <span class="ptally-hint">(count bills in hand)</span></div>
+        <table class="ptally-table">
+          <tr><th>Bill</th><th>Count</th><th>Amount</th></tr>
+          ${DENOMS.map(d => `
+            <tr>
+              <td>$${d}</td>
+              <td><input class="ptally-count-input" type="number" min="0" step="1"
+                value="${cashCounts[d] || ''}" placeholder="0"
+                onchange="setExcelCalcCashCount('${d}',this.value)"></td>
+              <td class="ptally-num">${formatCurrency(d * (Number(cashCounts[d]) || 0))}</td>
+            </tr>`).join('')}
+          <tr class="ptally-subtotal">
+            <td colspan="2"><strong>Total Cash in Hand</strong></td>
+            <td class="ptally-num"><strong>${formatCurrency(cashTotal)}</strong></td>
+          </tr>
+          <tr>
+            <td colspan="2">Cash from hand (change float)
+              <input class="ptally-price-input" type="number" min="0" step="1"
+                value="${cashFromHand}" style="width:60px;margin-left:6px"
+                onchange="setExcelCalcValue('cashFromHand',this.value)">
+            </td>
+            <td class="ptally-num ptally-neg">${formatCurrency(-cashFromHand)}</td>
+          </tr>
+          <tr class="ptally-subtotal">
+            <td colspan="2"><strong>Cash Sales</strong></td>
+            <td class="ptally-num ${cashSales < 0 ? 'ptally-neg' : ''}" ><strong>${formatCurrency(cashSales)}</strong></td>
+          </tr>
+        </table>
+      </div>
+      <div>
+        <div class="ptally-section-head">📱 Zelle Received</div>
+        <table class="ptally-table" id="zelleTable">
+          ${zelleEntries.map((e, i) => `
+            <tr>
+              <td><input class="ptally-text-input" type="text" value="${escapeHtml(e.name || '')}" placeholder="Name"
+                onchange="updateZelleEntry(${i},'name',this.value)"></td>
+              <td><input class="ptally-price-input" type="number" min="0" step="0.01" value="${e.amount || ''}" placeholder="0.00"
+                onchange="updateZelleEntry(${i},'amount',this.value)"></td>
+            </tr>`).join('')}
+          <tr><td colspan="2"><button class="ptally-add-btn" onclick="addZelleEntry()">+ Add Zelle</button></td></tr>
+          <tr class="ptally-subtotal"><td><strong>Total Zelle</strong></td><td class="ptally-num"><strong>${formatCurrency(zelleTotal)}</strong></td></tr>
+        </table>
+
+        <div class="ptally-section-head" style="margin-top:16px">📊 Summary</div>
+        <table class="ptally-table">
+          <tr><th></th><th>Cash</th><th>Zelle</th><th>Unknown</th><th>Total</th></tr>
+          <tr>
+            <td>Total held</td>
+            <td><input class="ptally-price-input" type="number" min="0" step="0.01" value="${record.totalCashHeld||''}" placeholder="0.00" onchange="setExcelCalcValue('totalCashHeld',this.value)"></td>
+            <td><input class="ptally-price-input" type="number" min="0" step="0.01" value="${record.totalZelleHeld||''}" placeholder="0.00" onchange="setExcelCalcValue('totalZelleHeld',this.value)"></td>
+            <td class="ptally-num">${formatCurrency(Math.max(0, unknownAmt))}</td>
+            <td class="ptally-num">${formatCurrency((record.totalCashHeld||0) + (record.totalZelleHeld||0) + Math.max(0, unknownAmt))}</td>
+          </tr>
+          <tr>
+            <td>Received</td>
+            <td class="ptally-num">${formatCurrency(cashSales)}</td>
+            <td class="ptally-num">${formatCurrency(zelleTotal)}</td>
+            <td></td>
+            <td class="ptally-num"><strong>${formatCurrency(totalReceived)}</strong></td>
+          </tr>
+          <tr class="ptally-balance-row">
+            <td>Balance left</td>
+            <td class="ptally-num ${balanceCash < 0 ? 'ptally-neg' : ''}">${formatCurrency(balanceCash)}</td>
+            <td class="ptally-num ${balanceZelle < 0 ? 'ptally-neg' : ''}">${formatCurrency(balanceZelle)}</td>
+            <td></td><td></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── SECTION 5: REMAINING + DAMAGED ─── -->
+    <div class="ptally-section">
+      <div class="ptally-section-head">📦 Remaining & Damaged Boxes</div>
+      <table class="ptally-table">
+        <tr><th>Variety</th><th>Boxes left</th><th>Value</th></tr>
+        ${VARIETIES.map(v => {
+          const qty = Number(remainingQty[v.id]) || 0;
+          return `
+            <tr>
+              <td>${v.label} (${v.code})</td>
+              <td><input class="ptally-count-input" type="number" min="0" step="1"
+                value="${remainingQty[v.id] || ''}" placeholder="0"
+                onchange="setExcelCalcProductMap('remainingQty','${escapeHtml(v.id)}',this.value)"></td>
+              <td class="ptally-num">${formatCurrency(qty * priceOf(v))}</td>
+            </tr>`;}).join('')}
+        <tr>
+          <td>Damaged/Spoiled boxes
+            <input class="ptally-price-input" type="number" min="0" step="1"
+              value="${record.damagedPrice||56}" style="width:50px;margin-left:4px"
+              onchange="setExcelCalcValue('damagedPrice',this.value)"> $/box
+          </td>
+          <td><input class="ptally-count-input" type="number" min="0" step="1"
+            value="${record.damagedCount || ''}" placeholder="0"
+            onchange="setExcelCalcValue('damagedCount',this.value)"></td>
+          <td class="ptally-num">${formatCurrency(damagedValue)}</td>
+        </tr>
+        <tr class="ptally-subtotal">
+          <td colspan="2"><strong>Total Remaining + Damaged</strong></td>
+          <td class="ptally-num"><strong>${formatCurrency(totalRemDamaged)}</strong></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- ─── SECTION 6: TALLY ─── -->
+    <div class="ptally-section ptally-tally-section ${tallyOk ? 'ptally-tally-ok' : 'ptally-tally-warn'}">
+      <div class="ptally-tally-row">
+        <span class="ptally-tally-label">🧾 Invoice Total</span>
+        <span class="ptally-tally-val">${formatCurrency(totalInvoice)}</span>
+      </div>
+      <div class="ptally-tally-row">
+        <span class="ptally-tally-label">💰 Total Received (Cash + Zelle)</span>
+        <span class="ptally-tally-val">−${formatCurrency(totalReceived)}</span>
+      </div>
+      <div class="ptally-tally-row">
+        <span class="ptally-tally-label">📦 Remaining + Damaged</span>
+        <span class="ptally-tally-val">−${formatCurrency(totalRemDamaged)}</span>
+      </div>
+      <div class="ptally-tally-divider"></div>
+      <div class="ptally-tally-row ptally-tally-result">
+        <span class="ptally-tally-label"><strong>TALLY</strong> ${tallyOk ? '✅ Balanced!' : '⚠️ Check numbers'}</span>
+        <span class="ptally-tally-big ${tally < 0 ? 'ptally-neg' : ''}">${formatCurrency(tally)}</span>
+      </div>
+    </div>
+
+    <!-- ─── ACTIONS ─── -->
+    <div class="ptally-actions">
+      <button class="toolbar-btn" onclick="saveExcelCalculations()">💾 Save Tally</button>
+      <button class="toolbar-btn" onclick="exportTallyAsExcel()">📥 Export as Excel</button>
+      ${(function() {
+        const r = accounting2SavedRecord(accounting2BatchName());
+        const isClosed = (r?.status || 'open') === 'closed';
+        return isClosed
+          ? `<button class="toolbar-btn" onclick="reopenExcelCalculations()">🔓 Reopen Batch</button>`
+          : `<button class="toolbar-btn" style="background:var(--saffron);color:white" onclick="closeExcelCalculations()">🔒 Close Batch</button>`;
+      })()}
+    </div>
+
+  </div>`;
 }
 
 function setExcelCalcValue(key, value) {
@@ -3880,4 +3926,37 @@ window.issueRefund = issueRefund;
 window.rejectRefund = rejectRefund;
 window.setRefundFilter = setRefundFilter;
 window.loadRefundTab = loadRefundTab;
+
+
+// ── PICKUP TALLY HELPERS ──────────────────────────────────────────────────────
+function updateZelleEntry(index, field, value) {
+  const batchName = accounting2BatchName();
+  if (!state.accounting2Records[batchName]) state.accounting2Records[batchName] = {};
+  const record = state.accounting2Records[batchName];
+  const entries = record.zelleEntries ? JSON.parse(JSON.stringify(record.zelleEntries)) : [];
+  while (entries.length <= index) entries.push({ name: '', amount: '' });
+  entries[index][field] = field === 'amount' ? (parseFloat(value) || '') : value;
+  record.zelleEntries = entries;
+  renderExcelCalculations();
+}
+
+function addZelleEntry() {
+  const batchName = accounting2BatchName();
+  if (!state.accounting2Records[batchName]) state.accounting2Records[batchName] = {};
+  const record = state.accounting2Records[batchName];
+  const entries = record.zelleEntries ? JSON.parse(JSON.stringify(record.zelleEntries)) : [];
+  entries.push({ name: '', amount: '' });
+  record.zelleEntries = entries;
+  renderExcelCalculations();
+}
+
+function exportTallyAsExcel() {
+  const batchName = accounting2BatchName();
+  const computed = accounting2ComputedTotals(batchName);
+  showToast('Export feature — use the CSV export from the Accounting tab for now.');
+}
+
+window.updateZelleEntry = updateZelleEntry;
+window.addZelleEntry = addZelleEntry;
+window.exportTallyAsExcel = exportTallyAsExcel;
 
