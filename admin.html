@@ -1442,6 +1442,51 @@
 .spoiled-variety-item input { width: 100%; border: 1.5px solid #e0d0b8; border-radius: 6px; padding: 4px 8px; font-size: 13px; font-weight: 700; text-align: center; }
 .walkup-tally-row { background: #E3F2FD; }
 .walkup-tally-row td { color: #1565C0; font-weight: 600; }
+
+/* ══════════════════════════════════════════════════
+   PICKUP TALLY — matches Kiran's spreadsheet layout
+   ══════════════════════════════════════════════════ */
+.ptally-wrap { max-width: 1100px; padding-bottom: 40px; }
+.ptally-section { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+.ptally-section-head { font-size: 12px; font-weight: 700; color: var(--gold-d, #8B5210); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.ptally-hint { font-size: 11px; font-weight: 400; color: var(--text-light); }
+.ptally-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.ptally-variety-row { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; }
+.ptally-variety-cell { text-align: center; }
+.ptally-vcell-label { font-size: 10px; font-weight: 700; color: var(--text-light); margin-bottom: 4px; text-transform: uppercase; }
+.ptally-num-input, .ptally-count-input { width: 100%; border: 1.5px solid var(--border); border-radius: 7px; padding: 6px 4px; font-size: 14px; font-weight: 700; text-align: center; background: #FAFAF8; }
+.ptally-num-input:focus, .ptally-count-input:focus { border-color: var(--saffron); outline: none; background: white; }
+.ptally-price-input { width: 80px; border: 1.5px solid var(--border); border-radius: 7px; padding: 5px 8px; font-size: 13px; font-weight: 600; text-align: center; background: #FAFAF8; }
+.ptally-price-input:focus { border-color: var(--saffron); outline: none; }
+.ptally-text-input { width: 120px; border: 1.5px solid var(--border); border-radius: 7px; padding: 5px 8px; font-size: 12px; }
+.ptally-total-cell { background: #FDF3E3; border-radius: 8px; }
+.ptally-total-val { font-size: 22px; font-weight: 800; color: var(--gold-d, #8B5210); padding: 6px 0; }
+.ptally-walkup-note { font-size: 11px; color: #1565C0; background: #E3F2FD; border-radius: 6px; padding: 5px 10px; margin-top: 8px; }
+.ptally-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.ptally-table th { background: #FAF7F2; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-light); padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+.ptally-table td { padding: 6px 10px; border-bottom: 1px solid #F5F0E8; vertical-align: middle; }
+.ptally-table tr:last-child td { border-bottom: none; }
+.ptally-num { text-align: right; font-weight: 600; font-family: monospace; }
+.ptally-neg { color: #C62828 !important; }
+.ptally-subtotal td { background: #FAF7F2; font-weight: 700; }
+.ptally-balance-row td { background: #FFF8E1; color: #F57F17; font-weight: 700; }
+.ptally-add-btn { background: transparent; border: 1.5px dashed var(--border); border-radius: 6px; padding: 4px 12px; font-size: 11px; cursor: pointer; color: var(--text-light); }
+.ptally-add-btn:hover { border-color: var(--saffron); color: var(--saffron); }
+.ptally-tally-section { padding: 20px 22px; }
+.ptally-tally-ok { background: #E8F5E9 !important; border-color: #A5D6A7 !important; }
+.ptally-tally-warn { background: #FFF8E1 !important; border-color: #FFE082 !important; }
+.ptally-tally-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; }
+.ptally-tally-label { color: #555; }
+.ptally-tally-val { font-weight: 600; font-family: monospace; font-size: 14px; }
+.ptally-tally-divider { border-top: 2px solid rgba(0,0,0,0.1); margin: 10px 0; }
+.ptally-tally-result { padding-top: 10px; }
+.ptally-tally-big { font-size: 28px; font-weight: 800; color: #2E7D32; font-family: monospace; }
+.ptally-tally-big.ptally-neg { color: #C62828; }
+.ptally-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+@media (max-width: 900px) {
+  .ptally-variety-row { grid-template-columns: repeat(4, 1fr); }
+  .ptally-two-col { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
