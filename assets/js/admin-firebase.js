@@ -29,7 +29,6 @@ const GO_LIVE_STATS_DATE = '2026-04-10';
 const EXCEL_CALC_DOC_PREFIX = 'excel_sheet__';
 const DAMAGED_BOX_UNIT_PRICE = 56; // Default spoiled box price — override per product in tally
 // Expose for refund module
-window._adminState = state; // expose for tally walkup calc
 window._firestoreExports = { collection, doc, updateDoc, addDoc: typeof addDoc !== 'undefined' ? addDoc : null, onSnapshot, orderBy, query };
 
 const NON_REVENUE_ORDER_STATUSES = ['cancelled', 'no_show'];
@@ -68,6 +67,7 @@ const state = {
   unsubAccountingBatches: null,
   unsubAccounting2Records: null
 };
+window._adminState = state; // expose for tally walkup calc
 
 function normalizeProductCategory(category) {
   return category === 'Mango Jelly' ? 'jellysnacks' : category;
