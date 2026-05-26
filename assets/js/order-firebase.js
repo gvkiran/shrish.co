@@ -20,6 +20,9 @@ let selectedLoc = '';
 let isSubmitting = false;
 let currentCustomer = null;
 let currentCustomerProfile = null;
+// Expose Firestore for refund module
+window._firestoreExports = { collection, doc, updateDoc, addDoc, onSnapshot };
+
 let selectedPaymentMethod = 'pickup';
 let guestStripeConfirmed = false;
 const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
@@ -231,6 +234,29 @@ async function renderStripeReturnMessage() {
         <div class="ss-row"><span>Order Confirmation No</span><span>${escapeHtml(orderNumber || 'Your confirmation email will include it')}</span></div>`;
     }
     renderStripeSuccessAccountPrompt(orderId, orderNumber, customer);
+
+    // Show refund request section for Stripe orders
+    // orderId available, get order data from Firestore
+    try {
+      const { doc, getDoc } = window._firestoreExports || {};
+      if (doc && getDoc) {
+        const orderSnap = await getDoc(doc(db, 'orders', orderId));
+        if (orderSnap.exists()) {
+          const od = orderSnap.data();
+          injectRefundSection(
+            orderId,
+            orderNumber,
+            od.totalPrice || 0,
+            'stripe',
+            od.stripePaymentIntentId || null,
+            od.fullName || '',
+            od.email || customer?.email || '',
+            od.phone || ''
+          );
+        }
+      }
+    } catch(e) { console.warn('Could not load order for refund section', e); }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return true;
   }
@@ -1339,6 +1365,18 @@ async function submitOrder() {
     rememberRecentOrderForAccount(orderRef, order, displayNumber);
     renderSuccessAccountPrompt(orderRef, order, displayNumber);
 
+    // Show refund request section
+    injectRefundSection(
+      orderRef.id,
+      displayNumber,
+      order.totalPrice || 0,
+      order.paymentMethod || 'pay_at_pickup',
+      null,
+      `${firstName} ${lastName}`.trim(),
+      email,
+      phone
+    );
+
     trackCheckoutEvent('order_submitted', {
       ...submittedOrderAnalytics
     });
@@ -1410,3 +1448,111 @@ async function init() {
 }
 
 init();
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// REFUND REQUEST — Customer Side
+// ══════════════════════════════════════════════════════════════════════════════
+
+async function submitRefundRequest({ orderId, orderNumber, orderTotal, paymentMethod, stripePaymentIntentId, customerName, customerEmail, customerPhone }) {
+  const form = document.getElementById('refundReqForm');
+  const submitBtn = document.getElementById('refundReqSubmit');
+  const reason = document.getElementById('refundReason')?.value?.trim();
+  const requestedAmount = document.getElementById('refundAmount')?.value?.trim();
+  const reasonType = document.getElementById('refundReasonType')?.value;
+
+  if (!reason || reason.length < 10) {
+    alert('Please describe your reason (at least 10 characters).');
+    return;
+  }
+  if (!requestedAmount || parseFloat(requestedAmount) <= 0) {
+    alert('Please enter the refund amount you are requesting.');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting...';
+
+  try {
+    const { collection, addDoc } = window._firestoreExports || {};
+    if (!collection || !addDoc) throw new Error('Firestore not loaded');
+
+    await addDoc(collection(db, 'refund_requests'), {
+      orderId,
+      orderNumber: orderNumber || orderId,
+      orderTotal: orderTotal || 0,
+      requestedAmount: parseFloat(requestedAmount),
+      paymentMethod: paymentMethod || 'pickup',
+      stripePaymentIntentId: stripePaymentIntentId || null,
+      customerName: customerName || '',
+      customerEmail: customerEmail || '',
+      customerPhone: customerPhone || '',
+      reason: `[${reasonType || 'other'}] ${reason}`,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+
+    // Show success message
+    if (form) form.style.display = 'none';
+    const successMsg = document.getElementById('refundReqSuccess');
+    if (successMsg) successMsg.style.display = 'block';
+
+  } catch (err) {
+    console.error('Refund request error:', err);
+    alert('Could not submit your request. Please contact us on WhatsApp or email contact@shrish.co');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit Refund Request';
+  }
+}
+
+function injectRefundSection(orderId, orderNumber, orderTotal, paymentMethod, stripePaymentIntentId, customerName, customerEmail, customerPhone) {
+  const container = document.getElementById('refundSection');
+  if (!container) return;
+  container.innerHTML = `
+    <div class="refund-request-section">
+      <h4>🔄 Request a Refund</h4>
+      <p>Need a refund? Submit your request below. We process refunds within <strong>3–5 business days</strong>. 
+         For Stripe payments, the refund goes back to your original card. 
+         For pickup payments, we'll arrange a Zelle or cash refund at your next pickup.</p>
+      <div class="refund-req-form" id="refundReqForm">
+        <select id="refundReasonType">
+          <option value="">-- Select reason --</option>
+          <option value="wrong_item">Wrong item received</option>
+          <option value="quality_issue">Quality issue / damaged product</option>
+          <option value="order_cancelled">I want to cancel my order</option>
+          <option value="overcharged">I was overcharged</option>
+          <option value="partial">Partial refund for missing items</option>
+          <option value="other">Other</option>
+        </select>
+        <textarea id="refundReason" rows="3" placeholder="Please describe the issue in detail..."></textarea>
+        <div style="display:flex;gap:10px;align-items:center">
+          <label style="font-size:13px;white-space:nowrap;font-weight:600">Refund amount ($)</label>
+          <input id="refundAmount" type="number" min="0" max="${orderTotal||999}" step="0.01" 
+                 value="${orderTotal||''}" placeholder="0.00" style="flex:1">
+        </div>
+        <div style="font-size:11px;color:var(--text-light)">Order total: $${parseFloat(orderTotal||0).toFixed(2)} &nbsp;·&nbsp; You may request a partial or full refund.</div>
+        <button class="refund-req-submit" id="refundReqSubmit"
+          onclick="submitRefundRequest({
+            orderId:'${escapeHtml(orderId)}',
+            orderNumber:'${escapeHtml(orderNumber||'')}',
+            orderTotal:${parseFloat(orderTotal||0)},
+            paymentMethod:'${escapeHtml(paymentMethod||'pickup')}',
+            stripePaymentIntentId:${stripePaymentIntentId ? `'${escapeHtml(stripePaymentIntentId)}'` : 'null'},
+            customerName:'${escapeHtml(customerName||'')}',
+            customerEmail:'${escapeHtml(customerEmail||'')}',
+            customerPhone:'${escapeHtml(customerPhone||'')}'
+          })">
+          Submit Refund Request
+        </button>
+      </div>
+      <div id="refundReqSuccess" class="refund-submitted-msg" style="display:none">
+        ✅ Refund request submitted! We'll review it within 3–5 business days and contact you at ${escapeHtml(customerEmail||'your email')}.
+      </div>
+    </div>`;
+  container.style.display = 'block';
+}
+
+window.submitRefundRequest = submitRefundRequest;
+window.injectRefundSection = injectRefundSection;
+
