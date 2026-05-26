@@ -118,28 +118,41 @@ function unsubscribeAdminData() {
   state.selectedReminderOrderIds.clear();
 }
 
-async function doLogin() {
-  const email = document.getElementById('adminEmail')?.value?.trim();
-  const password = document.getElementById('adminPw')?.value || '';
+  async function doLogin() {
+    const email = document.getElementById('adminEmail')?.value?.trim();
+    const password = document.getElementById('adminPw')?.value || '';
+    const btn = document.querySelector('.login-btn');
 
-  if (!email || !password) {
-    showLoginError('Enter admin email and password.');
-    return;
-  }
+    if (!email) { showLoginError('⚠️ Please enter your email address.'); return; }
+    if (!password) { showLoginError('⚠️ Please enter your password.'); return; }
 
-  if (normalizeLookup(email) !== ADMIN_EMAIL) {
-    showLoginError(`Admin access is only available for ${ADMIN_EMAIL}.`);
-    return;
-  }
+    if (normalizeLookup(email) !== ADMIN_EMAIL) {
+      showLoginError('❌ Wrong email. Admin login requires: ' + ADMIN_EMAIL);
+      return;
+    }
 
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
+    if (btn) { btn.textContent = 'Logging in...'; btn.disabled = true; }
     clearLoginError();
-  } catch (error) {
-    console.error(error);
-    showLoginError('Login failed. Check your Firebase Auth admin user.');
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      clearLoginError();
+    } catch (error) {
+      console.error('Login error:', error.code, error.message);
+      const msgs = {
+        'auth/wrong-password':         '❌ Wrong password. Please try again.',
+        'auth/invalid-credential':     '❌ Wrong password. Please try again.',
+        'auth/user-not-found':         '❌ No account found for this email.',
+        'auth/invalid-email':          '❌ Invalid email address format.',
+        'auth/too-many-requests':      '⚠️ Too many failed attempts. Try again later.',
+        'auth/network-request-failed': '⚠️ Network error. Check your connection.',
+        'auth/user-disabled':          '❌ This account has been disabled.',
+      };
+      showLoginError(msgs[error.code] || ('❌ Login failed (' + error.code + '). Check email and password.'));
+    } finally {
+      if (btn) { btn.textContent = 'Login →'; btn.disabled = false; }
+    }
   }
-}
 
 async function doLogout() {
   await signOut(auth);
