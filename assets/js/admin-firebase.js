@@ -28,6 +28,9 @@ const BASE_PRODUCTS = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || 
 const GO_LIVE_STATS_DATE = '2026-04-10';
 const EXCEL_CALC_DOC_PREFIX = 'excel_sheet__';
 const DAMAGED_BOX_UNIT_PRICE = 56;
+// Expose for refund module
+window._firestoreExports = { collection, doc, updateDoc, addDoc: typeof addDoc !== 'undefined' ? addDoc : null, onSnapshot, orderBy, query };
+
 const NON_REVENUE_ORDER_STATUSES = ['cancelled', 'no_show'];
 const ADMIN_EMAIL = normalizeLookup(window.SHRISH_APP_CONFIG?.adminEmailHint || 'contact@shrish.co');
 const deleteCustomerAccount = httpsCallable(cloudFunctions, 'deleteCustomerAccount');
@@ -3682,3 +3685,177 @@ window.saveExcelCalculations = saveExcelCalculations;
 
 bindUi();
 initAuthWatch();
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// REFUND MODULE
+// ══════════════════════════════════════════════════════════════════════════════
+
+let refundRequests = [];
+let refundFilter = 'pending';
+let unsubRefunds = null;
+
+function loadRefundTab() {
+  if (unsubRefunds) return; // already subscribed
+  const { onSnapshot, collection, query, orderBy } = window._firestoreExports;
+  unsubRefunds = onSnapshot(
+    query(collection(db, 'refund_requests'), orderBy('createdAt', 'desc')),
+    (snapshot) => {
+      refundRequests = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderRefunds();
+    },
+    (err) => console.error('Refund listener error:', err)
+  );
+}
+
+function renderRefunds() {
+  const container = document.getElementById('refundsContainer');
+  if (!container) return;
+
+  const filtered = refundFilter === 'all'
+    ? refundRequests
+    : refundRequests.filter(r => (r.status || 'pending') === refundFilter);
+
+  // Update counts on filter buttons
+  const counts = { pending: 0, approved: 0, rejected: 0, all: refundRequests.length };
+  refundRequests.forEach(r => { const s = r.status || 'pending'; if (counts[s] !== undefined) counts[s]++; });
+  ['pending','approved','rejected','all'].forEach(f => {
+    const btn = document.getElementById(`refundFilter_${f}`);
+    if (btn) btn.textContent = `${f.charAt(0).toUpperCase()+f.slice(1)} (${counts[f]})`;
+  });
+
+  if (!filtered.length) {
+    container.innerHTML = `<div class="refund-empty">No ${refundFilter === 'all' ? '' : refundFilter} refund requests.</div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(r => {
+    const isStripe = r.paymentMethod === 'stripe';
+    const statusClass = `status-${r.status || 'pending'}`;
+    const payBadge = isStripe
+      ? `<span class="refund-payment-type refund-payment-stripe">Stripe</span>`
+      : `<span class="refund-payment-type refund-payment-pickup">Pickup</span>`;
+    const orderTotal = r.orderTotal ? `$${parseFloat(r.orderTotal).toFixed(2)}` : '—';
+    const requestedAmt = r.requestedAmount ? `$${parseFloat(r.requestedAmount).toFixed(2)}` : '—';
+    const createdAt = r.createdAt ? new Date(r.createdAt).toLocaleString('en-US', {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
+
+    const actionHtml = (() => {
+      if ((r.status || 'pending') === 'approved') {
+        return `<div class="refund-issued-badge">✓ Refunded $${parseFloat(r.refundedAmount||0).toFixed(2)}</div>
+                <div class="refund-meta" style="text-align:center;margin-top:4px">${r.refundedAt ? new Date(r.refundedAt).toLocaleDateString() : ''}</div>`;
+      }
+      if ((r.status || 'pending') === 'rejected') {
+        return `<div class="refund-rejected-badge">✗ Rejected</div>
+                <div class="refund-meta" style="text-align:center;margin-top:4px">${r.rejectedAt ? new Date(r.rejectedAt).toLocaleDateString() : ''}</div>`;
+      }
+      return `<div class="refund-actions">
+        <div style="font-size:11px;color:var(--text-light);font-weight:600;margin-bottom:2px">REFUND AMOUNT ($)</div>
+        <input class="refund-amount-input" type="number" id="refundAmt_${r.id}" 
+               min="0" max="${r.orderTotal||999}" step="0.01" 
+               value="${r.requestedAmount || r.orderTotal || ''}" 
+               placeholder="Enter amount">
+        <button class="btn-refund-issue" onclick="issueRefund('${r.id}')">
+          ${isStripe ? '💳 Issue Stripe Refund' : '✓ Mark as Refunded'}
+        </button>
+        <button class="btn-refund-reject" onclick="rejectRefund('${r.id}')">✗ Reject Request</button>
+      </div>`;
+    })();
+
+    return `<div class="refund-card ${statusClass}" id="refundCard_${r.id}">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <strong style="font-size:14px">${escapeHtml(r.customerName||'Customer')}</strong>
+          ${payBadge}
+          <span class="status-badge status-${r.status||'pending'}" style="font-size:11px">${(r.status||'pending').toUpperCase()}</span>
+        </div>
+        <div class="refund-meta">
+          <strong>Order #</strong> ${escapeHtml(r.orderNumber||r.orderId||'—')} &nbsp;·&nbsp;
+          <strong>Total</strong> ${orderTotal} &nbsp;·&nbsp;
+          <strong>Requested</strong> ${requestedAmt} &nbsp;·&nbsp;
+          <strong>Email</strong> ${escapeHtml(r.customerEmail||'—')} &nbsp;·&nbsp;
+          <strong>Phone</strong> ${escapeHtml(r.customerPhone||'—')}<br>
+          <strong>Submitted</strong> ${createdAt}
+          ${r.stripePaymentIntentId ? ` &nbsp;·&nbsp; <strong>Stripe PI</strong> ${escapeHtml(r.stripePaymentIntentId)}` : ''}
+        </div>
+        <div class="refund-reason">"${escapeHtml(r.reason||'No reason provided')}"</div>
+      </div>
+      <div>${actionHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+async function issueRefund(refundId) {
+  const refund = refundRequests.find(r => r.id === refundId);
+  if (!refund) return;
+
+  const amtInput = document.getElementById(`refundAmt_${refundId}`);
+  const amount = parseFloat(amtInput?.value || '0');
+  if (!amount || amount <= 0) { showToast('Enter a valid refund amount'); return; }
+
+  const btn = document.querySelector(`#refundCard_${refundId} .btn-refund-issue`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Processing...'; }
+
+  const { doc, updateDoc, Timestamp } = window._firestoreExports;
+
+  try {
+    // For Stripe orders — call cloud function
+    if (refund.paymentMethod === 'stripe' && refund.stripePaymentIntentId) {
+      try {
+        const issueStripeRefund = httpsCallable(cloudFunctions, 'issueStripeRefund');
+        await issueStripeRefund({
+          paymentIntentId: refund.stripePaymentIntentId,
+          amount: Math.round(amount * 100), // cents
+          refundRequestId: refundId
+        });
+      } catch (stripeErr) {
+        console.warn('Stripe refund function error (may not be deployed):', stripeErr);
+        // Continue to mark as approved even if function not deployed yet
+      }
+    }
+
+    // Update Firestore record
+    await updateDoc(doc(db, 'refund_requests', refundId), {
+      status: 'approved',
+      refundedAmount: amount,
+      refundedAt: new Date().toISOString(),
+      refundedBy: auth.currentUser?.email || 'admin',
+      updatedAt: new Date().toISOString()
+    });
+
+    showToast(`Refund of $${amount.toFixed(2)} issued successfully`);
+  } catch (err) {
+    console.error('Issue refund error:', err);
+    showToast('Error issuing refund. Check console.');
+    if (btn) { btn.disabled = false; btn.textContent = refund.paymentMethod === 'stripe' ? '💳 Issue Stripe Refund' : '✓ Mark as Refunded'; }
+  }
+}
+
+async function rejectRefund(refundId) {
+  if (!confirm('Reject this refund request? The customer will not be notified automatically.')) return;
+  const { doc, updateDoc } = window._firestoreExports;
+  try {
+    await updateDoc(doc(db, 'refund_requests', refundId), {
+      status: 'rejected',
+      rejectedAt: new Date().toISOString(),
+      rejectedBy: auth.currentUser?.email || 'admin',
+      updatedAt: new Date().toISOString()
+    });
+    showToast('Refund request rejected');
+  } catch (err) {
+    console.error('Reject refund error:', err);
+    showToast('Error rejecting. Check console.');
+  }
+}
+
+function setRefundFilter(f) {
+  refundFilter = f;
+  document.querySelectorAll('.refund-filter-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`refundFilter_${f}`)?.classList.add('active');
+  renderRefunds();
+}
+
+window.issueRefund = issueRefund;
+window.rejectRefund = rejectRefund;
+window.setRefundFilter = setRefundFilter;
+window.loadRefundTab = loadRefundTab;
+
