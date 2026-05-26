@@ -27,8 +27,9 @@ import {
 const BASE_PRODUCTS = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || []));
 const GO_LIVE_STATS_DATE = '2026-04-10';
 const EXCEL_CALC_DOC_PREFIX = 'excel_sheet__';
-const DAMAGED_BOX_UNIT_PRICE = 56;
+const DAMAGED_BOX_UNIT_PRICE = 56; // Default spoiled box price — override per product in tally
 // Expose for refund module
+window._adminState = state; // expose for tally walkup calc
 window._firestoreExports = { collection, doc, updateDoc, addDoc: typeof addDoc !== 'undefined' ? addDoc : null, onSnapshot, orderBy, query };
 
 const NON_REVENUE_ORDER_STATUSES = ['cancelled', 'no_show'];
@@ -452,6 +453,15 @@ function accounting2ComputedTotals(batchName = accounting2BatchName()) {
   const extraBoxesTotal = Object.values(extraBoxes).reduce((sum, qty) => sum + excelCalcCountValue(qty), 0);
   const invoiceBalance = batchOrderTotal - invoiceTotal;
   const receivedTotal = cashSales + zelleAmount;
+  // Walk-up (manual) orders on this batch date
+  const batchDate = record.batchDate || '';
+  const walkupOrders = (window._adminState?.orders || state.orders || []).filter(o =>
+    (o.manualBatchDate === batchDate || o.source === 'admin_manual') &&
+    (o.status === 'fulfilled' || o.paymentCollected)
+  );
+  const walkupRevenue = walkupOrders.reduce((sum, o) => sum + (moneyNumber(o.totalPrice) || 0), 0);
+  const walkupBoxes = walkupOrders.reduce((sum, o) => sum + (o.totalBoxes || 0), 0);
+
   const tallyValue = batchOrderTotal - receivedTotal - (remainingValue + damagedAmount);
 
   return {
@@ -479,6 +489,9 @@ function accounting2ComputedTotals(batchName = accounting2BatchName()) {
     extraBoxesValue,
     totalBoxesCount: orderedBoxesTotal + extraBoxesTotal,
     totalLossValue: remainingValue + damagedAmount,
+    walkupRevenue,
+    walkupBoxes,
+    walkupOrderCount: walkupOrders.length,
     tallyValue
   };
 }
@@ -1061,6 +1074,7 @@ async function saveEditedOrder() {
       const pickupDate = document.getElementById('manualPickupDate')?.value || todayDateInputValue();
       const paymentMethod = document.getElementById('manualPaymentMethod')?.value || '';
       const notes = (document.getElementById('manualNotes')?.value || '').trim();
+  const manualBatchDate = document.getElementById('manualBatchDate')?.value || pickupDate || todayDateInputValue();
       const phoneDigits = phone.replace(/\D/g, '');
       const nowIso = new Date().toISOString();
       const orderRef = doc(collection(db, 'orders'));
@@ -1077,6 +1091,7 @@ async function saveEditedOrder() {
         location,
         locationLabel: locationLabel(location),
         referral: 'Manual admin entry',
+    manualBatchDate: manualBatchDate,
         notes,
         items: cleanedItems,
         totalBoxes: totals.totalBoxes,
@@ -2946,7 +2961,7 @@ function printActiveOrders() {
 }
 
 function renderExcelCalculations() {
-  const tab = document.getElementById('tab-excel-calculations');
+  const tab = document.getElementById('tab-pickup-tally');
   if (!tab) return;
 
   const dateInput = document.getElementById('excelCalcDate');
@@ -3062,7 +3077,7 @@ function renderExcelCalculations() {
           </tr>
           <tr>
             <td>${formatDate(dateInput.value)}</td>
-            <td>${computed.totalBoxesCount}</td>
+            <td>${computed.totalBoxesCount} ordered + ${computed.walkupBoxes || 0} walk-up = <strong>${(computed.totalBoxesCount || 0) + (computed.walkupBoxes || 0)} total distributed</strong></td>
             <td>${formatCurrency(computed.batchOrderTotal)}</td>
           </tr>
         </tbody>
@@ -3178,9 +3193,13 @@ function renderExcelCalculations() {
             </tr>
             ${remainingRows}
             <tr>
-              <td>Damaged ($${DAMAGED_BOX_UNIT_PRICE})</td>
+              <td>Damaged/Spoiled ($${DAMAGED_BOX_UNIT_PRICE}/box)</td>
               <td><input type="number" min="0" step="1" value="${computed.damagedCount || ''}" onchange="setExcelCalcValue('damagedCount', this.value)"></td>
               <td>${formatCurrency(computed.damagedAmount)}</td>
+            </tr>
+            <tr class="walkup-tally-row">
+              <td colspan="2">Walk-up Sales (${computed.walkupOrderCount || 0} extra orders · ${computed.walkupBoxes || 0} boxes)</td>
+              <td style="color:#1565C0;font-weight:700">+${formatCurrency(computed.walkupRevenue || 0)}</td>
             </tr>
             <tr class="excel-calc-total-row">
               <td>Total</td>
@@ -3446,14 +3465,17 @@ function switchTab(tab, btn) {
   document.getElementById('tab-feedback').style.display = tab === 'feedback' ? 'block' : 'none';
   document.getElementById('tab-subscribers').style.display = tab === 'subscribers' ? 'block' : 'none';
   document.getElementById('tab-accounting').style.display = tab === 'accounting' ? 'block' : 'none';
-  document.getElementById('tab-excel-calculations').style.display = tab === 'excel-calculations' ? 'block' : 'none';
+  document.getElementById('tab-pickup-tally').style.display = tab === 'pickup-tally' ? 'block' : 'none';
+  const refundsPanel = document.getElementById('tab-refunds');
+  if (refundsPanel) refundsPanel.style.display = tab === 'refunds' ? 'block' : 'none';
   if (tab === 'products') renderProducts();
   if (tab === 'orders') renderOrders();
   if (tab === 'customers') renderCustomers();
   if (tab === 'feedback') renderFeedback();
   if (tab === 'subscribers') renderSubscribers();
   if (tab === 'accounting') renderAccounting();
-  if (tab === 'excel-calculations') renderExcelCalculations();
+  if (tab === 'pickup-tally') renderExcelCalculations();
+  if (tab === 'refunds') loadRefundTab();
   updateOrdersSheetUi();
 }
 
