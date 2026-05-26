@@ -2880,84 +2880,210 @@ function printableQty(order) {
 }
 
 function printActiveOrders() {
-  const orders = getFilteredOrders('active');
-  if (!orders.length) {
-    showToast('No active orders to print.');
-    return;
-  }
+  const allActive = getFilteredOrders('active');
+  if (!allActive.length) { showToast('No active orders to print.'); return; }
 
-  const rows = orders.map((order) => `
+  const locationOrder = { shortpump: 1, chesterfield: 2, mechanicsville: 3 };
+  const orders = [...allActive].sort((a, b) => {
+    const la = locationOrder[a.location] || 9;
+    const lb = locationOrder[b.location] || 9;
+    if (la !== lb) return la - lb;
+    return String(a.orderNumber || '').localeCompare(String(b.orderNumber || ''));
+  });
+
+  const groups = {};
+  orders.forEach(o => {
+    const loc = o.locationLabel || locationLabel(o.location) || 'Other';
+    if (!groups[loc]) groups[loc] = [];
+    groups[loc].push(o);
+  });
+
+  const totalBoxes = orders.reduce((s, o) => s + (printableQty(o) || 0), 0);
+  const totalAmt   = orders.reduce((s, o) => s + (Number(o.totalPrice) || 0), 0);
+  const now = new Date();
+  const printDate = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const printTime = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+
+  let rowNum = 1;
+  let bodyHtml = '';
+  Object.entries(groups).forEach(([loc, locOrders]) => {
+    const locBoxes = locOrders.reduce((s,o) => s + (printableQty(o)||0), 0);
+    const locAmt   = locOrders.reduce((s,o) => s + (Number(o.totalPrice)||0), 0);
+    bodyHtml += `<tr class="loc-hdr"><td colspan="7">&#128205; ${escapeHtml(loc)}<span class="loc-meta">${locOrders.length} orders &nbsp;&bull;&nbsp; ${locBoxes} boxes &nbsp;&bull;&nbsp; ${formatCurrency(locAmt)}</span></td></tr>`;
+    locOrders.forEach(order => {
+      const name  = escapeHtml((order.fullName || `${order.firstName||''} ${order.lastName||''}`.trim()).trim());
+      const phone = escapeHtml(order.phone || '');
+      const items = (order.items || []).map(it => `<span class="pill">${escapeHtml(it.name||'Item')} &times;${it.qty||1}</span>`).join(' ');
+      const qty   = printableQty(order);
+      const amt   = formatCurrency(order.totalPrice || 0);
+      const onum  = escapeHtml(String(order.orderNumber || order.id || ''));
+      const pref  = (order.paymentMethod || '').toLowerCase();
+      const Z = pref === 'zelle' ? ' pre' : '';
+      const C = pref === 'cash'  ? ' pre' : '';
+      const K = pref === 'card'  ? ' pre' : '';
+      bodyHtml += `
+        <tr class="orow">
+          <td class="c-num">${rowNum++}</td>
+          <td class="c-ord">${onum}</td>
+          <td class="c-name">${name}<div class="phone">${phone}</div></td>
+          <td class="c-items">${items}</td>
+          <td class="c-qty">${qty}</td>
+          <td class="c-amt">${amt}</td>
+          <td class="c-pay">
+            <div class="pay-row">
+              <label class="cb-lbl"><span class="cb${C}"></span>Cash</label>
+              <label class="cb-lbl"><span class="cb${Z}"></span>Zelle</label>
+              <label class="cb-lbl"><span class="cb${K}"></span>Card</label>
+            </div>
+            <div class="done-row"><span class="cb-g"></span><span class="done-txt">Handed over</span></div>
+          </td>
+        </tr>`;
+    });
+    bodyHtml += `<tr class="loc-sub"><td colspan="4" class="sub-lbl">Subtotal &mdash; ${escapeHtml(loc)}</td><td class="sub-boxes">${locBoxes} boxes</td><td class="sub-amt">${formatCurrency(locAmt)}</td><td></td></tr>`;
+  });
+
+  const pw = window.open('', '_blank', 'width=1100,height=860');
+  if (!pw) { showToast('Allow popups to print.'); return; }
+
+  pw.document.write(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<title>Shrish Pickup Checklist</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,Helvetica,sans-serif;font-size:11.5px;color:#111;background:#fff;padding:14px 18px}
+
+  /* ── HEADER ── */
+  .hdr{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:9px;border-bottom:3px solid #C8791A;margin-bottom:11px}
+  .hdr-left h1{font-size:19px;color:#7A4800;line-height:1.2}
+  .hdr-left .sub{font-size:10.5px;color:#777;margin-top:3px}
+  .hdr-right{text-align:right;font-size:11px}
+  .hdr-right .big{font-size:17px;font-weight:700;color:#C8791A;display:block}
+
+  /* ── LEGEND (screen only) ── */
+  .legend{background:#FDF3E3;border:1px solid #F0D8A0;border-radius:5px;padding:6px 11px;margin-bottom:10px;font-size:10.5px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  .legend b{color:#7A4800}
+  .demo{display:inline-block;width:13px;height:13px;border:2px solid #333;border-radius:2px;vertical-align:middle;margin-right:3px}
+  .demo.pre{background:#FDF3E3;border-color:#C8791A}
+  .demo.grn{border:2px solid #2E7D32;background:#E8F5E9}
+
+  /* ── TABLE ── */
+  table{width:100%;border-collapse:collapse;font-size:11.5px}
+  colgroup col:nth-child(1){width:28px}
+  colgroup col:nth-child(2){width:58px}
+  colgroup col:nth-child(3){width:155px}
+  colgroup col:nth-child(4){width:auto}
+  colgroup col:nth-child(5){width:38px}
+  colgroup col:nth-child(6){width:60px}
+  colgroup col:nth-child(7){width:168px}
+
+  thead th{background:#7A4800;color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.5px;padding:6px 7px;text-align:left;border:1px solid #5A3000}
+  thead th:nth-child(5),thead th:nth-child(6){text-align:center}
+
+  /* location header */
+  tr.loc-hdr td{background:#F5E4C8;color:#7A4800;font-weight:700;font-size:11.5px;padding:6px 9px;border:1px solid #D9C0A0}
+  .loc-meta{font-weight:400;color:#A07040;margin-left:10px;font-size:10.5px}
+
+  /* order row */
+  tr.orow td{border:1px solid #D9C0A0;padding:6px 7px;vertical-align:top}
+  tr.orow:nth-child(odd) td{background:#FDFAF6}
+  tr.orow:nth-child(even) td{background:#FBF7F1}
+
+  .c-num{text-align:center;color:#AAA;font-size:10.5px}
+  .c-ord{font-weight:700;color:#7A4800;font-size:11px;white-space:nowrap}
+  .c-name{font-weight:700;font-size:12.5px}
+  .phone{font-size:10.5px;color:#666;font-weight:400;margin-top:1px}
+  .c-items{}
+  .pill{display:inline-block;background:#FDF3E3;border:1px solid #EDD5A0;border-radius:3px;padding:1px 5px;margin:1px 2px 1px 0;font-size:10.5px;font-weight:700;color:#7A4800;white-space:nowrap}
+  .c-qty{text-align:center;font-weight:800;font-size:15px;color:#2E7D32;vertical-align:middle!important}
+  .c-amt{text-align:center;font-weight:700;font-size:12px;white-space:nowrap;vertical-align:middle!important}
+  .c-pay{vertical-align:middle!important}
+
+  /* checkboxes */
+  .pay-row{display:flex;gap:5px;margin-bottom:5px;align-items:center}
+  .cb-lbl{display:flex;align-items:center;gap:3px;font-size:10.5px;font-weight:600;white-space:nowrap;cursor:default}
+  .cb{display:inline-block;width:15px;height:15px;border:2px solid #444;border-radius:2px;flex-shrink:0}
+  .cb.pre{background:#FDF3E3;border-color:#C8791A}
+  .done-row{display:flex;align-items:center;gap:4px;font-size:10.5px;color:#2E7D32;font-weight:600;margin-top:3px}
+  .cb-g{display:inline-block;width:16px;height:16px;border:2px solid #2E7D32;border-radius:2px;flex-shrink:0}
+  .done-txt{}
+
+  /* subtotal */
+  tr.loc-sub td{background:#FAF5EE;font-weight:700;font-size:11px;padding:5px 7px;border:1px solid #D9C0A0;color:#555}
+  .sub-lbl{text-align:right}
+  .sub-boxes,.sub-amt{text-align:center;color:#2E7D32}
+
+  /* grand total */
+  .grand{margin-top:10px;background:#7A4800;color:#fff;border-radius:5px;padding:9px 14px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
+  .grand strong{font-size:17px}
+
+  /* notes */
+  .notes{margin-top:12px;border:1.5px dashed #C8791A;border-radius:5px;padding:9px 13px}
+  .notes h3{font-size:11.5px;font-weight:700;color:#7A4800;margin-bottom:7px}
+  .nl{border-bottom:1px solid #ddd;height:22px;margin-bottom:4px}
+
+  /* print overrides */
+  @media print{
+    @page{size:A4 landscape;margin:10mm 12mm}
+    body{padding:0;font-size:11px}
+    .legend{display:none}
+    thead{display:table-header-group}
+    tr.orow{page-break-inside:avoid}
+    tr.loc-hdr{page-break-before:auto}
+    .grand{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    tr.loc-hdr td,.hdr{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    thead th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-left">
+    <h1>&#129389; Shrish LLC &mdash; Pickup Day Checklist</h1>
+    <div class="sub">Printed: ${escapeHtml(printDate)} &nbsp;&bull;&nbsp; ${escapeHtml(printTime)} &nbsp;&bull;&nbsp; Pending orders only</div>
+  </div>
+  <div class="hdr-right">
+    <span class="big">${orders.length} orders &nbsp; ${totalBoxes} boxes</span>
+    Expected: ${formatCurrency(totalAmt)}
+  </div>
+</div>
+
+<div class="legend">
+  <b>How to use:</b>
+  <span><span class="demo pre"></span> Orange tint = payment pre-selected by customer</span>
+  <span><span class="demo"></span> Tick Cash / Zelle / Card when you receive payment</span>
+  <span><span class="demo grn"></span> Tick &ldquo;Handed over&rdquo; when boxes given out</span>
+</div>
+
+<table>
+  <colgroup><col><col><col><col><col><col><col></colgroup>
+  <thead>
     <tr>
-      <td>${escapeHtml(order.orderNumber || order.id)}</td>
-      <td>${escapeHtml(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim())}</td>
-      <td>${escapeHtml(order.phone || '')}</td>
-      <td>${printableItems(order)}</td>
-      <td>${escapeHtml(String(printableQty(order)))}</td>
-      <td>${escapeHtml(formatCurrency(order.totalPrice || 0))}</td>
-      <td>${escapeHtml(order.locationLabel || order.location || '—')}</td>
-      <td>Cash [&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br>Zelle [&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br>Card [&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]</td>
+      <th>#</th>
+      <th>Order</th>
+      <th>Name &amp; Phone</th>
+      <th>Items Ordered</th>
+      <th style="text-align:center">Boxes</th>
+      <th style="text-align:center">Amount</th>
+      <th>Payment &amp; Handover</th>
     </tr>
-  `).join('');
+  </thead>
+  <tbody>${bodyHtml}</tbody>
+</table>
 
-  const selectedFrom = document.getElementById('filterDateFrom')?.value || '';
-  const selectedTo = document.getElementById('filterDateTo')?.value || '';
-  const selectedDate = selectedFrom || selectedTo
-    ? `${selectedFrom || 'Any'} to ${selectedTo || 'Any'}`
-    : 'All dates';
-  const printWindow = window.open('', '_blank', 'width=1200,height=900');
-  if (!printWindow) {
-    showToast('Allow popups to print orders.');
-    return;
-  }
+<div class="grand">
+  <span>GRAND TOTAL &nbsp;&bull;&nbsp; ${orders.length} orders &nbsp;&bull;&nbsp; ${totalBoxes} boxes</span>
+  <strong>${formatCurrency(totalAmt)}</strong>
+</div>
 
-  printWindow.document.write(`<!DOCTYPE html>
-  <html>
-    <head>
-      <title>Shrish Active Orders Print</title>
-      <style>
-        body { font-family: Arial, sans-serif; padding: 24px; color: #1A1208; }
-        h1 { margin: 0 0 8px; font-size: 26px; }
-        p { margin: 0 0 18px; color: #6B4A20; font-size: 14px; }
-        table { width: 100%; border-collapse: collapse; table-layout: auto; }
-        th, td { border: 1px solid #d9c8ab; padding: 10px 8px; vertical-align: top; font-size: 12px; text-align: left; }
-        th { background: #f5e9d4; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; }
-        th:nth-child(1), td:nth-child(1) { width: 10%; white-space: nowrap; }
-        th:nth-child(2), td:nth-child(2) { width: 14%; white-space: nowrap; }
-        th:nth-child(3), td:nth-child(3) { width: 11%; white-space: nowrap; }
-          th:nth-child(4), td:nth-child(4) { width: 24%; }
-          th:nth-child(5), td:nth-child(5) { width: 5%; white-space: nowrap; text-align: center; }
-          th:nth-child(6), td:nth-child(6) { width: 10%; white-space: nowrap; }
-          th:nth-child(7), td:nth-child(7) { width: 11%; white-space: nowrap; }
-          th:nth-child(8), td:nth-child(8) { width: 19%; }
-        .meta { margin-bottom: 16px; font-size: 13px; }
-        @media print {
-          body { padding: 0; }
-          .no-print { display: none; }
-        }
-      </style>
-    </head>
-    <body>
-      <h1>Shrish Active Orders</h1>
-      <p class="meta">Pending pickup orders only. Filter date: ${escapeHtml(selectedDate)}. Printed on ${escapeHtml(new Date().toLocaleString())}.</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Order No</th>
-            <th>Name</th>
-            <th>Phone</th>
-            <th>Item</th>
-            <th>Qty</th>
-            <th>Total</th>
-            <th>Location</th>
-            <th>Payment</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-      <script>window.onload = () => { window.print(); };</script>
-    </body>
-  </html>`);
-  printWindow.document.close();
+<div class="notes">
+  <h3>Notes / Walk-up sales / Damaged boxes</h3>
+  <div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div>
+</div>
+
+<script>window.onload=()=>window.print();<\/script>
+</body></html>`);
+  pw.document.close();
 }
 
 function renderExcelCalculations() {
@@ -3959,4 +4085,3 @@ function exportTallyAsExcel() {
 window.updateZelleEntry = updateZelleEntry;
 window.addZelleEntry = addZelleEntry;
 window.exportTallyAsExcel = exportTallyAsExcel;
-
