@@ -1487,6 +1487,19 @@
   .ptally-variety-row { grid-template-columns: repeat(4, 1fr); }
   .ptally-two-col { grid-template-columns: 1fr; }
 }
+
+/* ── PRINT BUTTON ── */
+.print-btn {
+  background: #1A1501 !important;
+  color: #F5E4C8 !important;
+  border: 2px solid #C8791A !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.3px;
+}
+.print-btn:hover {
+  background: #C8791A !important;
+  color: #fff !important;
+}
 </style>
 </head>
 <body>
@@ -1566,7 +1579,7 @@
               <button class="toolbar-btn" id="emailReminderBtn" type="button" onclick="openEmailReminderModal()" style="display:none;">Email Reminder</button>
               <button class="toolbar-btn" id="whatsappReminderBtn" type="button" onclick="openWhatsAppReminderModal()" style="display:none;">WhatsApp Reminder</button>
               <button class="toolbar-btn" id="bulkFulfillBtn" onclick="markFilteredActiveFulfilled()">✓ Mark Filtered Fulfilled</button>
-              <button class="toolbar-btn" onclick="printActiveOrders()">🖨 Print Active</button>
+              <button class="toolbar-btn print-btn" onclick="printActiveOrders()" title="Print pickup checklist for today">🖨️ Print Checklist</button>
               <button class="toolbar-btn" onclick="exportCSV()">⬇ Export CSV</button>
             </div>
           </div>
