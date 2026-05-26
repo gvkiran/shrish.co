@@ -1434,7 +1434,15 @@
       .admin-topbar { padding: 12px 16px; }
       .admin-wrap { padding: 20px 12px 60px; }
     }
-  </style>
+  
+/* ── PER-VARIETY SPOILED ── */
+.spoiled-variety-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; margin: 8px 0; }
+.spoiled-variety-item { background: #fff8f0; border: 1px solid #f0d8b0; border-radius: 8px; padding: 8px 10px; }
+.spoiled-variety-item label { font-size: 10px; font-weight: 600; color: #8B5210; display: block; margin-bottom: 4px; }
+.spoiled-variety-item input { width: 100%; border: 1.5px solid #e0d0b8; border-radius: 6px; padding: 4px 8px; font-size: 13px; font-weight: 700; text-align: center; }
+.walkup-tally-row { background: #E3F2FD; }
+.walkup-tally-row td { color: #1565C0; font-weight: 600; }
+</style>
 </head>
 <body>
 
@@ -1483,7 +1491,7 @@
           <button class="admin-tab" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
           <button class="admin-tab" onclick="switchTab('refunds',this);loadRefundTab()">💸 Refunds</button>
             <button class="admin-tab" onclick="switchTab('accounting',this)">📒 Accounting</button>
-          <button class="admin-tab" onclick="switchTab('excel-calculations',this)">Excel Calculations</button>
+          <button class="admin-tab" onclick="switchTab('pickup-tally',this)">🧾 Pickup Tally</button>
         </div>
       </aside>
 
@@ -1598,6 +1606,10 @@
                   <option value="card">Card</option>
                   <option value="">Not collected</option>
                 </select>
+              </label>
+              <label class="manual-order-field">
+                Batch Date (for tally)
+                <input type="date" id="manualBatchDate" autocomplete="off">
               </label>
               <label class="manual-order-field full">
                 Notes
@@ -1988,11 +2000,11 @@
         </div>
       </div>
 
-      <div id="tab-excel-calculations" style="display:none;">
+      <div id="tab-pickup-tally" style="display:none;">
         <div class="excel-calc-toolbar">
           <div class="excel-calc-copy">
-            <h2>Excel Calculations</h2>
-            <p>Worksheet view based on your spreadsheet. Save a sheet, open it later, and keep Excel Calculations separate from everything else.</p>
+            <h2>Pickup Tally</h2>
+            <p>Tally your pickup event: ordered boxes, walk-up sales, leftover, spoiled, and cate from everything else.</p>
           </div>
           <div class="toolbar-actions">
             <select id="excelCalcSavedSheet" class="filter-input" onchange="setExcelCalcSheet(this.value)">
