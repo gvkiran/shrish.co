@@ -2935,7 +2935,7 @@ function printActiveOrders() {
               <label class="cb-lbl"><span class="cb${Z}"></span>Zelle</label>
               <label class="cb-lbl"><span class="cb${K}"></span>Card</label>
             </div>
-            <div class="done-row"><span class="cb-g"></span><span class="done-txt">Handed over</span></div>
+
           </td>
         </tr>`;
     });
@@ -3003,8 +3003,7 @@ function printActiveOrders() {
   .cb-lbl{display:flex;align-items:center;gap:3px;font-size:10.5px;font-weight:600;white-space:nowrap;cursor:default}
   .cb{display:inline-block;width:15px;height:15px;border:2px solid #444;border-radius:2px;flex-shrink:0}
   .cb.pre{background:#FDF3E3;border-color:#C8791A}
-  .done-row{display:flex;align-items:center;gap:4px;font-size:10.5px;color:#2E7D32;font-weight:600;margin-top:3px}
-  .cb-g{display:inline-block;width:16px;height:16px;border:2px solid #2E7D32;border-radius:2px;flex-shrink:0}
+
   .done-txt{}
 
   /* subtotal */
