@@ -784,10 +784,16 @@ function renderActiveOrderSummary(orders = []) {
     return;
   }
 
+  const totalBoxes = summaryItems.reduce((sum, [, qty]) => sum + Number(qty || 0), 0);
+
   summaryEl.innerHTML = `
-    <div class="summary-label">Active Item Counts</div>
+    <div class="summary-label">Active Counts</div>
+    <div class="summary-totals">
+      <span>${orders.length} orders</span>
+      <span>${totalBoxes} boxes</span>
+    </div>
     <div class="summary-items">
-      ${summaryItems.map(([name, qty]) => `<span class="summary-chip"><strong>${escapeHtml(name)}:</strong> ${escapeHtml(String(qty))}</span>`).join('')}
+      ${summaryItems.map(([name, qty]) => `<span class="summary-chip"><span>${escapeHtml(name)}</span><b>${escapeHtml(String(qty))}</b></span>`).join('')}
     </div>`;
   summaryEl.classList.add('show');
 }
@@ -2077,21 +2083,20 @@ function renderProducts() {
       ? variantSummary
       : (product.price ? `${product.price} - ${product.unit || 'per box'}` : (isComingSoon ? 'Coming Soon' : `No price set - ${product.unit || 'per box'}`));
 
-    return `<div class="pm-card" id="pmc-${escapeHtml(product.id)}">
+    return `<div class="pm-card ${isHidden ? 'is-hidden' : ''}" id="pmc-${escapeHtml(product.id)}">
       <div class="pm-emoji">🥭</div>
       <div class="pm-info">
         <div class="pm-meta">
+          <span class="pm-chip pm-status">${escapeHtml(statusText)}</span>
           <span class="pm-chip">${escapeHtml(productCategoryLabel(product.category))}</span>
           ${product.tag ? `<span class="pm-chip">${escapeHtml(product.tag)}</span>` : ''}
         </div>
         <h4 title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</h4>
-        <div class="pm-sub">${escapeHtml(shortDescription || 'No description added yet.')}</div>
-        <div class="pm-sub">${escapeHtml(product.unit || 'per box')}</div>
-        <div class="pm-sub">${escapeHtml(priceSummary)}</div>
+        <div class="pm-sub pm-desc">${escapeHtml(shortDescription || 'No description added yet.')}</div>
+        <div class="pm-price">${escapeHtml(priceSummary)}</div>
         <div class="pm-sort-wrap"><span class="pm-sort-label">Order</span><input type="number" class="pm-sort-input" id="sort-${escapeHtml(product.id)}" value="${escapeHtml(String(product.sortOrder ?? ''))}" min="1" step="1"><button class="pm-save-btn" onclick="saveProductSortOrder('${escapeHtml(product.id)}')">Save</button></div>
-        <div class="pm-sub">Use Edit to update ${variants.length ? 'size and price options' : 'price and product details'}.</div>
       </div>
-      <div class="pm-controls"><label class="toggle-switch"><input type="checkbox" ${product.available && !isHidden ? 'checked' : ''} onchange="toggleAvailable('${escapeHtml(product.id)}', this.checked)"><span class="toggle-slider"></span></label><span style="font-size:10px;color:var(--text-light)">${statusText}</span><button class="pm-edit-btn" type="button" onclick="editProduct('${escapeHtml(product.id)}')">Edit</button><button class="pm-edit-btn" type="button" onclick="toggleProductHidden('${escapeHtml(product.id)}', ${isHidden ? 'false' : 'true'})">${isHidden ? 'Unhide' : 'Hide'}</button></div>
+      <div class="pm-controls"><label class="toggle-switch"><input type="checkbox" ${product.available && !isHidden ? 'checked' : ''} onchange="toggleAvailable('${escapeHtml(product.id)}', this.checked)"><span class="toggle-slider"></span></label><button class="pm-edit-btn" type="button" onclick="editProduct('${escapeHtml(product.id)}')">Edit</button><button class="pm-edit-btn" type="button" onclick="toggleProductHidden('${escapeHtml(product.id)}', ${isHidden ? 'false' : 'true'})">${isHidden ? 'Unhide' : 'Hide'}</button></div>
     </div>`;
   }).join('');
 }
