@@ -2537,3 +2537,130 @@ span { color: inherit; }
     grid-template-columns: 1fr 1fr !important;
   }
 }
+
+/* Pickup Tally: smaller bounded panels instead of oversized full-width blocks */
+#tab-pickup-tally {
+  max-width: 1180px !important;
+}
+
+#excelCalcSheet {
+  max-width: 1120px !important;
+}
+
+#tab-pickup-tally .ptally-wrap {
+  display: grid !important;
+  gap: 12px !important;
+  max-width: 1120px !important;
+}
+
+#tab-pickup-tally .ptally-section {
+  max-width: 1120px !important;
+  padding: 12px 14px !important;
+  margin-bottom: 0 !important;
+  border-radius: 12px !important;
+}
+
+#tab-pickup-tally .ptally-two-col {
+  display: grid !important;
+  grid-template-columns: minmax(320px, 470px) minmax(360px, 1fr) !important;
+  gap: 14px !important;
+  align-items: start !important;
+}
+
+#tab-pickup-tally .ptally-two-col > div {
+  min-width: 0 !important;
+  padding: 10px !important;
+  background: rgba(8,6,4,0.22) !important;
+  border: 1px solid rgba(200,121,26,0.1) !important;
+  border-radius: 10px !important;
+}
+
+#tab-pickup-tally .ptally-section-head {
+  margin-bottom: 8px !important;
+  font-size: 13px !important;
+  line-height: 1.2 !important;
+}
+
+#tab-pickup-tally .ptally-hint {
+  font-size: 10px !important;
+}
+
+#tab-pickup-tally .ptally-variety-row {
+  grid-template-columns: repeat(auto-fit, minmax(86px, 1fr)) !important;
+  gap: 7px !important;
+}
+
+#tab-pickup-tally .ptally-variety-cell {
+  min-width: 0 !important;
+}
+
+#tab-pickup-tally .ptally-vcell-label {
+  overflow: hidden !important;
+  margin-bottom: 4px !important;
+  font-size: 9px !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#tab-pickup-tally .ptally-num-input,
+#tab-pickup-tally .ptally-count-input {
+  width: 74px !important;
+  max-width: 100% !important;
+  padding: 5px 6px !important;
+  font-size: 12px !important;
+}
+
+#tab-pickup-tally .ptally-variety-row .ptally-num-input {
+  width: 100% !important;
+}
+
+#tab-pickup-tally .ptally-price-input {
+  width: 72px !important;
+  padding: 5px 7px !important;
+  font-size: 12px !important;
+}
+
+#tab-pickup-tally .ptally-text-input {
+  width: min(100%, 260px) !important;
+  padding: 7px 10px !important;
+}
+
+#tab-pickup-tally .ptally-table {
+  font-size: 12px !important;
+}
+
+#tab-pickup-tally .ptally-table th,
+#tab-pickup-tally .ptally-table td {
+  padding: 6px 9px !important;
+}
+
+#tab-pickup-tally .ptally-table td:nth-child(2) {
+  width: 92px !important;
+}
+
+#tab-pickup-tally #zelleTable td:first-child {
+  width: auto !important;
+}
+
+#tab-pickup-tally #zelleTable td:nth-child(2) {
+  width: 92px !important;
+}
+
+#tab-pickup-tally .ptally-tally-section {
+  max-width: 680px !important;
+}
+
+#tab-pickup-tally .ptally-tally-row {
+  padding: 5px 0 !important;
+  font-size: 13px !important;
+}
+
+#tab-pickup-tally .ptally-tally-big {
+  font-size: 30px !important;
+}
+
+@media (max-width: 980px) {
+  #tab-pickup-tally .ptally-two-col {
+    grid-template-columns: 1fr !important;
+  }
+}
