@@ -1571,6 +1571,203 @@ input[type="checkbox"] {
   opacity: 0.4;
 }
 
+
+/* ════════════════════════════════════════════════════════
+   UI FIXES v2 — readability + compact layout
+   ════════════════════════════════════════════════════════ */
+
+/* FIX 1 + 3: Products — compact card grid instead of long scroll */
+#productFormCard .manual-order-fields,
+#addProductForm { max-width: 100%; }
+
+.product-grid-admin {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+  gap: 12px !important;
+}
+.product-card-admin {
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid rgba(200,121,26,0.2) !important;
+  border-radius: 14px !important;
+  padding: 14px !important;
+  cursor: pointer !important;
+  transition: all 0.25s ease !important;
+}
+.product-card-admin:hover {
+  border-color: rgba(200,121,26,0.5) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4) !important;
+}
+.product-card-admin h3, .product-card-admin .pc-name {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #F5C97A !important;
+  margin-bottom: 4px !important;
+  font-style: normal !important;
+}
+.product-card-admin p, .product-card-admin .pc-desc,
+.product-card-admin span, .product-card-admin small {
+  font-size: 11px !important;
+  color: #9A8060 !important;
+  line-height: 1.5 !important;
+}
+
+/* FIX 2: Orders table — fix unreadable text colors */
+.orders-table td { color: #E8D5B0 !important; }
+.orders-table .customer-name { color: #F5C97A !important; font-weight: 600 !important; }
+.orders-table .customer-email,
+.orders-table .customer-phone { color: #9A8060 !important; font-size: 11px !important; }
+.orders-table td a, .orders-table .order-number-link { color: #E8A83C !important; }
+/* Product qty text */
+.orders-table td:nth-child(4) { color: #E8A83C !important; font-weight: 500 !important; }
+/* Total column */
+.orders-table td:nth-child(5) { color: #F5C97A !important; font-weight: 700 !important; }
+/* Location */
+.orders-table td:nth-child(6) { color: #C8A870 !important; }
+/* Payment */
+.orders-table td:nth-child(7) { color: #9A8060 !important; }
+/* Make sure all text in table rows is visible */
+.orders-table tbody tr td * { color: inherit !important; }
+.orders-table tbody tr td { color: #D4B896 !important; }
+
+/* FIX 3: Pickup Tally — compact two-column sections */
+#tab-pickup-tally .ptally-sec,
+#tab-pickup-tally .ptally-section,
+#tab-pickup-tally section.ptally-sec {
+  padding: 14px 16px !important;
+  margin-bottom: 10px !important;
+}
+#tab-pickup-tally .ptally-two {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+}
+/* Tighter variety row */
+#tab-pickup-tally .var-row,
+#tab-pickup-tally .ptally-variety-row {
+  gap: 6px !important;
+}
+#tab-pickup-tally .var-inp,
+#tab-pickup-tally .ptally-num-input { 
+  padding: 5px 2px !important;
+  font-size: 13px !important;
+}
+
+/* FIX 4: Accounting — compact, dropdown-style batch rows */
+#tab-accounting .accounting-batch-list,
+#accountingBatchListBody {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+/* Batch rows compact */
+.batch-item,
+#accountingBatchListBody tr,
+#accountingBatchListBody .batch-row {
+  padding: 10px 14px !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+}
+/* Accounting section titles smaller */
+#tab-accounting h2 {
+  font-size: 20px !important;
+  margin-bottom: 12px !important;
+}
+/* Accounting view switcher compact */
+#accountingViewSwitcher {
+  display: flex !important;
+  gap: 6px !important;
+  margin-bottom: 12px !important;
+}
+
+/* FIX 5: Refunds — show placeholder when empty, force column visibility */
+#tab-refunds h2 { font-size: 20px !important; color: #F5C97A !important; margin-bottom: 8px !important; }
+#tab-refunds p { color: #9A8060 !important; font-size: 12px !important; margin-bottom: 12px !important; }
+.refund-filter-bar { display: flex !important; gap: 8px !important; flex-wrap: wrap !important; margin-bottom: 14px !important; }
+.refund-filter-btn { 
+  padding: 6px 14px !important; 
+  border-radius: 999px !important;
+  border: 1px solid rgba(200,121,26,0.3) !important;
+  background: transparent !important;
+  color: #9A8060 !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+}
+.refund-filter-btn.active {
+  background: linear-gradient(135deg, #F5C97A, #C8791A) !important;
+  color: #080604 !important;
+  border-color: transparent !important;
+}
+/* Empty state — visible placeholder */
+.refund-empty {
+  text-align: center !important;
+  padding: 40px 20px !important;
+  color: #6B5535 !important;
+  font-size: 14px !important;
+  background: rgba(255,255,255,0.02) !important;
+  border: 1px dashed rgba(200,121,26,0.15) !important;
+  border-radius: 14px !important;
+}
+/* Force refund column structure visible */
+#refundsContainer { display: block !important; min-height: 80px !important; }
+
+/* FIX 6: Subscribers, Feedback, Customer Accounts — fix font readability */
+/* Subscribers table text */
+#tab-subscribers table td,
+#tab-subscribers table th { color: #E8D5B0 !important; font-size: 12px !important; }
+#tab-subscribers table th {
+  color: #9A8060 !important;
+  font-size: 10px !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  background: rgba(200,121,26,0.06) !important;
+}
+#tab-subscribers table td a,
+#tab-subscribers table td:first-child { color: #E8A83C !important; }
+.subscriber-table-wrap table tbody tr:hover td { background: rgba(200,121,26,0.04) !important; }
+
+/* Feedback text */
+#tab-feedback .feedback-text { color: #D4B896 !important; }
+#tab-feedback .feedback-meta { color: #9A8060 !important; }
+#tab-feedback .feedback-card h4,
+#tab-feedback .feedback-card strong { color: #F5C97A !important; }
+
+/* Customer Accounts text */
+#tab-customers table td,
+#tab-customers table th { color: #E8D5B0 !important; }
+#tab-customers table th {
+  color: #9A8060 !important;
+  font-size: 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  background: rgba(200,121,26,0.06) !important;
+}
+#tab-customers table td:first-child,
+#tab-customers .customer-name { color: #F5C97A !important; font-weight: 600 !important; }
+#tab-customers table a { color: #E8A83C !important; }
+
+/* ALL tables globally — ensure readable text */
+table td, table th { color: #D4B896 !important; }
+table th {
+  color: #9A8060 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+}
+/* Subscribed badge */
+.badge.subscribed, [class*="subscribed"] { color: #22C55E !important; }
+
+/* ── GLOBAL text readability pass ── */
+p, span, div, label, li { color: inherit; }
+/* Ensure light text on dark bg throughout */
+#dashboard * { -webkit-font-smoothing: antialiased; }
+
+/* Stat card text fix */
+.stat-card .stat-label { color: #6B5535 !important; }
+.stat-card .stat-value { color: #F5C97A !important; }
+.stat-card .stat-sub   { color: #9A8060 !important; }
 </style>
 </head>
 <body>
@@ -2183,9 +2380,9 @@ input[type="checkbox"] {
 <!-- Toast -->
 <div class="admin-toast" id="adminToast"></div>
 
-<script src="assets/js/data.js?v=luxury-ui-20260526"></script>
+<script src="assets/js/data.js?v=luxury-ui-v2-20260526"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/admin-firebase.js?v=luxury-ui-20260526"></script>
+<script type="module" src="assets/js/admin-firebase.js?v=luxury-ui-v2-20260526"></script>
 
 
 <canvas id="particle-canvas"></canvas>
