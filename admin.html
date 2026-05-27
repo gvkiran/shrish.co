@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css" />
-  <link rel="stylesheet" href="assets/css/admin-luxury.css?v=20260527-ext">
+  <link rel="stylesheet" href="assets/css/admin-luxury.css?v=fixes-20260527">
 </head>
 <body>
 
@@ -622,9 +622,9 @@
 <!-- Toast --><!-- deploy-20260527-021204 -->
 <div class="admin-toast" id="adminToast"></div>
 
-<script src="assets/js/data.js?v=luxury-ui-v2-20260526"></script>
+<script src="assets/js/data.js?v=fixes-20260527"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/admin-firebase.js?v=luxury-ui-v2-20260526"></script>
+<script type="module" src="assets/js/admin-firebase.js?v=fixes-20260527"></script>
 
 
 <canvas id="particle-canvas"></canvas>
@@ -954,7 +954,7 @@ input::placeholder, textarea::placeholder { color: rgba(154,128,96,0.5) !importa
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css" />
-  <link rel="stylesheet" href="assets/css/admin-luxury.css?v=20260527-ext">
+  <link rel="stylesheet" href="assets/css/admin-luxury.css?v=fixes-20260527">
 </head>
 <body>
 
@@ -1566,9 +1566,1835 @@ input::placeholder, textarea::placeholder { color: rgba(154,128,96,0.5) !importa
 <!-- Toast --><!-- deploy-20260527-021204 -->
 <div class="admin-toast" id="adminToast"></div>
 
-<script src="assets/js/data.js?v=luxury-ui-v2-20260526"></script>
+<script src="assets/js/data.js?v=fixes-20260527"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/admin-firebase.js?v=luxury-ui-v2-20260526"></script>
+<script type="module" src="assets/js/admin-firebase.js?v=fixes-20260527"></script>
+
+
+<canvas id="particle-canvas"></canvas>
+<script>
+// ── PARTICLE SYSTEM ──────────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('particle-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  class Particle {
+    constructor() { this.reset(); }
+    reset() {
+      this.x  = Math.random() * W;
+      this.y  = Math.random() * H;
+      this.vx = (Math.random() - 0.5) * 0.3;
+      this.vy = (Math.random() - 0.5) * 0.3;
+      this.r  = Math.random() * 1.5 + 0.3;
+      this.alpha = Math.random() * 0.4 + 0.05;
+      this.gold = Math.random() > 0.6;
+    }
+    update() {
+      this.x += this.vx; this.y += this.vy;
+      if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fillStyle = this.gold
+        ? `rgba(200,121,26,${this.alpha})`
+        : `rgba(245,201,122,${this.alpha * 0.5})`;
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+// ── MAGNETIC BUTTONS ────────────────────────────────────────────
+document.addEventListener('mousemove', function(e) {
+  document.querySelectorAll('.admin-tab.active, .toolbar-btn, .admin-logout-btn, .print-btn').forEach(el => {
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width  / 2;
+    const cy = rect.top  + rect.height / 2;
+    const dx = e.clientX - cx;
+    const dy = e.clientY - cy;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const maxDist = 80;
+    if (dist < maxDist) {
+      const force = (1 - dist / maxDist) * 6;
+      el.style.transform = `translate(${dx * force / dist}px, ${dy * force / dist}px)`;
+    } else {
+      el.style.transform = '';
+    }
+  });
+});
+
+// ── SMOOTH TAB TRANSITIONS ──────────────────────────────────────
+const _origSwitchTab = window.switchTab;
+if (_origSwitchTab) {
+  window.switchTab = function(tab, el) {
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      if (p.style.display !== 'none') {
+        p.style.opacity = '0';
+        p.style.transform = 'translateY(8px)';
+      }
+    });
+    setTimeout(() => {
+      _origSwitchTab(tab, el);
+      const panel = document.getElementById('tab-' + tab);
+      if (panel) {
+        panel.style.opacity = '0';
+        panel.style.transform = 'translateY(12px)';
+        requestAnimationFrame(() => {
+          panel.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+          panel.style.opacity = '1';
+          panel.style.transform = 'translateY(0)';
+        });
+      }
+    }, 80);
+  };
+}
+</script>
+
+</body>
+</html
+/* ══════════════════════════════════════════
+   TARGETED FIXES v3 — 2026-05-27
+   ══════════════════════════════════════════ */
+
+/* PRODUCT FORM — 2-col compact grid */
+.product-form-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px 16px !important;
+}
+.product-field {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+}
+.product-field label {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--text-light) !important;
+}
+.product-field input,
+.product-field select,
+.product-field textarea {
+  padding: 9px 12px !important;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(200,121,26,0.2) !important;
+  border-radius: 10px !important;
+  color: var(--gold-200) !important;
+  font-size: 13px !important;
+  font-family: var(--font-body) !important;
+  outline: none !important;
+}
+.product-field input:focus,
+.product-field select:focus {
+  border-color: var(--gold-400) !important;
+  background: rgba(200,121,26,0.06) !important;
+  box-shadow: 0 0 0 3px rgba(200,121,26,0.1) !important;
+}
+.product-field small {
+  font-size: 10px !important;
+  color: var(--text-light) !important;
+}
+.product-field.full-width { grid-column: 1 / -1 !important; }
+.product-form-head {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  margin-bottom: 16px !important;
+  padding-bottom: 14px !important;
+  border-bottom: 1px solid rgba(200,121,26,0.15) !important;
+}
+.product-form-head h3 {
+  font-family: var(--font-display) !important;
+  font-size: 22px !important;
+  font-style: italic !important;
+  color: var(--gold-300) !important;
+  margin-bottom: 4px !important;
+}
+.product-form-head p {
+  font-size: 12px !important;
+  color: var(--text-light) !important;
+  margin: 0 !important;
+}
+.product-form-close {
+  padding: 7px 16px !important;
+  background: transparent !important;
+  border: 1px solid rgba(200,121,26,0.25) !important;
+  border-radius: 99px !important;
+  color: var(--text-light) !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+}
+.product-form-close:hover {
+  border-color: var(--red) !important;
+  color: var(--red) !important;
+}
+.product-form-actions {
+  display: flex !important;
+  gap: 10px !important;
+  margin-top: 16px !important;
+  padding-top: 14px !important;
+  border-top: 1px solid rgba(200,121,26,0.1) !important;
+}
+
+/* EXISTING PRODUCTS LIST — compact grid cards */
+.product-admin-item, .product-list-item {
+  background: var(--glass-light) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 12px !important;
+  padding: 14px !important;
+  transition: all 0.2s ease !important;
+}
+.product-admin-item:hover, .product-list-item:hover {
+  border-color: rgba(200,121,26,0.3) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* ORDERS TABLE — readable text, dark bg */
+.orders-table-wrap, .orders-table-wrap * {
+  background: transparent !important;
+}
+.orders-table-wrap {
+  background: rgba(255,248,237,0.04) !important;
+  border: 1px solid rgba(200,121,26,0.15) !important;
+  border-radius: 18px !important;
+  backdrop-filter: blur(12px) !important;
+}
+.orders-table td { 
+  color: #D4B896 !important;
+  border-bottom: 1px solid rgba(200,121,26,0.06) !important;
+}
+.orders-table tr:hover td { background: rgba(200,121,26,0.04) !important; }
+.orders-table th {
+  background: rgba(200,121,26,0.08) !important;
+  color: rgba(154,128,96,0.8) !important;
+  border-bottom: 1px solid rgba(200,121,26,0.12) !important;
+}
+
+/* ALL TABLE TEXT READABLE */
+table td { color: #D4B896 !important; }
+table th { color: rgba(154,128,96,0.8) !important; background: rgba(200,121,26,0.06) !important; }
+table tr:hover td { background: rgba(200,121,26,0.04) !important; }
+table { background: transparent !important; }
+
+/* WRAP ALL TABLES IN DARK GLASS */
+.table-wrap, [class*="table-wrap"] {
+  background: rgba(255,248,237,0.04) !important;
+  border: 1px solid rgba(200,121,26,0.15) !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* HEADINGS VISIBLE */
+h2, h3 { color: var(--gold-300) !important; }
+p, li, small { color: #9A8060 !important; }
+label { color: #9A8060 !important; }
+strong { color: #D4B896 !important; }
+span { color: inherit; }
+
+/* ACCOUNTING COMPACT */
+#tab-accounting table td,
+#tab-pickup-tally table td {
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+  color: #D4B896 !important;
+}
+.batch-item { padding: 9px 12px !important; }
+.batch-item:hover { transform: translateX(3px) !important; }
+
+</style>PE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard – SHRISH LLC</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="icon" href="images/brand/logo-small.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/css/admin-luxury.css?v=fixes-20260527">
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="loginScreen" class="admin-login-wrap">
+  <div class="admin-login-card">
+    <img src="images/brand/logo-small.png" alt="Shrish LLC" />
+    <h2>Admin Access</h2>
+    <p>Enter your admin email and password to manage orders and products</p>
+    <input type="email" id="adminEmail" placeholder="Admin email" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()" />
+    <input type="password" id="adminPw" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+    <button onclick="doLogin()">Login →</button>
+    <p class="login-error" id="loginErr">Login failed. Check your Firebase Auth admin user.</p>
+  </div>
+</div>
+
+<!-- ── DASHBOARD ── -->
+<div id="dashboard" style="display:none;">
+
+  <!-- Top bar -->
+  <div class="admin-topbar">
+    <div class="admin-topbar-left">
+      <img src="images/brand/logo-small.png" alt="Shrish" />
+      <h1>Admin Dashboard</h1>
+    </div>
+    <span id="adminUserEmail" style="font-size:13px;color:var(--text-light);margin-right:8px"></span><button class="admin-logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+
+  <div class="admin-wrap">
+    <div class="admin-layout">
+      <aside class="admin-sidebar">
+        <div class="sidebar-title">Navigation</div>
+        <div class="admin-tabs">
+          <button class="admin-tab active" onclick="switchTab('orders',this)">📋 Orders</button>
+          <div class="sidebar-sheet-group">
+            <div class="sheet-switcher" id="ordersSheetSwitcher">
+              <button class="sheet-pill active" id="ordersSheetActive" onclick="setOrderSheet('active', this)">Active Orders</button>
+              <button class="sheet-pill" id="ordersSheetProcessed" onclick="setOrderSheet('processed', this)">Processed Orders</button>
+              <button class="sheet-pill" id="ordersSheetAll" onclick="setOrderSheet('all', this)">All Orders</button>
+            </div>
+          </div>
+          <div class="sidebar-divider"></div>
+          <button class="admin-tab" onclick="switchTab('products',this)">🛒 Manage Products</button>
+          <button class="admin-tab" onclick="switchTab('customers',this)">Customer Accounts</button>
+          <button class="admin-tab" onclick="switchTab('feedback',this)">Feedback</button>
+          <button class="admin-tab" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
+          <button class="admin-tab" onclick="switchTab('refunds',this);loadRefundTab()">💸 Refunds</button>
+            <button class="admin-tab" onclick="switchTab('accounting',this)">📒 Accounting</button>
+          <button class="admin-tab" onclick="switchTab('pickup-tally',this)">🧾 Pickup Tally</button>
+        </div>
+      </aside>
+
+      <main class="admin-main">
+        <!-- ── ORDERS TAB ── -->
+        <div id="tab-orders">
+          <div class="orders-toolbar">
+            <h2 id="ordersSectionTitle">Active Orders</h2>
+            <div class="toolbar-actions">
+              <input type="search" id="filterSearch" class="filter-input" placeholder="Search order #, name, phone, email" onchange="renderOrders()">
+              <select id="filterLocation" class="filter-input" onchange="renderOrders()">
+                <option value="all">All Locations</option>
+                <option value="shortpump">Short Pump</option>
+                <option value="chesterfield">Chesterfield</option>
+                <option value="mechanicsville">Mechanicsville</option>
+              </select>
+              <input type="date" id="filterDateFrom" class="filter-input" onchange="renderOrders()">
+              <input type="date" id="filterDateTo" class="filter-input" onchange="renderOrders()">
+              <select id="filterStatus" class="filter-input" onchange="renderOrders()">
+                <option value="all">All Orders</option>
+                <option value="pending">Pending</option>
+                <option value="fulfilled">Fulfilled</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="no_show">No Show</option>
+              </select>
+              <button class="toolbar-btn" type="button" onclick="openManualOrderForm()">+ Manual Order</button>
+              <button class="toolbar-btn" id="emailReminderBtn" type="button" onclick="openEmailReminderModal()" style="display:none;">Email Reminder</button>
+              <button class="toolbar-btn" id="whatsappReminderBtn" type="button" onclick="openWhatsAppReminderModal()" style="display:none;">WhatsApp Reminder</button>
+              <button class="toolbar-btn" id="bulkFulfillBtn" onclick="markFilteredActiveFulfilled()">✓ Mark Filtered Fulfilled</button>
+              <button class="toolbar-btn print-btn" onclick="printActiveOrders()" title="Print pickup checklist for today">🖨️ Print Checklist</button>
+              <button class="toolbar-btn" onclick="exportCSV()">⬇ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="orders-help" id="ordersHelpText">
+            Active Orders shows your current pending pickup list. Processed Orders shows fulfilled pickups that still need review. Cancelled and no-show records live in All Orders.
+          </div>
+
+          <div class="active-order-summary" id="activeOrderSummary"></div>
+
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th class="order-select-col"><input type="checkbox" id="selectAllActiveOrders" onchange="toggleVisibleReminderOrders(this.checked)" aria-label="Select all visible active orders"></th>
+                  <th>Order #</th>
+                  <th>Received Date</th>
+                  <th>Customer</th>
+                  <th>Products &amp; Qty</th>
+                  <th>Total</th>
+                  <th>Location</th>
+                  <th>Payment</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ordersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── PRODUCTS TAB ── -->
+        <div class="order-editor-modal" id="orderEditorModal" onclick="handleOrderEditorOverlayClick(event)">
+          <div class="order-editor-card" role="dialog" aria-modal="true" aria-labelledby="orderEditorOrderNumber">
+            <div class="order-editor-head">
+              <div>
+                <h3>Edit Order <span id="orderEditorOrderNumber"></span></h3>
+                <p id="orderEditorCustomer"></p>
+              </div>
+              <button class="order-editor-close" type="button" onclick="closeOrderEditor()">Close</button>
+            </div>
+            <div class="order-editor-toolbar">
+              <select id="orderEditorAddSelect">
+                <option value="">Add an item</option>
+              </select>
+              <button class="toolbar-btn" type="button" onclick="addOrderDraftItem()">+ Add Item</button>
+            </div>
+            <div class="manual-order-fields" id="manualOrderFields">
+              <label class="manual-order-field">
+                First Name
+                <input type="text" id="manualFirstName" autocomplete="off">
+              </label>
+              <label class="manual-order-field">
+                Last Name
+                <input type="text" id="manualLastName" autocomplete="off">
+              </label>
+              <label class="manual-order-field">
+                Phone
+                <input type="tel" id="manualPhone" autocomplete="off">
+              </label>
+              <label class="manual-order-field">
+                Email
+                <input type="email" id="manualEmail" autocomplete="off">
+              </label>
+              <label class="manual-order-field">
+                Pickup Location
+                <select id="manualLocation">
+                  <option value="shortpump">Short Pump, VA</option>
+                  <option value="chesterfield">Chesterfield, VA</option>
+                  <option value="mechanicsville">Mechanicsville, VA</option>
+                </select>
+              </label>
+              <label class="manual-order-field">
+                Pickup Date
+                <input type="date" id="manualPickupDate">
+              </label>
+              <label class="manual-order-field">
+                Payment Method
+                <select id="manualPaymentMethod">
+                  <option value="cash">Cash</option>
+                  <option value="zelle">Zelle</option>
+                  <option value="card">Card</option>
+                  <option value="">Not collected</option>
+                </select>
+              </label>
+              <label class="manual-order-field">
+                Batch Date (for tally)
+                <input type="date" id="manualBatchDate" autocomplete="off">
+              </label>
+              <label class="manual-order-field full">
+                Notes
+                <textarea id="manualNotes" rows="2"></textarea>
+              </label>
+            </div>
+            <div class="order-editor-list" id="orderEditorItems"></div>
+            <div class="order-editor-empty" id="orderEditorEmpty">This order has no items yet. Add a catalog item before saving.</div>
+            <div class="order-editor-foot">
+              <div class="order-editor-summary">
+                <div class="order-editor-pill">Boxes: <strong id="orderEditorBoxes">0</strong></div>
+                <div class="order-editor-pill">Total: <strong id="orderEditorTotal">$0.00</strong></div>
+              </div>
+              <div class="order-editor-actions">
+                <button class="toolbar-btn" type="button" onclick="closeOrderEditor()">Cancel</button>
+                <button class="toolbar-btn" id="orderEditorSaveBtn" type="button" onclick="saveEditedOrder()">Save Changes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-editor-modal" id="emailReminderModal" onclick="handleEmailReminderOverlayClick(event)">
+          <div class="order-editor-card reminder-editor-card" role="dialog" aria-modal="true" aria-labelledby="emailReminderTitle">
+            <div class="order-editor-head">
+              <div>
+                <h3 id="emailReminderTitle">Email Pickup Reminder</h3>
+                <p id="emailReminderSummary">Review selected customers before sending.</p>
+              </div>
+              <button class="order-editor-close" type="button" onclick="closeEmailReminderModal()">Close</button>
+            </div>
+            <div class="reminder-form">
+              <div class="reminder-recipient-list" id="emailReminderRecipients"></div>
+              <label class="reminder-field">
+                Subject
+                <input type="text" id="emailReminderSubject" maxlength="160">
+              </label>
+              <label class="reminder-field">
+                Message
+                <textarea id="emailReminderBody"></textarea>
+              </label>
+              <p class="reminder-help">
+                You can use placeholders: {{firstName}}, {{fullName}}, {{orderNumber}}, {{pickupLocation}}, {{items}}, {{totalBoxes}}, and {{totalPrice}}.
+              </p>
+              <div class="order-editor-actions">
+                <button class="toolbar-btn" type="button" onclick="closeEmailReminderModal()">Cancel</button>
+                <button class="toolbar-btn" id="emailReminderSendBtn" type="button" onclick="sendSelectedReminderEmails()">Send Reminder Emails</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-editor-modal" id="whatsappReminderModal" onclick="handleWhatsAppReminderOverlayClick(event)">
+          <div class="order-editor-card reminder-editor-card" role="dialog" aria-modal="true" aria-labelledby="whatsappReminderTitle">
+            <div class="order-editor-head">
+              <div>
+                <h3 id="whatsappReminderTitle">WhatsApp Pickup Reminder</h3>
+                <p id="whatsappReminderSummary">Review selected customers before opening WhatsApp.</p>
+              </div>
+              <button class="order-editor-close" type="button" onclick="closeWhatsAppReminderModal()">Close</button>
+            </div>
+            <div class="reminder-form">
+              <div class="reminder-recipient-list" id="whatsappReminderRecipients"></div>
+              <label class="reminder-field">
+                Message
+                <textarea id="whatsappReminderBody"></textarea>
+              </label>
+              <p class="reminder-help">
+                Review the message, then use each Open WhatsApp button. WhatsApp opens with the message filled in, and you send it manually.
+              </p>
+              <div class="order-editor-actions">
+                <button class="toolbar-btn" type="button" onclick="closeWhatsAppReminderModal()">Done</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-products" style="display:none;">
+          <div class="products-toolbar">
+            <div class="products-toolbar-copy">
+              <h2>Manage Products</h2>
+              <p>Add new catalog items here. New products will use the same live and coming soon behavior as your existing shop cards.</p>
+            </div>
+            <button class="add-product-btn" onclick="openAddProductForm()">+ Add Product</button>
+          </div>
+          <div class="product-form-card" id="productFormCard">
+            <div class="product-form-head">
+              <div>
+                <h3>Add New Product</h3>
+                <p>Keep category within your current shop groups so the new product appears safely in the existing filters and modal.</p>
+              </div>
+              <button class="product-form-close" type="button" onclick="closeAddProductForm()">Close</button>
+            </div>
+            <form id="addProductForm">
+              <input id="editingProductId" name="editingProductId" type="hidden">
+              <div class="product-form-grid">
+                <div class="product-field">
+                  <label for="newProductName">Product Name</label>
+                  <input id="newProductName" name="name" type="text" required maxlength="120" placeholder="Ex: Imam Pasand Special">
+                </div>
+                <div class="product-field">
+                  <label for="newProductCategory">Category</label>
+                  <select id="newProductCategory" name="category" required>
+                    <option value="mangoes">Fruits/Mangoes</option>
+                    <option value="putharekulu">Putharekulu</option>
+                    <option value="jellysnacks">Jelly</option>
+                    <option value="snacks">Snacks</option>
+                    <option value="picklespodi">Pickles & Podi</option>
+                  </select>
+                </div>
+                <div class="product-field">
+                  <label for="newProductLocalName">Local Name</label>
+                  <input id="newProductLocalName" name="localName" type="text" maxlength="120" placeholder="Optional local language name">
+                </div>
+                <div class="product-field">
+                  <label for="newProductOrigin">Origin</label>
+                  <input id="newProductOrigin" name="origin" type="text" maxlength="120" required placeholder="Ex: Andhra Pradesh">
+                </div>
+                <div class="product-field">
+                  <label for="newProductStatus">Shop Status</label>
+                  <select id="newProductStatus" name="status" required>
+                    <option value="live">Live and orderable</option>
+                    <option value="off">Visible but sold out</option>
+                    <option value="soon">Coming soon / notify only</option>
+                  </select>
+                </div>
+                <div class="product-field">
+                  <label for="newProductTag">Tag</label>
+                  <input id="newProductTag" name="tag" type="text" maxlength="60" placeholder="Ex: Limited, Premium, Best Seller">
+                </div>
+                <div class="product-field">
+                  <label for="newProductPrice">Price (numbers only)</label>
+                  <input id="newProductPrice" name="price" type="number" min="0" step="0.01" placeholder="56">
+                  <small>Leave empty for coming soon products.</small>
+                </div>
+                <div class="product-field">
+                  <label for="newProductUnit">Unit</label>
+                  <input id="newProductUnit" name="unit" type="text" maxlength="80" required value="per box">
+                </div>
+                <div class="product-field">
+                  <label for="newProductImage">Main Image</label>
+                  <input id="newProductImage" name="image" type="text" maxlength="200" placeholder="Ex: img_new_product.jpg">
+                  <small>Use one main cover image here.</small>
+                </div>
+                <div class="product-field">
+                  <label for="newProductGallery">Gallery Images</label>
+                  <input id="newProductGallery" name="gallery" type="text" maxlength="500" placeholder="Ex: img_new_product_1.jpg, img_new_product_2.jpg">
+                  <small>Add extra images here, separated by commas.</small>
+                </div>
+                <div class="product-field">
+                  <label for="newProductSeason">Season</label>
+                  <input id="newProductSeason" name="season" type="text" maxlength="80" placeholder="Ex: May - July">
+                </div>
+                <div class="product-field">
+                  <label for="newProductTaste">Taste</label>
+                  <input id="newProductTaste" name="taste" type="text" maxlength="120" placeholder="Ex: Sweet - Rich - Fiberless">
+                </div>
+                <div class="product-field">
+                  <label for="newProductBestFor">Best For</label>
+                  <input id="newProductBestFor" name="bestFor" type="text" maxlength="160" placeholder="Ex: Eating fresh - Lassi - Dessert">
+                </div>
+                <div class="product-field full">
+                  <label for="newProductDescription">Description</label>
+                  <textarea id="newProductDescription" name="description" maxlength="700" required placeholder="Write the short description you want to show in the shop card and product modal."></textarea>
+                </div>
+                <div class="variant-fields" id="variantFields">
+                  <h4>Category Size / Count Options</h4>
+                  <div class="variant-help">Use these for Putharekulu, Jelly & Snacks, and Pickles & Podi products when you want selectable size/count options with different pricing.</div>
+                  <div class="product-field">
+                    <label id="variantOneLabelText" for="variantOneLabel">Option 1 Label</label>
+                    <input id="variantOneLabel" name="variantOneLabel" type="text" maxlength="60" placeholder="Ex: 5 count or 250g">
+                  </div>
+                  <div class="product-field">
+                    <label id="variantOnePriceText" for="variantOnePrice">Option 1 Price</label>
+                    <input id="variantOnePrice" name="variantOnePrice" type="number" min="0" step="0.01" placeholder="7.99">
+                  </div>
+                  <div class="product-field">
+                    <label id="variantOneSkuText" for="variantOneSku">Option 1 SKU</label>
+                    <input id="variantOneSku" name="variantOneSku" type="text" maxlength="40" placeholder="Ex: PSK5 or MJS250">
+                  </div>
+                  <div class="product-field">
+                    <label id="variantTwoLabelText" for="variantTwoLabel">Option 2 Label</label>
+                    <input id="variantTwoLabel" name="variantTwoLabel" type="text" maxlength="60" placeholder="Ex: 10 count or 500g">
+                  </div>
+                  <div class="product-field">
+                    <label id="variantTwoPriceText" for="variantTwoPrice">Option 2 Price</label>
+                    <input id="variantTwoPrice" name="variantTwoPrice" type="number" min="0" step="0.01" placeholder="14.99">
+                  </div>
+                  <div class="product-field">
+                    <label id="variantTwoSkuText" for="variantTwoSku">Option 2 SKU</label>
+                    <input id="variantTwoSku" name="variantTwoSku" type="text" maxlength="40" placeholder="Ex: PSK10 or MJS500">
+                  </div>
+                </div>
+              </div>
+              <div class="product-form-actions">
+                <button class="product-secondary-btn" type="button" onclick="resetAddProductForm()">Reset</button>
+                <button class="product-primary-btn" id="addProductSubmitBtn" type="submit">Save Product</button>
+              </div>
+            </form>
+          </div>
+          <div class="products-filter-bar" id="productsFilterBar">
+            <span class="products-filter-label">Filter Products</span>
+          </div>
+          <div class="products-manage-grid" id="productsGrid"></div>
+        </div>
+
+        <div id="tab-subscribers" style="display:none;">
+          <div class="orders-toolbar">
+            <h2>Email Subscribers</h2>
+            <div class="toolbar-actions">
+              <button class="toolbar-btn" onclick="exportSubscribersCSV()">⬇ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Subscription</th>
+                  <th>Source</th>
+                  <th>Status</th>
+                  <th>Consent</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="subscribersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="tab-customers" style="display:none;">
+          <div class="orders-toolbar">
+            <div>
+              <h2>Customer Accounts</h2>
+              <p class="orders-help">Read-only customer profiles. Delete is available only for accounts with no orders.</p>
+            </div>
+            <div class="toolbar-actions">
+              <input type="search" id="customerSearch" class="filter-input" placeholder="Search name, email, phone" oninput="renderCustomers()">
+              <button class="toolbar-btn" onclick="exportCustomersCSV()">Export CSV</button>
+            </div>
+          </div>
+          <div class="customers-summary" id="customersSummary"></div>
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email / UID</th>
+                  <th>Phone</th>
+                  <th>Preferred Pickup</th>
+                  <th>Address</th>
+                  <th>Orders</th>
+                  <th>Created / Updated</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="customersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="tab-feedback" style="display:none;">
+          <div class="orders-toolbar">
+            <div>
+              <h2>Customer Feedback</h2>
+              <p class="orders-help">Review order feedback saved in Firestore. Use filters to spot product, pickup, or low-rating patterns.</p>
+            </div>
+            <div class="toolbar-actions">
+              <input type="search" id="feedbackSearch" class="filter-input" placeholder="Search order, item, email" oninput="renderFeedback()">
+              <select id="feedbackRating" class="filter-input" onchange="renderFeedback()">
+                <option value="all">All ratings</option>
+                <option value="low">Low ratings 1-3</option>
+                <option value="5">5 stars</option>
+                <option value="4">4 stars</option>
+                <option value="3">3 stars</option>
+                <option value="2">2 stars</option>
+                <option value="1">1 star</option>
+              </select>
+              <select id="feedbackLocation" class="filter-input" onchange="renderFeedback()">
+                <option value="all">All locations</option>
+                <option value="shortpump">Short Pump</option>
+                <option value="chesterfield">Chesterfield</option>
+                <option value="mechanicsville">Mechanicsville</option>
+              </select>
+              <button class="toolbar-btn" onclick="exportFeedbackCSV()">Export CSV</button>
+            </div>
+          </div>
+          <div class="customers-summary" id="feedbackSummary"></div>
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th>Rating</th>
+                  <th>Answers</th>
+                  <th>Items</th>
+                  <th>Pickup</th>
+                  <th>Submitted</th>
+                </tr>
+              </thead>
+              <tbody id="feedbackBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+          <div id="tab-accounting" style="display:none;">
+            <div class="accounting-toolbar">
+              <h2>Accounting</h2>
+              <div class="toolbar-actions">
+                <input type="date" id="accountingDate" class="filter-input" onchange="renderAccounting()" />
+                <div class="accounting-batch" id="accountingBatchName">SHR-BATCH-YYYY-MM-DD</div>
+                <button class="toolbar-btn" onclick="saveAccountingBatch()">Save Tally</button>
+                <button class="toolbar-btn" id="closeBatchBtn" onclick="closeAccountingBatch()">Close Batch</button>
+                <button class="toolbar-btn" id="reopenBatchBtn" onclick="reopenAccountingBatch()" style="display:none;">Reopen Batch</button>
+                <button class="toolbar-btn" onclick="exportAccountingBatchCSV()">Export Batch CSV</button>
+              </div>
+            </div>
+            <div class="sheet-switcher accounting-view-switcher" id="accountingViewSwitcher">
+              <button class="sheet-pill active" id="accountingViewOpen" onclick="setAccountingView('open')">Open Batches</button>
+              <button class="sheet-pill" id="accountingViewClosed" onclick="setAccountingView('closed')">Closed Batches</button>
+            </div>
+            <div class="batch-list-card">
+              <h3 id="accountingBatchListTitle">Open Batches</h3>
+              <div class="batch-list-help" id="accountingBatchListHelp">Open batches stay here until you finish tallying and close them. Closed batches move to their own tab, and reopened batches come back here.</div>
+              <div class="batch-list-table-wrap">
+                <table class="batch-list-table">
+                  <thead>
+                    <tr>
+                      <th>Batch</th>
+                      <th>Status</th>
+                      <th>Orders</th>
+                      <th>Collected Total</th>
+                      <th>Last Saved</th>
+                      <th>Closed At</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="accountingBatchListBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="accounting-grid" id="accountingStats"></div>
+
+          <div class="tally-box">
+            <h3>Tally Check</h3>
+            <div class="tally-help">Difference compares the actual amounts you enter below against the collected total for this batch.</div>
+            <div class="batch-status-box" id="batchStatusBox">Batch is open. Save the tally during pickup and close the batch once the day is finalized.</div>
+            <div class="tally-grid">
+              <div class="tally-field">
+                <label for="actualCash">Actual Cash Counted</label>
+                <input type="number" id="actualCash" min="0" step="0.01" placeholder="0.00" oninput="renderAccounting()">
+              </div>
+              <div class="tally-field">
+                <label for="actualZelle">Actual Zelle Received</label>
+                <input type="number" id="actualZelle" min="0" step="0.01" placeholder="0.00" oninput="renderAccounting()">
+              </div>
+              <div class="tally-field">
+                <label for="actualCard">Actual Card Total</label>
+                <input type="number" id="actualCard" min="0" step="0.01" placeholder="0.00" oninput="renderAccounting()">
+              </div>
+            </div>
+            <div class="tally-actions">
+              <button class="toolbar-btn" onclick="saveAccountingBatch()">Save Tally</button>
+              <button class="toolbar-btn" onclick="exportAccountingBatchCSV()">Export Batch CSV</button>
+            </div>
+          </div>
+
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Customer</th>
+                  <th>Total</th>
+                  <th>Method</th>
+                  <th>Collected</th>
+                  <th>Payment Time</th>
+                  <th>Batch</th>
+                </tr>
+              </thead>
+              <tbody id="accountingBody"></tbody>
+            </table>
+          </div>
+        <div class="export-banner" style="margin-top:18px;">
+          <p>Processed orders with payment method and collected status are included in the daily batch totals. Batch format: <strong>SHR-BATCH-YYYY-MM-DD</strong>.</p>
+        </div>
+      </div>
+
+      <div id="tab-pickup-tally" style="display:none;">
+        <div class="excel-calc-toolbar">
+          <div class="excel-calc-copy">
+            <h2>Pickup Tally</h2>
+            <p>Tally your pickup event: ordered boxes, walk-up sales, leftover, spoiled, and cate from everything else.</p>
+          </div>
+          <div class="toolbar-actions">
+            <select id="excelCalcSavedSheet" class="filter-input" onchange="setExcelCalcSheet(this.value)">
+              <option value="">Current Sheet</option>
+            </select>
+            <input type="date" id="excelCalcDate" class="filter-input">
+            <input type="number" id="excelCalcBatchSeq" class="filter-input" min="1" step="1" value="1" style="width:92px">
+            <div class="excel-calc-batch" id="excelCalcBatchName">SHR-BATCH-YYYY-MM-DD_1</div>
+            <button class="toolbar-btn" type="button" onclick="newExcelCalculationsSheet()">New Sheet</button>
+            <button class="toolbar-btn" id="excelCalcSaveBtn" onclick="saveExcelCalculations()">Save Sheet</button>
+          </div>
+        </div>
+
+        <div class="excel-sheet-frame">
+          <div id="excelCalcSheet"></div>
+        </div>
+      </div>
+      </main>
+
+      
+        <!-- ── REFUNDS PANEL ──────────────────────────────────────── -->
+        <section id="tab-refunds" class="tab-panel" style="display:none">
+          <h2>Refund Requests</h2>
+          <p style="color:var(--text-light);font-size:13px;margin-bottom:16px">
+            Pending requests are shown first. For Stripe orders, clicking "Issue Stripe Refund" 
+            will call the Stripe API automatically. For pickup orders, mark manually after completing 
+            the refund via Zelle/cash.
+          </p>
+          <div class="refund-filter-bar">
+            <button class="refund-filter-btn active" id="refundFilter_pending" onclick="setRefundFilter('pending')">Pending (0)</button>
+            <button class="refund-filter-btn" id="refundFilter_approved" onclick="setRefundFilter('approved')">Approved (0)</button>
+            <button class="refund-filter-btn" id="refundFilter_rejected" onclick="setRefundFilter('rejected')">Rejected (0)</button>
+            <button class="refund-filter-btn" id="refundFilter_all" onclick="setRefundFilter('all')">All (0)</button>
+          </div>
+          <div id="refundsContainer">
+            <div class="refund-empty">Click "Refunds" tab to load requests.</div>
+          </div>
+        </section>
+
+        <aside class="admin-stats-rail">
+        <div class="admin-stats" id="adminStats"></div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- Toast --><!-- deploy-20260527-021204 -->
+<div class="admin-toast" id="adminToast"></div>
+
+<script src="assets/js/data.js?v=fixes-20260527"></script>
+<script src="assets/js/firebase-config.js"></script>
+<script type="module" src="assets/js/admin-firebase.js?v=fixes-20260527"></script>
+
+
+<canvas id="particle-canvas"></canvas>
+<script>
+// ── PARTICLE SYSTEM ──────────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('particle-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  class Particle {
+    constructor() { this.reset(); }
+    reset() {
+      this.x  = Math.random() * W;
+      this.y  = Math.random() * H;
+      this.vx = (Math.random() - 0.5) * 0.3;
+      this.vy = (Math.random() - 0.5) * 0.3;
+      this.r  = Math.random() * 1.5 + 0.3;
+      this.alpha = Math.random() * 0.4 + 0.05;
+      this.gold = Math.random() > 0.6;
+    }
+    update() {
+      this.x += this.vx; this.y += this.vy;
+      if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fillStyle = this.gold
+        ? `rgba(200,121,26,${this.alpha})`
+        : `rgba(245,201,122,${this.alpha * 0.5})`;
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+// ── MAGNETIC BUTTONS ────────────────────────────────────────────
+document.addEventListener('mousemove', function(e) {
+  document.querySelectorAll('.admin-tab.active, .toolbar-btn, .admin-logout-btn, .print-btn').forEach(el => {
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width  / 2;
+    const cy = rect.top  + rect.height / 2;
+    const dx = e.clientX - cx;
+    const dy = e.clientY - cy;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const maxDist = 80;
+    if (dist < maxDist) {
+      const force = (1 - dist / maxDist) * 6;
+      el.style.transform = `translate(${dx * force / dist}px, ${dy * force / dist}px)`;
+    } else {
+      el.style.transform = '';
+    }
+  });
+});
+
+// ── SMOOTH TAB TRANSITIONS ──────────────────────────────────────
+const _origSwitchTab = window.switchTab;
+if (_origSwitchTab) {
+  window.switchTab = function(tab, el) {
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      if (p.style.display !== 'none') {
+        p.style.opacity = '0';
+        p.style.transform = 'translateY(8px)';
+      }
+    });
+    setTimeout(() => {
+      _origSwitchTab(tab, el);
+      const panel = document.getElementById('tab-' + tab);
+      if (panel) {
+        panel.style.opacity = '0';
+        panel.style.transform = 'translateY(12px)';
+        requestAnimationFrame(() => {
+          panel.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+          panel.style.opacity = '1';
+          panel.style.transform = 'translateY(0)';
+        });
+      }
+    }, 80);
+  };
+}
+</script>
+
+</body>
+</html
+/* ═══════════════════════════════════════════════════════
+   CRITICAL FIXES — Applied after base styles
+   ═══════════════════════════════════════════════════════ */
+
+/* FIX 1: Order table — dark background, readable text */
+.orders-table-wrap,
+#ordersBody,
+#ordersBody table,
+.orders-table-wrap table {
+  background: transparent !important;
+  color: var(--text) !important;
+}
+.orders-table-wrap {
+  background: var(--glass-light) !important;
+  backdrop-filter: blur(12px) !important;
+}
+.orders-table td { color: var(--text) !important; }
+.orders-table td .customer-name,
+.orders-table td:nth-child(3) { color: var(--gold-200) !important; }
+.orders-table td small,
+.orders-table td .customer-email,
+.orders-table td .customer-phone { color: var(--text-light) !important; }
+/* Order number */
+.orders-table td:nth-child(2) a,
+.orders-table td:nth-child(2) { color: var(--gold-400) !important; font-family: var(--font-mono) !important; font-size: 12px !important; }
+/* Products column */
+.orders-table td .product-pill { color: var(--gold-300) !important; background: rgba(200,121,26,0.12) !important; }
+/* Total */
+.orders-table td:nth-child(6) { color: var(--gold-200) !important; font-weight: 600 !important; }
+/* Location */
+.orders-table td:nth-child(7) { color: var(--text-light) !important; font-size: 12px !important; }
+
+/* FIX 2: Subscribers / Feedback / Customer tables — dark bg, visible text */
+#tab-subscribers table,
+#tab-feedback table,
+#tab-customers table,
+.subscribers-table,
+.feedback-table,
+.customers-table {
+  background: transparent !important;
+}
+#tab-subscribers table td,
+#tab-feedback table td,
+#tab-customers table td {
+  color: var(--text) !important;
+  border-bottom-color: rgba(200,121,26,0.06) !important;
+}
+#tab-subscribers table td:first-child,
+#tab-feedback table td:first-child,
+#tab-customers table td:first-child {
+  color: var(--gold-300) !important;
+}
+#tab-subscribers table tr:hover td,
+#tab-feedback table tr:hover td,
+#tab-customers table tr:hover td {
+  background: rgba(200,121,26,0.04) !important;
+}
+/* All table wrappers */
+#tab-subscribers .table-wrap,
+#tab-feedback .table-wrap,
+#tab-customers .table-wrap,
+#tab-subscribers > div,
+[class*="subscriber-table"],
+[class*="feedback-table"],
+[class*="customer-table"] {
+  background: var(--glass-light) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--r-xl) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* FIX 3: Products — compact card grid, not long scroll */
+#productFormCard,
+#addProductForm,
+.product-form-card {
+  background: var(--glass-light) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--r-xl) !important;
+  padding: 20px !important;
+  margin-bottom: 12px !important;
+}
+/* Make product form a compact two-column grid */
+#addProductForm .manual-order-fields,
+#addProductForm .form-grid,
+.product-form-inner {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+}
+/* Existing product cards — compact grid */
+.product-list-grid,
+#productListContainer,
+.admin-product-list {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+  gap: 12px !important;
+}
+.product-card-admin {
+  padding: 14px !important;
+}
+
+/* FIX 4: Pickup Tally — compact, not huge inputs */
+.ptally-sec, .ptally-section, .excel-calc-section {
+  padding: 14px 16px !important;
+  margin-bottom: 10px !important;
+}
+.var-inp, .ptally-num-input, .ptally-count-input {
+  font-size: 13px !important;
+  padding: 5px 3px !important;
+}
+.pt-table td, .ptally-table td { padding: 5px 8px !important; }
+.pt-table th, .ptally-table th { padding: 5px 8px !important; }
+.ptally-price-input, .pt-inp { width: 65px !important; font-size: 12px !important; padding: 4px 6px !important; }
+.ptally-two, .excel-calc-two-col { gap: 12px !important; }
+
+/* FIX 5: Accounting — collapsible batches, compact */
+.accounting-batch-list .batch-item {
+  padding: 10px 14px !important;
+  font-size: 12px !important;
+}
+#accountingBatchListBody table td { 
+  padding: 6px 10px !important; 
+  font-size: 12px !important;
+  color: var(--text) !important;
+}
+#accountingBatchListBody table th {
+  font-size: 10px !important;
+  padding: 6px 10px !important;
+}
+#accountingStats { color: var(--text) !important; font-size: 13px !important; }
+.accounting-view-btn { font-size: 11px !important; padding: 6px 14px !important; }
+
+/* FIX 6: Refunds — show empty state properly */
+.refund-empty {
+  background: var(--glass-light) !important;
+  border: 1px dashed rgba(200,121,26,0.2) !important;
+  border-radius: var(--r-xl) !important;
+  padding: 48px 20px !important;
+  color: var(--text-light) !important;
+  text-align: center !important;
+  font-size: 14px !important;
+}
+/* Show column headers even when empty */
+#tab-refunds .refund-table-header {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 1fr 1fr 2fr !important;
+  gap: 8px !important;
+  padding: 8px 14px !important;
+  background: rgba(200,121,26,0.06) !important;
+  border-radius: var(--r-md) !important;
+  margin-bottom: 10px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--obs-300) !important;
+}
+
+/* FIX 7: ALL table th backgrounds */
+th, .orders-table th {
+  background: rgba(200,121,26,0.08) !important;
+  color: var(--obs-300) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  padding: 8px 12px !important;
+  border-bottom: 1px solid rgba(200,121,26,0.12) !important;
+}
+
+/* FIX 8: Any remaining white/cream backgrounds */
+[style*="background: white"],
+[style*="background:#fff"],
+[style*="background: #fff"],
+[style*="background:#FFF"],
+[style*="background-color: white"],
+[style*="background-color: #fff"] {
+  background: var(--glass-light) !important;
+  color: var(--text) !important;
+}
+
+/* FIX 9: Section titles visible */
+h2, h3, .section-header h2 {
+  color: var(--gold-300) !important;
+}
+h3, .subsection-title { color: var(--text) !important; font-size: 15px !important; }
+p { color: var(--text-light) !important; }
+label { color: var(--text-light) !important; }
+
+/* FIX 10: Form inputs contrast */
+input, select, textarea {
+  color: var(--gold-200) !important;
+  background: rgba(255,255,255,0.04) !important;
+  border-color: rgba(200,121,26,0.2) !important;
+}
+input::placeholder, textarea::placeholder { color: rgba(154,128,96,0.5) !important; }
+
+/* FIX 11: Stat cards on left when rail hidden */
+#adminStats .stat-card {
+  background: var(--glass-light) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--text) !important;
+}
+.stat-card .stat-label { color: var(--obs-300) !important; }
+.stat-card .stat-value { color: var(--gold-300) !important; }
+
+/* FIX 12: Tally big number */
+.excel-calc-tally-amount,
+[class*="tally-big"],
+[class*="tally-amount"] {
+  font-family: var(--font-display) !important;
+  font-size: 36px !important;
+  font-style: italic !important;
+  color: var(--green) !important;
+}
+
+</style>PE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard – SHRISH LLC</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="icon" href="images/brand/logo-small.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/css/admin-luxury.css?v=fixes-20260527">
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="loginScreen" class="admin-login-wrap">
+  <div class="admin-login-card">
+    <img src="images/brand/logo-small.png" alt="Shrish LLC" />
+    <h2>Admin Access</h2>
+    <p>Enter your admin email and password to manage orders and products</p>
+    <input type="email" id="adminEmail" placeholder="Admin email" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()" />
+    <input type="password" id="adminPw" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+    <button onclick="doLogin()">Login →</button>
+    <p class="login-error" id="loginErr">Login failed. Check your Firebase Auth admin user.</p>
+  </div>
+</div>
+
+<!-- ── DASHBOARD ── -->
+<div id="dashboard" style="display:none;">
+
+  <!-- Top bar -->
+  <div class="admin-topbar">
+    <div class="admin-topbar-left">
+      <img src="images/brand/logo-small.png" alt="Shrish" />
+      <h1>Admin Dashboard</h1>
+    </div>
+    <span id="adminUserEmail" style="font-size:13px;color:var(--text-light);margin-right:8px"></span><button class="admin-logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+
+  <div class="admin-wrap">
+    <div class="admin-layout">
+      <aside class="admin-sidebar">
+        <div class="sidebar-title">Navigation</div>
+        <div class="admin-tabs">
+          <button class="admin-tab active" onclick="switchTab('orders',this)">📋 Orders</button>
+          <div class="sidebar-sheet-group">
+            <div class="sheet-switcher" id="ordersSheetSwitcher">
+              <button class="sheet-pill active" id="ordersSheetActive" onclick="setOrderSheet('active', this)">Active Orders</button>
+              <button class="sheet-pill" id="ordersSheetProcessed" onclick="setOrderSheet('processed', this)">Processed Orders</button>
+              <button class="sheet-pill" id="ordersSheetAll" onclick="setOrderSheet('all', this)">All Orders</button>
+            </div>
+          </div>
+          <div class="sidebar-divider"></div>
+          <button class="admin-tab" onclick="switchTab('products',this)">🛒 Manage Products</button>
+          <button class="admin-tab" onclick="switchTab('customers',this)">Customer Accounts</button>
+          <button class="admin-tab" onclick="switchTab('feedback',this)">Feedback</button>
+          <button class="admin-tab" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
+          <button class="admin-tab" onclick="switchTab('refunds',this);loadRefundTab()">💸 Refunds</button>
+            <button class="admin-tab" onclick="switchTab('accounting',this)">📒 Accounting</button>
+          <button class="admin-tab" onclick="switchTab('pickup-tally',this)">🧾 Pickup Tally</button>
+        </div>
+      </aside>
+
+      <main class="admin-main">
+        <!-- ── ORDERS TAB ── -->
+        <div id="tab-orders">
+          <div class="orders-toolbar">
+            <h2 id="ordersSectionTitle">Active Orders</h2>
+            <div class="toolbar-actions">
+              <input type="search" id="filterSearch" class="filter-input" placeholder="Search order #, name, phone, email" onchange="renderOrders()">
+              <select id="filterLocation" class="filter-input" onchange="renderOrders()">
+                <option value="all">All Locations</option>
+                <option value="shortpump">Short Pump</option>
+                <option value="chesterfield">Chesterfield</option>
+                <option value="mechanicsville">Mechanicsville</option>
+              </select>
+              <input type="date" id="filterDateFrom" class="filter-input" onchange="renderOrders()">
+              <input type="date" id="filterDateTo" class="filter-input" onchange="renderOrders()">
+              <select id="filterStatus" class="filter-input" onchange="renderOrders()">
+                <option value="all">All Orders</option>
+                <option value="pending">Pending</option>
+                <option value="fulfilled">Fulfilled</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="no_show">No Show</option>
+              </select>
+              <button class="toolbar-btn" type="button" onclick="openManualOrderForm()">+ Manual Order</button>
+              <button class="toolbar-btn" id="emailReminderBtn" type="button" onclick="openEmailReminderModal()" style="display:none;">Email Reminder</button>
+              <button class="toolbar-btn" id="whatsappReminderBtn" type="button" onclick="openWhatsAppReminderModal()" style="display:none;">WhatsApp Reminder</button>
+              <button class="toolbar-btn" id="bulkFulfillBtn" onclick="markFilteredActiveFulfilled()">✓ Mark Filtered Fulfilled</button>
+              <button class="toolbar-btn print-btn" onclick="printActiveOrders()" title="Print pickup checklist for today">🖨️ Print Checklist</button>
+              <button class="toolbar-btn" onclick="exportCSV()">⬇ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="orders-help" id="ordersHelpText">
+            Active Orders shows your current pending pickup list. Processed Orders shows fulfilled pickups that still need review. Cancelled and no-show records live in All Orders.
+          </div>
+
+          <div class="active-order-summary" id="activeOrderSummary"></div>
+
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th class="order-select-col"><input type="checkbox" id="selectAllActiveOrders" onchange="toggleVisibleReminderOrders(this.checked)" aria-label="Select all visible active orders"></th>
+                  <th>Order #</th>
+                  <th>Received Date</th>
+                  <th>Customer</th>
+                  <th>Products &amp; Qty</th>
+                  <th>Total</th>
+                  <th>Location</th>
+                  <th>Payment</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ordersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── PRODUCTS TAB ── -->
+        <div class="order-editor-modal" id="orderEditorModal" onclick="handleOrderEditorOverlayClick(event)">
+          <div class="order-editor-card" role="dialog" aria-modal="true" aria-labelledby="orderEditorOrderNumber">
+            <div class="order-editor-head">
+              <div>
+                <h3>Edit Order <span id="orderEditorOrderNumber"></span></h3>
+                <p id="orderEditorCustomer"></p>
+              </div>
+              <button class="order-editor-close" type="button" onclick="closeOrderEditor()">Close</button>
+            </div>
+            <div class="order-editor-toolbar">
+              <select id="orderEditorAddSelect">
+                <option value="">Add an item</option>
+              </select>
+              <button class="toolbar-btn" type="button" onclick="addOrderDraftItem()">+ Add Item</button>
+            </div>
+            <div class="manual-order-fields" id="manualOrderFields">
+              <label class="manual-order-field">
+                First Name
+                <input type="text" id="manualFirstName" autocomplete="off">
+              </label>
+              <label class="manual-order-field">
+                Last Name
+                <input type="text" id="manualLastName" autocomplete="off">
+              </label>
+              <label class="manual-order-field">
+                Phone
+                <input type="tel" id="manualPhone" autocomplete="off">
+              </label>
+              <label class="manual-order-field">
+                Email
+                <input type="email" id="manualEmail" autocomplete="off">
+              </label>
+              <label class="manual-order-field">
+                Pickup Location
+                <select id="manualLocation">
+                  <option value="shortpump">Short Pump, VA</option>
+                  <option value="chesterfield">Chesterfield, VA</option>
+                  <option value="mechanicsville">Mechanicsville, VA</option>
+                </select>
+              </label>
+              <label class="manual-order-field">
+                Pickup Date
+                <input type="date" id="manualPickupDate">
+              </label>
+              <label class="manual-order-field">
+                Payment Method
+                <select id="manualPaymentMethod">
+                  <option value="cash">Cash</option>
+                  <option value="zelle">Zelle</option>
+                  <option value="card">Card</option>
+                  <option value="">Not collected</option>
+                </select>
+              </label>
+              <label class="manual-order-field">
+                Batch Date (for tally)
+                <input type="date" id="manualBatchDate" autocomplete="off">
+              </label>
+              <label class="manual-order-field full">
+                Notes
+                <textarea id="manualNotes" rows="2"></textarea>
+              </label>
+            </div>
+            <div class="order-editor-list" id="orderEditorItems"></div>
+            <div class="order-editor-empty" id="orderEditorEmpty">This order has no items yet. Add a catalog item before saving.</div>
+            <div class="order-editor-foot">
+              <div class="order-editor-summary">
+                <div class="order-editor-pill">Boxes: <strong id="orderEditorBoxes">0</strong></div>
+                <div class="order-editor-pill">Total: <strong id="orderEditorTotal">$0.00</strong></div>
+              </div>
+              <div class="order-editor-actions">
+                <button class="toolbar-btn" type="button" onclick="closeOrderEditor()">Cancel</button>
+                <button class="toolbar-btn" id="orderEditorSaveBtn" type="button" onclick="saveEditedOrder()">Save Changes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-editor-modal" id="emailReminderModal" onclick="handleEmailReminderOverlayClick(event)">
+          <div class="order-editor-card reminder-editor-card" role="dialog" aria-modal="true" aria-labelledby="emailReminderTitle">
+            <div class="order-editor-head">
+              <div>
+                <h3 id="emailReminderTitle">Email Pickup Reminder</h3>
+                <p id="emailReminderSummary">Review selected customers before sending.</p>
+              </div>
+              <button class="order-editor-close" type="button" onclick="closeEmailReminderModal()">Close</button>
+            </div>
+            <div class="reminder-form">
+              <div class="reminder-recipient-list" id="emailReminderRecipients"></div>
+              <label class="reminder-field">
+                Subject
+                <input type="text" id="emailReminderSubject" maxlength="160">
+              </label>
+              <label class="reminder-field">
+                Message
+                <textarea id="emailReminderBody"></textarea>
+              </label>
+              <p class="reminder-help">
+                You can use placeholders: {{firstName}}, {{fullName}}, {{orderNumber}}, {{pickupLocation}}, {{items}}, {{totalBoxes}}, and {{totalPrice}}.
+              </p>
+              <div class="order-editor-actions">
+                <button class="toolbar-btn" type="button" onclick="closeEmailReminderModal()">Cancel</button>
+                <button class="toolbar-btn" id="emailReminderSendBtn" type="button" onclick="sendSelectedReminderEmails()">Send Reminder Emails</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-editor-modal" id="whatsappReminderModal" onclick="handleWhatsAppReminderOverlayClick(event)">
+          <div class="order-editor-card reminder-editor-card" role="dialog" aria-modal="true" aria-labelledby="whatsappReminderTitle">
+            <div class="order-editor-head">
+              <div>
+                <h3 id="whatsappReminderTitle">WhatsApp Pickup Reminder</h3>
+                <p id="whatsappReminderSummary">Review selected customers before opening WhatsApp.</p>
+              </div>
+              <button class="order-editor-close" type="button" onclick="closeWhatsAppReminderModal()">Close</button>
+            </div>
+            <div class="reminder-form">
+              <div class="reminder-recipient-list" id="whatsappReminderRecipients"></div>
+              <label class="reminder-field">
+                Message
+                <textarea id="whatsappReminderBody"></textarea>
+              </label>
+              <p class="reminder-help">
+                Review the message, then use each Open WhatsApp button. WhatsApp opens with the message filled in, and you send it manually.
+              </p>
+              <div class="order-editor-actions">
+                <button class="toolbar-btn" type="button" onclick="closeWhatsAppReminderModal()">Done</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-products" style="display:none;">
+          <div class="products-toolbar">
+            <div class="products-toolbar-copy">
+              <h2>Manage Products</h2>
+              <p>Add new catalog items here. New products will use the same live and coming soon behavior as your existing shop cards.</p>
+            </div>
+            <button class="add-product-btn" onclick="openAddProductForm()">+ Add Product</button>
+          </div>
+          <div class="product-form-card" id="productFormCard">
+            <div class="product-form-head">
+              <div>
+                <h3>Add New Product</h3>
+                <p>Keep category within your current shop groups so the new product appears safely in the existing filters and modal.</p>
+              </div>
+              <button class="product-form-close" type="button" onclick="closeAddProductForm()">Close</button>
+            </div>
+            <form id="addProductForm">
+              <input id="editingProductId" name="editingProductId" type="hidden">
+              <div class="product-form-grid">
+                <div class="product-field">
+                  <label for="newProductName">Product Name</label>
+                  <input id="newProductName" name="name" type="text" required maxlength="120" placeholder="Ex: Imam Pasand Special">
+                </div>
+                <div class="product-field">
+                  <label for="newProductCategory">Category</label>
+                  <select id="newProductCategory" name="category" required>
+                    <option value="mangoes">Fruits/Mangoes</option>
+                    <option value="putharekulu">Putharekulu</option>
+                    <option value="jellysnacks">Jelly</option>
+                    <option value="snacks">Snacks</option>
+                    <option value="picklespodi">Pickles & Podi</option>
+                  </select>
+                </div>
+                <div class="product-field">
+                  <label for="newProductLocalName">Local Name</label>
+                  <input id="newProductLocalName" name="localName" type="text" maxlength="120" placeholder="Optional local language name">
+                </div>
+                <div class="product-field">
+                  <label for="newProductOrigin">Origin</label>
+                  <input id="newProductOrigin" name="origin" type="text" maxlength="120" required placeholder="Ex: Andhra Pradesh">
+                </div>
+                <div class="product-field">
+                  <label for="newProductStatus">Shop Status</label>
+                  <select id="newProductStatus" name="status" required>
+                    <option value="live">Live and orderable</option>
+                    <option value="off">Visible but sold out</option>
+                    <option value="soon">Coming soon / notify only</option>
+                  </select>
+                </div>
+                <div class="product-field">
+                  <label for="newProductTag">Tag</label>
+                  <input id="newProductTag" name="tag" type="text" maxlength="60" placeholder="Ex: Limited, Premium, Best Seller">
+                </div>
+                <div class="product-field">
+                  <label for="newProductPrice">Price (numbers only)</label>
+                  <input id="newProductPrice" name="price" type="number" min="0" step="0.01" placeholder="56">
+                  <small>Leave empty for coming soon products.</small>
+                </div>
+                <div class="product-field">
+                  <label for="newProductUnit">Unit</label>
+                  <input id="newProductUnit" name="unit" type="text" maxlength="80" required value="per box">
+                </div>
+                <div class="product-field">
+                  <label for="newProductImage">Main Image</label>
+                  <input id="newProductImage" name="image" type="text" maxlength="200" placeholder="Ex: img_new_product.jpg">
+                  <small>Use one main cover image here.</small>
+                </div>
+                <div class="product-field">
+                  <label for="newProductGallery">Gallery Images</label>
+                  <input id="newProductGallery" name="gallery" type="text" maxlength="500" placeholder="Ex: img_new_product_1.jpg, img_new_product_2.jpg">
+                  <small>Add extra images here, separated by commas.</small>
+                </div>
+                <div class="product-field">
+                  <label for="newProductSeason">Season</label>
+                  <input id="newProductSeason" name="season" type="text" maxlength="80" placeholder="Ex: May - July">
+                </div>
+                <div class="product-field">
+                  <label for="newProductTaste">Taste</label>
+                  <input id="newProductTaste" name="taste" type="text" maxlength="120" placeholder="Ex: Sweet - Rich - Fiberless">
+                </div>
+                <div class="product-field">
+                  <label for="newProductBestFor">Best For</label>
+                  <input id="newProductBestFor" name="bestFor" type="text" maxlength="160" placeholder="Ex: Eating fresh - Lassi - Dessert">
+                </div>
+                <div class="product-field full">
+                  <label for="newProductDescription">Description</label>
+                  <textarea id="newProductDescription" name="description" maxlength="700" required placeholder="Write the short description you want to show in the shop card and product modal."></textarea>
+                </div>
+                <div class="variant-fields" id="variantFields">
+                  <h4>Category Size / Count Options</h4>
+                  <div class="variant-help">Use these for Putharekulu, Jelly & Snacks, and Pickles & Podi products when you want selectable size/count options with different pricing.</div>
+                  <div class="product-field">
+                    <label id="variantOneLabelText" for="variantOneLabel">Option 1 Label</label>
+                    <input id="variantOneLabel" name="variantOneLabel" type="text" maxlength="60" placeholder="Ex: 5 count or 250g">
+                  </div>
+                  <div class="product-field">
+                    <label id="variantOnePriceText" for="variantOnePrice">Option 1 Price</label>
+                    <input id="variantOnePrice" name="variantOnePrice" type="number" min="0" step="0.01" placeholder="7.99">
+                  </div>
+                  <div class="product-field">
+                    <label id="variantOneSkuText" for="variantOneSku">Option 1 SKU</label>
+                    <input id="variantOneSku" name="variantOneSku" type="text" maxlength="40" placeholder="Ex: PSK5 or MJS250">
+                  </div>
+                  <div class="product-field">
+                    <label id="variantTwoLabelText" for="variantTwoLabel">Option 2 Label</label>
+                    <input id="variantTwoLabel" name="variantTwoLabel" type="text" maxlength="60" placeholder="Ex: 10 count or 500g">
+                  </div>
+                  <div class="product-field">
+                    <label id="variantTwoPriceText" for="variantTwoPrice">Option 2 Price</label>
+                    <input id="variantTwoPrice" name="variantTwoPrice" type="number" min="0" step="0.01" placeholder="14.99">
+                  </div>
+                  <div class="product-field">
+                    <label id="variantTwoSkuText" for="variantTwoSku">Option 2 SKU</label>
+                    <input id="variantTwoSku" name="variantTwoSku" type="text" maxlength="40" placeholder="Ex: PSK10 or MJS500">
+                  </div>
+                </div>
+              </div>
+              <div class="product-form-actions">
+                <button class="product-secondary-btn" type="button" onclick="resetAddProductForm()">Reset</button>
+                <button class="product-primary-btn" id="addProductSubmitBtn" type="submit">Save Product</button>
+              </div>
+            </form>
+          </div>
+          <div class="products-filter-bar" id="productsFilterBar">
+            <span class="products-filter-label">Filter Products</span>
+          </div>
+          <div class="products-manage-grid" id="productsGrid"></div>
+        </div>
+
+        <div id="tab-subscribers" style="display:none;">
+          <div class="orders-toolbar">
+            <h2>Email Subscribers</h2>
+            <div class="toolbar-actions">
+              <button class="toolbar-btn" onclick="exportSubscribersCSV()">⬇ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Subscription</th>
+                  <th>Source</th>
+                  <th>Status</th>
+                  <th>Consent</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="subscribersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="tab-customers" style="display:none;">
+          <div class="orders-toolbar">
+            <div>
+              <h2>Customer Accounts</h2>
+              <p class="orders-help">Read-only customer profiles. Delete is available only for accounts with no orders.</p>
+            </div>
+            <div class="toolbar-actions">
+              <input type="search" id="customerSearch" class="filter-input" placeholder="Search name, email, phone" oninput="renderCustomers()">
+              <button class="toolbar-btn" onclick="exportCustomersCSV()">Export CSV</button>
+            </div>
+          </div>
+          <div class="customers-summary" id="customersSummary"></div>
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email / UID</th>
+                  <th>Phone</th>
+                  <th>Preferred Pickup</th>
+                  <th>Address</th>
+                  <th>Orders</th>
+                  <th>Created / Updated</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="customersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="tab-feedback" style="display:none;">
+          <div class="orders-toolbar">
+            <div>
+              <h2>Customer Feedback</h2>
+              <p class="orders-help">Review order feedback saved in Firestore. Use filters to spot product, pickup, or low-rating patterns.</p>
+            </div>
+            <div class="toolbar-actions">
+              <input type="search" id="feedbackSearch" class="filter-input" placeholder="Search order, item, email" oninput="renderFeedback()">
+              <select id="feedbackRating" class="filter-input" onchange="renderFeedback()">
+                <option value="all">All ratings</option>
+                <option value="low">Low ratings 1-3</option>
+                <option value="5">5 stars</option>
+                <option value="4">4 stars</option>
+                <option value="3">3 stars</option>
+                <option value="2">2 stars</option>
+                <option value="1">1 star</option>
+              </select>
+              <select id="feedbackLocation" class="filter-input" onchange="renderFeedback()">
+                <option value="all">All locations</option>
+                <option value="shortpump">Short Pump</option>
+                <option value="chesterfield">Chesterfield</option>
+                <option value="mechanicsville">Mechanicsville</option>
+              </select>
+              <button class="toolbar-btn" onclick="exportFeedbackCSV()">Export CSV</button>
+            </div>
+          </div>
+          <div class="customers-summary" id="feedbackSummary"></div>
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th>Rating</th>
+                  <th>Answers</th>
+                  <th>Items</th>
+                  <th>Pickup</th>
+                  <th>Submitted</th>
+                </tr>
+              </thead>
+              <tbody id="feedbackBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+          <div id="tab-accounting" style="display:none;">
+            <div class="accounting-toolbar">
+              <h2>Accounting</h2>
+              <div class="toolbar-actions">
+                <input type="date" id="accountingDate" class="filter-input" onchange="renderAccounting()" />
+                <div class="accounting-batch" id="accountingBatchName">SHR-BATCH-YYYY-MM-DD</div>
+                <button class="toolbar-btn" onclick="saveAccountingBatch()">Save Tally</button>
+                <button class="toolbar-btn" id="closeBatchBtn" onclick="closeAccountingBatch()">Close Batch</button>
+                <button class="toolbar-btn" id="reopenBatchBtn" onclick="reopenAccountingBatch()" style="display:none;">Reopen Batch</button>
+                <button class="toolbar-btn" onclick="exportAccountingBatchCSV()">Export Batch CSV</button>
+              </div>
+            </div>
+            <div class="sheet-switcher accounting-view-switcher" id="accountingViewSwitcher">
+              <button class="sheet-pill active" id="accountingViewOpen" onclick="setAccountingView('open')">Open Batches</button>
+              <button class="sheet-pill" id="accountingViewClosed" onclick="setAccountingView('closed')">Closed Batches</button>
+            </div>
+            <div class="batch-list-card">
+              <h3 id="accountingBatchListTitle">Open Batches</h3>
+              <div class="batch-list-help" id="accountingBatchListHelp">Open batches stay here until you finish tallying and close them. Closed batches move to their own tab, and reopened batches come back here.</div>
+              <div class="batch-list-table-wrap">
+                <table class="batch-list-table">
+                  <thead>
+                    <tr>
+                      <th>Batch</th>
+                      <th>Status</th>
+                      <th>Orders</th>
+                      <th>Collected Total</th>
+                      <th>Last Saved</th>
+                      <th>Closed At</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="accountingBatchListBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="accounting-grid" id="accountingStats"></div>
+
+          <div class="tally-box">
+            <h3>Tally Check</h3>
+            <div class="tally-help">Difference compares the actual amounts you enter below against the collected total for this batch.</div>
+            <div class="batch-status-box" id="batchStatusBox">Batch is open. Save the tally during pickup and close the batch once the day is finalized.</div>
+            <div class="tally-grid">
+              <div class="tally-field">
+                <label for="actualCash">Actual Cash Counted</label>
+                <input type="number" id="actualCash" min="0" step="0.01" placeholder="0.00" oninput="renderAccounting()">
+              </div>
+              <div class="tally-field">
+                <label for="actualZelle">Actual Zelle Received</label>
+                <input type="number" id="actualZelle" min="0" step="0.01" placeholder="0.00" oninput="renderAccounting()">
+              </div>
+              <div class="tally-field">
+                <label for="actualCard">Actual Card Total</label>
+                <input type="number" id="actualCard" min="0" step="0.01" placeholder="0.00" oninput="renderAccounting()">
+              </div>
+            </div>
+            <div class="tally-actions">
+              <button class="toolbar-btn" onclick="saveAccountingBatch()">Save Tally</button>
+              <button class="toolbar-btn" onclick="exportAccountingBatchCSV()">Export Batch CSV</button>
+            </div>
+          </div>
+
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Customer</th>
+                  <th>Total</th>
+                  <th>Method</th>
+                  <th>Collected</th>
+                  <th>Payment Time</th>
+                  <th>Batch</th>
+                </tr>
+              </thead>
+              <tbody id="accountingBody"></tbody>
+            </table>
+          </div>
+        <div class="export-banner" style="margin-top:18px;">
+          <p>Processed orders with payment method and collected status are included in the daily batch totals. Batch format: <strong>SHR-BATCH-YYYY-MM-DD</strong>.</p>
+        </div>
+      </div>
+
+      <div id="tab-pickup-tally" style="display:none;">
+        <div class="excel-calc-toolbar">
+          <div class="excel-calc-copy">
+            <h2>Pickup Tally</h2>
+            <p>Tally your pickup event: ordered boxes, walk-up sales, leftover, spoiled, and cate from everything else.</p>
+          </div>
+          <div class="toolbar-actions">
+            <select id="excelCalcSavedSheet" class="filter-input" onchange="setExcelCalcSheet(this.value)">
+              <option value="">Current Sheet</option>
+            </select>
+            <input type="date" id="excelCalcDate" class="filter-input">
+            <input type="number" id="excelCalcBatchSeq" class="filter-input" min="1" step="1" value="1" style="width:92px">
+            <div class="excel-calc-batch" id="excelCalcBatchName">SHR-BATCH-YYYY-MM-DD_1</div>
+            <button class="toolbar-btn" type="button" onclick="newExcelCalculationsSheet()">New Sheet</button>
+            <button class="toolbar-btn" id="excelCalcSaveBtn" onclick="saveExcelCalculations()">Save Sheet</button>
+          </div>
+        </div>
+
+        <div class="excel-sheet-frame">
+          <div id="excelCalcSheet"></div>
+        </div>
+      </div>
+      </main>
+
+      
+        <!-- ── REFUNDS PANEL ──────────────────────────────────────── -->
+        <section id="tab-refunds" class="tab-panel" style="display:none">
+          <h2>Refund Requests</h2>
+          <p style="color:var(--text-light);font-size:13px;margin-bottom:16px">
+            Pending requests are shown first. For Stripe orders, clicking "Issue Stripe Refund" 
+            will call the Stripe API automatically. For pickup orders, mark manually after completing 
+            the refund via Zelle/cash.
+          </p>
+          <div class="refund-filter-bar">
+            <button class="refund-filter-btn active" id="refundFilter_pending" onclick="setRefundFilter('pending')">Pending (0)</button>
+            <button class="refund-filter-btn" id="refundFilter_approved" onclick="setRefundFilter('approved')">Approved (0)</button>
+            <button class="refund-filter-btn" id="refundFilter_rejected" onclick="setRefundFilter('rejected')">Rejected (0)</button>
+            <button class="refund-filter-btn" id="refundFilter_all" onclick="setRefundFilter('all')">All (0)</button>
+          </div>
+          <div id="refundsContainer">
+            <div class="refund-empty">Click "Refunds" tab to load requests.</div>
+          </div>
+        </section>
+
+        <aside class="admin-stats-rail">
+        <div class="admin-stats" id="adminStats"></div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- Toast --><!-- deploy-20260527-021204 -->
+<div class="admin-toast" id="adminToast"></div>
+
+<script src="assets/js/data.js?v=fixes-20260527"></script>
+<script src="assets/js/firebase-config.js"></script>
+<script type="module" src="assets/js/admin-firebase.js?v=fixes-20260527"></script>
 
 
 <canvas id="particle-canvas"></canvas>
