@@ -1758,3 +1758,373 @@ p, span, div, label, li { color: inherit; }
 .stat-card .stat-sub   { color: #9A8060 !important; }
 
 /* v=1779848324 */
+
+/* ═══════════════════════════════════════════════════════
+   CRITICAL FIXES — Applied after base styles
+   ═══════════════════════════════════════════════════════ */
+
+/* FIX 1: Order table — dark background, readable text */
+.orders-table-wrap,
+#ordersBody,
+#ordersBody table,
+.orders-table-wrap table {
+  background: transparent !important;
+  color: var(--text) !important;
+}
+.orders-table-wrap {
+  background: var(--glass-light) !important;
+  backdrop-filter: blur(12px) !important;
+}
+.orders-table td { color: var(--text) !important; }
+.orders-table td .customer-name,
+.orders-table td:nth-child(3) { color: var(--gold-200) !important; }
+.orders-table td small,
+.orders-table td .customer-email,
+.orders-table td .customer-phone { color: var(--text-light) !important; }
+/* Order number */
+.orders-table td:nth-child(2) a,
+.orders-table td:nth-child(2) { color: var(--gold-400) !important; font-family: var(--font-mono) !important; font-size: 12px !important; }
+/* Products column */
+.orders-table td .product-pill { color: var(--gold-300) !important; background: rgba(200,121,26,0.12) !important; }
+/* Total */
+.orders-table td:nth-child(6) { color: var(--gold-200) !important; font-weight: 600 !important; }
+/* Location */
+.orders-table td:nth-child(7) { color: var(--text-light) !important; font-size: 12px !important; }
+
+/* FIX 2: Subscribers / Feedback / Customer tables — dark bg, visible text */
+#tab-subscribers table,
+#tab-feedback table,
+#tab-customers table,
+.subscribers-table,
+.feedback-table,
+.customers-table {
+  background: transparent !important;
+}
+#tab-subscribers table td,
+#tab-feedback table td,
+#tab-customers table td {
+  color: var(--text) !important;
+  border-bottom-color: rgba(200,121,26,0.06) !important;
+}
+#tab-subscribers table td:first-child,
+#tab-feedback table td:first-child,
+#tab-customers table td:first-child {
+  color: var(--gold-300) !important;
+}
+#tab-subscribers table tr:hover td,
+#tab-feedback table tr:hover td,
+#tab-customers table tr:hover td {
+  background: rgba(200,121,26,0.04) !important;
+}
+/* All table wrappers */
+#tab-subscribers .table-wrap,
+#tab-feedback .table-wrap,
+#tab-customers .table-wrap,
+#tab-subscribers > div,
+[class*="subscriber-table"],
+[class*="feedback-table"],
+[class*="customer-table"] {
+  background: var(--glass-light) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--r-xl) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* FIX 3: Products — compact card grid, not long scroll */
+#productFormCard,
+#addProductForm,
+.product-form-card {
+  background: var(--glass-light) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--r-xl) !important;
+  padding: 20px !important;
+  margin-bottom: 12px !important;
+}
+/* Make product form a compact two-column grid */
+#addProductForm .manual-order-fields,
+#addProductForm .form-grid,
+.product-form-inner {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+}
+/* Existing product cards — compact grid */
+.product-list-grid,
+#productListContainer,
+.admin-product-list {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+  gap: 12px !important;
+}
+.product-card-admin {
+  padding: 14px !important;
+}
+
+/* FIX 4: Pickup Tally — compact, not huge inputs */
+.ptally-sec, .ptally-section, .excel-calc-section {
+  padding: 14px 16px !important;
+  margin-bottom: 10px !important;
+}
+.var-inp, .ptally-num-input, .ptally-count-input {
+  font-size: 13px !important;
+  padding: 5px 3px !important;
+}
+.pt-table td, .ptally-table td { padding: 5px 8px !important; }
+.pt-table th, .ptally-table th { padding: 5px 8px !important; }
+.ptally-price-input, .pt-inp { width: 65px !important; font-size: 12px !important; padding: 4px 6px !important; }
+.ptally-two, .excel-calc-two-col { gap: 12px !important; }
+
+/* FIX 5: Accounting — collapsible batches, compact */
+.accounting-batch-list .batch-item {
+  padding: 10px 14px !important;
+  font-size: 12px !important;
+}
+#accountingBatchListBody table td {
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+  color: var(--text) !important;
+}
+#accountingBatchListBody table th {
+  font-size: 10px !important;
+  padding: 6px 10px !important;
+}
+#accountingStats { color: var(--text) !important; font-size: 13px !important; }
+.accounting-view-btn { font-size: 11px !important; padding: 6px 14px !important; }
+
+/* FIX 6: Refunds — show empty state properly */
+.refund-empty {
+  background: var(--glass-light) !important;
+  border: 1px dashed rgba(200,121,26,0.2) !important;
+  border-radius: var(--r-xl) !important;
+  padding: 48px 20px !important;
+  color: var(--text-light) !important;
+  text-align: center !important;
+  font-size: 14px !important;
+}
+/* Show column headers even when empty */
+#tab-refunds .refund-table-header {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 1fr 1fr 2fr !important;
+  gap: 8px !important;
+  padding: 8px 14px !important;
+  background: rgba(200,121,26,0.06) !important;
+  border-radius: var(--r-md) !important;
+  margin-bottom: 10px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--obs-300) !important;
+}
+
+/* FIX 7: ALL table th backgrounds */
+th, .orders-table th {
+  background: rgba(200,121,26,0.08) !important;
+  color: var(--obs-300) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  padding: 8px 12px !important;
+  border-bottom: 1px solid rgba(200,121,26,0.12) !important;
+}
+
+/* FIX 8: Any remaining white/cream backgrounds */
+[style*="background: white"],
+[style*="background:#fff"],
+[style*="background: #fff"],
+[style*="background:#FFF"],
+[style*="background-color: white"],
+[style*="background-color: #fff"] {
+  background: var(--glass-light) !important;
+  color: var(--text) !important;
+}
+
+/* FIX 9: Section titles visible */
+h2, h3, .section-header h2 {
+  color: var(--gold-300) !important;
+}
+h3, .subsection-title { color: var(--text) !important; font-size: 15px !important; }
+p { color: var(--text-light) !important; }
+label { color: var(--text-light) !important; }
+
+/* FIX 10: Form inputs contrast */
+input, select, textarea {
+  color: var(--gold-200) !important;
+  background: rgba(255,255,255,0.04) !important;
+  border-color: rgba(200,121,26,0.2) !important;
+}
+input::placeholder, textarea::placeholder { color: rgba(154,128,96,0.5) !important; }
+
+/* FIX 11: Stat cards on left when rail hidden */
+#adminStats .stat-card {
+  background: var(--glass-light) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--text) !important;
+}
+.stat-card .stat-label { color: var(--obs-300) !important; }
+.stat-card .stat-value { color: var(--gold-300) !important; }
+
+/* FIX 12: Tally big number */
+.excel-calc-tally-amount,
+[class*="tally-big"],
+[class*="tally-amount"] {
+  font-family: var(--font-display) !important;
+  font-size: 36px !important;
+  font-style: italic !important;
+  color: var(--green) !important;
+}
+
+/* ══════════════════════════════════════════
+   TARGETED FIXES v3 — 2026-05-27
+   ══════════════════════════════════════════ */
+
+/* PRODUCT FORM — 2-col compact grid */
+.product-form-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px 16px !important;
+}
+.product-field {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+}
+.product-field label {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--text-light) !important;
+}
+.product-field input,
+.product-field select,
+.product-field textarea {
+  padding: 9px 12px !important;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(200,121,26,0.2) !important;
+  border-radius: 10px !important;
+  color: var(--gold-200) !important;
+  font-size: 13px !important;
+  font-family: var(--font-body) !important;
+  outline: none !important;
+}
+.product-field input:focus,
+.product-field select:focus {
+  border-color: var(--gold-400) !important;
+  background: rgba(200,121,26,0.06) !important;
+  box-shadow: 0 0 0 3px rgba(200,121,26,0.1) !important;
+}
+.product-field small {
+  font-size: 10px !important;
+  color: var(--text-light) !important;
+}
+.product-field.full-width { grid-column: 1 / -1 !important; }
+.product-form-head {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  margin-bottom: 16px !important;
+  padding-bottom: 14px !important;
+  border-bottom: 1px solid rgba(200,121,26,0.15) !important;
+}
+.product-form-head h3 {
+  font-family: var(--font-display) !important;
+  font-size: 22px !important;
+  font-style: italic !important;
+  color: var(--gold-300) !important;
+  margin-bottom: 4px !important;
+}
+.product-form-head p {
+  font-size: 12px !important;
+  color: var(--text-light) !important;
+  margin: 0 !important;
+}
+.product-form-close {
+  padding: 7px 16px !important;
+  background: transparent !important;
+  border: 1px solid rgba(200,121,26,0.25) !important;
+  border-radius: 99px !important;
+  color: var(--text-light) !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+}
+.product-form-close:hover {
+  border-color: var(--red) !important;
+  color: var(--red) !important;
+}
+.product-form-actions {
+  display: flex !important;
+  gap: 10px !important;
+  margin-top: 16px !important;
+  padding-top: 14px !important;
+  border-top: 1px solid rgba(200,121,26,0.1) !important;
+}
+
+/* EXISTING PRODUCTS LIST — compact grid cards */
+.product-admin-item, .product-list-item {
+  background: var(--glass-light) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 12px !important;
+  padding: 14px !important;
+  transition: all 0.2s ease !important;
+}
+.product-admin-item:hover, .product-list-item:hover {
+  border-color: rgba(200,121,26,0.3) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* ORDERS TABLE — readable text, dark bg */
+.orders-table-wrap, .orders-table-wrap * {
+  background: transparent !important;
+}
+.orders-table-wrap {
+  background: rgba(255,248,237,0.04) !important;
+  border: 1px solid rgba(200,121,26,0.15) !important;
+  border-radius: 18px !important;
+  backdrop-filter: blur(12px) !important;
+}
+.orders-table td {
+  color: #D4B896 !important;
+  border-bottom: 1px solid rgba(200,121,26,0.06) !important;
+}
+.orders-table tr:hover td { background: rgba(200,121,26,0.04) !important; }
+.orders-table th {
+  background: rgba(200,121,26,0.08) !important;
+  color: rgba(154,128,96,0.8) !important;
+  border-bottom: 1px solid rgba(200,121,26,0.12) !important;
+}
+
+/* ALL TABLE TEXT READABLE */
+table td { color: #D4B896 !important; }
+table th { color: rgba(154,128,96,0.8) !important; background: rgba(200,121,26,0.06) !important; }
+table tr:hover td { background: rgba(200,121,26,0.04) !important; }
+table { background: transparent !important; }
+
+/* WRAP ALL TABLES IN DARK GLASS */
+.table-wrap, [class*="table-wrap"] {
+  background: rgba(255,248,237,0.04) !important;
+  border: 1px solid rgba(200,121,26,0.15) !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* HEADINGS VISIBLE */
+h2, h3 { color: var(--gold-300) !important; }
+p, li, small { color: #9A8060 !important; }
+label { color: #9A8060 !important; }
+strong { color: #D4B896 !important; }
+span { color: inherit; }
+
+/* ACCOUNTING COMPACT */
+#tab-accounting table td,
+#tab-pickup-tally table td {
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+  color: #D4B896 !important;
+}
+.batch-item { padding: 9px 12px !important; }
+.batch-item:hover { transform: translateX(3px) !important; }
