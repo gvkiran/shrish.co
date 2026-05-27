@@ -2912,7 +2912,6 @@ function printActiveOrders() {
   });
 
   const totalBoxes = orders.reduce((s, o) => s + (printableQty(o) || 0), 0);
-  const totalAmt   = orders.reduce((s, o) => s + (Number(o.totalPrice) || 0), 0);
   const now = new Date();
   const printDate = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
   const printTime = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
@@ -2921,14 +2920,12 @@ function printActiveOrders() {
   let bodyHtml = '';
   Object.entries(groups).forEach(([loc, locOrders]) => {
     const locBoxes = locOrders.reduce((s,o) => s + (printableQty(o)||0), 0);
-    const locAmt   = locOrders.reduce((s,o) => s + (Number(o.totalPrice)||0), 0);
-    bodyHtml += `<tr class="loc-hdr"><td colspan="7">&#128205; ${escapeHtml(loc)}<span class="loc-meta">${locOrders.length} orders &nbsp;&bull;&nbsp; ${locBoxes} boxes &nbsp;&bull;&nbsp; ${formatCurrency(locAmt)}</span></td></tr>`;
+    bodyHtml += `<tr class="loc-hdr"><td colspan="6">&#128205; ${escapeHtml(loc)}<span class="loc-meta">${locOrders.length} orders &nbsp;&bull;&nbsp; ${locBoxes} boxes</span></td></tr>`;
     locOrders.forEach(order => {
       const name  = escapeHtml((order.fullName || `${order.firstName||''} ${order.lastName||''}`.trim()).trim());
       const phone = escapeHtml(order.phone || '');
       const items = (order.items || []).map(it => `<span class="pill">${escapeHtml(it.name||'Item')} &times;${it.qty||1}</span>`).join(' ');
       const qty   = printableQty(order);
-      const amt   = formatCurrency(order.totalPrice || 0);
       const onum  = escapeHtml(String(order.orderNumber || order.id || ''));
       const pref  = (order.paymentMethod || '').toLowerCase();
       const Z = pref === 'zelle' ? ' pre' : '';
@@ -2941,7 +2938,6 @@ function printActiveOrders() {
           <td class="c-name">${name}<div class="phone">${phone}</div></td>
           <td class="c-items">${items}</td>
           <td class="c-qty">${qty}</td>
-          <td class="c-amt">${amt}</td>
           <td class="c-pay">
             <div class="pay-row">
               <label class="cb-lbl"><span class="cb${C}"></span>Cash</label>
@@ -2952,7 +2948,7 @@ function printActiveOrders() {
           </td>
         </tr>`;
     });
-    bodyHtml += `<tr class="loc-sub"><td colspan="4" class="sub-lbl">Subtotal &mdash; ${escapeHtml(loc)}</td><td class="sub-boxes">${locBoxes} boxes</td><td class="sub-amt">${formatCurrency(locAmt)}</td><td></td></tr>`;
+    bodyHtml += `<tr class="loc-sub"><td colspan="4" class="sub-lbl">Subtotal &mdash; ${escapeHtml(loc)}</td><td class="sub-boxes">${locBoxes} boxes</td><td></td></tr>`;
   });
 
   const pw = window.open('', '_blank', 'width=1100,height=860');
@@ -2972,13 +2968,6 @@ function printActiveOrders() {
   .hdr-right{text-align:right;font-size:11px}
   .hdr-right .big{font-size:17px;font-weight:700;color:#C8791A;display:block}
 
-  /* ── LEGEND (screen only) ── */
-  .legend{background:#FDF3E3;border:1px solid #F0D8A0;border-radius:5px;padding:6px 11px;margin-bottom:10px;font-size:10.5px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
-  .legend b{color:#7A4800}
-  .demo{display:inline-block;width:13px;height:13px;border:2px solid #333;border-radius:2px;vertical-align:middle;margin-right:3px}
-  .demo.pre{background:#FDF3E3;border-color:#C8791A}
-  .demo.grn{border:2px solid #2E7D32;background:#E8F5E9}
-
   /* ── TABLE ── */
   table{width:100%;border-collapse:collapse;font-size:11.5px}
   colgroup col:nth-child(1){width:28px}
@@ -2986,11 +2975,10 @@ function printActiveOrders() {
   colgroup col:nth-child(3){width:155px}
   colgroup col:nth-child(4){width:auto}
   colgroup col:nth-child(5){width:38px}
-  colgroup col:nth-child(6){width:60px}
-  colgroup col:nth-child(7){width:168px}
+  colgroup col:nth-child(6){width:168px}
 
   thead th{background:#7A4800;color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.5px;padding:6px 7px;text-align:left;border:1px solid #5A3000}
-  thead th:nth-child(5),thead th:nth-child(6){text-align:center}
+  thead th:nth-child(5){text-align:center}
 
   /* location header */
   tr.loc-hdr td{background:#F5E4C8;color:#7A4800;font-weight:700;font-size:11.5px;padding:6px 9px;border:1px solid #D9C0A0}
@@ -3008,7 +2996,6 @@ function printActiveOrders() {
   .c-items{}
   .pill{display:inline-block;background:#FDF3E3;border:1px solid #EDD5A0;border-radius:3px;padding:1px 5px;margin:1px 2px 1px 0;font-size:10.5px;font-weight:700;color:#7A4800;white-space:nowrap}
   .c-qty{text-align:center;font-weight:800;font-size:15px;color:#2E7D32;vertical-align:middle!important}
-  .c-amt{text-align:center;font-weight:700;font-size:12px;white-space:nowrap;vertical-align:middle!important}
   .c-pay{vertical-align:middle!important}
 
   /* checkboxes */
@@ -3022,12 +3009,10 @@ function printActiveOrders() {
   /* subtotal */
   tr.loc-sub td{background:#FAF5EE;font-weight:700;font-size:11px;padding:5px 7px;border:1px solid #D9C0A0;color:#555}
   .sub-lbl{text-align:right}
-  .sub-boxes,.sub-amt{text-align:center;color:#2E7D32}
+  .sub-boxes{text-align:center;color:#2E7D32}
 
   /* grand total */
   .grand{margin-top:10px;background:#7A4800;color:#fff;border-radius:5px;padding:9px 14px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
-  .grand strong{font-size:17px}
-
   /* notes */
   .notes{margin-top:12px;border:1.5px dashed #C8791A;border-radius:5px;padding:9px 13px}
   .notes h3{font-size:11.5px;font-weight:700;color:#7A4800;margin-bottom:7px}
@@ -3037,7 +3022,6 @@ function printActiveOrders() {
   @media print{
     @page{size:A4 landscape;margin:10mm 12mm}
     body{padding:0;font-size:11px}
-    .legend{display:none}
     thead{display:table-header-group}
     tr.orow{page-break-inside:avoid}
     tr.loc-hdr{page-break-before:auto}
@@ -3056,19 +3040,11 @@ function printActiveOrders() {
   </div>
   <div class="hdr-right">
     <span class="big">${orders.length} orders &nbsp; ${totalBoxes} boxes</span>
-    Expected: ${formatCurrency(totalAmt)}
   </div>
 </div>
 
-<div class="legend">
-  <b>How to use:</b>
-  <span><span class="demo pre"></span> Orange tint = payment pre-selected by customer</span>
-  <span><span class="demo"></span> Tick Cash / Zelle / Card when you receive payment</span>
-  <span><span class="demo grn"></span> Tick &ldquo;Handed over&rdquo; when boxes given out</span>
-</div>
-
 <table>
-  <colgroup><col><col><col><col><col><col><col></colgroup>
+  <colgroup><col><col><col><col><col><col></colgroup>
   <thead>
     <tr>
       <th>#</th>
@@ -3076,7 +3052,6 @@ function printActiveOrders() {
       <th>Name &amp; Phone</th>
       <th>Items Ordered</th>
       <th style="text-align:center">Boxes</th>
-      <th style="text-align:center">Amount</th>
       <th>Payment &amp; Handover</th>
     </tr>
   </thead>
@@ -3085,7 +3060,6 @@ function printActiveOrders() {
 
 <div class="grand">
   <span>GRAND TOTAL &nbsp;&bull;&nbsp; ${orders.length} orders &nbsp;&bull;&nbsp; ${totalBoxes} boxes</span>
-  <strong>${formatCurrency(totalAmt)}</strong>
 </div>
 
 <div class="notes">
