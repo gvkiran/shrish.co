@@ -2436,3 +2436,104 @@ span { color: inherit; }
     justify-content: flex-start !important;
   }
 }
+
+/* Accounting batch picker: replace long batch list with one dropdown */
+#tab-accounting .batch-list-card {
+  max-width: 980px !important;
+  margin-bottom: 16px !important;
+  padding: 14px 16px !important;
+  background: rgba(255,248,237,0.04) !important;
+  border: 1px solid rgba(200,121,26,0.16) !important;
+  border-radius: 14px !important;
+}
+
+#tab-accounting .batch-list-help {
+  margin: 4px 0 12px !important;
+  color: var(--text-light) !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+.accounting-batch-picker {
+  display: grid !important;
+  grid-template-columns: minmax(160px, 1fr) minmax(320px, 3fr) !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin-bottom: 12px !important;
+}
+
+.accounting-batch-picker label {
+  color: var(--text-light) !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+#accountingBatchSelect {
+  width: 100% !important;
+  min-height: 42px !important;
+  color: var(--gold-200) !important;
+  font-size: 13px !important;
+}
+
+.accounting-batch-summary {
+  display: block !important;
+}
+
+.accounting-batch-summary-card {
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(115px, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.accounting-batch-summary-card > div {
+  min-width: 0 !important;
+  padding: 10px 11px !important;
+  background: rgba(8,6,4,0.32) !important;
+  border: 1px solid rgba(200,121,26,0.12) !important;
+  border-radius: 10px !important;
+}
+
+.accounting-batch-summary-card span {
+  display: block !important;
+  margin-bottom: 4px !important;
+  color: var(--text-light) !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+.accounting-batch-summary-card strong {
+  display: block !important;
+  overflow: hidden !important;
+  color: var(--gold-200) !important;
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.accounting-batch-summary-card strong.good {
+  color: var(--green) !important;
+}
+
+.accounting-batch-summary-card strong.warn {
+  color: var(--amber) !important;
+}
+
+@media (max-width: 1100px) {
+  .accounting-batch-summary-card {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .accounting-batch-picker {
+    grid-template-columns: 1fr !important;
+  }
+  .accounting-batch-summary-card {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}

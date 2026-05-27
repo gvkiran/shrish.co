@@ -574,8 +574,9 @@ function renderAccountingBatchList(selectedBatchName) {
   const closedBtn = document.getElementById('accountingViewClosed');
   const titleEl = document.getElementById('accountingBatchListTitle');
   const helpEl = document.getElementById('accountingBatchListHelp');
-  const bodyEl = document.getElementById('accountingBatchListBody');
-  if (!bodyEl) return;
+  const summaryEl = document.getElementById('accountingBatchListBody');
+  const selectEl = document.getElementById('accountingBatchSelect');
+  if (!summaryEl || !selectEl) return;
 
   openBtn?.classList.toggle('active', state.accountingView === 'open');
   closedBtn?.classList.toggle('active', state.accountingView === 'closed');
@@ -587,23 +588,52 @@ function renderAccountingBatchList(selectedBatchName) {
       : 'Closed batches stay here for reference. Open any batch to review the breakdown, or reopen it if you need to continue collecting and tallying.';
   }
 
-  const entries = getAccountingBatchEntries();
-  if (!entries.length) {
-    bodyEl.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📒</div><p>No ${state.accountingView} batches yet.</p></div></td></tr>`;
+  const dropdownEntries = getAccountingBatchEntries();
+  if (!dropdownEntries.length) {
+    selectEl.innerHTML = `<option value="">No ${state.accountingView} batches yet</option>`;
+    selectEl.disabled = true;
+    summaryEl.innerHTML = `<div class="empty-state"><div class="empty-icon">📒</div><p>No ${state.accountingView} batches yet.</p></div>`;
     return;
   }
 
-  bodyEl.innerHTML = entries.map((entry) => `
-    <tr>
-      <td><strong>${escapeHtml(entry.batchName)}</strong></td>
-      <td><span class="status-badge ${entry.status === 'closed' ? 'status-cancelled' : 'status-fulfilled'}">${escapeHtml(entry.status)}</span></td>
-      <td>${escapeHtml(String(entry.orderCount || 0))}</td>
-      <td>${formatCurrency(entry.collectedTotal || 0)}</td>
-      <td>${escapeHtml(formatDateTime(entry.lastSavedAt))}</td>
-      <td>${escapeHtml(formatDateTime(entry.closedAt))}</td>
-      <td><button class="toolbar-btn batch-open-btn" onclick="setSelectedAccountingBatch('${escapeHtml(entry.batchName)}')">${entry.batchName === selectedBatchName ? 'Viewing' : 'Open Breakdown'}</button></td>
-    </tr>
-  `).join('');
+  const selectedEntry = dropdownEntries.find((entry) => entry.batchName === selectedBatchName) || dropdownEntries[0];
+  selectEl.disabled = false;
+  selectEl.innerHTML = dropdownEntries.map((entry) => {
+    const labelParts = [
+      entry.batchName,
+      `${entry.orderCount || 0} orders`,
+      formatCurrency(entry.collectedTotal || 0)
+    ];
+    return `<option value="${escapeHtml(entry.batchName)}" ${entry.batchName === selectedEntry.batchName ? 'selected' : ''}>${escapeHtml(labelParts.join(' | '))}</option>`;
+  }).join('');
+
+  summaryEl.innerHTML = `
+    <div class="accounting-batch-summary-card">
+      <div>
+        <span>Selected Batch</span>
+        <strong>${escapeHtml(selectedEntry.batchName)}</strong>
+      </div>
+      <div>
+        <span>Status</span>
+        <strong class="${selectedEntry.status === 'closed' ? 'warn' : 'good'}">${escapeHtml(selectedEntry.status)}</strong>
+      </div>
+      <div>
+        <span>Orders</span>
+        <strong>${escapeHtml(String(selectedEntry.orderCount || 0))}</strong>
+      </div>
+      <div>
+        <span>Collected</span>
+        <strong>${formatCurrency(selectedEntry.collectedTotal || 0)}</strong>
+      </div>
+      <div>
+        <span>Last Saved</span>
+        <strong>${escapeHtml(formatDateTime(selectedEntry.lastSavedAt))}</strong>
+      </div>
+      <div>
+        <span>Closed At</span>
+        <strong>${escapeHtml(formatDateTime(selectedEntry.closedAt))}</strong>
+      </div>
+    </div>`;
 }
 
 function syncAccountingInputs(batchName, batchRecord = {}, force = false) {

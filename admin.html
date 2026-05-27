@@ -504,21 +504,12 @@
             <div class="batch-list-card">
               <h3 id="accountingBatchListTitle">Open Batches</h3>
               <div class="batch-list-help" id="accountingBatchListHelp">Open batches stay here until you finish tallying and close them. Closed batches move to their own tab, and reopened batches come back here.</div>
-              <div class="batch-list-table-wrap">
-                <table class="batch-list-table">
-                  <thead>
-                    <tr>
-                      <th>Batch</th>
-                      <th>Status</th>
-                      <th>Orders</th>
-                      <th>Collected Total</th>
-                      <th>Last Saved</th>
-                      <th>Closed At</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody id="accountingBatchListBody"></tbody>
-                </table>
+              <div class="accounting-batch-picker">
+                <label for="accountingBatchSelect">Select batch</label>
+                <select id="accountingBatchSelect" class="filter-input" onchange="setSelectedAccountingBatch(this.value)"></select>
+              </div>
+              <div class="accounting-batch-summary" id="accountingBatchListBody">
+                <div class="empty-state"><div class="empty-icon">📒</div><p>No open batches yet.</p></div>
               </div>
             </div>
             <div class="accounting-grid" id="accountingStats"></div>
