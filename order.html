@@ -295,13 +295,15 @@
 .refund-submitted-msg { text-align: center; padding: 16px; color: #2E7D32; font-weight: 600; font-size: 14px; }
 
 
-/* ── STRIPE / PAY-ONLINE TEMPORARILY HIDDEN (reversible) ──
+/* ── STRIPE / PAY-ONLINE + REFUND REQUEST TEMPORARILY HIDDEN (reversible) ──
    Pickup is the JS default; hiding the stripe option means it can never be
-   selected. To re-enable online payments later, delete this block. */
+   selected. The refund request form is hidden on the success screen.
+   To re-enable later, delete the relevant lines in this block. */
 .payment-option[data-payment="stripe"]{display:none !important;}
 .save-card-row{display:none !important;}
 .payment-options{grid-template-columns:1fr !important;}
-/* ── END STRIPE HIDE ── */
+#refundSection{display:none !important;}
+/* ── END STRIPE / REFUND HIDE ── */
 
 </style>
 <script>
@@ -549,7 +551,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="assets/js/analytics.js?v=owner-insights-1"></script>
 <script src="assets/js/main.js?v=account-menu-2"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/order-firebase.js?v=stripe-hidden-20260528"></script>
+<script type="module" src="assets/js/order-firebase.js?v=refund-hidden-20260528"></script>
 
 </body>
 </html>
