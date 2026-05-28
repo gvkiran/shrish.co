@@ -294,6 +294,15 @@
 .refund-req-submit:disabled { background: #aaa; }
 .refund-submitted-msg { text-align: center; padding: 16px; color: #2E7D32; font-weight: 600; font-size: 14px; }
 
+
+/* ── STRIPE / PAY-ONLINE TEMPORARILY HIDDEN (reversible) ──
+   Pickup is the JS default; hiding the stripe option means it can never be
+   selected. To re-enable online payments later, delete this block. */
+.payment-option[data-payment="stripe"]{display:none !important;}
+.save-card-row{display:none !important;}
+.payment-options{grid-template-columns:1fr !important;}
+/* ── END STRIPE HIDE ── */
+
 </style>
 <script>
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -540,7 +549,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="assets/js/analytics.js?v=owner-insights-1"></script>
 <script src="assets/js/main.js?v=account-menu-2"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/order-firebase.js?v=checkout-import-fix-20260527"></script>
+<script type="module" src="assets/js/order-firebase.js?v=stripe-hidden-20260528"></script>
 
 </body>
 </html>
