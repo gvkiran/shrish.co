@@ -952,6 +952,68 @@ function cleanCustomerQty(value) {
   return Math.min(Math.max(qty, 0), 99);
 }
 
+function customerOrderProductId(item = {}) {
+  return item.productId || String(item.id || "").split("__")[0] || "";
+}
+
+function customerOrderVariantId(item = {}) {
+  if (item.variantId) return item.variantId;
+  const id = String(item.id || "");
+  return id.includes("__") ? id.split("__")[1] : "default";
+}
+
+function customerCartItemId(productId, variantId = "default") {
+  return variantId === "default" ? productId : `${productId}__${variantId}`;
+}
+
+function customerProductVariants(product = {}) {
+  if (Array.isArray(product.variants) && product.variants.length) {
+    return product.variants
+      .filter((variant) => variant && variant.available !== false && !variant.displayOnly)
+      .map((variant, index) => ({
+        id: variant.id || `opt${index + 1}`,
+        label: variant.label || product.unit || "Option",
+        price: variant.price || product.price || "",
+        unit: variant.unit || variant.label || product.unit || "",
+      }));
+  }
+
+  return [{
+    id: "default",
+    label: product.unit || "Default",
+    price: product.price || "",
+    unit: product.unit || "",
+  }];
+}
+
+function buildCustomerOrderItemFromProduct(product = {}, productId, variantId, qty) {
+  if (!product || product.available === false || product.displayOnly || product.hidden) {
+    throw new HttpsError("failed-precondition", "This product is not available.");
+  }
+
+  const variant = customerProductVariants(product).find((item) => item.id === variantId);
+  if (!variant) {
+    throw new HttpsError("failed-precondition", "This product option is not available.");
+  }
+
+  const unitPrice = parseMoney(variant.price || product.price);
+  if (unitPrice <= 0) {
+    throw new HttpsError("failed-precondition", "This product does not have a valid price.");
+  }
+
+  return {
+    id: customerCartItemId(productId, variant.id),
+    productId,
+    variantId: variant.id,
+    name: variant.id === "default" ? (product.name || "Item") : `${product.name || "Item"} (${variant.label})`,
+    price: variant.price || product.price || currency(unitPrice),
+    unit: variant.unit || product.unit || "",
+    image: product.image || null,
+    qty,
+    lineTotal: Number((unitPrice * qty).toFixed(2)),
+  };
+}
+
 function normalizeOrderPhone(value) {
   const digits = String(value || "").replace(/\D/g, "");
   return digits.startsWith("1") ? digits.slice(1, 11) : digits.slice(0, 10);
@@ -1022,14 +1084,23 @@ exports.updateCustomerPendingOrder = onCall(
 
       const requestedItems = Array.isArray(request.data?.items) ? request.data.items : [];
       const qtyByIndex = new Map();
+      const additionsByKey = new Map();
       requestedItems.forEach((item) => {
         const index = Number(item?.index);
-        if (Number.isInteger(index) && index >= 0 && index < existingItems.length) {
+        const productId = String(item?.productId || "").trim();
+        const variantId = String(item?.variantId || "default").trim() || "default";
+        const qty = cleanCustomerQty(item?.qty);
+        if (productId && qty > 0) {
+          const key = `${productId}__${variantId}`;
+          const current = additionsByKey.get(key) || { productId, variantId, qty: 0 };
+          current.qty = cleanCustomerQty(current.qty + qty);
+          additionsByKey.set(key, current);
+        } else if (Number.isInteger(index) && index >= 0 && index < existingItems.length) {
           qtyByIndex.set(index, cleanCustomerQty(item?.qty));
         }
       });
 
-      if (!qtyByIndex.size) {
+      if (!qtyByIndex.size && !additionsByKey.size) {
         throw new HttpsError("invalid-argument", "At least one quantity is required.");
       }
 
@@ -1042,6 +1113,33 @@ exports.updateCustomerPendingOrder = onCall(
           lineTotal: Number((unitPrice * qty).toFixed(2)),
         };
       }).filter((item) => item.qty > 0);
+
+      for (const addition of additionsByKey.values()) {
+        const productSnap = await tx.get(db.collection("products").doc(addition.productId));
+        if (!productSnap.exists) {
+          throw new HttpsError("not-found", "Product not found.");
+        }
+
+        const product = { id: productSnap.id, ...productSnap.data() };
+        const newItem = buildCustomerOrderItemFromProduct(product, addition.productId, addition.variantId, addition.qty);
+        const existingIndex = updatedItems.findIndex((item) =>
+          customerOrderProductId(item) === newItem.productId &&
+          customerOrderVariantId(item) === newItem.variantId
+        );
+
+        if (existingIndex >= 0) {
+          const existing = updatedItems[existingIndex];
+          const mergedQty = cleanCustomerQty(Number(existing.qty || 0) + addition.qty);
+          const unitPrice = customerOrderUnitPrice(existing) || customerOrderUnitPrice(newItem);
+          updatedItems[existingIndex] = {
+            ...existing,
+            qty: mergedQty,
+            lineTotal: Number((unitPrice * mergedQty).toFixed(2)),
+          };
+        } else {
+          updatedItems.push(newItem);
+        }
+      }
 
       if (!updatedItems.length) {
         throw new HttpsError("failed-precondition", "Use cancel order if removing every item.");

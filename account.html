@@ -105,6 +105,11 @@
 .order-edit-message.ok{background:#E8F5E9;color:#1B5E20}
 .order-edit-message.error{background:#FFEBEE;color:#B71C1C}
 .order-edit-message.info{background:#FFF8E1;color:#7A4A00}
+.order-edit-add{display:grid;grid-template-columns:minmax(0,1fr) 82px auto;gap:10px;align-items:end;border:1px dashed rgba(200,121,26,.3);border-radius:12px;background:#fff;padding:12px;margin-top:12px}
+.order-edit-add label{display:block;color:var(--text-light);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.order-edit-add select,.order-edit-add input{width:100%;height:40px;border:1.5px solid rgba(200,121,26,.22);border-radius:12px;background:#fffdf8;color:var(--dark);font:inherit;font-size:13px;font-weight:700;padding:0 11px}
+.order-edit-add button{height:40px;white-space:nowrap}
+.order-edit-add[hidden]{display:none}
 .feedback-card{border:1px solid rgba(200,121,26,.16);border-radius:14px;background:#fffdf8;padding:16px;margin-top:8px}
 .feedback-question{margin:0 0 18px}
 .feedback-question strong{display:block;color:var(--dark);font-size:15px;line-height:1.45;margin-bottom:10px}
@@ -129,7 +134,7 @@
 .empty-orders{border:1px dashed rgba(200,121,26,.35);border-radius:16px;padding:24px;text-align:center;color:var(--text-light);background:#fffdf8}
 .admin-account-note{border:1px solid rgba(200,121,26,.22);border-radius:16px;background:#fffdf8;padding:18px;color:var(--text-light);font-size:15px;line-height:1.7;margin-bottom:18px}
 .admin-account-note strong{color:var(--dark)}
-@media(max-width:900px){.account-shell{grid-template-columns:1fr;padding:40px 20px 64px}.account-form.two-col,.account-insights,.order-detail-grid,.profile-view{grid-template-columns:1fr}.profile-header{flex-direction:column}.order-modal-card{padding:24px 18px}.order-items-row{grid-template-columns:minmax(0,1fr) 44px 76px}.order-edit-heading{display:block}.order-edit-heading span{text-align:left;margin-top:4px}.order-edit-row{grid-template-columns:minmax(0,1fr);align-items:start}.order-edit-line{text-align:left}}
+@media(max-width:900px){.account-shell{grid-template-columns:1fr;padding:40px 20px 64px}.account-form.two-col,.account-insights,.order-detail-grid,.profile-view{grid-template-columns:1fr}.profile-header{flex-direction:column}.order-modal-card{padding:24px 18px}.order-items-row{grid-template-columns:minmax(0,1fr) 44px 76px}.order-edit-heading{display:block}.order-edit-heading span{text-align:left;margin-top:4px}.order-edit-row,.order-edit-add{grid-template-columns:minmax(0,1fr);align-items:start}.order-edit-line{text-align:left}}
 </style>
 <script>
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -397,7 +402,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="assets/js/analytics.js?v=customer-accounts-1"></script>
 <script src="assets/js/main.js?v=account-menu-2"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/account-firebase.js?v=checkout-return-20260521"></script>
+<script type="module" src="assets/js/account-firebase.js?v=customer-order-edit-20260528"></script>
 
 </body>
 </html>
