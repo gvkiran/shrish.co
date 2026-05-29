@@ -28,6 +28,7 @@ const BASE_PRODUCTS = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || 
 const GO_LIVE_STATS_DATE = '2026-04-10';
 const EXCEL_CALC_DOC_PREFIX = 'excel_sheet__';
 const DAMAGED_BOX_UNIT_PRICE = 56; // Default spoiled box price — override per product in tally
+const REMINDER_EMAIL_BATCH_SIZE = 50;
 // Expose for refund module
 window._firestoreExports = { collection, doc, updateDoc, addDoc: typeof addDoc !== 'undefined' ? addDoc : null, onSnapshot, orderBy, query };
 
@@ -1270,6 +1271,14 @@ function applyReminderTemplate(template = '', order = {}) {
   );
 }
 
+function chunkReminderOrderIds(orderIds = []) {
+  const chunks = [];
+  for (let i = 0; i < orderIds.length; i += REMINDER_EMAIL_BATCH_SIZE) {
+    chunks.push(orderIds.slice(i, i + REMINDER_EMAIL_BATCH_SIZE));
+  }
+  return chunks;
+}
+
 function whatsappPhoneDigits(order = {}) {
   const raw = String(order.phoneDigits || order.phone || '').replace(/\D/g, '');
   if (raw.length === 10) return `1${raw}`;
@@ -1492,14 +1501,24 @@ async function sendSelectedReminderEmails() {
 
   try {
     const sendReminder = httpsCallable(cloudFunctions, 'sendOrderReminderEmails');
-    const result = await sendReminder({
-      orderIds: selectedOrders.map((order) => order.id),
-      subject,
-      body
-    });
-    const data = result?.data || {};
-    const sent = Number(data.sent || 0);
-    const skipped = Number(data.skipped || 0);
+    const orderIdBatches = chunkReminderOrderIds(selectedOrders.map((order) => order.id));
+    let sent = 0;
+    let skipped = 0;
+
+    for (let i = 0; i < orderIdBatches.length; i += 1) {
+      if (sendBtn && orderIdBatches.length > 1) {
+        sendBtn.textContent = `Sending ${i + 1}/${orderIdBatches.length}...`;
+      }
+      const result = await sendReminder({
+        orderIds: orderIdBatches[i],
+        subject,
+        body
+      });
+      const data = result?.data || {};
+      sent += Number(data.sent || 0);
+      skipped += Number(data.skipped || 0);
+    }
+
     state.selectedReminderOrderIds.clear();
     closeEmailReminderModal();
     renderOrders();
