@@ -3004,8 +3004,6 @@ function printActiveOrders() {
   let rowNum = 1;
   let bodyHtml = '';
   Object.entries(groups).forEach(([loc, locOrders]) => {
-    const locBoxes = locOrders.reduce((s,o) => s + (printableQty(o)||0), 0);
-    const locTotal = locOrders.reduce((s,o) => s + printableTotal(o), 0);
     bodyHtml += `<tr class="loc-hdr"><td colspan="7">&#128205; ${escapeHtml(loc)}<span class="loc-meta">${locOrders.length} orders</span></td></tr>`;
     locOrders.forEach(order => {
       const name  = escapeHtml((order.fullName || `${order.firstName||''} ${order.lastName||''}`.trim()).trim());
@@ -3035,7 +3033,6 @@ function printActiveOrders() {
           </td>
         </tr>`;
     });
-    bodyHtml += `<tr class="loc-sub"><td colspan="4" class="sub-lbl">Subtotal &mdash; ${escapeHtml(loc)}</td><td class="sub-boxes">${locBoxes} boxes</td><td class="sub-total">${escapeHtml(formatCurrency(locTotal))}</td><td></td></tr>`;
   });
 
   const pw = window.open('', '_blank', 'width=1100,height=860');
@@ -3058,12 +3055,12 @@ function printActiveOrders() {
   /* ── TABLE ── */
   table{width:100%;border-collapse:collapse;font-size:11.5px}
   colgroup col:nth-child(1){width:28px}
-  colgroup col:nth-child(2){width:58px}
-  colgroup col:nth-child(3){width:155px}
+  colgroup col:nth-child(2){width:62px}
+  colgroup col:nth-child(3){width:132px}
   colgroup col:nth-child(4){width:auto}
-  colgroup col:nth-child(5){width:38px}
-  colgroup col:nth-child(6){width:70px}
-  colgroup col:nth-child(7){width:150px}
+  colgroup col:nth-child(5){width:36px}
+  colgroup col:nth-child(6){width:62px}
+  colgroup col:nth-child(7){width:105px}
 
   thead th{background:#7A4800;color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.5px;padding:6px 7px;text-align:left;border:1px solid #5A3000}
   thead th:nth-child(5){text-align:center}
@@ -3096,12 +3093,6 @@ function printActiveOrders() {
 
   .done-txt{}
 
-  /* subtotal */
-  tr.loc-sub td{background:#FAF5EE;font-weight:700;font-size:11px;padding:5px 7px;border:1px solid #D9C0A0;color:#555}
-  .sub-lbl{text-align:right}
-  .sub-boxes{text-align:center;color:#2E7D32}
-  .sub-total{text-align:right;color:#7A4800;white-space:nowrap}
-
   /* grand total */
   .grand{margin-top:10px;background:#7A4800;color:#fff;border-radius:5px;padding:9px 14px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
   /* notes */
@@ -3111,8 +3102,16 @@ function printActiveOrders() {
 
   /* print overrides */
   @media print{
-    @page{size:A4 landscape;margin:10mm 12mm}
-    body{padding:0;font-size:11px}
+    @page{size:A4 portrait;margin:9mm 8mm}
+    body{padding:0;font-size:10px}
+    table{font-size:10px}
+    thead th{font-size:8.5px;padding:5px 4px}
+    tr.orow td{padding:5px 4px}
+    .c-name{font-size:11px}
+    .phone,.pill,.cb-lbl{font-size:9px}
+    .c-qty{font-size:13px}
+    .c-total{font-size:10px}
+    .cb{width:12px;height:12px}
     thead{display:table-header-group}
     tr.orow{page-break-inside:avoid}
     tr.loc-hdr{page-break-before:auto}
