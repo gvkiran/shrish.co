@@ -503,21 +503,18 @@ button.btn-primary:active {
 .hero-slide {
   position: absolute;
   inset: 0;
-  display: grid;
+  display: none;
   grid-template-columns: minmax(520px, 700px) minmax(500px, 620px);
   justify-content: center;
   align-items: center;
   gap: 96px;
   padding: 44px 2.5% 52px;
-  opacity: 0;
-  visibility: hidden;
   z-index: 1;
-  animation: heroPanel 12s infinite ease-in-out;
 }
-.hero-slide:nth-of-type(2) { animation-delay: 0s; }
-.hero-slide:nth-of-type(3) { animation-delay: 3s; }
-.hero-slide:nth-of-type(4) { animation-delay: 6s; }
-.hero-slide:nth-of-type(5) { animation-delay: 9s; }
+.hero-slide.is-active {
+  display: grid;
+  z-index: 2;
+}
 .hero-slide::before {
   content: "";
   position: absolute;
@@ -621,15 +618,8 @@ button.btn-primary:active {
 @keyframes fadeUp   { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
 @keyframes fadeLeft { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
 @keyframes scaleIn  { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-@keyframes heroPanel {
-  0%, 22% { opacity: 1; visibility: visible; }
-  30%, 92% { opacity: 0; visibility: hidden; }
-  100% { opacity: 1; visibility: visible; }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .hero-slide { animation: none; opacity: 0; visibility: hidden; }
-  .hero-slide:nth-of-type(2) { opacity: 1; visibility: visible; }
+  .hero-slide { transition: none; }
 }
 
 @media (max-width: 900px) {
