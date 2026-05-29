@@ -34,6 +34,16 @@
 .filter-btn.active,.filter-btn:hover{background:var(--saffron);color:#fff;border-color:var(--saffron)}
 .filter-count{display:inline-block;background:rgba(0,0,0,.1);border-radius:50px;padding:1px 7px;font-size:11px;margin-left:4px}
 .active .filter-count{background:rgba(255,255,255,.25)}
+.filter-btn-sweets{border-color:var(--saffron);color:var(--dark);box-shadow:0 8px 20px rgba(200,121,26,.12)}
+.filter-btn-sweets::before{content:'Featured';display:inline-block;margin-right:7px;padding:1px 7px;border-radius:50px;background:#FFF3E0;color:var(--saffron);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;vertical-align:middle}
+.filter-btn-sweets.active::before,.filter-btn-sweets:hover::before{background:rgba(255,255,255,.25);color:#fff}
+.sweets-spotlight{max-width:1180px;margin:26px auto 0;padding:0 24px}
+.sweets-spotlight-inner{display:flex;align-items:center;justify-content:space-between;gap:18px;background:#fff8ec;border:1.5px solid rgba(200,121,26,.25);border-left:6px solid var(--saffron);border-radius:16px;padding:18px 22px;box-shadow:0 12px 34px rgba(26,18,8,.08)}
+.sweets-spotlight-kicker{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--saffron);margin-bottom:4px}
+.sweets-spotlight h2{font-family:var(--font-display);font-size:28px;line-height:1.1;color:var(--dark);margin:0 0 4px}
+.sweets-spotlight p{color:var(--text-light);font-size:14px;line-height:1.55;margin:0}
+.sweets-spotlight a{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:var(--saffron);color:#fff;text-decoration:none;font-size:14px;font-weight:800;padding:11px 18px;box-shadow:0 8px 20px rgba(200,121,26,.2)}
+.sweets-spotlight a:hover{background:var(--saffron-d);transform:translateY(-1px)}
 
 /* ── SECTION ── */
 .shop-section{padding:40px 24px 16px;max-width:1520px;margin:0 auto}
@@ -217,6 +227,10 @@
 }
 
 @media(max-width:680px){
+  .sweets-spotlight{margin-top:18px;padding:0 16px}
+  .sweets-spotlight-inner{align-items:flex-start;flex-direction:column;padding:16px}
+  .sweets-spotlight h2{font-size:24px}
+  .sweets-spotlight a{width:100%}
   .modal-overlay.open{padding:14px}
   .modal-box{max-width:100%;border-radius:20px}
   .modal-images{border-radius:20px 20px 0 0;min-height:240px}
@@ -358,6 +372,17 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
   <p>Click any product to view details and add to cart. Pay at Pickup</p>
 </div>
 
+<section class="sweets-spotlight" aria-labelledby="sweetsSpotlightTitle">
+  <div class="sweets-spotlight-inner">
+    <div>
+      <div class="sweets-spotlight-kicker">Sweets are live</div>
+      <h2 id="sweetsSpotlightTitle">Putharekulu, jelly sweets, and festive boxes</h2>
+      <p>Browse traditional Andhra sweets separately from mangoes so they are easy to find.</p>
+    </div>
+    <a href="/shop/sweets/">Shop Sweets</a>
+  </div>
+</section>
+
 <!-- FILTERS -->
 <div class="filter-bar" id="filterBar"></div>
 
@@ -452,7 +477,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="assets/js/analytics.js?v=owner-insights-1"></script>
 <script src="assets/js/main.js?v=shop-route-active-20260518"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/shop-firebase.js?v=drumstick-podi-price-20260521"></script>
+<script type="module" src="assets/js/shop-firebase.js?v=seo-sweets-checkout-20260529"></script>
 
 </body>
 </html>

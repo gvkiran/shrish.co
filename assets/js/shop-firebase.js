@@ -137,8 +137,8 @@ function normalizeCatalogProduct(product = {}) {
 const SHOP_CATEGORY_IDS = new Set(['mangoes', 'putharekulu', 'jellysnacks', 'snacks', 'picklespodi']);
 const SHOP_FILTERS = [
   { id: 'all', label: 'All Products', categories: ['mangoes', 'putharekulu', 'jellysnacks', 'snacks', 'picklespodi'] },
-  { id: 'mangoes', label: 'Fruits/Mangoes', categories: ['mangoes'] },
   { id: 'sweets', label: 'Sweets', categories: ['putharekulu', 'jellysnacks'] },
+  { id: 'mangoes', label: 'Fruits/Mangoes', categories: ['mangoes'] },
   { id: 'snacks', label: 'Snacks', categories: ['snacks'] },
   { id: 'picklespodi', label: 'Pickles & Podi', categories: ['picklespodi'] }
 ];
@@ -1078,7 +1078,7 @@ function buildFilters() {
       ? window.SHRISH_DATA.products.filter((p) => !p.hidden).length
       : window.SHRISH_DATA.products.filter((p) => !p.hidden && cat.categories.includes(normalizeProductCategory(p.category))).length;
     const btn = document.createElement('button');
-    btn.className = `filter-btn${normalizedCatId === activeFilter ? ' active' : ''}`;
+    btn.className = `filter-btn filter-btn-${normalizedCatId}${normalizedCatId === activeFilter ? ' active' : ''}`;
     btn.innerHTML = `${escapeHtml(cat.label)} <span class="filter-count">${count}</span>`;
     btn.onclick = () => {
       document.querySelectorAll('.filter-btn').forEach((b) => b.classList.remove('active'));
