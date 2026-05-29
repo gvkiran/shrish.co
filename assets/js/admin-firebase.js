@@ -1527,8 +1527,10 @@ async function sendSelectedReminderEmails() {
 
 function renderOrders() {
   const orders = getFilteredOrders();
+  const isActiveSheet = state.orderSheet === 'active';
   updateOrdersSheetUi();
   renderActiveOrderSummary(orders);
+  renderOrdersTableHead(isActiveSheet);
 
   const tbody = document.getElementById('ordersBody');
   if (!tbody) return;
@@ -1551,7 +1553,7 @@ function renderOrders() {
     const paymentMethod = order.paymentMethod || '';
     const paymentCollected = Boolean(order.paymentCollected);
     const fallbackBatch = batchNameFromDate(todayDateInputValue());
-    const canSelect = state.orderSheet === 'active' && status === 'pending';
+    const canSelect = isActiveSheet && status === 'pending';
     const checked = state.selectedReminderOrderIds.has(order.id) ? 'checked' : '';
     const quickPaymentButtons = status === 'fulfilled'
       ? `<div class="payment-quick-actions" aria-label="Quick payment method">
@@ -1588,13 +1590,12 @@ function renderOrders() {
       <td>${itemsHtml}</td>
       <td><div class="total-amount">${formatCurrency(order.totalPrice || 0)}</div></td>
       <td style="font-size:13px">${escapeHtml(order.locationLabel || order.location || '—')}</td>
-      <td>${paymentCellHtml}</td>
-      <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+      ${isActiveSheet ? '' : `<td>${paymentCellHtml}</td><td><span class="status-badge ${statusClass}">${statusLabel}</span></td>`}
       <td><div class="action-btns"><button class="action-btn btn-fulfill" onclick="setStatus('${escapeHtml(order.id)}','fulfilled')">✓ Fulfill</button><button class="action-btn btn-noshow" onclick="setStatus('${escapeHtml(order.id)}','no_show')">No Show</button><button class="action-btn btn-cancel" onclick="setStatus('${escapeHtml(order.id)}','cancelled')">✕ Cancel</button><button class="action-btn btn-reset" onclick="setStatus('${escapeHtml(order.id)}','pending')">↺ Reset</button></div></td>
     </tr>`;
   }).join('');
 
-  if (state.orderSheet === 'active') {
+  if (isActiveSheet) {
     orders.forEach((order) => {
       if ((order.status || 'pending') !== 'pending') return;
       const row = document.getElementById(`row-${order.id}`);
@@ -1611,6 +1612,25 @@ function renderOrders() {
 
   renderStats();
   updateReminderActionUi();
+}
+
+function renderOrdersTableHead(isActiveSheet = state.orderSheet === 'active') {
+  const headRow = document.querySelector('.orders-table thead tr');
+  if (!headRow) return;
+  const selectAllHtml = isActiveSheet
+    ? '<input type="checkbox" id="selectAllActiveOrders" onchange="toggleVisibleReminderOrders(this.checked)" aria-label="Select all visible active orders">'
+    : '';
+  headRow.innerHTML = `
+    <th class="order-select-col">${selectAllHtml}</th>
+    <th>Order #</th>
+    <th>Received Date</th>
+    <th>Customer</th>
+    <th>Products &amp; Qty</th>
+    <th>Total</th>
+    <th>Location</th>
+    ${isActiveSheet ? '' : '<th>Payment</th><th>Status</th>'}
+    <th>Actions</th>
+  `;
 }
 
 function productCategoryLabel(category) {
@@ -2955,17 +2975,13 @@ function printActiveOrders() {
   let bodyHtml = '';
   Object.entries(groups).forEach(([loc, locOrders]) => {
     const locBoxes = locOrders.reduce((s,o) => s + (printableQty(o)||0), 0);
-    bodyHtml += `<tr class="loc-hdr"><td colspan="6">&#128205; ${escapeHtml(loc)}<span class="loc-meta">${locOrders.length} orders &nbsp;&bull;&nbsp; ${locBoxes} boxes</span></td></tr>`;
+    bodyHtml += `<tr class="loc-hdr"><td colspan="5">&#128205; ${escapeHtml(loc)}<span class="loc-meta">${locOrders.length} orders &nbsp;&bull;&nbsp; ${locBoxes} boxes</span></td></tr>`;
     locOrders.forEach(order => {
       const name  = escapeHtml((order.fullName || `${order.firstName||''} ${order.lastName||''}`.trim()).trim());
       const phone = escapeHtml(order.phone || '');
       const items = (order.items || []).map(it => `<span class="pill">${escapeHtml(it.name||'Item')} &times;${it.qty||1}</span>`).join(' ');
       const qty   = printableQty(order);
       const onum  = escapeHtml(String(order.orderNumber || order.id || ''));
-      const pref  = (order.paymentMethod || '').toLowerCase();
-      const Z = pref === 'zelle' ? ' pre' : '';
-      const C = pref === 'cash'  ? ' pre' : '';
-      const K = pref === 'card'  ? ' pre' : '';
       bodyHtml += `
         <tr class="orow">
           <td class="c-num">${rowNum++}</td>
@@ -2973,17 +2989,9 @@ function printActiveOrders() {
           <td class="c-name">${name}<div class="phone">${phone}</div></td>
           <td class="c-items">${items}</td>
           <td class="c-qty">${qty}</td>
-          <td class="c-pay">
-            <div class="pay-row">
-              <label class="cb-lbl"><span class="cb${C}"></span>Cash</label>
-              <label class="cb-lbl"><span class="cb${Z}"></span>Zelle</label>
-              <label class="cb-lbl"><span class="cb${K}"></span>Card</label>
-            </div>
-
-          </td>
         </tr>`;
     });
-    bodyHtml += `<tr class="loc-sub"><td colspan="4" class="sub-lbl">Subtotal &mdash; ${escapeHtml(loc)}</td><td class="sub-boxes">${locBoxes} boxes</td><td></td></tr>`;
+    bodyHtml += `<tr class="loc-sub"><td colspan="4" class="sub-lbl">Subtotal &mdash; ${escapeHtml(loc)}</td><td class="sub-boxes">${locBoxes} boxes</td></tr>`;
   });
 
   const pw = window.open('', '_blank', 'width=1100,height=860');
@@ -3010,7 +3018,6 @@ function printActiveOrders() {
   colgroup col:nth-child(3){width:155px}
   colgroup col:nth-child(4){width:auto}
   colgroup col:nth-child(5){width:38px}
-  colgroup col:nth-child(6){width:168px}
 
   thead th{background:#7A4800;color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.5px;padding:6px 7px;text-align:left;border:1px solid #5A3000}
   thead th:nth-child(5){text-align:center}
@@ -3031,13 +3038,6 @@ function printActiveOrders() {
   .c-items{}
   .pill{display:inline-block;background:#FDF3E3;border:1px solid #EDD5A0;border-radius:3px;padding:1px 5px;margin:1px 2px 1px 0;font-size:10.5px;font-weight:700;color:#7A4800;white-space:nowrap}
   .c-qty{text-align:center;font-weight:800;font-size:15px;color:#2E7D32;vertical-align:middle!important}
-  .c-pay{vertical-align:middle!important}
-
-  /* checkboxes */
-  .pay-row{display:flex;gap:5px;margin-bottom:5px;align-items:center}
-  .cb-lbl{display:flex;align-items:center;gap:3px;font-size:10.5px;font-weight:600;white-space:nowrap;cursor:default}
-  .cb{display:inline-block;width:15px;height:15px;border:2px solid #444;border-radius:2px;flex-shrink:0}
-  .cb.pre{background:#FDF3E3;border-color:#C8791A}
 
   .done-txt{}
 
@@ -3079,7 +3079,7 @@ function printActiveOrders() {
 </div>
 
 <table>
-  <colgroup><col><col><col><col><col><col></colgroup>
+  <colgroup><col><col><col><col><col></colgroup>
   <thead>
     <tr>
       <th>#</th>
@@ -3087,7 +3087,6 @@ function printActiveOrders() {
       <th>Name &amp; Phone</th>
       <th>Items Ordered</th>
       <th style="text-align:center">Boxes</th>
-      <th>Payment &amp; Handover</th>
     </tr>
   </thead>
   <tbody>${bodyHtml}</tbody>
