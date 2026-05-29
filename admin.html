@@ -6,1317 +6,11 @@
   <title>Admin Dashboard – SHRISH LLC</title>
   <meta name="robots" content="noindex,nofollow" />
   <link rel="icon" href="images/brand/logo-small.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css" />
-  <style>
-    /* ── ADMIN OVERRIDES ── */
-    body { background: #f5f0e8; }
-
-    .admin-topbar {
-      background: var(--dark); color: var(--white);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 32px; position: sticky; top: 0; z-index: 100;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
-    }
-    .admin-topbar-left { display: flex; align-items: center; gap: 14px; }
-    .admin-topbar img { height: 36px; border-radius: 50%; }
-    .admin-topbar h1 { font-family: var(--font-display); font-size: 1.5rem; color: var(--gold-l); margin: 0; }
-    .admin-logout-btn {
-      padding: 8px 20px; background: transparent;
-      border: 1.5px solid rgba(255,255,255,0.3); border-radius: 50px;
-      color: rgba(255,255,255,0.7); font-family: var(--font-body);
-      font-size: 13px; cursor: pointer; transition: var(--transition);
-    }
-    .admin-logout-btn:hover { border-color: #e55; color: #e55; }
-
-    /* Login */
-    .admin-login-wrap {
-      min-height: 100vh; display: flex; align-items: center;
-      justify-content: center; padding: 24px;
-    }
-    .admin-login-card {
-      background: var(--white); border-radius: var(--radius-lg);
-      padding: 48px 40px; box-shadow: var(--shadow-lg);
-      width: 100%; max-width: 400px; text-align: center;
-    }
-    .admin-login-card img { height: 72px; margin: 0 auto 20px; }
-    .admin-login-card h2 { font-family: var(--font-display); font-size: 28px; color: var(--dark); margin-bottom: 8px; }
-    .admin-login-card p { color: var(--text-light); font-size: 14px; margin-bottom: 28px; }
-    .admin-login-card input {
-      width: 100%; padding: 13px 16px; border-radius: var(--radius);
-      border: 1.5px solid #E0D0B8; background: var(--cream);
-      font-size: 15px; font-family: var(--font-body); color: var(--text);
-      outline: none; margin-bottom: 12px;
-      transition: border-color var(--transition);
-    }
-    .admin-login-card input:focus { border-color: var(--saffron); }
-    .admin-login-card button {
-      width: 100%; padding: 14px; background: var(--saffron); color: white;
-      border: none; border-radius: 50px; font-family: var(--font-body);
-      font-size: 15px; font-weight: 700; cursor: pointer; transition: var(--transition);
-    }
-    .admin-login-card button:hover { background: var(--saffron-d); }
-    .login-error { color: #c62828; font-size: 13px; margin-top: 10px; display: none; }
-
-    /* Dashboard */
-    .admin-wrap { max-width: none; margin: 0; padding: 28px 8px 80px; }
-    .admin-layout {
-      display: grid;
-      grid-template-columns: 290px minmax(0, 1fr) 360px;
-      gap: 18px;
-      align-items: start;
-    }
-    .admin-sidebar {
-      position: sticky;
-      top: 86px;
-      background: linear-gradient(180deg, #fff, #fbf5eb);
-      border: 1px solid rgba(200,121,26,0.12);
-      border-radius: 24px;
-      box-shadow: var(--shadow);
-      padding: 20px 16px;
-    }
-    .admin-main { min-width: 0; }
-    .admin-stats-rail {
-      position: sticky;
-      top: 86px;
-      min-width: 0;
-    }
-    .sidebar-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.8px;
-      text-transform: uppercase;
-      color: var(--text-light);
-      margin: 4px 8px 14px;
-    }
-
-    /* Stats */
-    .admin-stats {
-      display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 0;
-    }
-    .stat-card {
-      background: var(--white); border-radius: var(--radius-lg);
-      padding: 24px 22px; box-shadow: var(--shadow);
-      border: 1px solid rgba(200,121,26,0.08);
-    }
-    .stat-card .s-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-light); margin-bottom: 8px; }
-    .stat-card .s-value { font-family: var(--font-display); font-size: 2.15rem; font-weight: 700; color: var(--dark); line-height: 1; }
-    .stat-card .s-value.gold { color: var(--saffron); }
-
-    /* Tabs */
-    .admin-tabs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-    .admin-tab {
-      padding: 14px 16px; border-radius: 18px;
-      border: 1.5px solid rgba(200,121,26,0.18); background: var(--white);
-      font-family: var(--font-body); font-size: 15px; font-weight: 700;
-      cursor: pointer; transition: var(--transition); color: var(--text-light);
-      box-shadow: 0 8px 18px rgba(26,18,8,0.05);
-      text-align: left;
-      justify-content: flex-start;
-    }
-    .admin-tab.active { background: var(--saffron); color: white; border-color: var(--saffron); box-shadow: 0 12px 24px rgba(200,121,26,0.22); }
-
-    /* Toolbar */
-    .orders-toolbar {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 18px; flex-wrap: wrap; gap: 12px;
-    }
-    .orders-toolbar h2 { font-family: var(--font-display); font-size: 24px; color: var(--dark); }
-    .toolbar-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-    .toolbar-btn {
-      padding: 10px 18px; border-radius: 999px; border: 1.5px solid rgba(200,121,26,0.2);
-      background: var(--white); font-family: var(--font-body); font-size: 13px;
-      font-weight: 600; cursor: pointer; transition: var(--transition); color: var(--text-light);
-      display: flex; align-items: center; gap: 6px;
-    }
-    .toolbar-btn:hover { border-color: var(--saffron); color: var(--saffron); box-shadow: 0 8px 18px rgba(26,18,8,0.05); }
-    .toolbar-btn.danger:hover { border-color: #c62828; color: #c62828; }
-
-    /* Filter */
-    .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-    .filter-pill {
-      padding: 6px 16px; border-radius: 50px; border: 1.5px solid var(--cream-d);
-      background: var(--white); font-size: 13px; cursor: pointer;
-      transition: var(--transition); color: var(--text-light); font-family: var(--font-body);
-    }
-    .filter-pill.active { background: var(--dark); color: white; border-color: var(--dark); }
-    .sheet-switcher { display: flex; flex-direction: column; gap: 8px; margin: 6px 0 10px 20px; }
-    .sheet-pill {
-      padding: 11px 14px; border-radius: 14px; border: 1.5px solid rgba(200,121,26,0.16);
-      background: linear-gradient(180deg, #fff, #fbf5eb); font-size: 14px; cursor: pointer;
-      transition: var(--transition); color: var(--text-light); font-family: var(--font-body); font-weight: 700;
-      box-shadow: 0 8px 18px rgba(26,18,8,0.05);
-      text-align: left;
-    }
-    .sheet-pill.active { background: var(--saffron); color: white; border-color: var(--saffron); box-shadow: 0 12px 24px rgba(200,121,26,0.22); }
-    .sidebar-sheet-group { margin-bottom: 8px; }
-    .sidebar-divider {
-      height: 1px;
-      background: linear-gradient(to right, rgba(200,121,26,0.22), transparent);
-      margin: 14px 6px;
-    }
-    .filter-input {
-      padding: 10px 14px; border-radius: 999px; border: 1.5px solid #e0d0b8;
-      background: #fff; font-size: 13px; color: var(--text); font-family: var(--font-body); outline: none;
-    }
-    .orders-help {
-      margin-bottom: 14px; font-size: 13px; color: var(--text-light);
-    }
-    .active-order-summary {
-      display: none;
-      margin-bottom: 16px;
-      padding: 14px 16px;
-      border-radius: 18px;
-      background: rgba(200,121,26,0.08);
-      border: 1px solid rgba(200,121,26,0.18);
-    }
-    .active-order-summary.show { display: block; }
-    .summary-label {
-      margin-bottom: 10px;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--saffron);
-    }
-    .summary-items {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .summary-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: var(--white);
-      border: 1px solid rgba(200,121,26,0.16);
-      font-size: 13px;
-      color: var(--text);
-    }
-    .summary-chip strong { color: var(--dark); }
-
-    /* Orders table */
-    .orders-table-wrap { overflow-x: auto; border-radius: var(--radius-lg); box-shadow: var(--shadow); }
-    .orders-table { width: 100%; border-collapse: collapse; background: var(--white); min-width: 1220px; }
-    .orders-table th {
-      padding: 13px 14px; text-align: left; font-size: 11px; font-weight: 700;
-      letter-spacing: 1px; text-transform: uppercase; color: var(--text-light);
-      background: var(--cream-d); white-space: nowrap;
-    }
-    .orders-table td {
-      padding: 14px; font-size: 13px; color: var(--text);
-      border-top: 1px solid rgba(0,0,0,0.04); vertical-align: top;
-    }
-    .orders-table tr:hover td { background: rgba(200,121,26,0.025); }
-    .customers-summary {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .customers-summary-card {
-      background: var(--white);
-      border: 1px solid rgba(200,121,26,0.12);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 8px 18px rgba(26,18,8,0.04);
-    }
-    .customers-summary-card span {
-      display: block;
-      color: var(--text-light);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-    .customers-summary-card strong {
-      display: block;
-      color: var(--dark);
-      font-size: 24px;
-      line-height: 1;
-    }
-    .order-select-col { width: 42px; text-align: center !important; }
-    .order-select-checkbox,
-    #selectAllActiveOrders {
-      width: 16px; height: 16px; accent-color: var(--saffron); cursor: pointer;
-    }
-    .toolbar-btn:disabled {
-      opacity: .45; cursor: not-allowed; box-shadow: none;
-    }
-
-    .order-id { font-weight: 700; color: var(--saffron); font-size: 12px; }
-    .customer-name { font-weight: 600; color: var(--dark); }
-    .customer-phone { color: var(--saffron); font-size: 12px; }
-    .customer-email { font-size: 11px; color: var(--text-light); }
-    .customer-profile-muted { color: var(--text-light); font-size: 12px; line-height: 1.45; }
-    .feedback-answer-list {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 220px;
-      line-height: 1.35;
-    }
-    .feedback-answer-list span {
-      display: inline-flex;
-      color: var(--text);
-      font-size: 12px;
-    }
-    .feedback-answer-list strong {
-      color: var(--dark);
-      font-size: 12px;
-      line-height: 1.45;
-    }
-
-    /* Items list in table */
-    .items-list { display: flex; flex-direction: column; gap: 4px; }
-    .item-row { font-size: 12px; background: var(--cream-d); border-radius: 6px; padding: 4px 8px; }
-    .item-row strong { color: var(--dark); }
-    .item-row span { color: var(--text-light); }
-
-    /* Total amount */
-    .total-amount { font-weight: 700; color: var(--saffron); font-size: 15px; }
-
-    /* Status badges */
-    .status-badge {
-      display: inline-block; padding: 4px 12px; border-radius: 50px;
-      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-    }
-    .status-pending   { background: #FFF8E1; color: #F57F17; }
-    .status-fulfilled { background: #E8F5E9; color: #2E7D32; }
-    .status-cancelled { background: #FFEBEE; color: #C62828; }
-    .status-no_show   { background: #ECEFF1; color: #455A64; }
-
-    /* Payment badge */
-    .payment-badge {
-      display: inline-block; padding: 3px 10px; border-radius: 50px;
-      font-size: 11px; font-weight: 600;
-    }
-    .payment-paid     { background: #E8F5E9; color: #2E7D32; }
-    .payment-pending  { background: #FFF3E0; color: #E65100; }
-
-    /* Pickup date input */
-    .pickup-date-input {
-      border: 1.5px solid #E0D0B8; border-radius: 8px;
-      padding: 5px 8px; font-size: 12px; font-family: var(--font-body);
-      color: var(--text); background: var(--cream); outline: none;
-      width: 130px; transition: border-color var(--transition);
-    }
-    .pickup-date-input:focus { border-color: var(--saffron); }
-
-    /* Payment select */
-    .payment-select {
-      border: 1.5px solid #E0D0B8; border-radius: 8px;
-      padding: 5px 8px; font-size: 12px; font-family: var(--font-body);
-      color: var(--text); background: var(--cream); outline: none;
-      cursor: pointer; transition: border-color var(--transition);
-    }
-    .payment-select:focus { border-color: var(--saffron); }
-    .payment-cell { display: flex; flex-direction: column; gap: 6px; min-width: 138px; }
-    .payment-quick-actions { display: flex; gap: 5px; flex-wrap: wrap; }
-    .payment-quick-btn {
-      min-width: 32px; border: 1.5px solid rgba(200, 121, 26, .35);
-      border-radius: 999px; background: #fff; color: var(--saffron);
-      padding: 4px 8px; font-size: 11px; font-weight: 800;
-      font-family: var(--font-body); cursor: pointer; transition: var(--transition);
-      line-height: 1.1;
-    }
-    .payment-quick-btn:hover { background: var(--saffron); border-color: var(--saffron); color: #fff; }
-    .payment-quick-btn.active { background: var(--saffron); border-color: var(--saffron); color: #fff; }
-    .payment-collected {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: 11px; color: var(--text-light);
-    }
-    .payment-collected input { accent-color: var(--saffron); }
-    .payment-note { font-size: 10px; color: var(--text-light); line-height: 1.4; }
-
-    /* Action buttons */
-    .action-btns { display: flex; flex-direction: column; gap: 6px; }
-    .action-btn {
-      padding: 5px 12px; border-radius: 50px; border: 1.5px solid;
-      font-size: 11px; font-weight: 600; cursor: pointer;
-      font-family: var(--font-body); transition: var(--transition);
-      white-space: nowrap;
-    }
-    .btn-fulfill { border-color: #2E7D32; color: #2E7D32; background: transparent; }
-    .btn-fulfill:hover { background: #2E7D32; color: white; }
-    .btn-cancel  { border-color: #C62828; color: #C62828; background: transparent; }
-    .btn-cancel:hover  { background: #C62828; color: white; }
-    .btn-noshow  { border-color: #546E7A; color: #546E7A; background: transparent; }
-    .btn-noshow:hover  { background: #546E7A; color: white; }
-    .btn-reset   { border-color: var(--text-light); color: var(--text-light); background: transparent; }
-    .btn-reset:hover   { background: var(--text-light); color: white; }
-    .btn-edit    { border-color: var(--saffron); color: var(--saffron); background: transparent; }
-    .btn-edit:hover    { background: var(--saffron); color: white; }
-
-    .order-editor-modal {
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      background: rgba(26,18,8,0.52);
-      z-index: 2000;
-    }
-    .order-editor-modal.open { display: flex; }
-    .order-editor-card {
-      width: min(920px, 100%);
-      max-height: calc(100vh - 48px);
-      overflow: auto;
-      background: #fff;
-      border-radius: 18px;
-      box-shadow: var(--shadow-lg);
-      padding: 24px;
-    }
-    .order-editor-head {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 18px;
-    }
-    .order-editor-head h3 {
-      margin: 0 0 6px;
-      font-family: var(--font-display);
-      font-size: 28px;
-      color: var(--dark);
-    }
-    .order-editor-head p {
-      margin: 0;
-      font-size: 13px;
-      color: var(--text-light);
-    }
-    .order-editor-close {
-      border: 1.5px solid rgba(200,121,26,0.2);
-      border-radius: 999px;
-      background: #fff;
-      color: var(--text-light);
-      padding: 10px 16px;
-      font: inherit;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .order-editor-toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    .order-editor-toolbar select {
-      min-width: 320px;
-      flex: 1 1 320px;
-      border: 1.5px solid #E0D0B8;
-      border-radius: 8px;
-      padding: 11px 12px;
-      font: inherit;
-      background: var(--cream);
-      color: var(--text);
-    }
-    .manual-order-fields {
-      display: none;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
-      padding: 14px;
-      border: 1px solid rgba(200,121,26,0.14);
-      border-radius: 14px;
-      background: #fffdf9;
-    }
-    .manual-order-fields.show { display: grid; }
-    .manual-order-field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--text-light);
-    }
-    .manual-order-field input,
-    .manual-order-field select,
-    .manual-order-field textarea {
-      border: 1.5px solid #E0D0B8;
-      border-radius: 8px;
-      padding: 10px 12px;
-      font: inherit;
-      font-size: 13px;
-      font-weight: 400;
-      letter-spacing: 0;
-      text-transform: none;
-      color: var(--text);
-      background: #fff;
-      outline: none;
-    }
-    .manual-order-field input:focus,
-    .manual-order-field select:focus,
-    .manual-order-field textarea:focus {
-      border-color: var(--saffron);
-    }
-    .manual-order-field.full { grid-column: 1 / -1; }
-    .order-editor-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    .order-editor-item {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 108px 110px 86px;
-      gap: 12px;
-      align-items: center;
-      border: 1px solid rgba(200,121,26,0.14);
-      border-radius: 12px;
-      padding: 14px;
-      background: #fffdf9;
-    }
-    .order-editor-item-name {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--dark);
-      margin-bottom: 4px;
-    }
-    .order-editor-item-meta {
-      font-size: 12px;
-      color: var(--text-light);
-    }
-    .order-editor-item-qty {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--text-light);
-    }
-    .order-editor-item-qty input {
-      border: 1.5px solid #E0D0B8;
-      border-radius: 8px;
-      padding: 9px 10px;
-      font: inherit;
-      font-size: 13px;
-      color: var(--text);
-      background: #fff;
-    }
-    .order-editor-item-total {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--saffron);
-      text-align: right;
-    }
-    .order-editor-remove {
-      border: 1.5px solid #C62828;
-      border-radius: 999px;
-      background: #fff;
-      color: #C62828;
-      padding: 9px 12px;
-      font: inherit;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .order-editor-empty {
-      border: 1px dashed rgba(200,121,26,0.2);
-      border-radius: 12px;
-      padding: 18px;
-      font-size: 13px;
-      color: var(--text-light);
-      text-align: center;
-      margin-bottom: 16px;
-      background: #fffdf9;
-    }
-    .order-editor-foot {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding-top: 14px;
-      border-top: 1px solid rgba(200,121,26,0.12);
-    }
-    .order-editor-summary {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .order-editor-pill {
-      border-radius: 999px;
-      border: 1px solid rgba(200,121,26,0.16);
-      background: var(--cream);
-      padding: 9px 14px;
-      font-size: 13px;
-      color: var(--text);
-    }
-    .order-editor-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .reminder-editor-card { width: min(780px, 100%); }
-    .reminder-form {
-      display: grid;
-      gap: 14px;
-    }
-    .reminder-field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-light);
-    }
-    .reminder-field input,
-    .reminder-field textarea {
-      border: 1.5px solid #E0D0B8;
-      border-radius: 8px;
-      padding: 11px 12px;
-      font: inherit;
-      font-size: 13px;
-      font-weight: 400;
-      color: var(--text);
-      background: #fff;
-      outline: none;
-    }
-    .reminder-field textarea {
-      min-height: 220px;
-      resize: vertical;
-      line-height: 1.55;
-    }
-    .reminder-field input:focus,
-    .reminder-field textarea:focus {
-      border-color: var(--saffron);
-    }
-    .reminder-summary {
-      border-radius: 12px;
-      background: var(--cream);
-      padding: 12px 14px;
-      font-size: 13px;
-      color: var(--text);
-    }
-    .reminder-recipient-list {
-      display: grid;
-      gap: 8px;
-      max-height: 180px;
-      overflow: auto;
-      border: 1px solid rgba(200,121,26,0.14);
-      border-radius: 12px;
-      padding: 10px;
-      background: #fffdf9;
-    }
-    .reminder-recipient {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      border-bottom: 1px solid rgba(0,0,0,0.05);
-      padding: 6px 2px 8px;
-      font-size: 13px;
-    }
-    .reminder-recipient:last-child { border-bottom: 0; }
-    .reminder-recipient strong { display: block; color: var(--dark); }
-    .reminder-recipient span { display: block; color: var(--text-light); font-size: 11px; margin-top: 2px; }
-    .reminder-recipient em { color: var(--text-light); font-style: normal; font-size: 12px; }
-    .reminder-recipient.missing em { color: #C62828; font-weight: 700; }
-    .reminder-link-btn {
-      border: 1px solid #1f8f49;
-      background: #fff;
-      color: #1f8f49;
-      border-radius: 999px;
-      padding: 7px 12px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .reminder-link-btn:hover { background: #E8F5E9; }
-    .reminder-help {
-      margin: 0;
-      font-size: 12px;
-      color: var(--text-light);
-      line-height: 1.6;
-    }
-
-    @media (max-width: 720px) {
-      .order-editor-card { padding: 18px; }
-      .order-editor-item {
-        grid-template-columns: 1fr;
-        align-items: stretch;
-      }
-      .manual-order-fields { grid-template-columns: 1fr; }
-      .order-editor-item-total { text-align: left; }
-    }
-
-    .excel-calc-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-    .excel-calc-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-    .excel-calc-toolbar h2 {
-      margin: 0;
-      font-family: var(--font-display);
-      font-size: 24px;
-      color: var(--dark);
-    }
-    .excel-calc-copy p {
-      margin: 6px 0 0;
-      font-size: 13px;
-      color: var(--text-light);
-    }
-    .excel-calc-toolbar .toolbar-actions {
-      align-items: center;
-    }
-    .excel-calc-batch {
-      display: inline-flex;
-      align-items: center;
-      min-height: 42px;
-      padding: 0 14px;
-      border-radius: 999px;
-      border: 1.5px solid rgba(200,121,26,0.18);
-      background: var(--white);
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--dark);
-    }
-    .excel-sheet-frame {
-      overflow-x: auto;
-      background: #fff;
-      border: 1px solid rgba(27, 18, 8, 0.08);
-      border-radius: 12px;
-      box-shadow: var(--shadow);
-      padding: 20px;
-    }
-    .excel-spreadsheet {
-      min-width: 980px;
-      color: #18120f;
-    }
-    .excel-sheet-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 18px;
-      margin-bottom: 12px;
-      font-size: 12px;
-      color: var(--text-light);
-    }
-    .excel-sheet-table {
-      width: auto;
-      border-collapse: collapse;
-      background: #fff;
-      margin-bottom: 14px;
-    }
-    .excel-sheet-table th,
-    .excel-sheet-table td {
-      min-width: 82px;
-      border: 1px solid #2d2418;
-      padding: 7px 8px;
-      font-size: 13px;
-      line-height: 1.25;
-      vertical-align: middle;
-      text-align: center;
-      color: #18120f;
-      background: #fff;
-    }
-    .excel-sheet-table th {
-      font-weight: 700;
-    }
-    .excel-sheet-table .excel-sheet-label {
-      min-width: 120px;
-      text-align: left;
-    }
-    .excel-sheet-table .excel-sheet-money-head,
-    .excel-sheet-table .excel-sheet-money {
-      min-width: 110px;
-    }
-    .excel-sheet-table input {
-      width: 100%;
-      min-width: 0;
-      border: 0;
-      padding: 0;
-      background: transparent;
-      font: inherit;
-      font-size: 13px;
-      text-align: center;
-      color: #18120f;
-    }
-    .excel-sheet-summary-head th,
-    .excel-sheet-summary-head td {
-      min-width: 140px;
-      text-align: left;
-    }
-    .excel-sheet-summary-head td:last-child,
-    .excel-sheet-summary-head th:last-child {
-      text-align: center;
-    }
-    .excel-sheet-workarea {
-      display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
-      gap: 20px;
-      align-items: start;
-      margin-bottom: 14px;
-    }
-    .excel-sheet-left,
-    .excel-sheet-right {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    .excel-sheet-panel {
-      width: fit-content;
-      max-width: 100%;
-    }
-    .excel-sheet-panel-title {
-      margin-bottom: 6px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #18120f;
-    }
-    .excel-sheet-panel .excel-sheet-table td:first-child,
-    .excel-sheet-panel .excel-sheet-table th:first-child {
-      text-align: left;
-      min-width: 110px;
-    }
-    .excel-sheet-panel-narrow .excel-sheet-table td:last-child {
-      min-width: 120px;
-    }
-    .excel-sheet-panel-bottom {
-      margin-bottom: 14px;
-    }
-    .excel-sheet-table-remaining td:first-child {
-      min-width: 180px;
-      text-align: left;
-    }
-    .excel-sheet-tally {
-      display: inline-flex;
-      align-items: center;
-      gap: 18px;
-      border: 1px solid #2d2418;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-weight: 700;
-      background: #fff;
-    }
-    .excel-calc-total-row td {
-      font-weight: 700;
-      background: #f7efe0;
-    }
-    .warn {
-      color: #C62828 !important;
-    }
-
-    @media (max-width: 900px) {
-      .excel-sheet-workarea {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Empty state */
-    .empty-state { text-align: center; padding: 60px 24px; color: var(--text-light); }
-    .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
-    .empty-state p { font-size: 15px; }
-
-    /* Products tab */
-    .products-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 18px;
-      flex-wrap: wrap;
-    }
-    .products-toolbar-copy h2 {
-      font-family: var(--font-display);
-      font-size: 24px;
-      color: var(--dark);
-      margin: 0 0 6px;
-    }
-    .products-toolbar-copy p {
-      margin: 0;
-      font-size: 13px;
-      color: var(--text-light);
-    }
-    .add-product-btn {
-      padding: 12px 20px;
-      border: none;
-      border-radius: 999px;
-      background: var(--saffron);
-      color: white;
-      font-family: var(--font-body);
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: var(--transition);
-      box-shadow: 0 12px 24px rgba(200,121,26,0.22);
-    }
-    .add-product-btn:hover { background: var(--saffron-d); }
-    .products-filter-bar {
-      background: linear-gradient(180deg, #fff9ec, #fff5da);
-      border: 1.5px solid rgba(200,121,26,0.2);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
-    .products-filter-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.4px;
-      text-transform: uppercase;
-      color: var(--text-light);
-      margin-right: 2px;
-    }
-    .product-filter-pill {
-      padding: 8px 14px;
-      border-radius: 999px;
-      border: 1.5px solid rgba(200,121,26,0.18);
-      background: var(--white);
-      color: var(--text-light);
-      font-family: var(--font-body);
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    .product-filter-pill.active {
-      background: var(--saffron);
-      border-color: var(--saffron);
-      color: white;
-      box-shadow: 0 10px 18px rgba(200,121,26,0.18);
-    }
-    .product-form-card {
-      display: none;
-      background: linear-gradient(180deg, #fff, #fbf5eb);
-      border: 1px solid rgba(200,121,26,0.14);
-      border-radius: 24px;
-      box-shadow: var(--shadow);
-      padding: 22px;
-      margin-bottom: 20px;
-    }
-    .product-form-card.open { display: block; }
-    .product-form-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 18px;
-      flex-wrap: wrap;
-    }
-    .product-form-head h3 {
-      font-family: var(--font-display);
-      font-size: 22px;
-      color: var(--dark);
-      margin: 0;
-    }
-    .product-form-head p {
-      margin: 6px 0 0;
-      font-size: 13px;
-      color: var(--text-light);
-    }
-    .product-form-close {
-      padding: 9px 14px;
-      border-radius: 999px;
-      border: 1.5px solid rgba(200,121,26,0.18);
-      background: var(--white);
-      color: var(--text-light);
-      font-family: var(--font-body);
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    .product-form-close:hover {
-      border-color: var(--saffron);
-      color: var(--saffron);
-    }
-    .product-form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px 16px;
-    }
-    .product-field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .product-field.full { grid-column: 1 / -1; }
-    .product-field label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      color: var(--text-light);
-    }
-    .product-field input,
-    .product-field select,
-    .product-field textarea {
-      width: 100%;
-      border: 1.5px solid #E0D0B8;
-      border-radius: 12px;
-      background: var(--white);
-      color: var(--text);
-      font-family: var(--font-body);
-      font-size: 14px;
-      padding: 12px 14px;
-      outline: none;
-      transition: border-color var(--transition), box-shadow var(--transition);
-    }
-    .product-field textarea {
-      min-height: 96px;
-      resize: vertical;
-    }
-    .product-field input:focus,
-    .product-field select:focus,
-    .product-field textarea:focus {
-      border-color: var(--saffron);
-      box-shadow: 0 0 0 4px rgba(200,121,26,0.08);
-    }
-    .product-field small {
-      font-size: 12px;
-      color: var(--text-light);
-    }
-    .product-form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: 18px;
-      flex-wrap: wrap;
-    }
-    .variant-fields {
-      display: none;
-      grid-column: 1 / -1;
-      background: rgba(200,121,26,0.06);
-      border: 1px solid rgba(200,121,26,0.14);
-      border-radius: 18px;
-      padding: 16px;
-      gap: 14px 16px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .variant-fields.open { display: grid; }
-    .variant-fields h4 {
-      grid-column: 1 / -1;
-      margin: 0;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--dark);
-    }
-    .variant-help {
-      grid-column: 1 / -1;
-      margin-top: -6px;
-      font-size: 12px;
-      color: var(--text-light);
-    }
-    .product-secondary-btn,
-    .product-primary-btn {
-      padding: 12px 18px;
-      border-radius: 999px;
-      font-family: var(--font-body);
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    .product-secondary-btn {
-      border: 1.5px solid rgba(200,121,26,0.18);
-      background: var(--white);
-      color: var(--text-light);
-    }
-    .product-secondary-btn:hover {
-      border-color: var(--saffron);
-      color: var(--saffron);
-    }
-    .product-primary-btn {
-      border: none;
-      background: var(--saffron);
-      color: white;
-      box-shadow: 0 12px 24px rgba(200,121,26,0.22);
-    }
-    .product-primary-btn:hover { background: var(--saffron-d); }
-    .product-primary-btn:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-    .products-manage-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;
-    }
-    .pm-card {
-      background: var(--white); border-radius: var(--radius-lg);
-      padding: 20px 22px; box-shadow: var(--shadow);
-      display: flex; align-items: center; gap: 14px;
-    }
-    .pm-emoji { font-size: 32px; flex-shrink: 0; }
-    .pm-info { flex: 1; min-width: 0; }
-    .pm-info h4 { font-size: 14px; font-weight: 600; color: var(--dark); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .pm-meta {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 4px;
-    }
-    .pm-chip {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: rgba(200,121,26,0.1);
-      color: var(--saffron);
-      font-size: 11px;
-      font-weight: 700;
-    }
-    .pm-sub {
-      font-size: 12px;
-      color: var(--text-light);
-      margin-top: 2px;
-      line-height: 1.45;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-    .pm-price-wrap { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
-    .pm-sort-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 8px;
-    }
-    .pm-sort-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--text-light);
-    }
-    .pm-sort-input {
-      width: 78px;
-      padding: 4px 8px;
-      border: 1.5px solid #E0D0B8;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--saffron);
-      background: var(--cream);
-      font-family: var(--font-body);
-      outline: none;
-      transition: border-color var(--transition);
-    }
-    .pm-sort-input:focus { border-color: var(--saffron); }
-    .pm-price-input {
-      width: 72px; padding: 4px 8px; border: 1.5px solid #E0D0B8;
-      border-radius: 8px; font-size: 13px; font-weight: 600;
-      color: var(--saffron); background: var(--cream);
-      font-family: var(--font-body); outline: none;
-      transition: border-color var(--transition);
-    }
-    .pm-price-input:focus { border-color: var(--saffron); }
-    .pm-save-btn {
-      padding: 4px 12px; border-radius: 50px; border: none;
-      background: var(--saffron); color: white; font-size: 11px;
-      font-weight: 600; cursor: pointer; font-family: var(--font-body);
-      transition: var(--transition);
-    }
-    .pm-save-btn:hover { background: var(--saffron-d); }
-    .pm-edit-btn {
-      padding: 4px 12px;
-      border-radius: 50px;
-      border: 1.5px solid rgba(200,121,26,0.22);
-      background: var(--white);
-      color: var(--text-light);
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: var(--font-body);
-      transition: var(--transition);
-    }
-    .pm-edit-btn:hover {
-      border-color: var(--saffron);
-      color: var(--saffron);
-    }
-    .pm-controls { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
-
-    /* Toggle */
-    .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider {
-      position: absolute; inset: 0; background: #ccc;
-      border-radius: 50px; cursor: pointer; transition: var(--transition);
-    }
-    .toggle-slider::before {
-      content: ''; position: absolute; width: 18px; height: 18px;
-      left: 3px; top: 3px; background: white; border-radius: 50%;
-      transition: var(--transition);
-    }
-    .toggle-switch input:checked + .toggle-slider { background: var(--saffron); }
-    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
-
-    /* Toast */
-    .admin-toast {
-      position: fixed; bottom: 24px; right: 24px;
-      background: var(--dark); color: white;
-      padding: 12px 20px; border-radius: var(--radius);
-      font-size: 13px; font-weight: 500; z-index: 9999;
-      transform: translateY(80px); opacity: 0;
-      transition: all 0.3s ease; pointer-events: none;
-    }
-    .admin-toast.show { transform: none; opacity: 1; }
-      .accounting-toolbar {
-        display: flex; align-items: center; justify-content: space-between;
-        gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
-      }
-      .accounting-toolbar .toolbar-actions {
-        margin-left: auto;
-        justify-content: flex-end;
-      }
-      .accounting-view-switcher {
-        margin: 0 0 16px;
-      }
-      .accounting-batch {
-        display: inline-flex; align-items: center; gap: 8px;
-        background: var(--white); border: 1.5px solid rgba(200,121,26,0.14);
-        border-radius: 999px; padding: 10px 16px; font-size: 13px; font-weight: 700; color: var(--saffron);
-        box-shadow: 0 8px 18px rgba(26,18,8,0.05);
-      }
-      .batch-list-card {
-        background: linear-gradient(180deg, #fff, #fbf5eb);
-        border: 1.5px solid rgba(200,121,26,0.14);
-        border-radius: 20px;
-        padding: 18px 20px;
-        margin-bottom: 22px;
-      }
-      .batch-list-card h3 {
-        font-family: var(--font-display);
-        font-size: 22px;
-        color: var(--dark);
-        margin-bottom: 8px;
-      }
-      .batch-list-help {
-        font-size: 13px;
-        color: var(--text-light);
-        margin-bottom: 14px;
-      }
-      .batch-list-table-wrap {
-        overflow-x: auto;
-      }
-      .batch-list-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 760px;
-      }
-      .batch-list-table th,
-      .batch-list-table td {
-        text-align: left;
-        padding: 12px 10px;
-        border-top: 1px solid rgba(200,121,26,0.12);
-        font-size: 13px;
-        color: var(--text);
-      }
-      .batch-list-table th {
-        border-top: 0;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 1.3px;
-        text-transform: uppercase;
-        color: var(--text-light);
-      }
-      .batch-list-table td strong {
-        color: var(--dark);
-      }
-      .batch-open-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 110px;
-      }
-      .accounting-grid {
-        display: grid; grid-template-columns: repeat(6, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px;
-      }
-    .accounting-card {
-      background: var(--white); border-radius: 20px; padding: 18px 18px; box-shadow: var(--shadow); border: 1px solid rgba(200,121,26,0.08);
-    }
-    .accounting-card .a-label { font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text-light); margin-bottom: 8px; }
-    .accounting-card .a-value { font-family: var(--font-display); font-size: 1.9rem; color: var(--dark); line-height: 1; font-weight: 700; }
-    .accounting-card .a-value.accent { color: var(--saffron); }
-    .accounting-card .a-value.good { color: #2E7D32; }
-    .accounting-card .a-value.warn { color: #C62828; }
-    .tally-box {
-      background: linear-gradient(180deg, #fff, #fbf5eb);
-      border: 1.5px solid rgba(200,121,26,0.14);
-      border-radius: 20px; padding: 18px 20px; margin-bottom: 20px;
-    }
-    .tally-box h3 { font-family: var(--font-display); font-size: 22px; color: var(--dark); margin-bottom: 12px; }
-    .tally-help { font-size: 13px; color: var(--text-light); margin: -2px 0 14px; }
-    .tally-actions {
-      display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; margin-top: 16px;
-    }
-    .batch-status-box {
-      margin-bottom: 16px; padding: 12px 14px; border-radius: 16px;
-      background: linear-gradient(180deg, #fff, #fbf5eb);
-      border: 1.5px solid rgba(200,121,26,0.12);
-      font-size: 13px; color: var(--text-light);
-    }
-    .batch-status-box strong { color: var(--dark); }
-    .tally-grid {
-      display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 14px;
-      justify-content: end;
-    }
-    .tally-field label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-light); margin-bottom: 6px; }
-    .tally-field input {
-      width: 100%; padding: 11px 12px; border-radius: 14px; border: 1.5px solid #E0D0B8;
-      background: var(--white); font-size: 14px; font-family: var(--font-body); color: var(--text); outline: none;
-    }
-    .tally-field input:focus { border-color: var(--saffron); }
-
-    @media (max-width: 1480px) {
-      .admin-layout { grid-template-columns: 250px minmax(0, 1fr) 320px; }
-    }
-    @media (max-width: 1320px) {
-      .admin-layout { grid-template-columns: 250px minmax(0, 1fr); }
-      .admin-stats-rail {
-        position: static;
-        grid-column: 1 / -1;
-        order: -1;
-      }
-      .admin-stats { grid-template-columns: repeat(4, minmax(170px, 1fr)); }
-      .accounting-grid { grid-template-columns: repeat(3, minmax(170px, 1fr)); }
-    }
-    @media (max-width: 1200px) {
-      .admin-stats { grid-template-columns: repeat(4, minmax(170px, 1fr)); }
-    }
-    @media (max-width: 900px) {
-      .admin-layout { grid-template-columns: 1fr; }
-      .admin-sidebar { position: static; }
-      .admin-stats-rail { position: static; order: 0; }
-      .admin-tabs { flex-direction: row; flex-wrap: wrap; }
-      .sheet-switcher { flex-direction: row; flex-wrap: wrap; margin-left: 0; }
-      .admin-stats { grid-template-columns: repeat(3, 1fr); }
-      .accounting-grid { grid-template-columns: repeat(2, 1fr); }
-      .tally-grid { grid-template-columns: 1fr; }
-      .accounting-toolbar .toolbar-actions { margin-left: 0; justify-content: flex-start; }
-      .admin-wrap { padding: 28px 18px 60px; }
-      .product-form-grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 600px) {
-      .admin-stats { grid-template-columns: repeat(2, 1fr); }
-      .admin-topbar { padding: 12px 16px; }
-      .admin-wrap { padding: 20px 12px 60px; }
-    }
-  </style>
+  <link rel="stylesheet" href="assets/css/admin-luxury.css?v=fixes-20260527">
 </head>
 <body>
 
@@ -1363,8 +57,9 @@
           <button class="admin-tab" onclick="switchTab('customers',this)">Customer Accounts</button>
           <button class="admin-tab" onclick="switchTab('feedback',this)">Feedback</button>
           <button class="admin-tab" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
-          <button class="admin-tab" onclick="switchTab('accounting',this)">📒 Accounting</button>
-          <button class="admin-tab" onclick="switchTab('excel-calculations',this)">Excel Calculations</button>
+          <button class="admin-tab" onclick="switchTab('refunds',this);loadRefundTab()">💸 Refunds</button>
+            <button class="admin-tab" onclick="switchTab('accounting',this)">📒 Accounting</button>
+          <button class="admin-tab" onclick="switchTab('pickup-tally',this)">🧾 Pickup Tally</button>
         </div>
       </aside>
 
@@ -1394,7 +89,7 @@
               <button class="toolbar-btn" id="emailReminderBtn" type="button" onclick="openEmailReminderModal()" style="display:none;">Email Reminder</button>
               <button class="toolbar-btn" id="whatsappReminderBtn" type="button" onclick="openWhatsAppReminderModal()" style="display:none;">WhatsApp Reminder</button>
               <button class="toolbar-btn" id="bulkFulfillBtn" onclick="markFilteredActiveFulfilled()">✓ Mark Filtered Fulfilled</button>
-              <button class="toolbar-btn" onclick="printActiveOrders()">🖨 Print Active</button>
+              <button class="toolbar-btn print-btn" onclick="printActiveOrders()" title="Print pickup checklist for today">🖨️ Print Checklist</button>
               <button class="toolbar-btn" onclick="exportCSV()">⬇ Export CSV</button>
             </div>
           </div>
@@ -1416,8 +111,6 @@
                   <th>Products &amp; Qty</th>
                   <th>Total</th>
                   <th>Location</th>
-                  <th>Payment</th>
-                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -1479,6 +172,10 @@
                   <option value="card">Card</option>
                   <option value="">Not collected</option>
                 </select>
+              </label>
+              <label class="manual-order-field">
+                Batch Date (for tally)
+                <input type="date" id="manualBatchDate" autocomplete="off">
               </label>
               <label class="manual-order-field full">
                 Notes
@@ -1561,7 +258,7 @@
               <h2>Manage Products</h2>
               <p>Add new catalog items here. New products will use the same live and coming soon behavior as your existing shop cards.</p>
             </div>
-            <button class="add-product-btn" onclick="openAddProductForm()">+ Add Product</button>
+            <button class="add-product-btn" onclick="openAddProductForm()">+ Add New Product</button>
           </div>
           <div class="product-form-card" id="productFormCard">
             <div class="product-form-head">
@@ -1805,21 +502,12 @@
             <div class="batch-list-card">
               <h3 id="accountingBatchListTitle">Open Batches</h3>
               <div class="batch-list-help" id="accountingBatchListHelp">Open batches stay here until you finish tallying and close them. Closed batches move to their own tab, and reopened batches come back here.</div>
-              <div class="batch-list-table-wrap">
-                <table class="batch-list-table">
-                  <thead>
-                    <tr>
-                      <th>Batch</th>
-                      <th>Status</th>
-                      <th>Orders</th>
-                      <th>Collected Total</th>
-                      <th>Last Saved</th>
-                      <th>Closed At</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody id="accountingBatchListBody"></tbody>
-                </table>
+              <div class="accounting-batch-picker">
+                <label for="accountingBatchSelect">Select batch</label>
+                <select id="accountingBatchSelect" class="filter-input" onchange="setSelectedAccountingBatch(this.value)"></select>
+              </div>
+              <div class="accounting-batch-summary" id="accountingBatchListBody">
+                <div class="empty-state"><div class="empty-icon">📒</div><p>No open batches yet.</p></div>
               </div>
             </div>
             <div class="accounting-grid" id="accountingStats"></div>
@@ -1869,11 +557,11 @@
         </div>
       </div>
 
-      <div id="tab-excel-calculations" style="display:none;">
+      <div id="tab-pickup-tally" style="display:none;">
         <div class="excel-calc-toolbar">
           <div class="excel-calc-copy">
-            <h2>Excel Calculations</h2>
-            <p>Worksheet view based on your spreadsheet. Save a sheet, open it later, and keep Excel Calculations separate from everything else.</p>
+            <h2>Pickup Tally</h2>
+            <p>Tally your pickup event: ordered boxes, walk-up sales, leftover, spoiled, and cate from everything else.</p>
           </div>
           <div class="toolbar-actions">
             <select id="excelCalcSavedSheet" class="filter-input" onchange="setExcelCalcSheet(this.value)">
@@ -1891,21 +579,139 @@
           <div id="excelCalcSheet"></div>
         </div>
       </div>
+
+
+        <!-- ── REFUNDS PANEL ──────────────────────────────────────── -->
+        <section id="tab-refunds" class="tab-panel" style="display:none">
+          <h2>Refund Requests</h2>
+          <p style="color:var(--text-light);font-size:13px;margin-bottom:16px">
+            Pending requests are shown first. For Stripe orders, clicking "Issue Stripe Refund"
+            will call the Stripe API automatically. For pickup orders, mark manually after completing
+            the refund via Zelle/cash.
+          </p>
+          <div class="refund-filter-bar">
+            <button class="refund-filter-btn active" id="refundFilter_pending" onclick="setRefundFilter('pending')">Pending (0)</button>
+            <button class="refund-filter-btn" id="refundFilter_approved" onclick="setRefundFilter('approved')">Approved (0)</button>
+            <button class="refund-filter-btn" id="refundFilter_rejected" onclick="setRefundFilter('rejected')">Rejected (0)</button>
+            <button class="refund-filter-btn" id="refundFilter_all" onclick="setRefundFilter('all')">All (0)</button>
+          </div>
+          <div id="refundsContainer">
+            <div class="refund-empty">Click "Refunds" tab to load requests.</div>
+          </div>
+        </section>
       </main>
 
-      <aside class="admin-stats-rail">
+        <aside class="admin-stats-rail">
         <div class="admin-stats" id="adminStats"></div>
       </aside>
     </div>
   </div>
 </div>
 
-<!-- Toast -->
+<!-- Toast --><!-- deploy-20260527-021204 -->
 <div class="admin-toast" id="adminToast"></div>
 
-<script src="assets/js/data.js?v=drumstick-podi-price-20260521"></script>
+<script src="assets/js/data.js?v=fixes-20260527"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/admin-firebase.js?v=drumstick-podi-price-20260521"></script>
+<script type="module" src="assets/js/admin-firebase.js?v=print-payment-type-20260528"></script>
+
+
+<canvas id="particle-canvas"></canvas>
+<script>
+// ── PARTICLE SYSTEM ──────────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('particle-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  class Particle {
+    constructor() { this.reset(); }
+    reset() {
+      this.x  = Math.random() * W;
+      this.y  = Math.random() * H;
+      this.vx = (Math.random() - 0.5) * 0.3;
+      this.vy = (Math.random() - 0.5) * 0.3;
+      this.r  = Math.random() * 1.5 + 0.3;
+      this.alpha = Math.random() * 0.4 + 0.05;
+      this.gold = Math.random() > 0.6;
+    }
+    update() {
+      this.x += this.vx; this.y += this.vy;
+      if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fillStyle = this.gold
+        ? `rgba(200,121,26,${this.alpha})`
+        : `rgba(245,201,122,${this.alpha * 0.5})`;
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+// ── MAGNETIC BUTTONS ────────────────────────────────────────────
+document.addEventListener('mousemove', function(e) {
+  document.querySelectorAll('.admin-tab.active, .toolbar-btn, .admin-logout-btn, .print-btn').forEach(el => {
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width  / 2;
+    const cy = rect.top  + rect.height / 2;
+    const dx = e.clientX - cx;
+    const dy = e.clientY - cy;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const maxDist = 80;
+    if (dist < maxDist) {
+      const force = (1 - dist / maxDist) * 6;
+      el.style.transform = `translate(${dx * force / dist}px, ${dy * force / dist}px)`;
+    } else {
+      el.style.transform = '';
+    }
+  });
+});
+
+// ── SMOOTH TAB TRANSITIONS ──────────────────────────────────────
+const _origSwitchTab = window.switchTab;
+if (_origSwitchTab) {
+  window.switchTab = function(tab, el) {
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      if (p.style.display !== 'none') {
+        p.style.opacity = '0';
+        p.style.transform = 'translateY(8px)';
+      }
+    });
+    setTimeout(() => {
+      _origSwitchTab(tab, el);
+      const panel = document.getElementById('tab-' + tab);
+      if (panel) {
+        panel.style.opacity = '0';
+        panel.style.transform = 'translateY(12px)';
+        requestAnimationFrame(() => {
+          panel.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+          panel.style.opacity = '1';
+          panel.style.transform = 'translateY(0)';
+        });
+      }
+    }, 80);
+  };
+}
+</script>
 
 </body>
 </html>

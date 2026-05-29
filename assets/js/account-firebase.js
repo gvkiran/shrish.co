@@ -39,7 +39,9 @@ const claimCustomerOrder = httpsCallable(cloudFunctions, 'claimCustomerOrder');
 const submitOrderFeedback = httpsCallable(cloudFunctions, 'submitOrderFeedback');
 const sendCustomerPasswordReset = httpsCallable(cloudFunctions, 'sendCustomerPasswordReset');
 const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
+const CHECKOUT_ACCOUNT_PREFILL_KEY = 'shrish_checkout_account_prefill';
 const RECENT_ORDER_CLAIM_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const CHECKOUT_ACCOUNT_PREFILL_MAX_AGE_MS = 60 * 60 * 1000;
 const FIREBASE_OPERATION_TIMEOUT_MS = 20000;
 
 function customerAccountsEnabled() {
@@ -185,6 +187,33 @@ function readRecentOrderClaim() {
   }
 }
 
+function readCheckoutAccountPrefill() {
+  try {
+    const raw = sessionStorage.getItem(CHECKOUT_ACCOUNT_PREFILL_KEY);
+    if (!raw) return null;
+    const prefill = JSON.parse(raw);
+    if (Date.now() - Number(prefill.createdAt || 0) > CHECKOUT_ACCOUNT_PREFILL_MAX_AGE_MS) {
+      sessionStorage.removeItem(CHECKOUT_ACCOUNT_PREFILL_KEY);
+      return null;
+    }
+    return prefill;
+  } catch {
+    sessionStorage.removeItem(CHECKOUT_ACCOUNT_PREFILL_KEY);
+    return null;
+  }
+}
+
+function shouldReturnToCheckout() {
+  return new URLSearchParams(window.location.search).get('return') === 'checkout';
+}
+
+function returnToCheckoutIfRequested() {
+  if (!shouldReturnToCheckout()) return false;
+  sessionStorage.removeItem(CHECKOUT_ACCOUNT_PREFILL_KEY);
+  window.location.href = 'order.html';
+  return true;
+}
+
 function prepareRecentOrderSignup(mode = 'signup') {
   const claim = readRecentOrderClaim();
   if (!claim) return;
@@ -196,6 +225,19 @@ function prepareRecentOrderSignup(mode = 'signup') {
   if (el('signupFirstName')) el('signupFirstName').value = claim.firstName || '';
   if (el('signupLastName')) el('signupLastName').value = claim.lastName || '';
   showMessage('authMessage', 'info', 'Sign in or create an account with the same email and phone from checkout to modify your pending order.');
+}
+
+function prepareCheckoutAccountPrefill(mode = 'signin') {
+  const prefill = readCheckoutAccountPrefill();
+  if (!prefill) return;
+  const authMode = mode === 'signup' ? 'signup' : 'signin';
+  setAuthMode(authMode);
+  if (el('signinEmail')) el('signinEmail').value = prefill.email || '';
+  if (el('signupEmail')) el('signupEmail').value = prefill.email || '';
+  if (el('signupPhone')) el('signupPhone').value = formatPhone(prefill.phone || prefill.phoneDigits || '');
+  if (el('signupFirstName')) el('signupFirstName').value = prefill.firstName || '';
+  if (el('signupLastName')) el('signupLastName').value = prefill.lastName || '';
+  showMessage('authMessage', 'info', 'Sign in or create an account, then we will bring you back to checkout.');
 }
 
 async function claimRecentOrderForUser(user) {
@@ -223,7 +265,8 @@ async function claimRecentOrderForUser(user) {
     });
   } catch (error) {
     console.warn('Could not link recent order', error);
-    showMessage('profileMessage', 'info', 'Account created, but we could not link the recent order automatically. Please use the same checkout email and phone, or contact Shrish.');
+    sessionStorage.removeItem(RECENT_ORDER_CLAIM_KEY);
+    clearMessage('profileMessage');
   }
 }
 
@@ -497,7 +540,7 @@ function orderItemsText(items = []) {
 function lineTotalValue(item = {}) {
   const explicit = Number(item.lineTotal || 0);
   if (explicit > 0) return explicit;
-  const price = parseFloat(String(item.price || '0').replace(/[^0-9.]/g, ''));
+  const price = moneyValue(item.price || 0);
   const qty = Number(item.qty || 1);
   return Number.isFinite(price) ? price * qty : 0;
 }
@@ -506,8 +549,13 @@ function orderItemUnitPrice(item = {}) {
   const qty = Number(item.qty || 1);
   const lineTotal = lineTotalValue(item);
   if (lineTotal > 0 && qty > 0) return lineTotal / qty;
-  const price = parseFloat(String(item.price || item.unitPrice || item.itemPrice || '0').replace(/[^0-9.]/g, ''));
+  const price = moneyValue(item.price || item.unitPrice || item.itemPrice || 0);
   return Number.isFinite(price) ? price : 0;
+}
+
+function moneyValue(value) {
+  const amount = parseFloat(String(value || '0').replace(/[^0-9.]/g, ''));
+  return Number.isFinite(amount) ? amount : 0;
 }
 
 function cleanOrderEditQty(value) {
@@ -550,11 +598,61 @@ function orderStatusMessage(order = {}) {
 function normalizeCartItem(item = {}) {
   return {
     id: item.id || String(item.name || 'item').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    productId: item.productId || String(item.id || '').split('__')[0] || '',
+    variantId: item.variantId || (String(item.id || '').includes('__') ? String(item.id || '').split('__')[1] : 'default'),
     name: item.name || 'Item',
     price: item.price || formatCurrency(lineTotalValue(item)),
     unit: item.unit || '',
     qty: Number(item.qty || 1)
   };
+}
+
+function buildOrderEditItemKey(productId, variantId = 'default') {
+  return `${productId}__${variantId || 'default'}`;
+}
+
+function cartItemId(productId, variantId = 'default') {
+  return variantId === 'default' ? productId : `${productId}__${variantId}`;
+}
+
+function productVariants(product = {}) {
+  if (Array.isArray(product.variants) && product.variants.length) {
+    return product.variants
+      .filter((variant) => variant && variant.available !== false && !variant.displayOnly)
+      .map((variant, index) => ({
+        id: variant.id || `opt${index + 1}`,
+        label: variant.label || product.unit || 'Option',
+        price: variant.price || product.price || '',
+        unit: variant.unit || variant.label || product.unit || ''
+      }));
+  }
+
+  return [{
+    id: 'default',
+    label: product.unit || 'Default',
+    price: product.price || '',
+    unit: product.unit || ''
+  }];
+}
+
+function orderEditCatalogOptions(order = {}) {
+  const products = window.SHRISH_DATA?.products || [];
+  const existingKeys = new Set((order.items || []).map((item) => {
+    const productId = item.productId || String(item.id || '').split('__')[0] || '';
+    const variantId = item.variantId || (String(item.id || '').includes('__') ? String(item.id || '').split('__')[1] : 'default');
+    return buildOrderEditItemKey(productId, variantId);
+  }));
+
+  return products
+    .filter((product) => product && product.id && product.available !== false && !product.displayOnly && !product.hidden)
+    .flatMap((product) => productVariants(product).map((variant) => ({
+      productId: product.id,
+      variantId: variant.id,
+      key: buildOrderEditItemKey(product.id, variant.id),
+      label: `${product.name || 'Item'}${variant.id === 'default' ? '' : ` - ${variant.label}`} - ${variant.price || product.price || 'TBD'}`,
+      disabled: existingKeys.has(buildOrderEditItemKey(product.id, variant.id)) || moneyValue(variant.price || product.price) <= 0
+    })))
+    .sort((a, b) => a.label.localeCompare(b.label));
 }
 
 function orderHasMangoItems(order = {}) {
@@ -620,12 +718,13 @@ function renderPendingOrderEditor(order = {}) {
   if (!isPendingOrder(order)) return '';
   const items = Array.isArray(order.items) ? order.items : [];
   if (!items.length) return '';
+  const addOptions = orderEditCatalogOptions(order);
 
   return `
     <div class="order-edit-panel">
       <div class="order-edit-heading">
         <strong>Edit pending order</strong>
-        <span>Change boxes before pickup is confirmed. Admin orders update automatically.</span>
+        <span>Change boxes or add available items before pickup is confirmed. Admin orders update automatically.</span>
       </div>
       <div class="order-edit-list">
         ${items.map((item, index) => {
@@ -645,6 +744,20 @@ function renderPendingOrderEditor(order = {}) {
               <div class="order-edit-line" data-edit-line>${escapeHtml(formatCurrency(unitPrice * qty))}</div>
             </div>`;
         }).join('')}
+      </div>
+      <div class="order-edit-add" ${addOptions.length ? '' : 'hidden'}>
+        <div>
+          <label for="orderEditAddProduct">Add item</label>
+          <select id="orderEditAddProduct" data-order-add-product>
+            <option value="">Select available product</option>
+            ${addOptions.map((option) => `<option value="${escapeHtml(option.key)}" ${option.disabled ? 'disabled' : ''}>${escapeHtml(option.label)}${option.disabled ? ' - already in order' : ''}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label for="orderEditAddQty">Qty</label>
+          <input id="orderEditAddQty" data-order-add-qty type="number" min="1" max="99" step="1" value="1">
+        </div>
+        <button class="order-mini-btn" type="button" data-order-add-item>Add item</button>
       </div>
       <div class="order-edit-message" data-order-edit-message></div>
       <div class="order-history-actions">
@@ -721,8 +834,7 @@ function buildOrderDetailHtml(order = {}) {
     <div class="order-detail-grid">
       <div class="order-detail-cell"><span>Order number</span><strong>${escapeHtml(orderNumber)}</strong></div>
       <div class="order-detail-cell"><span>Pickup</span><strong>${escapeHtml(location)}</strong></div>
-      <div class="order-detail-cell"><span>Payment method</span><strong>${escapeHtml(paymentMethod)}</strong></div>
-      <div class="order-detail-cell"><span>Payment status</span><strong>${escapeHtml(paymentStatus)}</strong></div>
+      <!-- Payment method/status cells temporarily hidden -->
       <div class="order-detail-cell"><span>Total boxes</span><strong>${escapeHtml(String(totalBoxes))}</strong></div>
       <div class="order-detail-cell"><span>Total price</span><strong>${escapeHtml(formatCurrency(total))}</strong></div>
     </div>
@@ -787,7 +899,7 @@ function setOrderEditMessage(type, text) {
 }
 
 function setOrderEditBusy(busy) {
-  el('orderDetailModal')?.querySelectorAll('[data-edit-delta], .order-edit-qty, [data-order-save], [data-order-cancel]').forEach((control) => {
+  el('orderDetailModal')?.querySelectorAll('[data-edit-delta], .order-edit-qty, [data-order-save], [data-order-cancel], [data-order-add-product], [data-order-add-qty], [data-order-add-item]').forEach((control) => {
     control.disabled = busy;
   });
 }
@@ -870,15 +982,102 @@ function updateOrderEditTotals() {
   });
 }
 
+function addItemToPendingOrderEditor(button) {
+  const modal = el('orderDetailModal');
+  if (!modal) return;
+  const select = modal.querySelector('[data-order-add-product]');
+  const qtyInput = modal.querySelector('[data-order-add-qty]');
+  const selectedKey = select?.value || '';
+  const qty = cleanOrderEditQty(qtyInput?.value || 1) || 1;
+  if (!selectedKey) {
+    setOrderEditMessage('error', 'Choose an available product to add.');
+    return;
+  }
+
+  const orderId = modal.querySelector('[data-order-save]')?.dataset.orderSave || '';
+  const order = findCurrentOrder(orderId);
+  const option = orderEditCatalogOptions(order).find((item) => item.key === selectedKey);
+  if (!option || option.disabled) {
+    setOrderEditMessage('error', 'That product is already in this order or is not available.');
+    return;
+  }
+
+  const product = (window.SHRISH_DATA?.products || []).find((item) => item.id === option.productId);
+  const variant = productVariants(product).find((item) => item.id === option.variantId);
+  if (!product || !variant) {
+    setOrderEditMessage('error', 'Could not find that product. Refresh and try again.');
+    return;
+  }
+
+  const unitPrice = moneyValue(variant.price || product.price);
+  const index = modal.querySelectorAll('.order-edit-qty').length;
+  const row = document.createElement('div');
+  row.className = 'order-edit-row';
+  row.dataset.editRow = '';
+  row.dataset.unitPrice = String(unitPrice);
+  row.dataset.newProductId = product.id;
+  row.dataset.newVariantId = variant.id;
+  row.innerHTML = `
+    <div>
+      <strong>${escapeHtml(variant.id === 'default' ? product.name : `${product.name} (${variant.label})`)}</strong>
+      <span>${escapeHtml(formatCurrency(unitPrice))}${variant.unit ? ` - ${escapeHtml(variant.unit)}` : ''}</span>
+    </div>
+    <div class="order-edit-qty-control">
+      <button type="button" data-edit-delta="-1" data-index="${index}" aria-label="Reduce added item quantity">-</button>
+      <input class="order-edit-qty" data-index="${index}" type="number" min="0" max="99" step="1" value="${escapeHtml(String(qty))}" aria-label="Added item quantity">
+      <button type="button" data-edit-delta="1" data-index="${index}" aria-label="Increase added item quantity">+</button>
+    </div>
+    <div class="order-edit-line" data-edit-line>${escapeHtml(formatCurrency(unitPrice * qty))}</div>`;
+
+  modal.querySelector('.order-edit-list')?.appendChild(row);
+  select.value = '';
+  if (qtyInput) qtyInput.value = '1';
+  button.disabled = true;
+  [...select.options].forEach((item) => {
+    if (item.value === selectedKey) item.disabled = true;
+  });
+  bindOrderEditRow(row);
+  updateOrderEditTotals();
+  setOrderEditMessage('info', 'Item added locally. Click Save changes to update the order.');
+}
+
+function bindOrderEditRow(row) {
+  const modal = el('orderDetailModal');
+  row?.querySelectorAll('[data-edit-delta]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const input = modal?.querySelector(`.order-edit-qty[data-index="${button.dataset.index}"]`);
+      if (!input) return;
+      input.value = String(cleanOrderEditQty(Number(input.value || 0) + Number(button.dataset.editDelta || 0)));
+      updateOrderEditTotals();
+      setOrderEditMessage('', '');
+    });
+  });
+
+  row?.querySelectorAll('.order-edit-qty').forEach((input) => {
+    input.addEventListener('input', () => {
+      updateOrderEditTotals();
+      setOrderEditMessage('', '');
+    });
+  });
+}
+
 async function savePendingOrderChanges(button) {
   const orderId = button?.dataset.orderSave;
   const modal = el('orderDetailModal');
   if (!orderId || !modal) return;
 
-  const items = [...modal.querySelectorAll('.order-edit-qty')].map((input) => ({
-    index: Number(input.dataset.index),
-    qty: cleanOrderEditQty(input.value)
-  }));
+  const items = [...modal.querySelectorAll('[data-edit-row]')].map((row) => {
+    const input = row.querySelector('.order-edit-qty');
+    const payload = {
+      index: Number(input?.dataset.index),
+      qty: cleanOrderEditQty(input?.value)
+    };
+    if (row.dataset.newProductId) {
+      payload.productId = row.dataset.newProductId;
+      payload.variantId = row.dataset.newVariantId || 'default';
+    }
+    return payload;
+  });
 
   if (!items.length) return;
   if (!items.some((item) => item.qty > 0)) {
@@ -947,25 +1146,20 @@ function bindOrderModalActions() {
     });
   });
 
-  modal?.querySelectorAll('[data-edit-delta]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const input = modal.querySelector(`.order-edit-qty[data-index="${button.dataset.index}"]`);
-      if (!input) return;
-      input.value = String(cleanOrderEditQty(Number(input.value || 0) + Number(button.dataset.editDelta || 0)));
-      updateOrderEditTotals();
-      setOrderEditMessage('', '');
-    });
-  });
-
-  modal?.querySelectorAll('.order-edit-qty').forEach((input) => {
-    input.addEventListener('input', () => {
-      updateOrderEditTotals();
-      setOrderEditMessage('', '');
-    });
-  });
+  modal?.querySelectorAll('[data-edit-row]').forEach(bindOrderEditRow);
 
   modal?.querySelector('[data-order-save]')?.addEventListener('click', (event) => {
     savePendingOrderChanges(event.currentTarget);
+  });
+
+  modal?.querySelector('[data-order-add-product]')?.addEventListener('change', () => {
+    const button = modal.querySelector('[data-order-add-item]');
+    if (button) button.disabled = !modal.querySelector('[data-order-add-product]')?.value;
+    setOrderEditMessage('', '');
+  });
+
+  modal?.querySelector('[data-order-add-item]')?.addEventListener('click', (event) => {
+    addItemToPendingOrderEditor(event.currentTarget);
   });
 
   modal?.querySelector('[data-order-cancel]')?.addEventListener('click', (event) => {
@@ -1030,7 +1224,7 @@ function printOrderSummary(order = {}) {
       <h1>Shrish Order Summary</h1>
       <p><strong>${escapeHtml(order.orderNumber || order.id || 'Order')}</strong></p>
       <p>${escapeHtml(formatDateTime(order.createdAt))} - ${escapeHtml(order.locationLabel || LOCATION_LABELS[order.location] || 'Pickup')}</p>
-      <p>Payment: ${escapeHtml(orderPaymentLabel(order))} (${escapeHtml(orderPaymentStatus(order))})</p>
+      <!-- Payment line temporarily hidden -->
       <table><thead><tr><th>Item</th><th>Qty</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table>
       <p style="text-align:right;margin-top:18px"><strong>Total: ${escapeHtml(formatCurrency(orderTotalValue(order)))}</strong></p>
     </body></html>`);
@@ -1075,10 +1269,11 @@ function renderOrders(orders = []) {
         <div class="order-history-meta">
           <span>${escapeHtml(location)}</span>
           <span>${escapeHtml(formatCurrency(total))}</span>
-          <span>${escapeHtml(paymentMethod)}</span>
+          <!-- Payment method span temporarily hidden -->
         </div>
         <div class="order-history-actions">
           <button class="order-mini-btn primary" type="button" data-order-toggle="${escapeHtml(order.id)}">View details</button>
+          ${isPendingOrder(order) ? `<button class="order-mini-btn" type="button" data-order-toggle="${escapeHtml(order.id)}">Edit order</button>` : ''}
           <button class="order-mini-btn" type="button" data-order-reorder="${escapeHtml(order.id)}">Order again</button>
           ${order.feedbackSubmitted
             ? '<button class="order-mini-btn" type="button" disabled>Feedback sent</button>'
@@ -1361,6 +1556,8 @@ function init() {
   }
   if (params.get('claim') === 'recent' || readRecentOrderClaim()) {
     prepareRecentOrderSignup(params.get('mode'));
+  } else if (params.get('return') === 'checkout' || readCheckoutAccountPrefill()) {
+    prepareCheckoutAccountPrefill(params.get('mode'));
   }
 
   onAuthStateChanged(auth, async (user) => {
@@ -1384,6 +1581,7 @@ function init() {
     await loadProfile(user);
     setProfileEditing(false);
     await claimRecentOrderForUser(user);
+    if (returnToCheckoutIfRequested()) return;
     subscribeOrders(user);
   });
 }

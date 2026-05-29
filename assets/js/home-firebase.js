@@ -251,7 +251,7 @@ function renderHomeModal(productId) {
     .join('');
 
   media.innerHTML = product.image
-    ? `<img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}">`
+    ? `<img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" loading="eager" decoding="async">`
     : '<div class="home-product-modal-fallback">🥭</div>';
 
   content.innerHTML = `
@@ -320,7 +320,7 @@ function renderHomeProducts(products) {
     const description = (p.description || '').slice(0, 80);
     const hasMore = (p.description || '').length > 80;
     const imgHtml = p.image
-      ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : '';
     const fallbackStyle = p.image ? 'style="display:none"' : '';
     productsGrid.innerHTML += `

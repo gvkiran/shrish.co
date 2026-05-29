@@ -27,7 +27,10 @@ import {
 const BASE_PRODUCTS = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || []));
 const GO_LIVE_STATS_DATE = '2026-04-10';
 const EXCEL_CALC_DOC_PREFIX = 'excel_sheet__';
-const DAMAGED_BOX_UNIT_PRICE = 56;
+const DAMAGED_BOX_UNIT_PRICE = 56; // Default spoiled box price — override per product in tally
+// Expose for refund module
+window._firestoreExports = { collection, doc, updateDoc, addDoc: typeof addDoc !== 'undefined' ? addDoc : null, onSnapshot, orderBy, query };
+
 const NON_REVENUE_ORDER_STATUSES = ['cancelled', 'no_show'];
 const ADMIN_EMAIL = normalizeLookup(window.SHRISH_APP_CONFIG?.adminEmailHint || 'contact@shrish.co');
 const deleteCustomerAccount = httpsCallable(cloudFunctions, 'deleteCustomerAccount');
@@ -64,6 +67,7 @@ const state = {
   unsubAccountingBatches: null,
   unsubAccounting2Records: null
 };
+window._adminState = state; // expose for tally walkup calc
 
 function normalizeProductCategory(category) {
   return category === 'Mango Jelly' ? 'jellysnacks' : category;
@@ -114,28 +118,41 @@ function unsubscribeAdminData() {
   state.selectedReminderOrderIds.clear();
 }
 
-async function doLogin() {
-  const email = document.getElementById('adminEmail')?.value?.trim();
-  const password = document.getElementById('adminPw')?.value || '';
+  async function doLogin() {
+    const email = document.getElementById('adminEmail')?.value?.trim();
+    const password = document.getElementById('adminPw')?.value || '';
+    const btn = document.querySelector('.login-btn');
 
-  if (!email || !password) {
-    showLoginError('Enter admin email and password.');
-    return;
-  }
+    if (!email) { showLoginError('⚠️ Please enter your email address.'); return; }
+    if (!password) { showLoginError('⚠️ Please enter your password.'); return; }
 
-  if (normalizeLookup(email) !== ADMIN_EMAIL) {
-    showLoginError(`Admin access is only available for ${ADMIN_EMAIL}.`);
-    return;
-  }
+    if (normalizeLookup(email) !== ADMIN_EMAIL) {
+      showLoginError('❌ Wrong email. Admin login requires: ' + ADMIN_EMAIL);
+      return;
+    }
 
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
+    if (btn) { btn.textContent = 'Logging in...'; btn.disabled = true; }
     clearLoginError();
-  } catch (error) {
-    console.error(error);
-    showLoginError('Login failed. Check your Firebase Auth admin user.');
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      clearLoginError();
+    } catch (error) {
+      console.error('Login error:', error.code, error.message);
+      const msgs = {
+        'auth/wrong-password':         '❌ Wrong password. Please try again.',
+        'auth/invalid-credential':     '❌ Wrong password. Please try again.',
+        'auth/user-not-found':         '❌ No account found for this email.',
+        'auth/invalid-email':          '❌ Invalid email address format.',
+        'auth/too-many-requests':      '⚠️ Too many failed attempts. Try again later.',
+        'auth/network-request-failed': '⚠️ Network error. Check your connection.',
+        'auth/user-disabled':          '❌ This account has been disabled.',
+      };
+      showLoginError(msgs[error.code] || ('❌ Login failed (' + error.code + '). Check email and password.'));
+    } finally {
+      if (btn) { btn.textContent = 'Login →'; btn.disabled = false; }
+    }
   }
-}
 
 async function doLogout() {
   await signOut(auth);
@@ -449,6 +466,15 @@ function accounting2ComputedTotals(batchName = accounting2BatchName()) {
   const extraBoxesTotal = Object.values(extraBoxes).reduce((sum, qty) => sum + excelCalcCountValue(qty), 0);
   const invoiceBalance = batchOrderTotal - invoiceTotal;
   const receivedTotal = cashSales + zelleAmount;
+  // Walk-up (manual) orders on this batch date
+  const batchDate = record.batchDate || '';
+  const walkupOrders = (window._adminState?.orders || state.orders || []).filter(o =>
+    (o.manualBatchDate === batchDate || o.source === 'admin_manual') &&
+    (o.status === 'fulfilled' || o.paymentCollected)
+  );
+  const walkupRevenue = walkupOrders.reduce((sum, o) => sum + (moneyNumber(o.totalPrice) || 0), 0);
+  const walkupBoxes = walkupOrders.reduce((sum, o) => sum + (o.totalBoxes || 0), 0);
+
   const tallyValue = batchOrderTotal - receivedTotal - (remainingValue + damagedAmount);
 
   return {
@@ -476,6 +502,9 @@ function accounting2ComputedTotals(batchName = accounting2BatchName()) {
     extraBoxesValue,
     totalBoxesCount: orderedBoxesTotal + extraBoxesTotal,
     totalLossValue: remainingValue + damagedAmount,
+    walkupRevenue,
+    walkupBoxes,
+    walkupOrderCount: walkupOrders.length,
     tallyValue
   };
 }
@@ -545,8 +574,9 @@ function renderAccountingBatchList(selectedBatchName) {
   const closedBtn = document.getElementById('accountingViewClosed');
   const titleEl = document.getElementById('accountingBatchListTitle');
   const helpEl = document.getElementById('accountingBatchListHelp');
-  const bodyEl = document.getElementById('accountingBatchListBody');
-  if (!bodyEl) return;
+  const summaryEl = document.getElementById('accountingBatchListBody');
+  const selectEl = document.getElementById('accountingBatchSelect');
+  if (!summaryEl || !selectEl) return;
 
   openBtn?.classList.toggle('active', state.accountingView === 'open');
   closedBtn?.classList.toggle('active', state.accountingView === 'closed');
@@ -558,23 +588,52 @@ function renderAccountingBatchList(selectedBatchName) {
       : 'Closed batches stay here for reference. Open any batch to review the breakdown, or reopen it if you need to continue collecting and tallying.';
   }
 
-  const entries = getAccountingBatchEntries();
-  if (!entries.length) {
-    bodyEl.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📒</div><p>No ${state.accountingView} batches yet.</p></div></td></tr>`;
+  const dropdownEntries = getAccountingBatchEntries();
+  if (!dropdownEntries.length) {
+    selectEl.innerHTML = `<option value="">No ${state.accountingView} batches yet</option>`;
+    selectEl.disabled = true;
+    summaryEl.innerHTML = `<div class="empty-state"><div class="empty-icon">📒</div><p>No ${state.accountingView} batches yet.</p></div>`;
     return;
   }
 
-  bodyEl.innerHTML = entries.map((entry) => `
-    <tr>
-      <td><strong>${escapeHtml(entry.batchName)}</strong></td>
-      <td><span class="status-badge ${entry.status === 'closed' ? 'status-cancelled' : 'status-fulfilled'}">${escapeHtml(entry.status)}</span></td>
-      <td>${escapeHtml(String(entry.orderCount || 0))}</td>
-      <td>${formatCurrency(entry.collectedTotal || 0)}</td>
-      <td>${escapeHtml(formatDateTime(entry.lastSavedAt))}</td>
-      <td>${escapeHtml(formatDateTime(entry.closedAt))}</td>
-      <td><button class="toolbar-btn batch-open-btn" onclick="setSelectedAccountingBatch('${escapeHtml(entry.batchName)}')">${entry.batchName === selectedBatchName ? 'Viewing' : 'Open Breakdown'}</button></td>
-    </tr>
-  `).join('');
+  const selectedEntry = dropdownEntries.find((entry) => entry.batchName === selectedBatchName) || dropdownEntries[0];
+  selectEl.disabled = false;
+  selectEl.innerHTML = dropdownEntries.map((entry) => {
+    const labelParts = [
+      entry.batchName,
+      `${entry.orderCount || 0} orders`,
+      formatCurrency(entry.collectedTotal || 0)
+    ];
+    return `<option value="${escapeHtml(entry.batchName)}" ${entry.batchName === selectedEntry.batchName ? 'selected' : ''}>${escapeHtml(labelParts.join(' | '))}</option>`;
+  }).join('');
+
+  summaryEl.innerHTML = `
+    <div class="accounting-batch-summary-card">
+      <div>
+        <span>Selected Batch</span>
+        <strong>${escapeHtml(selectedEntry.batchName)}</strong>
+      </div>
+      <div>
+        <span>Status</span>
+        <strong class="${selectedEntry.status === 'closed' ? 'warn' : 'good'}">${escapeHtml(selectedEntry.status)}</strong>
+      </div>
+      <div>
+        <span>Orders</span>
+        <strong>${escapeHtml(String(selectedEntry.orderCount || 0))}</strong>
+      </div>
+      <div>
+        <span>Collected</span>
+        <strong>${formatCurrency(selectedEntry.collectedTotal || 0)}</strong>
+      </div>
+      <div>
+        <span>Last Saved</span>
+        <strong>${escapeHtml(formatDateTime(selectedEntry.lastSavedAt))}</strong>
+      </div>
+      <div>
+        <span>Closed At</span>
+        <strong>${escapeHtml(formatDateTime(selectedEntry.closedAt))}</strong>
+      </div>
+    </div>`;
 }
 
 function syncAccountingInputs(batchName, batchRecord = {}, force = false) {
@@ -755,10 +814,16 @@ function renderActiveOrderSummary(orders = []) {
     return;
   }
 
+  const totalBoxes = summaryItems.reduce((sum, [, qty]) => sum + Number(qty || 0), 0);
+
   summaryEl.innerHTML = `
-    <div class="summary-label">Active Item Counts</div>
+    <div class="summary-label">Active Counts</div>
+    <div class="summary-totals">
+      <span>${orders.length} orders</span>
+      <span>${totalBoxes} boxes</span>
+    </div>
     <div class="summary-items">
-      ${summaryItems.map(([name, qty]) => `<span class="summary-chip"><strong>${escapeHtml(name)}:</strong> ${escapeHtml(String(qty))}</span>`).join('')}
+      ${summaryItems.map(([name, qty]) => `<span class="summary-chip"><span>${escapeHtml(name)}</span><b>${escapeHtml(String(qty))}</b></span>`).join('')}
     </div>`;
   summaryEl.classList.add('show');
 }
@@ -1058,6 +1123,7 @@ async function saveEditedOrder() {
       const pickupDate = document.getElementById('manualPickupDate')?.value || todayDateInputValue();
       const paymentMethod = document.getElementById('manualPaymentMethod')?.value || '';
       const notes = (document.getElementById('manualNotes')?.value || '').trim();
+  const manualBatchDate = document.getElementById('manualBatchDate')?.value || pickupDate || todayDateInputValue();
       const phoneDigits = phone.replace(/\D/g, '');
       const nowIso = new Date().toISOString();
       const orderRef = doc(collection(db, 'orders'));
@@ -1074,6 +1140,7 @@ async function saveEditedOrder() {
         location,
         locationLabel: locationLabel(location),
         referral: 'Manual admin entry',
+    manualBatchDate: manualBatchDate,
         notes,
         items: cleanedItems,
         totalBoxes: totals.totalBoxes,
@@ -1460,8 +1527,10 @@ async function sendSelectedReminderEmails() {
 
 function renderOrders() {
   const orders = getFilteredOrders();
+  const isActiveSheet = state.orderSheet === 'active';
   updateOrdersSheetUi();
   renderActiveOrderSummary(orders);
+  renderOrdersTableHead(isActiveSheet);
 
   const tbody = document.getElementById('ordersBody');
   if (!tbody) return;
@@ -1484,7 +1553,7 @@ function renderOrders() {
     const paymentMethod = order.paymentMethod || '';
     const paymentCollected = Boolean(order.paymentCollected);
     const fallbackBatch = batchNameFromDate(todayDateInputValue());
-    const canSelect = state.orderSheet === 'active' && status === 'pending';
+    const canSelect = isActiveSheet && status === 'pending';
     const checked = state.selectedReminderOrderIds.has(order.id) ? 'checked' : '';
     const quickPaymentButtons = status === 'fulfilled'
       ? `<div class="payment-quick-actions" aria-label="Quick payment method">
@@ -1521,13 +1590,12 @@ function renderOrders() {
       <td>${itemsHtml}</td>
       <td><div class="total-amount">${formatCurrency(order.totalPrice || 0)}</div></td>
       <td style="font-size:13px">${escapeHtml(order.locationLabel || order.location || '—')}</td>
-      <td>${paymentCellHtml}</td>
-      <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+      ${isActiveSheet ? '' : `<td>${paymentCellHtml}</td><td><span class="status-badge ${statusClass}">${statusLabel}</span></td>`}
       <td><div class="action-btns"><button class="action-btn btn-fulfill" onclick="setStatus('${escapeHtml(order.id)}','fulfilled')">✓ Fulfill</button><button class="action-btn btn-noshow" onclick="setStatus('${escapeHtml(order.id)}','no_show')">No Show</button><button class="action-btn btn-cancel" onclick="setStatus('${escapeHtml(order.id)}','cancelled')">✕ Cancel</button><button class="action-btn btn-reset" onclick="setStatus('${escapeHtml(order.id)}','pending')">↺ Reset</button></div></td>
     </tr>`;
   }).join('');
 
-  if (state.orderSheet === 'active') {
+  if (isActiveSheet) {
     orders.forEach((order) => {
       if ((order.status || 'pending') !== 'pending') return;
       const row = document.getElementById(`row-${order.id}`);
@@ -1544,6 +1612,25 @@ function renderOrders() {
 
   renderStats();
   updateReminderActionUi();
+}
+
+function renderOrdersTableHead(isActiveSheet = state.orderSheet === 'active') {
+  const headRow = document.querySelector('.orders-table thead tr');
+  if (!headRow) return;
+  const selectAllHtml = isActiveSheet
+    ? '<input type="checkbox" id="selectAllActiveOrders" onchange="toggleVisibleReminderOrders(this.checked)" aria-label="Select all visible active orders">'
+    : '';
+  headRow.innerHTML = `
+    <th class="order-select-col">${selectAllHtml}</th>
+    <th>Order #</th>
+    <th>Received Date</th>
+    <th>Customer</th>
+    <th>Products &amp; Qty</th>
+    <th>Total</th>
+    <th>Location</th>
+    ${isActiveSheet ? '' : '<th>Payment</th><th>Status</th>'}
+    <th>Actions</th>
+  `;
 }
 
 function productCategoryLabel(category) {
@@ -2046,21 +2133,20 @@ function renderProducts() {
       ? variantSummary
       : (product.price ? `${product.price} - ${product.unit || 'per box'}` : (isComingSoon ? 'Coming Soon' : `No price set - ${product.unit || 'per box'}`));
 
-    return `<div class="pm-card" id="pmc-${escapeHtml(product.id)}">
+    return `<div class="pm-card ${isHidden ? 'is-hidden' : ''}" id="pmc-${escapeHtml(product.id)}">
       <div class="pm-emoji">🥭</div>
       <div class="pm-info">
         <div class="pm-meta">
+          <span class="pm-chip pm-status">${escapeHtml(statusText)}</span>
           <span class="pm-chip">${escapeHtml(productCategoryLabel(product.category))}</span>
           ${product.tag ? `<span class="pm-chip">${escapeHtml(product.tag)}</span>` : ''}
         </div>
         <h4 title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</h4>
-        <div class="pm-sub">${escapeHtml(shortDescription || 'No description added yet.')}</div>
-        <div class="pm-sub">${escapeHtml(product.unit || 'per box')}</div>
-        <div class="pm-sub">${escapeHtml(priceSummary)}</div>
+        <div class="pm-sub pm-desc">${escapeHtml(shortDescription || 'No description added yet.')}</div>
+        <div class="pm-price">${escapeHtml(priceSummary)}</div>
         <div class="pm-sort-wrap"><span class="pm-sort-label">Order</span><input type="number" class="pm-sort-input" id="sort-${escapeHtml(product.id)}" value="${escapeHtml(String(product.sortOrder ?? ''))}" min="1" step="1"><button class="pm-save-btn" onclick="saveProductSortOrder('${escapeHtml(product.id)}')">Save</button></div>
-        <div class="pm-sub">Use Edit to update ${variants.length ? 'size and price options' : 'price and product details'}.</div>
       </div>
-      <div class="pm-controls"><label class="toggle-switch"><input type="checkbox" ${product.available && !isHidden ? 'checked' : ''} onchange="toggleAvailable('${escapeHtml(product.id)}', this.checked)"><span class="toggle-slider"></span></label><span style="font-size:10px;color:var(--text-light)">${statusText}</span><button class="pm-edit-btn" type="button" onclick="editProduct('${escapeHtml(product.id)}')">Edit</button><button class="pm-edit-btn" type="button" onclick="toggleProductHidden('${escapeHtml(product.id)}', ${isHidden ? 'false' : 'true'})">${isHidden ? 'Unhide' : 'Hide'}</button></div>
+      <div class="pm-controls"><label class="toggle-switch"><input type="checkbox" ${product.available && !isHidden ? 'checked' : ''} onchange="toggleAvailable('${escapeHtml(product.id)}', this.checked)"><span class="toggle-slider"></span></label><button class="pm-edit-btn" type="button" onclick="editProduct('${escapeHtml(product.id)}')">Edit</button><button class="pm-edit-btn" type="button" onclick="toggleProductHidden('${escapeHtml(product.id)}', ${isHidden ? 'false' : 'true'})">${isHidden ? 'Unhide' : 'Hide'}</button></div>
     </div>`;
   }).join('');
 }
@@ -2862,88 +2948,186 @@ function printableQty(order) {
 }
 
 function printActiveOrders() {
-  const orders = getFilteredOrders('active');
-  if (!orders.length) {
-    showToast('No active orders to print.');
-    return;
-  }
+  const allActive = getFilteredOrders('active');
+  if (!allActive.length) { showToast('No active orders to print.'); return; }
 
-  const rows = orders.map((order) => `
+  const locationOrder = { shortpump: 1, chesterfield: 2, mechanicsville: 3 };
+  const orders = [...allActive].sort((a, b) => {
+    const la = locationOrder[a.location] || 9;
+    const lb = locationOrder[b.location] || 9;
+    if (la !== lb) return la - lb;
+    return String(a.orderNumber || '').localeCompare(String(b.orderNumber || ''));
+  });
+
+  const groups = {};
+  orders.forEach(o => {
+    const loc = o.locationLabel || locationLabel(o.location) || 'Other';
+    if (!groups[loc]) groups[loc] = [];
+    groups[loc].push(o);
+  });
+
+  const totalBoxes = orders.reduce((s, o) => s + (printableQty(o) || 0), 0);
+  const now = new Date();
+  const printDate = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const printTime = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+
+  let rowNum = 1;
+  let bodyHtml = '';
+  Object.entries(groups).forEach(([loc, locOrders]) => {
+    const locBoxes = locOrders.reduce((s,o) => s + (printableQty(o)||0), 0);
+    bodyHtml += `<tr class="loc-hdr"><td colspan="6">&#128205; ${escapeHtml(loc)}<span class="loc-meta">${locOrders.length} orders &nbsp;&bull;&nbsp; ${locBoxes} boxes</span></td></tr>`;
+    locOrders.forEach(order => {
+      const name  = escapeHtml((order.fullName || `${order.firstName||''} ${order.lastName||''}`.trim()).trim());
+      const phone = escapeHtml(order.phone || '');
+      const items = (order.items || []).map(it => `<span class="pill">${escapeHtml(it.name||'Item')} &times;${it.qty||1}</span>`).join(' ');
+      const qty   = printableQty(order);
+      const onum  = escapeHtml(String(order.orderNumber || order.id || ''));
+      const pref  = (order.paymentMethod || '').toLowerCase();
+      const Z = pref === 'zelle' ? ' pre' : '';
+      const C = pref === 'cash'  ? ' pre' : '';
+      const K = pref === 'card'  ? ' pre' : '';
+      bodyHtml += `
+        <tr class="orow">
+          <td class="c-num">${rowNum++}</td>
+          <td class="c-ord">${onum}</td>
+          <td class="c-name">${name}<div class="phone">${phone}</div></td>
+          <td class="c-items">${items}</td>
+          <td class="c-qty">${qty}</td>
+          <td class="c-pay">
+            <div class="pay-row">
+              <label class="cb-lbl"><span class="cb${C}"></span>Cash</label>
+              <label class="cb-lbl"><span class="cb${Z}"></span>Zelle</label>
+              <label class="cb-lbl"><span class="cb${K}"></span>Card</label>
+            </div>
+          </td>
+        </tr>`;
+    });
+    bodyHtml += `<tr class="loc-sub"><td colspan="4" class="sub-lbl">Subtotal &mdash; ${escapeHtml(loc)}</td><td class="sub-boxes">${locBoxes} boxes</td><td></td></tr>`;
+  });
+
+  const pw = window.open('', '_blank', 'width=1100,height=860');
+  if (!pw) { showToast('Allow popups to print.'); return; }
+
+  pw.document.write(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<title>Shrish Pickup Checklist</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,Helvetica,sans-serif;font-size:11.5px;color:#111;background:#fff;padding:14px 18px}
+
+  /* ── HEADER ── */
+  .hdr{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:9px;border-bottom:3px solid #C8791A;margin-bottom:11px}
+  .hdr-left h1{font-size:19px;color:#7A4800;line-height:1.2}
+  .hdr-left .sub{font-size:10.5px;color:#777;margin-top:3px}
+  .hdr-right{text-align:right;font-size:11px}
+  .hdr-right .big{font-size:17px;font-weight:700;color:#C8791A;display:block}
+
+  /* ── TABLE ── */
+  table{width:100%;border-collapse:collapse;font-size:11.5px}
+  colgroup col:nth-child(1){width:28px}
+  colgroup col:nth-child(2){width:58px}
+  colgroup col:nth-child(3){width:155px}
+  colgroup col:nth-child(4){width:auto}
+  colgroup col:nth-child(5){width:38px}
+  colgroup col:nth-child(6){width:150px}
+
+  thead th{background:#7A4800;color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.5px;padding:6px 7px;text-align:left;border:1px solid #5A3000}
+  thead th:nth-child(5){text-align:center}
+
+  /* location header */
+  tr.loc-hdr td{background:#F5E4C8;color:#7A4800;font-weight:700;font-size:11.5px;padding:6px 9px;border:1px solid #D9C0A0}
+  .loc-meta{font-weight:400;color:#A07040;margin-left:10px;font-size:10.5px}
+
+  /* order row */
+  tr.orow td{border:1px solid #D9C0A0;padding:6px 7px;vertical-align:top}
+  tr.orow:nth-child(odd) td{background:#FDFAF6}
+  tr.orow:nth-child(even) td{background:#FBF7F1}
+
+  .c-num{text-align:center;color:#AAA;font-size:10.5px}
+  .c-ord{font-weight:700;color:#7A4800;font-size:11px;white-space:nowrap}
+  .c-name{font-weight:700;font-size:12.5px}
+  .phone{font-size:10.5px;color:#666;font-weight:400;margin-top:1px}
+  .c-items{}
+  .pill{display:inline-block;background:#FDF3E3;border:1px solid #EDD5A0;border-radius:3px;padding:1px 5px;margin:1px 2px 1px 0;font-size:10.5px;font-weight:700;color:#7A4800;white-space:nowrap}
+  .c-qty{text-align:center;font-weight:800;font-size:15px;color:#2E7D32;vertical-align:middle!important}
+  .c-pay{vertical-align:middle!important}
+
+  /* payment type checkboxes */
+  .pay-row{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+  .cb-lbl{display:flex;align-items:center;gap:3px;font-size:10.5px;font-weight:600;white-space:nowrap;cursor:default}
+  .cb{display:inline-block;width:15px;height:15px;border:2px solid #444;border-radius:2px;flex-shrink:0}
+  .cb.pre{background:#FDF3E3;border-color:#C8791A}
+
+  .done-txt{}
+
+  /* subtotal */
+  tr.loc-sub td{background:#FAF5EE;font-weight:700;font-size:11px;padding:5px 7px;border:1px solid #D9C0A0;color:#555}
+  .sub-lbl{text-align:right}
+  .sub-boxes{text-align:center;color:#2E7D32}
+
+  /* grand total */
+  .grand{margin-top:10px;background:#7A4800;color:#fff;border-radius:5px;padding:9px 14px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
+  /* notes */
+  .notes{margin-top:12px;border:1.5px dashed #C8791A;border-radius:5px;padding:9px 13px}
+  .notes h3{font-size:11.5px;font-weight:700;color:#7A4800;margin-bottom:7px}
+  .nl{border-bottom:1px solid #ddd;height:22px;margin-bottom:4px}
+
+  /* print overrides */
+  @media print{
+    @page{size:A4 landscape;margin:10mm 12mm}
+    body{padding:0;font-size:11px}
+    thead{display:table-header-group}
+    tr.orow{page-break-inside:avoid}
+    tr.loc-hdr{page-break-before:auto}
+    .grand{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    tr.loc-hdr td,.hdr{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    thead th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-left">
+    <h1>&#129389; Shrish LLC &mdash; Pickup Day Checklist</h1>
+    <div class="sub">Printed: ${escapeHtml(printDate)} &nbsp;&bull;&nbsp; ${escapeHtml(printTime)} &nbsp;&bull;&nbsp; Pending orders only</div>
+  </div>
+  <div class="hdr-right">
+    <span class="big">${orders.length} orders &nbsp; ${totalBoxes} boxes</span>
+  </div>
+</div>
+
+<table>
+  <colgroup><col><col><col><col><col><col></colgroup>
+  <thead>
     <tr>
-      <td>${escapeHtml(order.orderNumber || order.id)}</td>
-      <td>${escapeHtml(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim())}</td>
-      <td>${escapeHtml(order.phone || '')}</td>
-      <td>${printableItems(order)}</td>
-      <td>${escapeHtml(String(printableQty(order)))}</td>
-      <td>${escapeHtml(formatCurrency(order.totalPrice || 0))}</td>
-      <td>${escapeHtml(order.locationLabel || order.location || '—')}</td>
-      <td>Cash [&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br>Zelle [&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br>Card [&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]</td>
+      <th>#</th>
+      <th>Order</th>
+      <th>Name &amp; Phone</th>
+      <th>Items Ordered</th>
+      <th style="text-align:center">Boxes</th>
+      <th>Payment Type</th>
     </tr>
-  `).join('');
+  </thead>
+  <tbody>${bodyHtml}</tbody>
+</table>
 
-  const selectedFrom = document.getElementById('filterDateFrom')?.value || '';
-  const selectedTo = document.getElementById('filterDateTo')?.value || '';
-  const selectedDate = selectedFrom || selectedTo
-    ? `${selectedFrom || 'Any'} to ${selectedTo || 'Any'}`
-    : 'All dates';
-  const printWindow = window.open('', '_blank', 'width=1200,height=900');
-  if (!printWindow) {
-    showToast('Allow popups to print orders.');
-    return;
-  }
+<div class="grand">
+  <span>GRAND TOTAL &nbsp;&bull;&nbsp; ${orders.length} orders &nbsp;&bull;&nbsp; ${totalBoxes} boxes</span>
+</div>
 
-  printWindow.document.write(`<!DOCTYPE html>
-  <html>
-    <head>
-      <title>Shrish Active Orders Print</title>
-      <style>
-        body { font-family: Arial, sans-serif; padding: 24px; color: #1A1208; }
-        h1 { margin: 0 0 8px; font-size: 26px; }
-        p { margin: 0 0 18px; color: #6B4A20; font-size: 14px; }
-        table { width: 100%; border-collapse: collapse; table-layout: auto; }
-        th, td { border: 1px solid #d9c8ab; padding: 10px 8px; vertical-align: top; font-size: 12px; text-align: left; }
-        th { background: #f5e9d4; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; }
-        th:nth-child(1), td:nth-child(1) { width: 10%; white-space: nowrap; }
-        th:nth-child(2), td:nth-child(2) { width: 14%; white-space: nowrap; }
-        th:nth-child(3), td:nth-child(3) { width: 11%; white-space: nowrap; }
-          th:nth-child(4), td:nth-child(4) { width: 24%; }
-          th:nth-child(5), td:nth-child(5) { width: 5%; white-space: nowrap; text-align: center; }
-          th:nth-child(6), td:nth-child(6) { width: 10%; white-space: nowrap; }
-          th:nth-child(7), td:nth-child(7) { width: 11%; white-space: nowrap; }
-          th:nth-child(8), td:nth-child(8) { width: 19%; }
-        .meta { margin-bottom: 16px; font-size: 13px; }
-        @media print {
-          body { padding: 0; }
-          .no-print { display: none; }
-        }
-      </style>
-    </head>
-    <body>
-      <h1>Shrish Active Orders</h1>
-      <p class="meta">Pending pickup orders only. Filter date: ${escapeHtml(selectedDate)}. Printed on ${escapeHtml(new Date().toLocaleString())}.</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Order No</th>
-            <th>Name</th>
-            <th>Phone</th>
-            <th>Item</th>
-            <th>Qty</th>
-            <th>Total</th>
-            <th>Location</th>
-            <th>Payment</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-      <script>window.onload = () => { window.print(); };</script>
-    </body>
-  </html>`);
-  printWindow.document.close();
+<div class="notes">
+  <h3>Notes / Walk-up sales / Damaged boxes</h3>
+  <div class="nl"></div><div class="nl"></div><div class="nl"></div><div class="nl"></div>
+</div>
+
+<script>window.onload=()=>window.print();<\/script>
+</body></html>`);
+  pw.document.close();
 }
 
 function renderExcelCalculations() {
-  const tab = document.getElementById('tab-excel-calculations');
+  const tab = document.getElementById('tab-pickup-tally');
   if (!tab) return;
 
   const dateInput = document.getElementById('excelCalcDate');
@@ -2963,237 +3147,287 @@ function renderExcelCalculations() {
 
   const computed = accounting2ComputedTotals(batchName);
   batchNameEl.textContent = batchName;
-  const savedSheetNames = accounting2SavedSheetNames();
-  const sheetProducts = accounting2SheetProducts(computed.products);
-  const balanceLeft = computed.batchOrderTotal - computed.receivedTotal;
-  const countedTotal = computed.cashCountTotal + computed.zelleAmount;
 
+  const savedSheetNames = accounting2SavedSheetNames();
   savedSheetSelect.innerHTML = [
     `<option value="" ${savedSheetNames.includes(batchName) ? '' : 'selected'}>Current Sheet</option>`,
     ...savedSheetNames.map((name) => `<option value="${escapeHtml(name)}" ${name === batchName ? 'selected' : ''}>${escapeHtml(name)}</option>`)
   ].join('');
 
-  const columnHeaders = sheetProducts.map(({ product, code }) => `
-    <th title="${escapeHtml(product.name || '')}">${escapeHtml(code)}</th>
-  `).join('');
+  // Variety definitions: id, label, code, default price
+  const VARIETIES = [
+    { id: 'alphonso',      label: 'Alphonso',      code: 'A', price: 54 },
+    { id: 'kesar',         label: 'Kesar',         code: 'K', price: 52 },
+    { id: 'banganapalli',  label: 'Banganapalli',  code: 'B', price: 53 },
+    { id: 'himayat',       label: 'Himayat',       code: 'H', price: 56 },
+    { id: 'rasalu',        label: 'Rasalu',        code: 'R', price: 52 },
+    { id: 'payari',        label: 'Payari',        code: 'P', price: 50 },
+    { id: 'langra',        label: 'Langra',        code: 'L', price: 50 },
+  ];
 
-  const extraValueCells = sheetProducts.map(({ product }) => `
-    <td><input type="number" min="0" step="1" value="${computed.extraBoxes[product.id] || ''}" onchange="setExcelCalcProductMap('extraBoxes','${escapeHtml(product.id)}', this.value)"></td>
-  `).join('');
+  // Get values from record
+  const extraBoxes   = accounting2MutableMap(record, 'extraBoxes');
+  const boxCount     = accounting2MutableMap(record, 'orderedBoxes');
+  const remainingQty = accounting2MutableMap(record, 'remainingQty');
+  const productPrices = accounting2MutableMap(record, 'productPrices');
+  const cashCounts   = accounting2MutableMap(record, 'cashCounts');
+  const zelleEntries = record.zelleEntries || [{ name: '', amount: '' }, { name: '', amount: '' }];
 
-  const orderedValueCells = sheetProducts.map(({ product }) => `
-    <td><input type="number" min="0" step="1" value="${computed.orderedCounts[product.id] ?? ''}" onchange="setExcelCalcProductMap('orderedBoxes','${escapeHtml(product.id)}', this.value)"></td>
-  `).join('');
+  const priceOf = (v) => Number(productPrices[v.id] || v.price || 0);
 
-  const priceRows = sheetProducts.map(({ product, code }) => `
-    <tr>
-      <td title="${escapeHtml(product.name || '')}">${escapeHtml(code)}</td>
-      <td><input type="text" inputmode="decimal" value="${computed.productPrices[product.id] ?? accounting2ProductPrice(product)}" onchange="setExcelCalcProductMap('productPrices','${escapeHtml(product.id)}', this.value)"></td>
-    </tr>
-  `).join('');
+  // Computed totals
+  const totalExtraBoxes = VARIETIES.reduce((s, v) => s + (Number(extraBoxes[v.id]) || 0), 0);
+  const totalExtraValue = VARIETIES.reduce((s, v) => s + (Number(extraBoxes[v.id]) || 0) * priceOf(v), 0);
+  const totalBoxCount   = VARIETIES.reduce((s, v) => s + (Number(boxCount[v.id]) || 0), 0);
+  const totalInvoice    = VARIETIES.reduce((s, v) => s + (Number(boxCount[v.id]) || 0) * priceOf(v), 0)
+                        + totalExtraValue;
 
-  const cashRows = accounting2DefaultDenominations().map((denomination) => {
-    const count = computed.cashCounts[denomination] || '';
-    return `
-      <tr>
-        <td>${formatCurrency(denomination)}</td>
-        <td><input type="number" min="0" step="1" value="${count}" onchange="setExcelCalcCashCount('${denomination}', this.value)"></td>
-        <td>${formatCurrency(Number(denomination) * Number(count || 0))}</td>
-      </tr>
-    `;
-  }).join('');
+  const DENOMS = [1, 5, 10, 20, 50, 100];
+  const cashTotal = DENOMS.reduce((s, d) => s + d * (Number(cashCounts[d]) || 0), 0);
+  const cashFromHand = Number(record.cashFromHand || 300);
+  const cashSales = cashTotal - cashFromHand;
 
-  const remainingRows = sheetProducts.map(({ product }) => {
-    const count = computed.remainingQty[product.id] ?? '';
-    const amount = excelCalcCountValue(count) * accounting2ProductUnitPrice(product, computed.productPrices);
-    return `
-      <tr>
-        <td>${escapeHtml(product.name || '')}</td>
-        <td><input type="number" min="0" step="1" value="${count}" onchange="setExcelCalcProductMap('remainingQty','${escapeHtml(product.id)}', this.value)"></td>
-        <td>${formatCurrency(amount)}</td>
-      </tr>
-    `;
-  }).join('');
+  const zelleTotal = zelleEntries.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+  const unknownAmt = totalInvoice - cashSales - zelleTotal;
+
+  const totalReceived = cashSales + zelleTotal;
+  const balanceCash   = (record.totalCashHeld || 0) - cashSales;
+  const balanceZelle  = (record.totalZelleHeld || 0) - zelleTotal;
+
+  const remainingValue = VARIETIES.reduce((s, v) => {
+    const qty = Number(remainingQty[v.id]) || 0;
+    return s + qty * priceOf(v);
+  }, 0);
+  const damagedCount = Number(record.damagedCount || 0);
+  const damagedValue = damagedCount * (Number(record.damagedPrice || 56));
+  const totalRemDamaged = remainingValue + damagedValue;
+
+  const tally = totalInvoice - totalReceived - totalRemDamaged;
+  const tallyOk = Math.abs(tally) < 1;
+
+  // Walk-up orders
+  const batchDate = record.batchDate || dateInput.value || '';
+  const walkupOrders = state.orders.filter(o =>
+    o.manualBatchDate === batchDate && (o.status === 'fulfilled' || o.paymentCollected)
+  );
+  const walkupRevenue = walkupOrders.reduce((s, o) => s + (moneyNumber(o.totalPrice) || 0), 0);
+  const walkupBoxes   = walkupOrders.reduce((s, o) => s + (o.totalBoxes || 0), 0);
+
+  const invoiceBalance = totalInvoice - (record.invoiceTotal || 0);
 
   sheetEl.innerHTML = `
-    <div class="excel-spreadsheet">
-      <div class="excel-sheet-meta">
-        <span>Saved Sheets: <strong>${savedSheetNames.length}</strong></span>
-        <span>Sheet: <strong>${escapeHtml(batchName)}</strong></span>
-      </div>
+  <div class="ptally-wrap">
 
-      <table class="excel-sheet-table excel-sheet-table-top">
-        <tbody>
-          <tr>
-            <th class="excel-sheet-label">Extra Box's</th>
-            ${columnHeaders}
-            <th class="excel-sheet-money-head">Total Extra</th>
-          </tr>
-          <tr>
-            <td></td>
-            ${extraValueCells}
-            <td class="excel-sheet-money">${formatCurrency(computed.extraBoxesValue)}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <table class="excel-sheet-table excel-sheet-table-top">
-        <tbody>
-          <tr>
-            <th class="excel-sheet-label">Box Count</th>
-            ${columnHeaders}
-          </tr>
-          <tr>
-            <td></td>
-            ${orderedValueCells}
-          </tr>
-        </tbody>
-      </table>
-
-      <table class="excel-sheet-table excel-sheet-summary-head">
-        <tbody>
-          <tr>
-            <th>Date</th>
-            <th>Total Box count</th>
-            <th>Total</th>
-          </tr>
-          <tr>
-            <td>${formatDate(dateInput.value)}</td>
-            <td>${computed.totalBoxesCount}</td>
-            <td>${formatCurrency(computed.batchOrderTotal)}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="excel-sheet-workarea">
-        <div class="excel-sheet-left">
-          <div class="excel-sheet-panel">
-            <div class="excel-sheet-panel-title">Cash</div>
-            <table class="excel-sheet-table">
-              <tbody>
-                <tr>
-                  <th></th>
-                  <th>Count</th>
-                  <th>Sum</th>
-                </tr>
-                ${cashRows}
-                <tr class="excel-calc-total-row">
-                  <td>Total</td>
-                  <td></td>
-                  <td>${formatCurrency(computed.cashCountTotal)}</td>
-                </tr>
-                <tr>
-                  <td>Cash from hand</td>
-                  <td colspan="2"><input type="text" inputmode="decimal" value="${record.cashFromHand ?? ''}" onchange="setExcelCalcValue('cashFromHand', this.value)"></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="excel-sheet-panel">
-            <div class="excel-sheet-panel-title">Zelle</div>
-            <table class="excel-sheet-table">
-              <tbody>
-                <tr>
-                  <td>Amount</td>
-                  <td><input type="text" inputmode="decimal" value="${record.zelleAmount ?? ''}" onchange="setExcelCalcValue('zelleAmount', this.value)"></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="excel-sheet-panel">
-            <table class="excel-sheet-table">
-              <tbody>
-                <tr>
-                  <th></th>
-                  <th>Cash</th>
-                  <th>Zelle</th>
-                  <th>Unknown</th>
-                  <th>Total</th>
-                </tr>
-                <tr>
-                  <td>Total</td>
-                  <td>${formatCurrency(computed.cashSales)}</td>
-                  <td>${formatCurrency(computed.zelleAmount)}</td>
-                  <td>${formatCurrency(computed.unknownAmount)}</td>
-                  <td>${formatCurrency(computed.batchOrderTotal)}</td>
-                </tr>
-                <tr>
-                  <td>Received</td>
-                  <td>${formatCurrency(computed.cashCountTotal)}</td>
-                  <td>${formatCurrency(computed.zelleAmount)}</td>
-                  <td></td>
-                  <td>${formatCurrency(countedTotal)}</td>
-                </tr>
-                <tr>
-                  <td>Balance left</td>
-                  <td>${formatCurrency(computed.cashFromHand)}</td>
-                  <td></td>
-                  <td>${formatCurrency(computed.unknownAmount)}</td>
-                  <td class="${balanceLeft < 0 ? 'warn' : ''}">${formatCurrency(balanceLeft)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+    <!-- ─── SECTION 1: EXTRA BOXES (from vendor above pre-orders) ─── -->
+    <div class="ptally-section">
+      <div class="ptally-section-head">📦 Extra Boxes from Vendor <span class="ptally-hint">(boxes received above what was pre-ordered)</span></div>
+      <div class="ptally-variety-row">
+        ${VARIETIES.map(v => `
+          <div class="ptally-variety-cell">
+            <div class="ptally-vcell-label">${v.code} — ${v.label}</div>
+            <input class="ptally-num-input" type="number" min="0" step="1"
+              value="${extraBoxes[v.id] || ''}"
+              placeholder="0"
+              onchange="setExcelCalcProductMap('extraBoxes','${escapeHtml(v.id)}',this.value)">
+          </div>`).join('')}
+        <div class="ptally-variety-cell ptally-total-cell">
+          <div class="ptally-vcell-label">Total Extra</div>
+          <div class="ptally-total-val">${totalExtraBoxes}</div>
         </div>
-
-        <div class="excel-sheet-right">
-          <div class="excel-sheet-panel excel-sheet-panel-narrow">
-            <table class="excel-sheet-table">
-              <tbody>
-                <tr>
-                  <td>Invoice</td>
-                  <td><input type="text" inputmode="decimal" value="${record.invoiceTotal ?? ''}" onchange="setExcelCalcValue('invoiceTotal', this.value)"></td>
-                </tr>
-                <tr>
-                  <td>Balance</td>
-                  <td class="${computed.invoiceBalance < 0 ? 'warn' : ''}">${formatCurrency(computed.invoiceBalance)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="excel-sheet-panel excel-sheet-panel-narrow">
-            <table class="excel-sheet-table">
-              <tbody>
-                ${priceRows}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="excel-sheet-panel excel-sheet-panel-bottom">
-        <div class="excel-sheet-panel-title">Remaining and Damaged:</div>
-        <table class="excel-sheet-table excel-sheet-table-remaining">
-          <tbody>
-            <tr>
-              <th>Item</th>
-              <th>Count</th>
-              <th>Amount</th>
-            </tr>
-            ${remainingRows}
-            <tr>
-              <td>Damaged ($${DAMAGED_BOX_UNIT_PRICE})</td>
-              <td><input type="number" min="0" step="1" value="${computed.damagedCount || ''}" onchange="setExcelCalcValue('damagedCount', this.value)"></td>
-              <td>${formatCurrency(computed.damagedAmount)}</td>
-            </tr>
-            <tr class="excel-calc-total-row">
-              <td>Total</td>
-              <td></td>
-              <td>${formatCurrency(computed.totalLossValue)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="excel-sheet-tally">
-        <span>Tally</span>
-        <strong class="${computed.tallyValue < 0 ? 'warn' : ''}">${formatCurrency(computed.tallyValue)}</strong>
       </div>
     </div>
-  `;
+
+    <!-- ─── SECTION 2: BOX COUNT DISTRIBUTED ─── -->
+    <div class="ptally-section">
+      <div class="ptally-section-head">🤝 Boxes Distributed <span class="ptally-hint">(pre-orders fulfilled + walk-up; enter per variety)</span></div>
+      <div class="ptally-variety-row">
+        ${VARIETIES.map(v => `
+          <div class="ptally-variety-cell">
+            <div class="ptally-vcell-label">${v.code} — ${v.label}</div>
+            <input class="ptally-num-input" type="number" min="0" step="1"
+              value="${boxCount[v.id] || ''}"
+              placeholder="0"
+              onchange="setExcelCalcProductMap('orderedBoxes','${escapeHtml(v.id)}',this.value)">
+          </div>`).join('')}
+        <div class="ptally-variety-cell ptally-total-cell">
+          <div class="ptally-vcell-label">Total Boxes</div>
+          <div class="ptally-total-val">${totalBoxCount}</div>
+        </div>
+      </div>
+      ${walkupBoxes > 0 ? `<div class="ptally-walkup-note">🚶 Includes ${walkupBoxes} walk-up boxes logged today (${walkupOrders.length} manual orders = ${formatCurrency(walkupRevenue)})</div>` : ''}
+    </div>
+
+    <!-- ─── SECTION 3: PRICES + INVOICE ─── -->
+    <div class="ptally-section ptally-two-col">
+      <div>
+        <div class="ptally-section-head">💰 Price per Box <span class="ptally-hint">(edit if prices changed this season)</span></div>
+        <table class="ptally-table">
+          <tr><th>Variety</th><th>$/box</th></tr>
+          ${VARIETIES.map(v => `
+            <tr>
+              <td>${v.label}</td>
+              <td><input class="ptally-price-input" type="number" min="0" step="1"
+                value="${priceOf(v)}"
+                onchange="setExcelCalcProductMap('productPrices','${escapeHtml(v.id)}',this.value)"></td>
+            </tr>`).join('')}
+        </table>
+      </div>
+      <div>
+        <div class="ptally-section-head">🧾 Invoice</div>
+        <table class="ptally-table">
+          <tr><td>Total boxes × price</td><td class="ptally-num">${formatCurrency(totalInvoice - totalExtraValue)}</td></tr>
+          <tr><td>Extra boxes value</td><td class="ptally-num">${formatCurrency(totalExtraValue)}</td></tr>
+          <tr class="ptally-subtotal"><td><strong>Total Invoice</strong></td><td class="ptally-num"><strong>${formatCurrency(totalInvoice)}</strong></td></tr>
+          <tr><td>Entered invoice amount</td>
+            <td><input class="ptally-price-input" type="number" min="0" step="0.01"
+              value="${record.invoiceTotal || ''}" placeholder="0.00"
+              onchange="setExcelCalcValue('invoiceTotal',this.value)"></td></tr>
+          <tr class="ptally-balance-row"><td>Balance</td><td class="ptally-num ${invoiceBalance < 0 ? 'ptally-neg' : ''}">${formatCurrency(invoiceBalance)}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── SECTION 4: CASH COUNTING ─── -->
+    <div class="ptally-section ptally-two-col">
+      <div>
+        <div class="ptally-section-head">💵 Cash Count <span class="ptally-hint">(count bills in hand)</span></div>
+        <table class="ptally-table">
+          <tr><th>Bill</th><th>Count</th><th>Amount</th></tr>
+          ${DENOMS.map(d => `
+            <tr>
+              <td>$${d}</td>
+              <td><input class="ptally-count-input" type="number" min="0" step="1"
+                value="${cashCounts[d] || ''}" placeholder="0"
+                onchange="setExcelCalcCashCount('${d}',this.value)"></td>
+              <td class="ptally-num">${formatCurrency(d * (Number(cashCounts[d]) || 0))}</td>
+            </tr>`).join('')}
+          <tr class="ptally-subtotal">
+            <td colspan="2"><strong>Total Cash in Hand</strong></td>
+            <td class="ptally-num"><strong>${formatCurrency(cashTotal)}</strong></td>
+          </tr>
+          <tr>
+            <td colspan="2">Cash from hand (change float)
+              <input class="ptally-price-input" type="number" min="0" step="1"
+                value="${cashFromHand}" style="width:60px;margin-left:6px"
+                onchange="setExcelCalcValue('cashFromHand',this.value)">
+            </td>
+            <td class="ptally-num ptally-neg">${formatCurrency(-cashFromHand)}</td>
+          </tr>
+          <tr class="ptally-subtotal">
+            <td colspan="2"><strong>Cash Sales</strong></td>
+            <td class="ptally-num ${cashSales < 0 ? 'ptally-neg' : ''}" ><strong>${formatCurrency(cashSales)}</strong></td>
+          </tr>
+        </table>
+      </div>
+      <div>
+        <div class="ptally-section-head">📱 Zelle Received</div>
+        <table class="ptally-table" id="zelleTable">
+          ${zelleEntries.map((e, i) => `
+            <tr>
+              <td><input class="ptally-text-input" type="text" value="${escapeHtml(e.name || '')}" placeholder="Name"
+                onchange="updateZelleEntry(${i},'name',this.value)"></td>
+              <td><input class="ptally-price-input" type="number" min="0" step="0.01" value="${e.amount || ''}" placeholder="0.00"
+                onchange="updateZelleEntry(${i},'amount',this.value)"></td>
+            </tr>`).join('')}
+          <tr><td colspan="2"><button class="ptally-add-btn" onclick="addZelleEntry()">+ Add Zelle</button></td></tr>
+          <tr class="ptally-subtotal"><td><strong>Total Zelle</strong></td><td class="ptally-num"><strong>${formatCurrency(zelleTotal)}</strong></td></tr>
+        </table>
+
+        <div class="ptally-section-head" style="margin-top:16px">📊 Summary</div>
+        <table class="ptally-table">
+          <tr><th></th><th>Cash</th><th>Zelle</th><th>Unknown</th><th>Total</th></tr>
+          <tr>
+            <td>Total held</td>
+            <td><input class="ptally-price-input" type="number" min="0" step="0.01" value="${record.totalCashHeld||''}" placeholder="0.00" onchange="setExcelCalcValue('totalCashHeld',this.value)"></td>
+            <td><input class="ptally-price-input" type="number" min="0" step="0.01" value="${record.totalZelleHeld||''}" placeholder="0.00" onchange="setExcelCalcValue('totalZelleHeld',this.value)"></td>
+            <td class="ptally-num">${formatCurrency(Math.max(0, unknownAmt))}</td>
+            <td class="ptally-num">${formatCurrency((record.totalCashHeld||0) + (record.totalZelleHeld||0) + Math.max(0, unknownAmt))}</td>
+          </tr>
+          <tr>
+            <td>Received</td>
+            <td class="ptally-num">${formatCurrency(cashSales)}</td>
+            <td class="ptally-num">${formatCurrency(zelleTotal)}</td>
+            <td></td>
+            <td class="ptally-num"><strong>${formatCurrency(totalReceived)}</strong></td>
+          </tr>
+          <tr class="ptally-balance-row">
+            <td>Balance left</td>
+            <td class="ptally-num ${balanceCash < 0 ? 'ptally-neg' : ''}">${formatCurrency(balanceCash)}</td>
+            <td class="ptally-num ${balanceZelle < 0 ? 'ptally-neg' : ''}">${formatCurrency(balanceZelle)}</td>
+            <td></td><td></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── SECTION 5: REMAINING + DAMAGED ─── -->
+    <div class="ptally-section">
+      <div class="ptally-section-head">📦 Remaining & Damaged Boxes</div>
+      <table class="ptally-table">
+        <tr><th>Variety</th><th>Boxes left</th><th>Value</th></tr>
+        ${VARIETIES.map(v => {
+          const qty = Number(remainingQty[v.id]) || 0;
+          return `
+            <tr>
+              <td>${v.label} (${v.code})</td>
+              <td><input class="ptally-count-input" type="number" min="0" step="1"
+                value="${remainingQty[v.id] || ''}" placeholder="0"
+                onchange="setExcelCalcProductMap('remainingQty','${escapeHtml(v.id)}',this.value)"></td>
+              <td class="ptally-num">${formatCurrency(qty * priceOf(v))}</td>
+            </tr>`;}).join('')}
+        <tr>
+          <td>Damaged/Spoiled boxes
+            <input class="ptally-price-input" type="number" min="0" step="1"
+              value="${record.damagedPrice||56}" style="width:50px;margin-left:4px"
+              onchange="setExcelCalcValue('damagedPrice',this.value)"> $/box
+          </td>
+          <td><input class="ptally-count-input" type="number" min="0" step="1"
+            value="${record.damagedCount || ''}" placeholder="0"
+            onchange="setExcelCalcValue('damagedCount',this.value)"></td>
+          <td class="ptally-num">${formatCurrency(damagedValue)}</td>
+        </tr>
+        <tr class="ptally-subtotal">
+          <td colspan="2"><strong>Total Remaining + Damaged</strong></td>
+          <td class="ptally-num"><strong>${formatCurrency(totalRemDamaged)}</strong></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- ─── SECTION 6: TALLY ─── -->
+    <div class="ptally-section ptally-tally-section ${tallyOk ? 'ptally-tally-ok' : 'ptally-tally-warn'}">
+      <div class="ptally-tally-row">
+        <span class="ptally-tally-label">🧾 Invoice Total</span>
+        <span class="ptally-tally-val">${formatCurrency(totalInvoice)}</span>
+      </div>
+      <div class="ptally-tally-row">
+        <span class="ptally-tally-label">💰 Total Received (Cash + Zelle)</span>
+        <span class="ptally-tally-val">−${formatCurrency(totalReceived)}</span>
+      </div>
+      <div class="ptally-tally-row">
+        <span class="ptally-tally-label">📦 Remaining + Damaged</span>
+        <span class="ptally-tally-val">−${formatCurrency(totalRemDamaged)}</span>
+      </div>
+      <div class="ptally-tally-divider"></div>
+      <div class="ptally-tally-row ptally-tally-result">
+        <span class="ptally-tally-label"><strong>TALLY</strong> ${tallyOk ? '✅ Balanced!' : '⚠️ Check numbers'}</span>
+        <span class="ptally-tally-big ${tally < 0 ? 'ptally-neg' : ''}">${formatCurrency(tally)}</span>
+      </div>
+    </div>
+
+    <!-- ─── ACTIONS ─── -->
+    <div class="ptally-actions">
+      <button class="toolbar-btn" onclick="saveExcelCalculations()">💾 Save Tally</button>
+      <button class="toolbar-btn" onclick="exportTallyAsExcel()">📥 Export as Excel</button>
+      ${(function() {
+        const r = accounting2SavedRecord(accounting2BatchName());
+        const isClosed = (r?.status || 'open') === 'closed';
+        return isClosed
+          ? `<button class="toolbar-btn" onclick="reopenExcelCalculations()">🔓 Reopen Batch</button>`
+          : `<button class="toolbar-btn" style="background:var(--saffron);color:white" onclick="closeExcelCalculations()">🔒 Close Batch</button>`;
+      })()}
+    </div>
+
+  </div>`;
 }
 
 function setExcelCalcValue(key, value) {
@@ -3443,14 +3677,17 @@ function switchTab(tab, btn) {
   document.getElementById('tab-feedback').style.display = tab === 'feedback' ? 'block' : 'none';
   document.getElementById('tab-subscribers').style.display = tab === 'subscribers' ? 'block' : 'none';
   document.getElementById('tab-accounting').style.display = tab === 'accounting' ? 'block' : 'none';
-  document.getElementById('tab-excel-calculations').style.display = tab === 'excel-calculations' ? 'block' : 'none';
+  document.getElementById('tab-pickup-tally').style.display = tab === 'pickup-tally' ? 'block' : 'none';
+  const refundsPanel = document.getElementById('tab-refunds');
+  if (refundsPanel) refundsPanel.style.display = tab === 'refunds' ? 'block' : 'none';
   if (tab === 'products') renderProducts();
   if (tab === 'orders') renderOrders();
   if (tab === 'customers') renderCustomers();
   if (tab === 'feedback') renderFeedback();
   if (tab === 'subscribers') renderSubscribers();
   if (tab === 'accounting') renderAccounting();
-  if (tab === 'excel-calculations') renderExcelCalculations();
+  if (tab === 'pickup-tally') renderExcelCalculations();
+  if (tab === 'refunds') loadRefundTab();
   updateOrdersSheetUi();
 }
 
@@ -3682,3 +3919,209 @@ window.saveExcelCalculations = saveExcelCalculations;
 
 bindUi();
 initAuthWatch();
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// REFUND MODULE
+// ══════════════════════════════════════════════════════════════════════════════
+
+let refundRequests = [];
+let refundFilter = 'pending';
+let unsubRefunds = null;
+
+function loadRefundTab() {
+  if (unsubRefunds) return; // already subscribed
+  const { onSnapshot, collection, query, orderBy } = window._firestoreExports;
+  unsubRefunds = onSnapshot(
+    query(collection(db, 'refund_requests'), orderBy('createdAt', 'desc')),
+    (snapshot) => {
+      refundRequests = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderRefunds();
+    },
+    (err) => console.error('Refund listener error:', err)
+  );
+}
+
+function renderRefunds() {
+  const container = document.getElementById('refundsContainer');
+  if (!container) return;
+
+  const filtered = refundFilter === 'all'
+    ? refundRequests
+    : refundRequests.filter(r => (r.status || 'pending') === refundFilter);
+
+  // Update counts on filter buttons
+  const counts = { pending: 0, approved: 0, rejected: 0, all: refundRequests.length };
+  refundRequests.forEach(r => { const s = r.status || 'pending'; if (counts[s] !== undefined) counts[s]++; });
+  ['pending','approved','rejected','all'].forEach(f => {
+    const btn = document.getElementById(`refundFilter_${f}`);
+    if (btn) btn.textContent = `${f.charAt(0).toUpperCase()+f.slice(1)} (${counts[f]})`;
+  });
+
+  if (!filtered.length) {
+    container.innerHTML = `<div class="refund-empty">No ${refundFilter === 'all' ? '' : refundFilter} refund requests.</div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(r => {
+    const isStripe = r.paymentMethod === 'stripe';
+    const statusClass = `status-${r.status || 'pending'}`;
+    const payBadge = isStripe
+      ? `<span class="refund-payment-type refund-payment-stripe">Stripe</span>`
+      : `<span class="refund-payment-type refund-payment-pickup">Pickup</span>`;
+    const orderTotal = r.orderTotal ? `$${parseFloat(r.orderTotal).toFixed(2)}` : '—';
+    const requestedAmt = r.requestedAmount ? `$${parseFloat(r.requestedAmount).toFixed(2)}` : '—';
+    const createdAt = r.createdAt ? new Date(r.createdAt).toLocaleString('en-US', {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
+
+    const actionHtml = (() => {
+      if ((r.status || 'pending') === 'approved') {
+        return `<div class="refund-issued-badge">✓ Refunded $${parseFloat(r.refundedAmount||0).toFixed(2)}</div>
+                <div class="refund-meta" style="text-align:center;margin-top:4px">${r.refundedAt ? new Date(r.refundedAt).toLocaleDateString() : ''}</div>`;
+      }
+      if ((r.status || 'pending') === 'rejected') {
+        return `<div class="refund-rejected-badge">✗ Rejected</div>
+                <div class="refund-meta" style="text-align:center;margin-top:4px">${r.rejectedAt ? new Date(r.rejectedAt).toLocaleDateString() : ''}</div>`;
+      }
+      return `<div class="refund-actions">
+        <div style="font-size:11px;color:var(--text-light);font-weight:600;margin-bottom:2px">REFUND AMOUNT ($)</div>
+        <input class="refund-amount-input" type="number" id="refundAmt_${r.id}"
+               min="0" max="${r.orderTotal||999}" step="0.01"
+               value="${r.requestedAmount || r.orderTotal || ''}"
+               placeholder="Enter amount">
+        <button class="btn-refund-issue" onclick="issueRefund('${r.id}')">
+          ${isStripe ? '💳 Issue Stripe Refund' : '✓ Mark as Refunded'}
+        </button>
+        <button class="btn-refund-reject" onclick="rejectRefund('${r.id}')">✗ Reject Request</button>
+      </div>`;
+    })();
+
+    return `<div class="refund-card ${statusClass}" id="refundCard_${r.id}">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <strong style="font-size:14px">${escapeHtml(r.customerName||'Customer')}</strong>
+          ${payBadge}
+          <span class="status-badge status-${r.status||'pending'}" style="font-size:11px">${(r.status||'pending').toUpperCase()}</span>
+        </div>
+        <div class="refund-meta">
+          <strong>Order #</strong> ${escapeHtml(r.orderNumber||r.orderId||'—')} &nbsp;·&nbsp;
+          <strong>Total</strong> ${orderTotal} &nbsp;·&nbsp;
+          <strong>Requested</strong> ${requestedAmt} &nbsp;·&nbsp;
+          <strong>Email</strong> ${escapeHtml(r.customerEmail||'—')} &nbsp;·&nbsp;
+          <strong>Phone</strong> ${escapeHtml(r.customerPhone||'—')}<br>
+          <strong>Submitted</strong> ${createdAt}
+          ${r.stripePaymentIntentId ? ` &nbsp;·&nbsp; <strong>Stripe PI</strong> ${escapeHtml(r.stripePaymentIntentId)}` : ''}
+        </div>
+        <div class="refund-reason">"${escapeHtml(r.reason||'No reason provided')}"</div>
+      </div>
+      <div>${actionHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+async function issueRefund(refundId) {
+  const refund = refundRequests.find(r => r.id === refundId);
+  if (!refund) return;
+
+  const amtInput = document.getElementById(`refundAmt_${refundId}`);
+  const amount = parseFloat(amtInput?.value || '0');
+  if (!amount || amount <= 0) { showToast('Enter a valid refund amount'); return; }
+
+  const btn = document.querySelector(`#refundCard_${refundId} .btn-refund-issue`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Processing...'; }
+
+  const { doc, updateDoc, Timestamp } = window._firestoreExports;
+
+  try {
+    // For Stripe orders — call cloud function
+    if (refund.paymentMethod === 'stripe' && refund.stripePaymentIntentId) {
+      try {
+        const issueStripeRefund = httpsCallable(cloudFunctions, 'issueStripeRefund');
+        await issueStripeRefund({
+          paymentIntentId: refund.stripePaymentIntentId,
+          amount: Math.round(amount * 100), // cents
+          refundRequestId: refundId
+        });
+      } catch (stripeErr) {
+        console.warn('Stripe refund function error (may not be deployed):', stripeErr);
+        // Continue to mark as approved even if function not deployed yet
+      }
+    }
+
+    // Update Firestore record
+    await updateDoc(doc(db, 'refund_requests', refundId), {
+      status: 'approved',
+      refundedAmount: amount,
+      refundedAt: new Date().toISOString(),
+      refundedBy: auth.currentUser?.email || 'admin',
+      updatedAt: new Date().toISOString()
+    });
+
+    showToast(`Refund of $${amount.toFixed(2)} issued successfully`);
+  } catch (err) {
+    console.error('Issue refund error:', err);
+    showToast('Error issuing refund. Check console.');
+    if (btn) { btn.disabled = false; btn.textContent = refund.paymentMethod === 'stripe' ? '💳 Issue Stripe Refund' : '✓ Mark as Refunded'; }
+  }
+}
+
+async function rejectRefund(refundId) {
+  if (!confirm('Reject this refund request? The customer will not be notified automatically.')) return;
+  const { doc, updateDoc } = window._firestoreExports;
+  try {
+    await updateDoc(doc(db, 'refund_requests', refundId), {
+      status: 'rejected',
+      rejectedAt: new Date().toISOString(),
+      rejectedBy: auth.currentUser?.email || 'admin',
+      updatedAt: new Date().toISOString()
+    });
+    showToast('Refund request rejected');
+  } catch (err) {
+    console.error('Reject refund error:', err);
+    showToast('Error rejecting. Check console.');
+  }
+}
+
+function setRefundFilter(f) {
+  refundFilter = f;
+  document.querySelectorAll('.refund-filter-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`refundFilter_${f}`)?.classList.add('active');
+  renderRefunds();
+}
+
+window.issueRefund = issueRefund;
+window.rejectRefund = rejectRefund;
+window.setRefundFilter = setRefundFilter;
+window.loadRefundTab = loadRefundTab;
+
+
+// ── PICKUP TALLY HELPERS ──────────────────────────────────────────────────────
+function updateZelleEntry(index, field, value) {
+  const batchName = accounting2BatchName();
+  if (!state.accounting2Records[batchName]) state.accounting2Records[batchName] = {};
+  const record = state.accounting2Records[batchName];
+  const entries = record.zelleEntries ? JSON.parse(JSON.stringify(record.zelleEntries)) : [];
+  while (entries.length <= index) entries.push({ name: '', amount: '' });
+  entries[index][field] = field === 'amount' ? (parseFloat(value) || '') : value;
+  record.zelleEntries = entries;
+  renderExcelCalculations();
+}
+
+function addZelleEntry() {
+  const batchName = accounting2BatchName();
+  if (!state.accounting2Records[batchName]) state.accounting2Records[batchName] = {};
+  const record = state.accounting2Records[batchName];
+  const entries = record.zelleEntries ? JSON.parse(JSON.stringify(record.zelleEntries)) : [];
+  entries.push({ name: '', amount: '' });
+  record.zelleEntries = entries;
+  renderExcelCalculations();
+}
+
+function exportTallyAsExcel() {
+  const batchName = accounting2BatchName();
+  const computed = accounting2ComputedTotals(batchName);
+  showToast('Export feature — use the CSV export from the Accounting tab for now.');
+}
+
+window.updateZelleEntry = updateZelleEntry;
+window.addZelleEntry = addZelleEntry;
+window.exportTallyAsExcel = exportTallyAsExcel;

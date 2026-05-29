@@ -1,9 +1,10 @@
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const { Resend } = require("resend");
 const { PostHog } = require("posthog-node");
+const Stripe = require("stripe");
 
 admin.initializeApp();
 
@@ -15,6 +16,8 @@ const posthog = new PostHog(process.env.POSTHOG_API_KEY, {
 });
 
 const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
+const STRIPE_SECRET_KEY = defineSecret("STRIPE_SECRET_KEY");
+const STRIPE_WEBHOOK_SECRET = defineSecret("STRIPE_WEBHOOK_SECRET");
 
 const SHRISH_FROM_EMAIL = "Shrish Orders <contact@shrish.co>";
 const SHRISH_ADMIN_EMAIL = "contact@shrish.co";
@@ -22,11 +25,51 @@ const SHRISH_SUPPORT_PHONE = "+1 (765) 325-5577";
 const SHRISH_INSTAGRAM_URL = "https://www.instagram.com/shrish_llc/";
 const SHRISH_WHATSAPP_URL = "https://wa.me/17653255577";
 const SHRISH_LOGO_URL = "https://gvkiran.github.io/shrish.co/images/brand/logo-small.png";
+const SHRISH_SITE_URL = "https://shrish.co";
 const ORDER_COUNTER_START = 671499;
 const MAX_REMINDER_EMAILS_PER_SEND = 50;
+const STRIPE_PAYMENTS_ENABLED = false;
 
 function isAdminRequest(request) {
   return String(request.auth?.token?.email || "").trim().toLowerCase() === SHRISH_ADMIN_EMAIL;
+}
+
+function normalizedSecret(secret) {
+  return String(secret.value() || "").trim().replace(/[\r\n]+/g, "");
+}
+
+function callableOptions(options = {}) {
+  return {
+    region: "us-central1",
+    enforceAppCheck: process.env.SHRISH_ENFORCE_APP_CHECK === "true",
+    ...options,
+  };
+}
+
+function stripeClient() {
+  return new Stripe(normalizedSecret(STRIPE_SECRET_KEY));
+}
+
+function allowedCheckoutOrigin(value = "") {
+  const fallback = SHRISH_SITE_URL;
+  try {
+    const url = new URL(String(value || fallback));
+    const hostname = url.hostname.toLowerCase();
+    const isAllowed =
+      hostname === "shrish.co" ||
+      hostname === "www.shrish.co" ||
+      hostname.endsWith(".vercel.app") ||
+      hostname === "localhost" ||
+      hostname === "127.0.0.1";
+
+    return isAllowed ? url.origin : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function toStripeAmount(value) {
+  return Math.max(0, Math.round(Number(value || 0) * 100));
 }
 
 function currency(value) {
@@ -152,6 +195,8 @@ function buildCustomerEmail(order) {
   const pickupLocation = escapeHtml(
     order.locationLabel || order.pickupLocation || "Chesterfield, VA"
   );
+  const isPaidOnline = order.paymentMethod === "stripe" || order.paymentStatus === "paid";
+  const paymentMessage = isPaidOnline ? "Payment was completed online." : "Payment is collected at pickup.";
 
   const { totalBoxes, estimatedTotal } = getOrderTotals(order);
   const itemRows = buildItemsRows(items);
@@ -185,7 +230,7 @@ function buildCustomerEmail(order) {
 
             <p style="margin:0 0 22px; font-size:15px; line-height:1.7;">
               We have your order <strong>${orderNumber}</strong> for pickup in <strong>${pickupLocation}</strong>.
-              Payment is collected at pickup.
+              ${paymentMessage}
             </p>
 
             <table style="width:100%; border-collapse:collapse; margin:0 0 24px;">
@@ -261,6 +306,10 @@ function buildAdminEmail(order) {
   const pickupLocation = escapeHtml(
     order.locationLabel || order.pickupLocation || "Chesterfield, VA"
   );
+  const paymentLabel = escapeHtml(
+    order.paymentMethodLabel ||
+    (order.paymentMethod === "stripe" || order.paymentStatus === "paid" ? "Paid online" : "Pay at pickup")
+  );
   const notes = escapeHtml(order.notes || "");
 
   const { totalBoxes, estimatedTotal } = getOrderTotals(order);
@@ -304,6 +353,10 @@ function buildAdminEmail(order) {
               <tr>
                 <td style="padding:8px 0; font-size:14px;"><strong>Pickup:</strong></td>
                 <td style="padding:8px 0; font-size:14px;">${pickupLocation}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0; font-size:14px;"><strong>Payment:</strong></td>
+                <td style="padding:8px 0; font-size:14px;">${paymentLabel}</td>
               </tr>
             </table>
 
@@ -358,6 +411,71 @@ function buildAdminEmail(order) {
     </body>
   </html>
   `;
+}
+
+async function sendOrderConfirmationEmails(orderRef, order, source = "order_created") {
+  if (!order || !order.email || order.confirmationEmailSentAt) return;
+
+  const finalOrderNumber = await assignSequentialOrderNumber(
+    orderRef,
+    order.orderNumber
+  );
+
+  const finalOrder = {
+    ...order,
+    orderNumber: finalOrderNumber,
+  };
+
+  const resend = new Resend(RESEND_API_KEY.value());
+
+  const customerSubject = `Shrish order confirmation — ${finalOrder.orderNumber || "Order received"}`;
+  const adminSubject = `New Shrish order — ${finalOrder.orderNumber || "Order received"}`;
+
+  await resend.emails.send({
+    from: SHRISH_FROM_EMAIL,
+    to: [finalOrder.email],
+    subject: customerSubject,
+    html: buildCustomerEmail(finalOrder),
+  });
+
+  await resend.emails.send({
+    from: SHRISH_FROM_EMAIL,
+    to: [SHRISH_ADMIN_EMAIL],
+    subject: adminSubject,
+    html: buildAdminEmail(finalOrder),
+  });
+
+  await orderRef.set({
+    confirmationEmailSentAt: admin.firestore.FieldValue.serverTimestamp(),
+    confirmationEmailSource: source,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+
+  const { totalBoxes, estimatedTotal } = getOrderTotals(finalOrder);
+  posthog.identify({
+    distinctId: finalOrder.email,
+    properties: {
+      $set: {
+        name: `${finalOrder.firstName || ""} ${finalOrder.lastName || ""}`.trim() || undefined,
+        email: finalOrder.email,
+        phone: finalOrder.phone || undefined,
+      },
+    },
+  });
+  posthog.capture({
+    distinctId: finalOrder.email,
+    event: "order_confirmed",
+    properties: {
+      order_number: finalOrder.orderNumber,
+      pickup_location: finalOrder.locationLabel || finalOrder.pickupLocation || "Chesterfield, VA",
+      total_boxes: totalBoxes,
+      estimated_total: estimatedTotal,
+      item_count: Array.isArray(finalOrder.items) ? finalOrder.items.length : 0,
+      payment_method: finalOrder.paymentMethod || finalOrder.payment || "pay_at_pickup",
+      source,
+    },
+  });
+  await posthog.flush();
 }
 
 function buildPasswordResetEmail(email, resetLink) {
@@ -565,10 +683,9 @@ function buildReminderEmail(order, messageText) {
 }
 
 exports.sendOrderReminderEmails = onCall(
-  {
-    region: "us-central1",
+  callableOptions({
     secrets: [RESEND_API_KEY],
-  },
+  }),
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Sign in as admin before sending reminders.");
@@ -681,6 +798,152 @@ exports.sendOrderReminderEmails = onCall(
   }
 );
 
+exports.createStripeCheckoutSession = onCall(
+  callableOptions({
+    secrets: [STRIPE_SECRET_KEY],
+  }),
+  async (request) => {
+    if (!STRIPE_PAYMENTS_ENABLED) {
+      throw new HttpsError("failed-precondition", "Online card payments are temporarily unavailable.");
+    }
+
+    const orderId = String(request.data?.orderId || "").trim();
+    if (!orderId) {
+      throw new HttpsError("invalid-argument", "Order ID is required.");
+    }
+
+    const db = admin.firestore();
+    const orderRef = db.collection("orders").doc(orderId);
+    const orderSnap = await orderRef.get();
+    if (!orderSnap.exists) {
+      throw new HttpsError("not-found", "Order not found.");
+    }
+
+    const order = orderSnap.data() || {};
+    if (order.customerUid && order.customerUid !== request.auth?.uid) {
+      throw new HttpsError("permission-denied", "You can only pay for your own order.");
+    }
+    if (String(order.paymentMethod || "") !== "stripe") {
+      throw new HttpsError("failed-precondition", "This order is not set for online payment.");
+    }
+    if (String(order.paymentStatus || "") === "paid") {
+      throw new HttpsError("failed-precondition", "This order is already paid.");
+    }
+    if (!Array.isArray(order.items) || !order.items.length) {
+      throw new HttpsError("failed-precondition", "This order has no items.");
+    }
+
+    let session;
+    let stripeCustomerId = "";
+    const saveCard = Boolean(request.data?.saveCard && request.auth?.uid);
+    const customerEmail = String(order.email || request.auth?.token?.email || "").trim().toLowerCase();
+    try {
+      const stripe = stripeClient();
+      const origin = allowedCheckoutOrigin(request.data?.origin);
+      const orderNumber = await assignSequentialOrderNumber(orderRef, order.orderNumber);
+      order.orderNumber = orderNumber;
+      const metadata = {
+        orderId,
+        orderNumber,
+        customerUid: order.customerUid || request.auth?.uid || "",
+        source: "shrish_checkout",
+      };
+
+      if (request.auth?.uid && saveCard) {
+        const profileRef = db.collection("user_profiles").doc(request.auth.uid);
+        const profileSnap = await profileRef.get();
+        const profile = profileSnap.exists ? profileSnap.data() || {} : {};
+        stripeCustomerId = String(profile.stripeCustomerId || "").trim();
+        if (!stripeCustomerId) {
+          const customer = await stripe.customers.create({
+            email: customerEmail || undefined,
+            name: order.fullName || `${order.firstName || ""} ${order.lastName || ""}`.trim() || undefined,
+            phone: order.phone || undefined,
+            metadata: {
+              customerUid: request.auth.uid,
+              source: "shrish_account",
+            },
+          });
+          stripeCustomerId = customer.id;
+          await profileRef.set({
+            stripeCustomerId,
+            stripeCustomerCreatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+        }
+      }
+
+      const lineItems = order.items.map((item) => {
+        const qty = normalizeQty(item);
+        const unitAmount = Math.max(50, toStripeAmount(customerOrderUnitPrice(item)));
+        return {
+          quantity: qty,
+          price_data: {
+            currency: "usd",
+            unit_amount: unitAmount,
+            product_data: {
+              name: String(item.name || "Shrish item").slice(0, 180),
+            },
+          },
+        };
+      });
+
+      const sessionConfig = {
+        mode: "payment",
+        payment_method_types: ["card"],
+        line_items: lineItems,
+        success_url: `${origin}/order.html?payment=success&orderId=${encodeURIComponent(orderId)}&orderNumber=${encodeURIComponent(orderNumber)}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/order.html?payment=cancelled&orderId=${encodeURIComponent(orderId)}`,
+        metadata,
+        payment_intent_data: {
+          metadata,
+        },
+      };
+
+      if (stripeCustomerId) {
+        sessionConfig.customer = stripeCustomerId;
+        if (saveCard) sessionConfig.payment_intent_data.setup_future_usage = "off_session";
+      } else if (customerEmail) {
+        sessionConfig.customer_email = customerEmail;
+      }
+
+      session = await stripe.checkout.sessions.create(sessionConfig);
+      await orderRef.set({
+        stripeCheckoutSessionId: session.id,
+        stripeCustomerId: stripeCustomerId || "",
+        saveCardRequested: saveCard,
+        paymentStatus: "checkout_started",
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    } catch (error) {
+      console.error("Stripe checkout session creation failed", {
+        orderId,
+        code: error?.code || "",
+        type: error?.type || "",
+        message: error?.message || String(error),
+      });
+      throw new HttpsError("internal", error?.message || "Could not start Stripe checkout.");
+    }
+
+    posthog.capture({
+      distinctId: customerEmail || request.auth?.uid || orderId,
+      event: "stripe_checkout_started",
+      properties: {
+        order_id: orderId,
+        save_card_requested: saveCard,
+        amount_total: session.amount_total || 0,
+      },
+    });
+    await posthog.flush();
+
+    return {
+      url: session.url,
+      sessionId: session.id,
+      orderNumber: order.orderNumber || "",
+    };
+  }
+);
+
 function customerOrderUnitPrice(item = {}) {
   const qty = normalizeQty(item);
   const lineTotal = normalizeLineTotal(item);
@@ -694,15 +957,75 @@ function cleanCustomerQty(value) {
   return Math.min(Math.max(qty, 0), 99);
 }
 
+function customerOrderProductId(item = {}) {
+  return item.productId || String(item.id || "").split("__")[0] || "";
+}
+
+function customerOrderVariantId(item = {}) {
+  if (item.variantId) return item.variantId;
+  const id = String(item.id || "");
+  return id.includes("__") ? id.split("__")[1] : "default";
+}
+
+function customerCartItemId(productId, variantId = "default") {
+  return variantId === "default" ? productId : `${productId}__${variantId}`;
+}
+
+function customerProductVariants(product = {}) {
+  if (Array.isArray(product.variants) && product.variants.length) {
+    return product.variants
+      .filter((variant) => variant && variant.available !== false && !variant.displayOnly)
+      .map((variant, index) => ({
+        id: variant.id || `opt${index + 1}`,
+        label: variant.label || product.unit || "Option",
+        price: variant.price || product.price || "",
+        unit: variant.unit || variant.label || product.unit || "",
+      }));
+  }
+
+  return [{
+    id: "default",
+    label: product.unit || "Default",
+    price: product.price || "",
+    unit: product.unit || "",
+  }];
+}
+
+function buildCustomerOrderItemFromProduct(product = {}, productId, variantId, qty) {
+  if (!product || product.available === false || product.displayOnly || product.hidden) {
+    throw new HttpsError("failed-precondition", "This product is not available.");
+  }
+
+  const variant = customerProductVariants(product).find((item) => item.id === variantId);
+  if (!variant) {
+    throw new HttpsError("failed-precondition", "This product option is not available.");
+  }
+
+  const unitPrice = parseMoney(variant.price || product.price);
+  if (unitPrice <= 0) {
+    throw new HttpsError("failed-precondition", "This product does not have a valid price.");
+  }
+
+  return {
+    id: customerCartItemId(productId, variant.id),
+    productId,
+    variantId: variant.id,
+    name: variant.id === "default" ? (product.name || "Item") : `${product.name || "Item"} (${variant.label})`,
+    price: variant.price || product.price || currency(unitPrice),
+    unit: variant.unit || product.unit || "",
+    image: product.image || null,
+    qty,
+    lineTotal: Number((unitPrice * qty).toFixed(2)),
+  };
+}
+
 function normalizeOrderPhone(value) {
   const digits = String(value || "").replace(/\D/g, "");
   return digits.startsWith("1") ? digits.slice(1, 11) : digits.slice(0, 10);
 }
 
 exports.updateCustomerPendingOrder = onCall(
-  {
-    region: "us-central1",
-  },
+  callableOptions(),
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Sign in before editing your order.");
@@ -731,6 +1054,9 @@ exports.updateCustomerPendingOrder = onCall(
       if (String(order.status || "pending").toLowerCase() !== "pending") {
         throw new HttpsError("failed-precondition", "Only pending orders can be changed.");
       }
+      if (order.paymentMethod === "stripe" || order.paymentStatus === "paid") {
+        throw new HttpsError("failed-precondition", "Online paid orders cannot be edited online yet. Please contact Shrish for help.");
+      }
 
       if (action === "cancel") {
         tx.update(orderRef, {
@@ -739,6 +1065,15 @@ exports.updateCustomerPendingOrder = onCall(
           customerCancelReason: String(request.data?.reason || "").trim().slice(0, 280),
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
+        const phoneDigits = normalizeOrderPhone(order.phoneDigits || order.phone || "");
+        if (phoneDigits) {
+          tx.set(db.collection("order_locks").doc(phoneDigits), {
+            phoneDigits,
+            orderId,
+            status: "cancelled",
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+        }
 
         return { status: "cancelled" };
       }
@@ -754,14 +1089,23 @@ exports.updateCustomerPendingOrder = onCall(
 
       const requestedItems = Array.isArray(request.data?.items) ? request.data.items : [];
       const qtyByIndex = new Map();
+      const additionsByKey = new Map();
       requestedItems.forEach((item) => {
         const index = Number(item?.index);
-        if (Number.isInteger(index) && index >= 0 && index < existingItems.length) {
+        const productId = String(item?.productId || "").trim();
+        const variantId = String(item?.variantId || "default").trim() || "default";
+        const qty = cleanCustomerQty(item?.qty);
+        if (productId && qty > 0) {
+          const key = `${productId}__${variantId}`;
+          const current = additionsByKey.get(key) || { productId, variantId, qty: 0 };
+          current.qty = cleanCustomerQty(current.qty + qty);
+          additionsByKey.set(key, current);
+        } else if (Number.isInteger(index) && index >= 0 && index < existingItems.length) {
           qtyByIndex.set(index, cleanCustomerQty(item?.qty));
         }
       });
 
-      if (!qtyByIndex.size) {
+      if (!qtyByIndex.size && !additionsByKey.size) {
         throw new HttpsError("invalid-argument", "At least one quantity is required.");
       }
 
@@ -774,6 +1118,33 @@ exports.updateCustomerPendingOrder = onCall(
           lineTotal: Number((unitPrice * qty).toFixed(2)),
         };
       }).filter((item) => item.qty > 0);
+
+      for (const addition of additionsByKey.values()) {
+        const productSnap = await tx.get(db.collection("products").doc(addition.productId));
+        if (!productSnap.exists) {
+          throw new HttpsError("not-found", "Product not found.");
+        }
+
+        const product = { id: productSnap.id, ...productSnap.data() };
+        const newItem = buildCustomerOrderItemFromProduct(product, addition.productId, addition.variantId, addition.qty);
+        const existingIndex = updatedItems.findIndex((item) =>
+          customerOrderProductId(item) === newItem.productId &&
+          customerOrderVariantId(item) === newItem.variantId
+        );
+
+        if (existingIndex >= 0) {
+          const existing = updatedItems[existingIndex];
+          const mergedQty = cleanCustomerQty(Number(existing.qty || 0) + addition.qty);
+          const unitPrice = customerOrderUnitPrice(existing) || customerOrderUnitPrice(newItem);
+          updatedItems[existingIndex] = {
+            ...existing,
+            qty: mergedQty,
+            lineTotal: Number((unitPrice * mergedQty).toFixed(2)),
+          };
+        } else {
+          updatedItems.push(newItem);
+        }
+      }
 
       if (!updatedItems.length) {
         throw new HttpsError("failed-precondition", "Use cancel order if removing every item.");
@@ -810,9 +1181,7 @@ exports.updateCustomerPendingOrder = onCall(
 );
 
 exports.claimCustomerOrder = onCall(
-  {
-    region: "us-central1",
-  },
+  callableOptions(),
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Sign in to link this order.");
@@ -886,9 +1255,7 @@ function cleanFeedbackRating(value) {
 }
 
 exports.submitOrderFeedback = onCall(
-  {
-    region: "us-central1",
-  },
+  callableOptions(),
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Sign in to submit order feedback.");
@@ -1022,9 +1389,7 @@ exports.submitOrderFeedback = onCall(
 );
 
 exports.deleteCustomerAccount = onCall(
-  {
-    region: "us-central1",
-  },
+  callableOptions(),
   async (request) => {
     if (!request.auth || !isAdminRequest(request)) {
       throw new HttpsError("permission-denied", "Admin access is required.");
@@ -1082,10 +1447,9 @@ exports.deleteCustomerAccount = onCall(
 );
 
 exports.sendCustomerPasswordReset = onCall(
-  {
-    region: "us-central1",
+  callableOptions({
     secrets: [RESEND_API_KEY],
-  },
+  }),
   async (request) => {
     const email = String(request.data?.email || "").trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -1128,6 +1492,111 @@ exports.sendCustomerPasswordReset = onCall(
   }
 );
 
+exports.stripeWebhook = onRequest(
+  {
+    region: "us-central1",
+    secrets: [STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, RESEND_API_KEY],
+  },
+  async (request, response) => {
+    if (!STRIPE_PAYMENTS_ENABLED) {
+      response.status(404).send("Stripe payments are disabled.");
+      return;
+    }
+
+    const signature = request.headers["stripe-signature"];
+    if (!signature) {
+      response.status(400).send("Missing Stripe signature");
+      return;
+    }
+
+    let event;
+    try {
+      event = stripeClient().webhooks.constructEvent(
+        request.rawBody,
+        signature,
+        normalizedSecret(STRIPE_WEBHOOK_SECRET)
+      );
+    } catch (error) {
+      console.error("Stripe webhook signature verification failed", error);
+      response.status(400).send("Invalid Stripe signature");
+      return;
+    }
+
+    const db = admin.firestore();
+
+    try {
+      if (event.type === "checkout.session.completed") {
+        const session = event.data.object;
+        const orderId = String(session.metadata?.orderId || "").trim();
+        if (!orderId) {
+          response.json({ received: true, skipped: "missing_order_id" });
+          return;
+        }
+
+        const orderRef = db.collection("orders").doc(orderId);
+        const orderSnap = await orderRef.get();
+        if (!orderSnap.exists) {
+          response.json({ received: true, skipped: "missing_order" });
+          return;
+        }
+
+        const order = orderSnap.data() || {};
+        await orderRef.set({
+          payment: "paid",
+          paymentMethod: "stripe",
+          paymentMethodLabel: "Paid online",
+          paymentStatus: "paid",
+          stripeCheckoutSessionId: session.id,
+          stripePaymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : "",
+          stripeCustomerId: typeof session.customer === "string" ? session.customer : (order.stripeCustomerId || ""),
+          paidAt: admin.firestore.FieldValue.serverTimestamp(),
+          status: "pending",
+          skipCustomerEmail: false,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+
+        if (order.phoneDigits) {
+          await db.collection("order_locks").doc(order.phoneDigits).set({
+            phoneDigits: order.phoneDigits,
+            orderId,
+            status: "pending",
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+        }
+
+        await sendOrderConfirmationEmails(orderRef, {
+          ...order,
+          payment: "paid",
+          paymentMethod: "stripe",
+          paymentMethodLabel: "Paid online",
+          paymentStatus: "paid",
+        }, "stripe_paid");
+      }
+
+      if (event.type === "checkout.session.expired") {
+        const session = event.data.object;
+        const orderId = String(session.metadata?.orderId || "").trim();
+        if (orderId) {
+          await db.collection("orders").doc(orderId).set({
+            paymentStatus: "expired",
+            status: "payment_expired",
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+        }
+      }
+
+      response.json({ received: true });
+    } catch (error) {
+      console.error("Stripe webhook handling failed", error);
+      posthog.captureException(error, "stripe_webhook", {
+        event_type: event.type,
+      });
+      await posthog.flush();
+      response.status(500).send("Webhook handler failed");
+    }
+  }
+);
+
 exports.sendOrderEmails = onDocumentCreated(
   {
     document: "orders/{orderId}",
@@ -1143,57 +1612,6 @@ exports.sendOrderEmails = onDocumentCreated(
     if (order?.source === "admin_manual" || order?.skipCustomerEmail) return;
     if (!order || !order.email) return;
 
-    const finalOrderNumber = await assignSequentialOrderNumber(
-      orderRef,
-      order.orderNumber
-    );
-
-    const finalOrder = {
-      ...order,
-      orderNumber: finalOrderNumber,
-    };
-
-    const resend = new Resend(RESEND_API_KEY.value());
-
-    const customerSubject = `Shrish order confirmation — ${finalOrder.orderNumber || "Order received"}`;
-    const adminSubject = `New Shrish order — ${finalOrder.orderNumber || "Order received"}`;
-
-    await resend.emails.send({
-      from: SHRISH_FROM_EMAIL,
-      to: [finalOrder.email],
-      subject: customerSubject,
-      html: buildCustomerEmail(finalOrder),
-    });
-
-    await resend.emails.send({
-      from: SHRISH_FROM_EMAIL,
-      to: [SHRISH_ADMIN_EMAIL],
-      subject: adminSubject,
-      html: buildAdminEmail(finalOrder),
-    });
-
-    const { totalBoxes, estimatedTotal } = getOrderTotals(finalOrder);
-    posthog.identify({
-      distinctId: finalOrder.email,
-      properties: {
-        $set: {
-          name: `${finalOrder.firstName || ""} ${finalOrder.lastName || ""}`.trim() || undefined,
-          email: finalOrder.email,
-          phone: finalOrder.phone || undefined,
-        },
-      },
-    });
-    posthog.capture({
-      distinctId: finalOrder.email,
-      event: "order_confirmed",
-      properties: {
-        order_number: finalOrder.orderNumber,
-        pickup_location: finalOrder.locationLabel || finalOrder.pickupLocation || "Chesterfield, VA",
-        total_boxes: totalBoxes,
-        estimated_total: estimatedTotal,
-        item_count: Array.isArray(finalOrder.items) ? finalOrder.items.length : 0,
-      },
-    });
-    await posthog.flush();
+    await sendOrderConfirmationEmails(orderRef, order, "order_created");
   }
 );

@@ -3,10 +3,15 @@ import {
   auth,
   collection,
   doc,
+  addDoc,
   getDoc,
   setDoc,
+  updateDoc,
   runTransaction,
+  onSnapshot,
   onAuthStateChanged,
+  cloudFunctions,
+  httpsCallable,
   serverTimestamp,
   normalizePhone,
   escapeHtml,
@@ -18,8 +23,15 @@ let selectedLoc = '';
 let isSubmitting = false;
 let currentCustomer = null;
 let currentCustomerProfile = null;
+// Expose Firestore for refund module
+window._firestoreExports = { collection, doc, updateDoc, addDoc, onSnapshot };
+
+let selectedPaymentMethod = 'pickup';
+let guestStripeConfirmed = false;
 const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
+const CHECKOUT_ACCOUNT_PREFILL_KEY = 'shrish_checkout_account_prefill';
 const CONFIRMATION_WAIT_MS = 15000;
+const createStripeCheckoutSession = httpsCallable(cloudFunctions, 'createStripeCheckoutSession');
 const LOCATION_LABELS = {
   shortpump: 'Short Pump, VA',
   chesterfield: 'Chesterfield, VA',
@@ -86,6 +98,23 @@ function rememberExistingOrderForAccount(orderId, displayNumber) {
   );
 }
 
+function rememberCheckoutAccountPrefill(details = {}) {
+  if (!customerAccountsEnabled()) return;
+  sessionStorage.setItem(CHECKOUT_ACCOUNT_PREFILL_KEY, JSON.stringify({
+    email: details.email || '',
+    phone: details.phone || '',
+    phoneDigits: details.phoneDigits || '',
+    firstName: details.firstName || '',
+    lastName: details.lastName || '',
+    location: selectedLoc || '',
+    createdAt: Date.now()
+  }));
+}
+
+function accountCheckoutHref(mode) {
+  return `account.html?mode=${encodeURIComponent(mode)}&return=checkout`;
+}
+
 function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
   const prompt = document.getElementById('successAccountPrompt');
   if (!prompt || !customerAccountsEnabled()) return;
@@ -113,6 +142,140 @@ function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
       <a href="${signinHref}" class="btn-outline">Sign In</a>
       <span class="success-account-note">Use <strong>${escapeHtml(order.email || 'the same email')}</strong> to link <strong>${escapeHtml(displayNumber)}</strong>.</span>
     </div>`;
+}
+
+function readRecentOrderClaim() {
+  try {
+    return JSON.parse(sessionStorage.getItem(RECENT_ORDER_CLAIM_KEY) || 'null');
+  } catch {
+    return null;
+  }
+}
+
+function renderStripeSuccessAccountPrompt(orderId, orderNumber, customer) {
+  const prompt = document.getElementById('successAccountPrompt');
+  if (!prompt || !customerAccountsEnabled()) return;
+
+  const displayNumber = orderNumber || 'this order';
+  const claim = readRecentOrderClaim() || {};
+  if (customer) {
+    prompt.classList.add('show');
+    prompt.innerHTML = `
+      <strong>Track this order in your account</strong>
+      <p>Your paid order is linked to your Shrish account. You can view order history, pickup details, and eligible pending order changes from one place.</p>
+      <div class="success-account-actions">
+        <a href="account.html" class="btn-primary">View My Orders</a>
+        <span class="success-account-note">${escapeHtml(displayNumber)} is ready in your account.</span>
+      </div>`;
+    return;
+  }
+
+  const signupHref = 'account.html?claim=recent&mode=signup';
+  const signinHref = 'account.html?claim=recent&mode=signin';
+  prompt.classList.add('show');
+  prompt.innerHTML = `
+    <strong>Create an account to track this order</strong>
+    <p>Save ${escapeHtml(displayNumber)} to see your purchase history, keep pickup details handy, and modify eligible pending orders before pickup is confirmed.</p>
+    <div class="success-account-actions">
+      <a href="${signupHref}" class="btn-primary">Create Account</a>
+      <a href="${signinHref}" class="btn-outline">Sign In</a>
+      <span class="success-account-note">Use ${escapeHtml(claim.email || 'the same checkout email')} and phone to link the order.</span>
+    </div>`;
+}
+
+function waitForCustomerAuthState() {
+  if (auth.currentUser) return Promise.resolve(isCustomerUser(auth.currentUser) ? auth.currentUser : null);
+
+  return new Promise((resolve) => {
+    let settled = false;
+    let unsubscribe = () => {};
+    const finish = (user) => {
+      if (settled) return;
+      settled = true;
+      unsubscribe();
+      resolve(isCustomerUser(user) ? user : null);
+    };
+
+    unsubscribe = onAuthStateChanged(auth, finish);
+    setTimeout(() => finish(null), 1000);
+  });
+}
+
+async function resolveStripeOrderNumber(orderId, params) {
+  const urlOrderNumber = params.get('orderNumber') || '';
+  if (/^SHR-\d+$/.test(urlOrderNumber)) return urlOrderNumber;
+  if (!orderId) return '';
+  return waitForOrderConfirmationNumber(doc(db, 'orders', orderId));
+}
+
+async function renderStripeReturnMessage() {
+  const params = new URLSearchParams(window.location.search);
+  const paymentState = params.get('payment');
+  if (!paymentState) return false;
+
+  const orderId = params.get('orderId') || '';
+  if (paymentState === 'success') {
+    const customer = await waitForCustomerAuthState();
+    currentCustomer = customer;
+    const orderNumber = await resolveStripeOrderNumber(orderId, params);
+    sessionStorage.removeItem('shrish_cart');
+    cart = [];
+    updateNavCart();
+
+    document.getElementById('checkoutWrap').style.display = 'none';
+    document.getElementById('successScreen').style.display = 'block';
+    document.getElementById('successOrderNum').textContent = orderNumber
+      ? `Payment received - Order Confirmation No: ${orderNumber}`
+      : 'Payment received';
+    document.querySelector('#successScreen > p')?.replaceChildren(document.createTextNode('Your online payment was received. Watch the WhatsApp group for pickup details.'));
+    const paymentCopy = document.querySelectorAll('#successScreen > p')[1];
+    if (paymentCopy) paymentCopy.textContent = 'Payment is already completed online.';
+    const summary = document.getElementById('successSummary');
+    if (summary) {
+      summary.innerHTML = `
+        <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Paid online</span></div>
+        <div class="ss-row"><span>Order Confirmation No</span><span>${escapeHtml(orderNumber || 'Your confirmation email will include it')}</span></div>`;
+    }
+    renderStripeSuccessAccountPrompt(orderId, orderNumber, customer);
+
+    // Show refund request section for Stripe orders
+    // orderId available, get order data from Firestore
+    try {
+      const { doc, getDoc } = window._firestoreExports || {};
+      if (doc && getDoc) {
+        const orderSnap = await getDoc(doc(db, 'orders', orderId));
+        if (orderSnap.exists()) {
+          const od = orderSnap.data();
+          injectRefundSection(
+            orderId,
+            orderNumber,
+            od.totalPrice || 0,
+            'stripe',
+            od.stripePaymentIntentId || null,
+            od.fullName || '',
+            od.email || customer?.email || '',
+            od.phone || ''
+          );
+        }
+      }
+    } catch(e) { console.warn('Could not load order for refund section', e); }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return true;
+  }
+
+  if (paymentState === 'cancelled') {
+    setErrorBannerTitle('Online payment was cancelled');
+    const banner = document.getElementById('errorBanner');
+    const list = document.getElementById('errorList');
+    if (banner && list) {
+      list.innerHTML = '<li>Your card was not charged. You can try online payment again or switch to pay at pickup.</li>';
+      banner.className = 'error-banner show';
+    }
+    return false;
+  }
+
+  return false;
 }
 
 function trackCheckoutEvent(eventName, props = {}) {
@@ -192,6 +355,37 @@ function applyCatalogFieldOverrides(product = {}) {
       ? override.variants.map((variant) => ({ ...variant }))
       : product.variants
   };
+}
+
+function staticCatalogProduct(productId) {
+  return window.SHRISH_DATA?.products?.find((product) => product.id === productId) || null;
+}
+
+function variantIdForOption(variant, index) {
+  return variant?.id || `opt${index + 1}`;
+}
+
+function hasVariantId(product = {}, variantId = 'default') {
+  if (variantId === 'default') return true;
+  return Array.isArray(product.variants)
+    && product.variants.some((variant, index) => variantIdForOption(variant, index) === variantId);
+}
+
+function applyStaticVariantFallback(product = {}, cartItem = {}) {
+  const productId = cartItemProductId(cartItem);
+  const variantId = cartItemVariantId(cartItem);
+  if (!productId || hasVariantId(product, variantId)) return product;
+
+  const staticProduct = staticCatalogProduct(productId);
+  if (!staticProduct || !hasVariantId(staticProduct, variantId)) return product;
+
+  return applyCatalogFieldOverrides({
+    ...staticProduct,
+    ...product,
+    unit: staticProduct.unit || product.unit,
+    price: staticProduct.price || product.price,
+    variants: staticProduct.variants
+  });
 }
 
 function liveProductVariants(product = {}) {
@@ -277,7 +471,10 @@ async function verifyCartAgainstLiveProducts() {
       continue;
     }
 
-    const product = applyCatalogFieldOverrides({ id: productId, ...productSnap.data() });
+    const product = applyStaticVariantFallback(
+      applyCatalogFieldOverrides({ id: productId, ...productSnap.data() }),
+      item
+    );
     if (product.hidden || !product.available || product.displayOnly) {
       cartChanged = true;
       messages.push(`${product.name || itemName} is currently not available and was removed from your cart.`);
@@ -495,19 +692,43 @@ function showDuplicateOrderMessage(phone, existingOrderId = '') {
   if (!banner || !list) return;
 
   rememberExistingOrderForAccount(existingOrderId, existingOrderId);
-  setErrorBannerTitle('You already have a pending order');
+  banner.className = 'error-banner';
+  list.innerHTML = '';
+
+  document.getElementById('duplicateOrderModal')?.remove();
   const accountHref = existingOrderId ? 'account.html?claim=recent&mode=signin' : 'account.html?mode=signin';
   const primaryLabel = currentCustomer ? 'Open My Orders' : 'Login to Modify Order';
-  list.innerHTML = `
-    <li>You already have an active order for <strong>${escapeHtml(phone)}</strong>.</li>
-    <li>To change boxes, cancel, or view details, sign in or create a Shrish account using the same email and phone from your order.</li>
-    <li class="duplicate-order-actions">
-      <a class="primary" href="${accountHref}">${primaryLabel}</a>
-      <a class="secondary" href="account.html?claim=recent&mode=signup">Create Account</a>
-      <a class="secondary" href="https://wa.me/17653255577" target="_blank" rel="noopener">WhatsApp Help</a>
-    </li>`;
-  banner.className = 'error-banner show account-action';
-  banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  const modal = document.createElement('div');
+  modal.id = 'duplicateOrderModal';
+  modal.className = 'duplicate-order-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.innerHTML = `
+    <div class="duplicate-order-card">
+      <button type="button" class="duplicate-order-close" aria-label="Close">&times;</button>
+      <h3>You already have a pending order</h3>
+      <p>You already have an active order for <strong>${escapeHtml(phone)}</strong>.</p>
+      <p>To change boxes, cancel, or view details, log in or create a Shrish account using the same email and phone from your order.</p>
+      <div class="duplicate-order-actions">
+        <a class="primary" href="${accountHref}">${primaryLabel}</a>
+        <a class="secondary" href="account.html?claim=recent&mode=signup">Create Account</a>
+        <a class="secondary" href="https://wa.me/17653255577" target="_blank" rel="noopener">WhatsApp Help</a>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+  document.body.style.overflow = 'hidden';
+  modal.querySelector('.duplicate-order-close')?.addEventListener('click', () => {
+    modal.remove();
+    document.body.style.overflow = '';
+  });
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) {
+      modal.remove();
+      document.body.style.overflow = '';
+    }
+  });
 }
 
 async function isActivePendingLock(lockSnap) {
@@ -517,6 +738,7 @@ async function isActivePendingLock(lockSnap) {
   if (!lock.orderId) return false;
 
   const orderSnap = await getDoc(doc(db, 'orders', lock.orderId)).catch((error) => {
+    if (error?.code === 'permission-denied' && currentCustomer) return null;
     if (error?.code === 'permission-denied') return { exists: () => true, data: () => ({ status: 'pending' }) };
     return null;
   });
@@ -660,12 +882,120 @@ function applyCustomerDefaults(profile = {}) {
   }
 }
 
+function updatePaymentUi() {
+  document.querySelectorAll('.payment-option').forEach((option) => {
+    const isSelected = option.dataset.payment === selectedPaymentMethod;
+    option.classList.toggle('selected', isSelected);
+    const input = option.querySelector('input[type="radio"]');
+    if (input) input.checked = isSelected;
+  });
+
+  const saveCardRow = document.getElementById('saveCardRow');
+  const saveCardInput = document.getElementById('saveCardForFuture');
+  const saveCardLabel = saveCardRow?.querySelector('label');
+  const canSaveCard = selectedPaymentMethod === 'stripe' && Boolean(currentCustomer);
+  if (saveCardRow) saveCardRow.classList.toggle('show', selectedPaymentMethod === 'stripe');
+  if (saveCardInput) {
+    saveCardInput.disabled = !canSaveCard;
+    if (!canSaveCard) saveCardInput.checked = false;
+  }
+  if (saveCardLabel) {
+    saveCardLabel.innerHTML = currentCustomer
+      ? `<strong>Save this card for future Shrish purchases.</strong><br>
+          Stripe stores the card securely; Shrish never sees your full card number.`
+      : `<strong>Sign in to save a card for future purchases.</strong><br>
+          You can still pay online as a guest. To save this card, <a href="account.html?mode=signin">sign in</a> or <a href="account.html?mode=signup">create an account</a> first.`;
+  }
+
+  const submitBtn = document.getElementById('submitBtn');
+  if (submitBtn) {
+    submitBtn.textContent = selectedPaymentMethod === 'stripe'
+      ? 'Continue to Secure Payment'
+      : 'Place Order - Pay at Pickup';
+  }
+
+  const note = document.getElementById('paymentNote');
+  if (note) {
+    note.textContent = selectedPaymentMethod === 'stripe'
+      ? (currentCustomer ? 'You will be redirected to Stripe. Signed-in customers can save a card for future purchases.' : 'You will be redirected to Stripe. Sign in first if you want to save a card for future purchases.')
+      : 'No payment needed now. Pay when you pick up.';
+  }
+}
+
+function closeCheckoutAccountModal(resolve, value = 'close') {
+  const modal = document.getElementById('checkoutAccountModal');
+  if (modal) modal.remove();
+  document.body.style.overflow = '';
+  resolve(value);
+}
+
+function showCheckoutAccountChoice(details = {}) {
+  rememberCheckoutAccountPrefill(details);
+  document.getElementById('checkoutAccountModal')?.remove();
+
+  return new Promise((resolve) => {
+    const modal = document.createElement('div');
+    modal.id = 'checkoutAccountModal';
+    modal.className = 'checkout-account-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.innerHTML = `
+      <div class="checkout-account-card">
+        <button type="button" class="checkout-account-close" aria-label="Close">&times;</button>
+        <h3>Pay online securely</h3>
+        <p>You can pay with card as a guest, or sign in first to save this order to your Shrish account.</p>
+        <div class="checkout-account-benefits">
+          <span>View purchase history and pickup details anytime.</span>
+          <span>Edit eligible pending orders before pickup is confirmed.</span>
+          <span>Save checkout details for faster ordering next time.</span>
+        </div>
+        <div class="checkout-account-actions">
+          <a class="primary" href="${accountCheckoutHref('signin')}">Sign In</a>
+          <a class="secondary" href="${accountCheckoutHref('signup')}">Create Account</a>
+          <button type="button" class="guest" id="continueAsGuestBtn">Checkout as Guest</button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+
+    modal.querySelector('.checkout-account-close')?.addEventListener('click', () => closeCheckoutAccountModal(resolve));
+    modal.querySelector('#continueAsGuestBtn')?.addEventListener('click', () => closeCheckoutAccountModal(resolve, 'guest'));
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) closeCheckoutAccountModal(resolve);
+    });
+  });
+}
+
+function bindPaymentUi() {
+  document.querySelectorAll('.payment-option').forEach((option) => {
+    option.addEventListener('click', () => {
+      selectedPaymentMethod = option.dataset.payment === 'stripe' ? 'stripe' : 'pickup';
+      if (selectedPaymentMethod !== 'stripe') guestStripeConfirmed = false;
+      updatePaymentUi();
+      trackCheckoutEvent('checkout_payment_method_selected', {
+        payment_method: selectedPaymentMethod
+      });
+    });
+
+    option.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        option.click();
+      }
+    });
+  });
+
+  updatePaymentUi();
+}
+
 function bindCustomerProfile() {
   if (!customerAccountsEnabled()) return;
 
   onAuthStateChanged(auth, async (user) => {
     currentCustomer = isCustomerUser(user) ? user : null;
     currentCustomerProfile = null;
+    updatePaymentUi();
 
     if (!currentCustomer) return;
 
@@ -677,6 +1007,7 @@ function bindCustomerProfile() {
 
     currentCustomerProfile = snap.data() || {};
     applyCustomerDefaults(currentCustomerProfile);
+    updatePaymentUi();
   });
 }
 
@@ -797,12 +1128,16 @@ async function submitOrder() {
   const email = document.getElementById('email').value.trim().toLowerCase();
   const referral = document.getElementById('referral').value;
   const notes = document.getElementById('notes').value.trim();
+  const payOnline = selectedPaymentMethod === 'stripe';
+  const saveCard = Boolean(document.getElementById('saveCardForFuture')?.checked && currentCustomer);
   const phoneDigits = extractUsPhoneDigits(phone);
   const emailValid = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email);
   trackCheckoutEvent('order_submit_attempted', {
     ...cartAnalyticsSummary(),
     pickup_location: selectedLoc || '',
-    referral: referral || 'Not specified'
+    referral: referral || 'Not specified',
+    payment_method: selectedPaymentMethod,
+    save_card_requested: saveCard
   });
 
   if (phoneInput) phoneInput.value = phone;
@@ -853,11 +1188,21 @@ async function submitOrder() {
     return;
   }
 
+  if (payOnline && !currentCustomer && !guestStripeConfirmed) {
+    const choice = await showCheckoutAccountChoice({ firstName, lastName, phone, phoneDigits, email });
+    if (choice !== 'guest') return;
+    guestStripeConfirmed = true;
+    trackCheckoutEvent('checkout_guest_payment_confirmed', {
+      ...cartAnalyticsSummary(),
+      pickup_location: selectedLoc || ''
+    });
+  }
+
   try {
     isSubmitting = true;
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Submitting...';
+      submitBtn.textContent = payOnline ? 'Preparing secure payment...' : 'Submitting...';
     }
 
     const cartIsCurrent = await verifyCartAgainstLiveProducts();
@@ -904,9 +1249,14 @@ async function submitOrder() {
       totalPrice: cart.reduce((sum, item) => {
         return sum + (moneyValue(item.price) * (item.qty || 1));
       }, 0),
-      payment: 'pending',
-      status: 'pending',
+      payment: payOnline ? 'online_pending' : 'pending',
+      paymentMethod: payOnline ? 'stripe' : 'pay_at_pickup',
+      paymentMethodLabel: payOnline ? 'Pay online' : 'Pay at pickup',
+      paymentStatus: payOnline ? 'awaiting_payment' : 'pay_at_pickup',
+      saveCardRequested: saveCard,
+      status: payOnline ? 'awaiting_payment' : 'pending',
       source: 'website',
+      skipCustomerEmail: payOnline,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
@@ -919,7 +1269,7 @@ async function submitOrder() {
     await runTransaction(db, async (transaction) => {
       const pendingLock = await transaction.get(lockRef);
       const pendingLockStatus = pendingLock.exists() ? (pendingLock.data()?.status || 'pending') : '';
-      if (pendingLockStatus === 'pending') {
+      if (!currentCustomer && pendingLockStatus === 'pending') {
         const pendingLockData = pendingLock.data() || {};
         if (pendingLockData.orderId) {
           const linkedOrder = await transaction.get(doc(db, 'orders', pendingLockData.orderId));
@@ -930,22 +1280,43 @@ async function submitOrder() {
       }
 
       transaction.set(orderRef, order);
-      transaction.set(lockRef, {
-        phoneDigits,
-        orderId: orderRef.id,
-        status: 'pending',
-        updatedAt: serverTimestamp()
-      });
+      if (!payOnline) {
+        transaction.set(lockRef, {
+          phoneDigits,
+          orderId: orderRef.id,
+          status: 'pending',
+          updatedAt: serverTimestamp()
+        });
+      }
     });
 
     await saveCheckoutDetailsToProfile(order).catch((error) => {
       console.warn('Could not update customer profile from checkout', error);
     });
 
+    if (payOnline) {
+      trackCheckoutEvent('stripe_checkout_redirect_started', {
+        ...cartAnalyticsSummary(),
+        pickup_location: selectedLoc,
+        save_card_requested: saveCard
+      });
+      const session = await createStripeCheckoutSession({
+        orderId: orderRef.id,
+        saveCard,
+        origin: window.location.origin
+      });
+      const checkoutUrl = session?.data?.url;
+      if (!checkoutUrl) throw new Error('STRIPE_CHECKOUT_URL_MISSING');
+      rememberRecentOrderForAccount(orderRef, order, session?.data?.orderNumber || orderRef.id);
+      window.location.href = checkoutUrl;
+      return;
+    }
+
     const submittedOrderAnalytics = {
       ...cartAnalyticsSummary(),
       pickup_location: selectedLoc,
-      referral: referral || 'Not specified'
+      referral: referral || 'Not specified',
+      payment_method: selectedPaymentMethod
     };
 
     sessionStorage.removeItem('shrish_cart');
@@ -997,6 +1368,18 @@ async function submitOrder() {
     rememberRecentOrderForAccount(orderRef, order, displayNumber);
     renderSuccessAccountPrompt(orderRef, order, displayNumber);
 
+    // Show refund request section
+    injectRefundSection(
+      orderRef.id,
+      displayNumber,
+      order.totalPrice || 0,
+      order.paymentMethod || 'pay_at_pickup',
+      null,
+      `${firstName} ${lastName}`.trim(),
+      email,
+      phone
+    );
+
     trackCheckoutEvent('order_submitted', {
       ...submittedOrderAnalytics
     });
@@ -1018,7 +1401,7 @@ async function submitOrder() {
     const list = document.getElementById('errorList');
     if (
       error?.message === 'DUPLICATE_PENDING_ORDER' ||
-      error?.code === 'permission-denied'
+      (!currentCustomer && error?.code === 'permission-denied')
     ) {
       const lockRef = orderLockRef(phoneDigits);
       const existingLock = await getDoc(lockRef).catch(() => null);
@@ -1029,9 +1412,16 @@ async function submitOrder() {
 
       setErrorBannerTitle('You already have a pending order');
       list.innerHTML = '<li>Please sign in to your Shrish account to modify your existing pending order, or contact us on WhatsApp if you need help.</li>';
+    } else if (currentCustomer && error?.code === 'permission-denied') {
+      setErrorBannerTitle('Could not verify this checkout');
+      list.innerHTML = '<li>Please refresh and try again. If this keeps happening, contact us on WhatsApp and we can help clean up the old order status.</li>';
     } else if (error?.message === 'LIVE_PRODUCT_CHECK_FAILED') {
       setErrorBannerTitle('Please refresh before placing your order');
       list.innerHTML = '<li>We could not verify live product availability right now. Please refresh and try again before placing the order.</li>';
+    } else if (payOnline) {
+      setErrorBannerTitle('Online payment could not start');
+      const detail = error?.message || error?.code || '';
+      list.innerHTML = `<li>Your order was not charged. Please try again, switch to pay at pickup, or contact us on WhatsApp.</li>${detail ? `<li style="font-size:12px">Payment setup detail: ${escapeHtml(detail)}</li>` : ''}`;
     } else {
       setErrorBannerTitle('Please fix the following before placing your order:');
       list.innerHTML = '<li>We could not submit your order right now. Please try again in a minute.</li>';
@@ -1042,15 +1432,17 @@ async function submitOrder() {
     isSubmitting = false;
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Place Order - Pay at Pickup';
+      updatePaymentUi();
     }
   }
 }
 
-function init() {
+async function init() {
+  if (await renderStripeReturnMessage()) return;
   renderCartReview();
   updateNavCart();
   bindFormUi();
+  bindPaymentUi();
   bindCustomerProfile();
   trackCheckoutEvent('checkout_viewed', {
     has_cart: Boolean(cart.length),
@@ -1059,3 +1451,114 @@ function init() {
 }
 
 init();
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// REFUND REQUEST — Customer Side
+// ══════════════════════════════════════════════════════════════════════════════
+
+async function submitRefundRequest({ orderId, orderNumber, orderTotal, paymentMethod, stripePaymentIntentId, customerName, customerEmail, customerPhone }) {
+  const form = document.getElementById('refundReqForm');
+  const submitBtn = document.getElementById('refundReqSubmit');
+  const reason = document.getElementById('refundReason')?.value?.trim();
+  const requestedAmount = document.getElementById('refundAmount')?.value?.trim();
+  const reasonType = document.getElementById('refundReasonType')?.value;
+
+  if (!reason || reason.length < 10) {
+    alert('Please describe your reason (at least 10 characters).');
+    return;
+  }
+  if (!requestedAmount || parseFloat(requestedAmount) <= 0) {
+    alert('Please enter the refund amount you are requesting.');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting...';
+
+  try {
+    const { collection, addDoc } = window._firestoreExports || {};
+    if (!collection || !addDoc) throw new Error('Firestore not loaded');
+
+    await addDoc(collection(db, 'refund_requests'), {
+      orderId,
+      orderNumber: orderNumber || orderId,
+      orderTotal: orderTotal || 0,
+      requestedAmount: parseFloat(requestedAmount),
+      paymentMethod: paymentMethod || 'pickup',
+      stripePaymentIntentId: stripePaymentIntentId || null,
+      customerName: customerName || '',
+      customerEmail: customerEmail || '',
+      customerPhone: customerPhone || '',
+      reason: `[${reasonType || 'other'}] ${reason}`,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+
+    // Show success message
+    if (form) form.style.display = 'none';
+    const successMsg = document.getElementById('refundReqSuccess');
+    if (successMsg) successMsg.style.display = 'block';
+
+  } catch (err) {
+    console.error('Refund request error:', err);
+    alert('Could not submit your request. Please contact us on WhatsApp or email contact@shrish.co');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit Refund Request';
+  }
+}
+
+function injectRefundSection(orderId, orderNumber, orderTotal, paymentMethod, stripePaymentIntentId, customerName, customerEmail, customerPhone) {
+  // ── REFUND REQUEST FEATURE TEMPORARILY DISABLED ──
+  // To re-enable, delete the next two lines.
+  return;
+  /* eslint-disable no-unreachable */
+  const container = document.getElementById('refundSection');
+  if (!container) return;
+  container.innerHTML = `
+    <div class="refund-request-section">
+      <h4>🔄 Request a Refund</h4>
+      <p>Need a refund? Submit your request below. We process refunds within <strong>3–5 business days</strong>.
+         For Stripe payments, the refund goes back to your original card.
+         For pickup payments, we'll arrange a Zelle or cash refund at your next pickup.</p>
+      <div class="refund-req-form" id="refundReqForm">
+        <select id="refundReasonType">
+          <option value="">-- Select reason --</option>
+          <option value="wrong_item">Wrong item received</option>
+          <option value="quality_issue">Quality issue / damaged product</option>
+          <option value="order_cancelled">I want to cancel my order</option>
+          <option value="overcharged">I was overcharged</option>
+          <option value="partial">Partial refund for missing items</option>
+          <option value="other">Other</option>
+        </select>
+        <textarea id="refundReason" rows="3" placeholder="Please describe the issue in detail..."></textarea>
+        <div style="display:flex;gap:10px;align-items:center">
+          <label style="font-size:13px;white-space:nowrap;font-weight:600">Refund amount ($)</label>
+          <input id="refundAmount" type="number" min="0" max="${orderTotal||999}" step="0.01"
+                 value="${orderTotal||''}" placeholder="0.00" style="flex:1">
+        </div>
+        <div style="font-size:11px;color:var(--text-light)">Order total: $${parseFloat(orderTotal||0).toFixed(2)} &nbsp;·&nbsp; You may request a partial or full refund.</div>
+        <button class="refund-req-submit" id="refundReqSubmit"
+          onclick="submitRefundRequest({
+            orderId:'${escapeHtml(orderId)}',
+            orderNumber:'${escapeHtml(orderNumber||'')}',
+            orderTotal:${parseFloat(orderTotal||0)},
+            paymentMethod:'${escapeHtml(paymentMethod||'pickup')}',
+            stripePaymentIntentId:${stripePaymentIntentId ? `'${escapeHtml(stripePaymentIntentId)}'` : 'null'},
+            customerName:'${escapeHtml(customerName||'')}',
+            customerEmail:'${escapeHtml(customerEmail||'')}',
+            customerPhone:'${escapeHtml(customerPhone||'')}'
+          })">
+          Submit Refund Request
+        </button>
+      </div>
+      <div id="refundReqSuccess" class="refund-submitted-msg" style="display:none">
+        ✅ Refund request submitted! We'll review it within 3–5 business days and contact you at ${escapeHtml(customerEmail||'your email')}.
+      </div>
+    </div>`;
+  container.style.display = 'block';
+}
+
+window.submitRefundRequest = submitRefundRequest;
+window.injectRefundSection = injectRefundSection;
