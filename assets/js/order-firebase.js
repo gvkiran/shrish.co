@@ -1510,6 +1510,10 @@ async function submitRefundRequest({ orderId, orderNumber, orderTotal, paymentMe
 }
 
 function injectRefundSection(orderId, orderNumber, orderTotal, paymentMethod, stripePaymentIntentId, customerName, customerEmail, customerPhone) {
+  // ── REFUND REQUEST FEATURE TEMPORARILY DISABLED ──
+  // To re-enable, delete the next two lines.
+  return;
+  /* eslint-disable no-unreachable */
   const container = document.getElementById('refundSection');
   if (!container) return;
   container.innerHTML = `
