@@ -351,7 +351,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 
 <div class="page-hero">
   <h1>Cart <em>Checkout</em></h1>
-  <p>Review your order, choose pickup, and submit. Pay at pickup or online.</p>
+  <p>Review your order, choose your pickup location, and submit. Payment is collected at pickup.</p>
 </div>
 
 <div class="checkout-wrap" id="checkoutWrap">
@@ -456,12 +456,15 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
           <span class="payment-title">Pay at pickup <span class="payment-pill">Default</span></span>
           <span class="payment-copy">Pay with cash, Zelle, or card when you pick up.</span>
         </label>
+        <!-- STRIPE PAYMENT OPTION TEMPORARILY DISABLED — uncomment to re-enable
         <label class="payment-option" data-payment="stripe">
           <input type="radio" name="paymentMethod" value="stripe">
           <span class="payment-title">Pay online now <span class="payment-pill">Stripe</span></span>
           <span class="payment-copy">Use a card securely through Stripe before pickup.</span>
         </label>
+        -->
       </div>
+      <!-- SAVE CARD ROW TEMPORARILY DISABLED — uncomment to re-enable
       <div class="save-card-row" id="saveCardRow">
         <input type="checkbox" id="saveCardForFuture">
         <label for="saveCardForFuture">
@@ -469,6 +472,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
           Available only when signed in. Stripe stores the card securely; Shrish never sees your full card number.
         </label>
       </div>
+      -->
 
       <div class="checkout-safety-note">
         <strong>Food allergy and spice notice:</strong> Products may contain or be prepared with peanut/groundnut oil and other major allergens. Ingredients, spice level, labels, and packaging may vary by batch. Product images are for illustration only. If you have allergies, sensitivities, or medical dietary restrictions, contact us before ordering.
@@ -490,9 +494,9 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
     </div>
     <div class="info-card">
       <h4>How It Works</h4>
-      <div class="ir"><span class="ir-icon">1</span><div><strong>Place order online</strong><span>Pay now by card or pay at pickup</span></div></div>
+      <div class="ir"><span class="ir-icon">1</span><div><strong>Place your order</strong><span>Submit the form on this page</span></div></div>
       <div class="ir"><span class="ir-icon">2</span><div><strong>Follow whatsApp for pickup updates</strong><span><a href="tel:+17653255577" style="color:var(--saffron)">+1 (765) 325-5577</a></span></div></div>
-      <div class="ir"><span class="ir-icon">3</span><div><strong>Choose payment</strong><span>Online card payment or pay at pickup</span></div></div>
+      <div class="ir"><span class="ir-icon">3</span><div><strong>Pay at pickup</strong><span>Cash, Zelle, or card accepted at pickup</span></div></div>
     </div>
     <div class="info-card" style="background:var(--dark)">
       <h4 style="color:var(--gold-l)">Need Help?</h4>
@@ -551,7 +555,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="assets/js/analytics.js?v=owner-insights-1"></script>
 <script src="assets/js/main.js?v=account-menu-2"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/order-firebase.js?v=refund-hidden-20260528"></script>
+<script type="module" src="assets/js/order-firebase.js?v=full-hide-20260528"></script>
 
 </body>
 </html>
