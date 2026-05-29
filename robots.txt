@@ -1,5 +1,3 @@
 User-agent: *
 Allow: /
-Disallow: /order.html
-
 Sitemap: https://shrish.co/sitemap.xml
