@@ -28,6 +28,7 @@ const SHRISH_LOGO_URL = "https://gvkiran.github.io/shrish.co/images/brand/logo-s
 const SHRISH_SITE_URL = "https://shrish.co";
 const ORDER_COUNTER_START = 671499;
 const MAX_REMINDER_EMAILS_PER_SEND = 50;
+const STRIPE_PAYMENTS_ENABLED = false;
 
 function isAdminRequest(request) {
   return String(request.auth?.token?.email || "").trim().toLowerCase() === SHRISH_ADMIN_EMAIL;
@@ -802,6 +803,10 @@ exports.createStripeCheckoutSession = onCall(
     secrets: [STRIPE_SECRET_KEY],
   }),
   async (request) => {
+    if (!STRIPE_PAYMENTS_ENABLED) {
+      throw new HttpsError("failed-precondition", "Online card payments are temporarily unavailable.");
+    }
+
     const orderId = String(request.data?.orderId || "").trim();
     if (!orderId) {
       throw new HttpsError("invalid-argument", "Order ID is required.");
@@ -1493,6 +1498,11 @@ exports.stripeWebhook = onRequest(
     secrets: [STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, RESEND_API_KEY],
   },
   async (request, response) => {
+    if (!STRIPE_PAYMENTS_ENABLED) {
+      response.status(404).send("Stripe payments are disabled.");
+      return;
+    }
+
     const signature = request.headers["stripe-signature"];
     if (!signature) {
       response.status(400).send("Missing Stripe signature");
