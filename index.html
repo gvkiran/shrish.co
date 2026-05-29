@@ -18,9 +18,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://images.unsplash.com">
 <link rel="preload" as="image" href="images/site/hero-mango-2026.jpg" fetchpriority="high">
+<link rel="preload" as="image" href="images/site/hero-thati-thandra-2026.webp">
+<link rel="preload" as="image" href="images/site/hero-pickle-2026.jpg">
+<link rel="preload" as="image" href="images/site/hero-podi-2026.jpg">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="icon" href="images/brand/logo-small.png" type="image/png">
-<link rel="stylesheet" href="assets/css/styles.css?v=homepage-carousel-20260529">
+<link rel="stylesheet" href="assets/css/styles.css?v=hero-slideshow-20260529">
 <script>
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
@@ -109,50 +112,110 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 </nav>
 
 <!-- HERO -->
-<section class="hero">
+<section class="hero" aria-label="Shrish seasonal highlights">
   <div class="hero-bg">
     <div class="hero-orb hero-orb-1"></div>
     <div class="hero-orb hero-orb-2"></div>
     <div class="hero-grain"></div>
   </div>
 
-  <div class="hero-content">
-    <div class="hero-badge">🌿 Farm-Fresh · Direct to You</div>
-    <h1 class="hero-title">
-      <em>Taste the</em> Sweetness of<br>
-      <span class="hero-title-accent">India</span>
-    </h1>
-    <p class="hero-sub">Premium Indian mangoes, Andhra pickles, podi, and traditional sweets sourced with care — available for pickup in Short Pump, Chesterfield & Mechanicsville, VA.</p>
-
-    <div class="hero-actions">
-      <a href="shop.html" class="btn-primary">Place an Order</a>
-      <a href="shop.html" class="btn-ghost">View Varieties</a>
+  <div class="hero-slide hero-slide-mango">
+    <div class="hero-content">
+      <div class="hero-badge">Farm-fresh . Direct to you</div>
+      <h1 class="hero-title">
+        <em>Golden boxes of</em> Mango Season<br>
+        <span class="hero-title-accent">are here</span>
+      </h1>
+      <p class="hero-sub">Every mango carries a little summer from India - fragrant, sweet, and ready for pickup close to home.</p>
+      <div class="hero-actions">
+        <a href="shop.html?filter=mangoes" class="btn-primary">Order Mangoes</a>
+        <a href="shop.html?filter=mangoes" class="btn-ghost">View Varieties</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num">9+</span><span class="stat-label">Mango Varieties</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">3</span><span class="stat-label">Pickup Locations</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">5.0</span><span class="stat-label">Customer Rating</span></div>
+      </div>
     </div>
-
-    <div class="hero-stats">
-      <div class="stat">
-        <span class="stat-num">9+</span>
-        <span class="stat-label">Mango Varieties</span>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat">
-        <span class="stat-num">3</span>
-        <span class="stat-label">Pickup Locations</span>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat">
-        <span class="stat-num">★ 5.0</span>
-        <span class="stat-label">Customer Rating</span>
-      </div>
+    <div class="hero-visual">
+      <div class="hero-img-frame"><img src="images/site/hero-mango-2026.jpg" alt="Fresh Indian mangoes packed for pickup" class="hero-img" width="1200" height="1600" loading="eager" fetchpriority="high" decoding="async"></div>
     </div>
   </div>
 
-  <div class="hero-visual">
-    <div class="hero-img-frame" aria-label="Shrish product highlights">
-      <img src="images/site/hero-mango-2026.jpg" alt="Fresh Indian mangoes packed for pickup" class="hero-img" width="1200" height="1600" loading="eager" fetchpriority="high" decoding="async">
-      <img src="images/site/hero-pickle-2026.jpg" alt="Homemade Indian pickle close-up" class="hero-img" width="1200" height="1600" loading="lazy" decoding="async">
-      <img src="images/site/hero-podi-2026.jpg" alt="Fresh green podi spice powder" class="hero-img" width="1200" height="1600" loading="lazy" decoding="async">
-      <img src="images/site/hero-thati-thandra-2026.webp" alt="Thati Thandra palm fruit jelly sweet" class="hero-img" width="1000" height="1000" loading="lazy" decoding="async">
+  <div class="hero-slide hero-slide-thati">
+    <div class="hero-content">
+      <div class="hero-badge">Atreyapuram special . Limited batch</div>
+      <h1 class="hero-title">
+        <em>Rustic palm sweetness</em> Thati Thandra<br>
+        <span class="hero-title-accent">made to remember</span>
+      </h1>
+      <p class="hero-sub">Deep, earthy palm fruit jelly with the old Andhra taste - chewy, rich, and beautifully traditional.</p>
+      <div class="hero-actions">
+        <a href="shop.html?filter=sweets&product=palm_jelly" class="btn-primary">Order Thati Thandra</a>
+        <a href="shop.html?filter=sweets" class="btn-ghost">See Sweets</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num">Palm</span><span class="stat-label">Fruit Jelly</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">Rare</span><span class="stat-label">Seasonal Sweet</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">AP</span><span class="stat-label">Andhra Style</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-img-frame"><img src="images/site/hero-thati-thandra-2026.webp" alt="Thati Thandra palm fruit jelly sweet" class="hero-img" width="1000" height="1000" loading="eager" decoding="async"></div>
+    </div>
+  </div>
+
+  <div class="hero-slide hero-slide-pickle">
+    <div class="hero-content">
+      <div class="hero-badge">Andhra-style . Bold flavor</div>
+      <h1 class="hero-title">
+        <em>Spice that wakes up</em> Pickles<br>
+        <span class="hero-title-accent">with every meal</span>
+      </h1>
+      <p class="hero-sub">Tangy, fiery, and packed in small batches - the kind of pickle that turns hot rice into comfort food.</p>
+      <div class="hero-actions">
+        <a href="shop.html?filter=picklespodi&type=veg" class="btn-primary">Order Pickles</a>
+        <a href="shop.html?filter=picklespodi&type=nonveg" class="btn-ghost">Non-Veg Pickles</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num">Veg</span><span class="stat-label">Pickles</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">Non-Veg</span><span class="stat-label">Preorder</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">AP</span><span class="stat-label">Traditional Spice</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-img-frame"><img src="images/site/hero-pickle-2026.jpg" alt="Homemade Indian pickle close-up" class="hero-img" width="1200" height="1600" loading="eager" decoding="async"></div>
+    </div>
+  </div>
+
+  <div class="hero-slide hero-slide-podi">
+    <div class="hero-content">
+      <div class="hero-badge">Roasted spice blends . Everyday comfort</div>
+      <h1 class="hero-title">
+        <em>Mix with hot rice</em> Podi<br>
+        <span class="hero-title-accent">and ghee</span>
+      </h1>
+      <p class="hero-sub">A spoonful of podi brings the taste of home - nutty, aromatic, and ready for rice, idli, dosa, or upma.</p>
+      <div class="hero-actions">
+        <a href="shop.html?filter=picklespodi&type=podi" class="btn-primary">Order Podi</a>
+        <a href="shop.html?filter=picklespodi" class="btn-ghost">All Pickles &amp; Podi</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num">Fresh</span><span class="stat-label">Roasted Flavor</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">Rice</span><span class="stat-label">Idli &amp; Dosa</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">Home</span><span class="stat-label">Style Taste</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-img-frame"><img src="images/site/hero-podi-2026.jpg" alt="Fresh green podi spice powder" class="hero-img" width="1200" height="1600" loading="eager" decoding="async"></div>
     </div>
   </div>
 </section>
