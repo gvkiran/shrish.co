@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css" />
-  <link rel="stylesheet" href="assets/css/admin-luxury.css?v=fixes-20260527">
+  <link rel="stylesheet" href="assets/css/admin-luxury.css?v=reminder-modal-polish-20260529">
 </head>
 <body>
 
@@ -127,7 +127,7 @@
                 <h3>Edit Order <span id="orderEditorOrderNumber"></span></h3>
                 <p id="orderEditorCustomer"></p>
               </div>
-              <button class="order-editor-close" type="button" onclick="closeOrderEditor()">Close</button>
+              <button class="order-editor-close" type="button" onclick="closeOrderEditor()" aria-label="Close">&times;</button>
             </div>
             <div class="order-editor-toolbar">
               <select id="orderEditorAddSelect">
@@ -204,7 +204,7 @@
                 <h3 id="emailReminderTitle">Email Pickup Reminder</h3>
                 <p id="emailReminderSummary">Review selected customers before sending.</p>
               </div>
-              <button class="order-editor-close" type="button" onclick="closeEmailReminderModal()">Close</button>
+              <button class="order-editor-close" type="button" onclick="closeEmailReminderModal()" aria-label="Close">&times;</button>
             </div>
             <div class="reminder-form">
               <div class="reminder-recipient-list" id="emailReminderRecipients"></div>
@@ -234,7 +234,7 @@
                 <h3 id="whatsappReminderTitle">WhatsApp Pickup Reminder</h3>
                 <p id="whatsappReminderSummary">Review selected customers before opening WhatsApp.</p>
               </div>
-              <button class="order-editor-close" type="button" onclick="closeWhatsAppReminderModal()">Close</button>
+              <button class="order-editor-close" type="button" onclick="closeWhatsAppReminderModal()" aria-label="Close">&times;</button>
             </div>
             <div class="reminder-form">
               <div class="reminder-recipient-list" id="whatsappReminderRecipients"></div>
