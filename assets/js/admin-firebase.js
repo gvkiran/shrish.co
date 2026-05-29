@@ -2987,7 +2987,7 @@ function printActiveOrders() {
   Object.entries(groups).forEach(([loc, locOrders]) => {
     const locBoxes = locOrders.reduce((s,o) => s + (printableQty(o)||0), 0);
     const locTotal = locOrders.reduce((s,o) => s + printableTotal(o), 0);
-    bodyHtml += `<tr class="loc-hdr"><td colspan="7">&#128205; ${escapeHtml(loc)}<span class="loc-meta">${locOrders.length} orders &nbsp;&bull;&nbsp; ${locBoxes} boxes &nbsp;&bull;&nbsp; ${escapeHtml(formatCurrency(locTotal))}</span></td></tr>`;
+    bodyHtml += `<tr class="loc-hdr"><td colspan="7">&#128205; ${escapeHtml(loc)}<span class="loc-meta">${locOrders.length} orders</span></td></tr>`;
     locOrders.forEach(order => {
       const name  = escapeHtml((order.fullName || `${order.firstName||''} ${order.lastName||''}`.trim()).trim());
       const phone = escapeHtml(order.phone || '');
