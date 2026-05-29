@@ -1295,7 +1295,7 @@ function updateReminderActionUi() {
 
   if (reminderBtn) {
     reminderBtn.style.display = isActiveSheet ? 'inline-flex' : 'none';
-    reminderBtn.disabled = !isActiveSheet || !selectedOrders.length;
+    reminderBtn.disabled = !isActiveSheet;
     reminderBtn.textContent = selectedOrders.length
       ? `Email Reminder (${selectedOrders.length})`
       : 'Email Reminder';
