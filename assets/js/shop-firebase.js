@@ -97,7 +97,7 @@ const PRODUCT_IMAGES = {
   sonpari_ghee: ['images/products/snacks/img_sonpari1.jpg'],
   mango_jelly_sugar: ['images/products/jellysnacks/img_mango_jelly.webp'],
   mango_jelly_jaggery: ['images/products/jellysnacks/img_mango_jelly.webp'],
-  palm_jelly: ['images/products/jellysnacks/img_palm_jelly.webp']
+  palm_jelly: ['images/products/jellysnacks/img_palm_jelly.webp', 'images/products/jellysnacks/img_palm_jelly_2.webp']
 };
 
 const LEGACY_PRODUCT_IMAGE_PATHS = Object.fromEntries(
@@ -115,9 +115,6 @@ function normalizeCatalogImagePath(value = '', productId = '') {
   const mapped = LEGACY_PRODUCT_IMAGE_PATHS[fileName] || PRODUCT_IMAGES[productId]?.[0];
   if (mapped) return mapped;
   if (/^https?:\/\//i.test(raw)) return raw;
-  if (raw.startsWith('images/products/pickles/') || raw.startsWith('images/products/podi/')) {
-    return 'images/brand/logo-small.png';
-  }
   if (raw.startsWith('images/')) return raw;
   return raw || 'images/brand/logo-small.png';
 }
