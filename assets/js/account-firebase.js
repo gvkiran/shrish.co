@@ -834,8 +834,7 @@ function buildOrderDetailHtml(order = {}) {
     <div class="order-detail-grid">
       <div class="order-detail-cell"><span>Order number</span><strong>${escapeHtml(orderNumber)}</strong></div>
       <div class="order-detail-cell"><span>Pickup</span><strong>${escapeHtml(location)}</strong></div>
-      <div class="order-detail-cell"><span>Payment method</span><strong>${escapeHtml(paymentMethod)}</strong></div>
-      <div class="order-detail-cell"><span>Payment status</span><strong>${escapeHtml(paymentStatus)}</strong></div>
+      <!-- Payment method/status cells temporarily hidden -->
       <div class="order-detail-cell"><span>Total boxes</span><strong>${escapeHtml(String(totalBoxes))}</strong></div>
       <div class="order-detail-cell"><span>Total price</span><strong>${escapeHtml(formatCurrency(total))}</strong></div>
     </div>
@@ -1225,7 +1224,7 @@ function printOrderSummary(order = {}) {
       <h1>Shrish Order Summary</h1>
       <p><strong>${escapeHtml(order.orderNumber || order.id || 'Order')}</strong></p>
       <p>${escapeHtml(formatDateTime(order.createdAt))} - ${escapeHtml(order.locationLabel || LOCATION_LABELS[order.location] || 'Pickup')}</p>
-      <p>Payment: ${escapeHtml(orderPaymentLabel(order))} (${escapeHtml(orderPaymentStatus(order))})</p>
+      <!-- Payment line temporarily hidden -->
       <table><thead><tr><th>Item</th><th>Qty</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table>
       <p style="text-align:right;margin-top:18px"><strong>Total: ${escapeHtml(formatCurrency(orderTotalValue(order)))}</strong></p>
     </body></html>`);
@@ -1270,7 +1269,7 @@ function renderOrders(orders = []) {
         <div class="order-history-meta">
           <span>${escapeHtml(location)}</span>
           <span>${escapeHtml(formatCurrency(total))}</span>
-          <span>${escapeHtml(paymentMethod)}</span>
+          <!-- Payment method span temporarily hidden -->
         </div>
         <div class="order-history-actions">
           <button class="order-mini-btn primary" type="button" data-order-toggle="${escapeHtml(order.id)}">View details</button>
