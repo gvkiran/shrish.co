@@ -3208,7 +3208,10 @@ function renderExcelCalculations() {
   const remainingQty = accounting2MutableMap(record, 'remainingQty');
   const productPrices = accounting2MutableMap(record, 'productPrices');
   const cashCounts   = accounting2MutableMap(record, 'cashCounts');
-  const zelleEntries = record.zelleEntries || [{ name: '', amount: '' }, { name: '', amount: '' }];
+  const legacyZelleEntries = Array.isArray(record.zelleEntries) ? record.zelleEntries : [];
+  const zelleAmount = record.zelleAmount !== undefined
+    ? moneyValue(record.zelleAmount)
+    : legacyZelleEntries.reduce((s, e) => s + (Number(e.amount) || 0), 0);
 
   const priceOf = (v) => Number(productPrices[v.id] || v.price || 0);
 
@@ -3224,12 +3227,13 @@ function renderExcelCalculations() {
   const cashFromHand = Number(record.cashFromHand || 300);
   const cashSales = cashTotal - cashFromHand;
 
-  const zelleTotal = zelleEntries.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+  const zelleTotal = zelleAmount;
   const unknownAmt = totalInvoice - cashSales - zelleTotal;
 
   const totalReceived = cashSales + zelleTotal;
+  const totalZelleHeld = zelleTotal;
   const balanceCash   = (record.totalCashHeld || 0) - cashSales;
-  const balanceZelle  = (record.totalZelleHeld || 0) - zelleTotal;
+  const balanceZelle  = totalZelleHeld - zelleTotal;
 
   const remainingValue = VARIETIES.reduce((s, v) => {
     const qty = Number(remainingQty[v.id]) || 0;
@@ -3359,15 +3363,11 @@ function renderExcelCalculations() {
       <div>
         <div class="ptally-section-head">📱 Zelle Received</div>
         <table class="ptally-table" id="zelleTable">
-          ${zelleEntries.map((e, i) => `
-            <tr>
-              <td><input class="ptally-text-input" type="text" value="${escapeHtml(e.name || '')}" placeholder="Name"
-                onchange="updateZelleEntry(${i},'name',this.value)"></td>
-              <td><input class="ptally-price-input" type="number" min="0" step="0.01" value="${e.amount || ''}" placeholder="0.00"
-                onchange="updateZelleEntry(${i},'amount',this.value)"></td>
-            </tr>`).join('')}
-          <tr><td colspan="2"><button class="ptally-add-btn" onclick="addZelleEntry()">+ Add Zelle</button></td></tr>
-          <tr class="ptally-subtotal"><td><strong>Total Zelle</strong></td><td class="ptally-num"><strong>${formatCurrency(zelleTotal)}</strong></td></tr>
+          <tr>
+            <td><strong>Zelle total</strong></td>
+            <td><input class="ptally-price-input" type="number" min="0" step="0.01" value="${zelleTotal || ''}" placeholder="0.00"
+              onchange="setExcelCalcValue('zelleAmount',this.value)"></td>
+          </tr>
         </table>
 
         <div class="ptally-section-head" style="margin-top:16px">📊 Summary</div>
@@ -3376,9 +3376,9 @@ function renderExcelCalculations() {
           <tr>
             <td>Total held</td>
             <td><input class="ptally-price-input" type="number" min="0" step="0.01" value="${record.totalCashHeld||''}" placeholder="0.00" onchange="setExcelCalcValue('totalCashHeld',this.value)"></td>
-            <td><input class="ptally-price-input" type="number" min="0" step="0.01" value="${record.totalZelleHeld||''}" placeholder="0.00" onchange="setExcelCalcValue('totalZelleHeld',this.value)"></td>
+            <td class="ptally-num">${formatCurrency(totalZelleHeld)}</td>
             <td class="ptally-num">${formatCurrency(Math.max(0, unknownAmt))}</td>
-            <td class="ptally-num">${formatCurrency((record.totalCashHeld||0) + (record.totalZelleHeld||0) + Math.max(0, unknownAmt))}</td>
+            <td class="ptally-num">${formatCurrency((record.totalCashHeld||0) + totalZelleHeld + Math.max(0, unknownAmt))}</td>
           </tr>
           <tr>
             <td>Received</td>
@@ -3514,8 +3514,11 @@ async function saveExcelCalculations() {
     invoiceTotal: moneyValue(existing.invoiceTotal),
     cashFromHand: Number(existing.cashFromHand || 0),
     zelleAmount: moneyValue(existing.zelleAmount),
+    totalCashHeld: moneyValue(existing.totalCashHeld),
+    totalZelleHeld: moneyValue(existing.zelleAmount),
     damagedCount: computed.damagedCount,
     damagedAmount: computed.damagedAmount,
+    damagedPrice: moneyValue(existing.damagedPrice || DAMAGED_BOX_UNIT_PRICE),
     extraBoxes: accounting2MutableMap(existing, 'extraBoxes'),
     productPrices: accounting2MutableMap(existing, 'productPrices'),
     remainingQty: accounting2MutableMap(existing, 'remainingQty'),
@@ -3542,7 +3545,7 @@ async function saveExcelCalculations() {
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
-      saveBtn.textContent = 'Save Excel Calculations';
+      saveBtn.textContent = 'Save Sheet';
     }
   }
 }
