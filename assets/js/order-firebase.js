@@ -623,7 +623,7 @@ function rebuildErrorBanner() {
 
   const errors = [];
   if (document.getElementById('err-firstName')?.style.display === 'block') errors.push('First name is required');
-  if (document.getElementById('err-lastName')?.style.display === 'block') errors.push('Last name is required');
+  if (document.getElementById('err-lastName')?.style.display === 'block') errors.push('Last name must be at least 2 characters or left blank');
   if (document.getElementById('err-phone')?.style.display === 'block') {
     errors.push(document.getElementById('err-phone').textContent || 'Valid phone number required');
   }
@@ -1144,7 +1144,7 @@ async function submitOrder() {
 
   let ok = true;
   ok = validateField('firstName', firstName.length >= 2, 'First name must be at least 2 characters') && ok;
-  ok = validateField('lastName', lastName.length >= 2, 'Last name must be at least 2 characters') && ok;
+  ok = validateField('lastName', !lastName || lastName.length >= 2, 'Last name must be at least 2 characters or left blank') && ok;
   ok = validateField(
     'phone',
     phoneDigits.length === 10,
@@ -1211,7 +1211,7 @@ async function submitOrder() {
     const lockRef = orderLockRef(phoneDigits);
     const lockSnap = await getDoc(lockRef);
     const lockStatus = lockSnap.exists() ? (lockSnap.data()?.status || 'pending') : '';
-    if (await isActivePendingLock(lockSnap)) {
+    if (!currentCustomer && await isActivePendingLock(lockSnap)) {
       trackCheckoutEvent('order_duplicate_blocked', {
         ...cartAnalyticsSummary(),
         pickup_location: selectedLoc
@@ -1229,7 +1229,7 @@ async function submitOrder() {
       orderNumber: '',
       firstName,
       lastName,
-      fullName: `${firstName} ${lastName}`,
+      fullName: `${firstName} ${lastName}`.trim(),
       phone,
       phoneDigits,
       email,
@@ -1360,7 +1360,7 @@ async function submitOrder() {
         </div>
       </div>
       <div class="ss-row"><span>Pickup</span><span>${escapeHtml(locLabel)}</span></div>
-      <div class="ss-row"><span>Name</span><span>${escapeHtml(firstName)} ${escapeHtml(lastName)}</span></div>
+      <div class="ss-row"><span>Name</span><span>${escapeHtml(`${firstName} ${lastName}`.trim())}</span></div>
       <div class="ss-row"><span>Phone</span><span>${escapeHtml(phone)}</span></div>
       <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Pay at Pickup</span></div>
       <div class="ss-row"><span>Order Confirmation No</span><span>${escapeHtml(displayNumber)}</span></div>`;

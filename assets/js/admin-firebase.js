@@ -28,6 +28,7 @@ const BASE_PRODUCTS = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || 
 const GO_LIVE_STATS_DATE = '2026-04-10';
 const EXCEL_CALC_DOC_PREFIX = 'excel_sheet__';
 const DAMAGED_BOX_UNIT_PRICE = 56; // Default spoiled box price — override per product in tally
+const REMINDER_EMAIL_BATCH_SIZE = 50;
 // Expose for refund module
 window._firestoreExports = { collection, doc, updateDoc, addDoc: typeof addDoc !== 'undefined' ? addDoc : null, onSnapshot, orderBy, query };
 
@@ -1270,6 +1271,14 @@ function applyReminderTemplate(template = '', order = {}) {
   );
 }
 
+function chunkReminderOrderIds(orderIds = []) {
+  const chunks = [];
+  for (let i = 0; i < orderIds.length; i += REMINDER_EMAIL_BATCH_SIZE) {
+    chunks.push(orderIds.slice(i, i + REMINDER_EMAIL_BATCH_SIZE));
+  }
+  return chunks;
+}
+
 function whatsappPhoneDigits(order = {}) {
   const raw = String(order.phoneDigits || order.phone || '').replace(/\D/g, '');
   if (raw.length === 10) return `1${raw}`;
@@ -1286,7 +1295,7 @@ function updateReminderActionUi() {
 
   if (reminderBtn) {
     reminderBtn.style.display = isActiveSheet ? 'inline-flex' : 'none';
-    reminderBtn.disabled = !isActiveSheet || !selectedOrders.length;
+    reminderBtn.disabled = !isActiveSheet;
     reminderBtn.textContent = selectedOrders.length
       ? `Email Reminder (${selectedOrders.length})`
       : 'Email Reminder';
@@ -1492,14 +1501,24 @@ async function sendSelectedReminderEmails() {
 
   try {
     const sendReminder = httpsCallable(cloudFunctions, 'sendOrderReminderEmails');
-    const result = await sendReminder({
-      orderIds: selectedOrders.map((order) => order.id),
-      subject,
-      body
-    });
-    const data = result?.data || {};
-    const sent = Number(data.sent || 0);
-    const skipped = Number(data.skipped || 0);
+    const orderIdBatches = chunkReminderOrderIds(selectedOrders.map((order) => order.id));
+    let sent = 0;
+    let skipped = 0;
+
+    for (let i = 0; i < orderIdBatches.length; i += 1) {
+      if (sendBtn && orderIdBatches.length > 1) {
+        sendBtn.textContent = `Sending ${i + 1}/${orderIdBatches.length}...`;
+      }
+      const result = await sendReminder({
+        orderIds: orderIdBatches[i],
+        subject,
+        body
+      });
+      const data = result?.data || {};
+      sent += Number(data.sent || 0);
+      skipped += Number(data.skipped || 0);
+    }
+
     state.selectedReminderOrderIds.clear();
     closeEmailReminderModal();
     renderOrders();
@@ -2947,6 +2966,16 @@ function printableQty(order) {
   return order.totalBoxes || (order.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0);
 }
 
+function printableTotal(order) {
+  const explicit = moneyNumber(order.totalPrice);
+  if (explicit > 0) return explicit;
+  return (order.items || []).reduce((sum, item) => {
+    const qty = Number(item.qty || 1);
+    const lineTotal = moneyNumber(item.lineTotal);
+    return sum + (lineTotal > 0 ? lineTotal : moneyNumber(item.price) * qty);
+  }, 0);
+}
+
 function printActiveOrders() {
   const allActive = getFilteredOrders('active');
   if (!allActive.length) { showToast('No active orders to print.'); return; }
@@ -2967,6 +2996,7 @@ function printActiveOrders() {
   });
 
   const totalBoxes = orders.reduce((s, o) => s + (printableQty(o) || 0), 0);
+  const totalAmount = orders.reduce((s, o) => s + printableTotal(o), 0);
   const now = new Date();
   const printDate = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
   const printTime = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
@@ -2974,13 +3004,13 @@ function printActiveOrders() {
   let rowNum = 1;
   let bodyHtml = '';
   Object.entries(groups).forEach(([loc, locOrders]) => {
-    const locBoxes = locOrders.reduce((s,o) => s + (printableQty(o)||0), 0);
-    bodyHtml += `<tr class="loc-hdr"><td colspan="6">&#128205; ${escapeHtml(loc)}<span class="loc-meta">${locOrders.length} orders &nbsp;&bull;&nbsp; ${locBoxes} boxes</span></td></tr>`;
+    bodyHtml += `<tr class="loc-hdr"><td colspan="7">&#128205; ${escapeHtml(loc)}<span class="loc-meta">${locOrders.length} orders</span></td></tr>`;
     locOrders.forEach(order => {
       const name  = escapeHtml((order.fullName || `${order.firstName||''} ${order.lastName||''}`.trim()).trim());
       const phone = escapeHtml(order.phone || '');
       const items = (order.items || []).map(it => `<span class="pill">${escapeHtml(it.name||'Item')} &times;${it.qty||1}</span>`).join(' ');
       const qty   = printableQty(order);
+      const total = escapeHtml(formatCurrency(printableTotal(order)));
       const onum  = escapeHtml(String(order.orderNumber || order.id || ''));
       const pref  = (order.paymentMethod || '').toLowerCase();
       const Z = pref === 'zelle' ? ' pre' : '';
@@ -2993,6 +3023,7 @@ function printActiveOrders() {
           <td class="c-name">${name}<div class="phone">${phone}</div></td>
           <td class="c-items">${items}</td>
           <td class="c-qty">${qty}</td>
+          <td class="c-total">${total}</td>
           <td class="c-pay">
             <div class="pay-row">
               <label class="cb-lbl"><span class="cb${C}"></span>Cash</label>
@@ -3002,7 +3033,6 @@ function printActiveOrders() {
           </td>
         </tr>`;
     });
-    bodyHtml += `<tr class="loc-sub"><td colspan="4" class="sub-lbl">Subtotal &mdash; ${escapeHtml(loc)}</td><td class="sub-boxes">${locBoxes} boxes</td><td></td></tr>`;
   });
 
   const pw = window.open('', '_blank', 'width=1100,height=860');
@@ -3025,14 +3055,16 @@ function printActiveOrders() {
   /* ── TABLE ── */
   table{width:100%;border-collapse:collapse;font-size:11.5px}
   colgroup col:nth-child(1){width:28px}
-  colgroup col:nth-child(2){width:58px}
-  colgroup col:nth-child(3){width:155px}
+  colgroup col:nth-child(2){width:62px}
+  colgroup col:nth-child(3){width:132px}
   colgroup col:nth-child(4){width:auto}
-  colgroup col:nth-child(5){width:38px}
-  colgroup col:nth-child(6){width:150px}
+  colgroup col:nth-child(5){width:36px}
+  colgroup col:nth-child(6){width:62px}
+  colgroup col:nth-child(7){width:105px}
 
   thead th{background:#7A4800;color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.5px;padding:6px 7px;text-align:left;border:1px solid #5A3000}
   thead th:nth-child(5){text-align:center}
+  thead th:nth-child(6){text-align:right}
 
   /* location header */
   tr.loc-hdr td{background:#F5E4C8;color:#7A4800;font-weight:700;font-size:11.5px;padding:6px 9px;border:1px solid #D9C0A0}
@@ -3050,6 +3082,7 @@ function printActiveOrders() {
   .c-items{}
   .pill{display:inline-block;background:#FDF3E3;border:1px solid #EDD5A0;border-radius:3px;padding:1px 5px;margin:1px 2px 1px 0;font-size:10.5px;font-weight:700;color:#7A4800;white-space:nowrap}
   .c-qty{text-align:center;font-weight:800;font-size:15px;color:#2E7D32;vertical-align:middle!important}
+  .c-total{text-align:right;font-weight:800;font-size:12px;color:#7A4800;vertical-align:middle!important;white-space:nowrap}
   .c-pay{vertical-align:middle!important}
 
   /* payment type checkboxes */
@@ -3060,11 +3093,6 @@ function printActiveOrders() {
 
   .done-txt{}
 
-  /* subtotal */
-  tr.loc-sub td{background:#FAF5EE;font-weight:700;font-size:11px;padding:5px 7px;border:1px solid #D9C0A0;color:#555}
-  .sub-lbl{text-align:right}
-  .sub-boxes{text-align:center;color:#2E7D32}
-
   /* grand total */
   .grand{margin-top:10px;background:#7A4800;color:#fff;border-radius:5px;padding:9px 14px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
   /* notes */
@@ -3074,8 +3102,16 @@ function printActiveOrders() {
 
   /* print overrides */
   @media print{
-    @page{size:A4 landscape;margin:10mm 12mm}
-    body{padding:0;font-size:11px}
+    @page{size:A4 portrait;margin:9mm 8mm}
+    body{padding:0;font-size:10px}
+    table{font-size:10px}
+    thead th{font-size:8.5px;padding:5px 4px}
+    tr.orow td{padding:5px 4px}
+    .c-name{font-size:11px}
+    .phone,.pill,.cb-lbl{font-size:9px}
+    .c-qty{font-size:13px}
+    .c-total{font-size:10px}
+    .cb{width:12px;height:12px}
     thead{display:table-header-group}
     tr.orow{page-break-inside:avoid}
     tr.loc-hdr{page-break-before:auto}
@@ -3098,7 +3134,7 @@ function printActiveOrders() {
 </div>
 
 <table>
-  <colgroup><col><col><col><col><col><col></colgroup>
+  <colgroup><col><col><col><col><col><col><col></colgroup>
   <thead>
     <tr>
       <th>#</th>
@@ -3106,6 +3142,7 @@ function printActiveOrders() {
       <th>Name &amp; Phone</th>
       <th>Items Ordered</th>
       <th style="text-align:center">Boxes</th>
+      <th style="text-align:right">Total</th>
       <th>Payment Type</th>
     </tr>
   </thead>
@@ -3113,7 +3150,7 @@ function printActiveOrders() {
 </table>
 
 <div class="grand">
-  <span>GRAND TOTAL &nbsp;&bull;&nbsp; ${orders.length} orders &nbsp;&bull;&nbsp; ${totalBoxes} boxes</span>
+  <span>GRAND TOTAL &nbsp;&bull;&nbsp; ${orders.length} orders &nbsp;&bull;&nbsp; ${totalBoxes} boxes &nbsp;&bull;&nbsp; ${escapeHtml(formatCurrency(totalAmount))}</span>
 </div>
 
 <div class="notes">

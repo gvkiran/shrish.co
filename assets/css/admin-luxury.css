@@ -1405,6 +1405,103 @@ input[type="checkbox"] {
 }
 #orderEditorModal.open, #emailReminderModal.open, #whatsappReminderModal.open { display: flex; }
 
+.order-editor-card {
+  width: min(960px, calc(100vw - 40px));
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  background: var(--obs-700);
+  border: 1px solid rgba(200,121,26,0.25);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-gold);
+  padding: 24px;
+}
+.reminder-editor-card {
+  width: min(1040px, calc(100vw - 40px));
+}
+.order-editor-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+.order-editor-head h3 { margin: 0 0 4px; }
+.order-editor-head p { margin: 0; }
+.order-editor-close {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(200,121,26,0.28);
+  border-radius: 50%;
+  background: rgba(200,121,26,0.12);
+  color: var(--gold-200);
+  font-size: 22px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: all var(--t-fast) ease;
+}
+.order-editor-close:hover {
+  background: rgba(200,121,26,0.22);
+  border-color: rgba(200,121,26,0.5);
+  color: var(--gold-300);
+}
+.reminder-form {
+  display: grid;
+  gap: 12px;
+}
+.reminder-recipient-list {
+  max-height: 190px;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 8px;
+  padding: 2px 6px 2px 2px;
+}
+.reminder-recipient {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 11px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(200,121,26,0.16);
+  border-radius: var(--r-md);
+}
+.reminder-recipient strong,
+.reminder-recipient span,
+.reminder-recipient em {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.reminder-recipient span,
+.reminder-recipient em {
+  color: var(--text-light);
+  font-size: 12px;
+}
+.reminder-field {
+  display: grid;
+  gap: 6px;
+}
+#emailReminderBody,
+#whatsappReminderBody {
+  min-height: 300px;
+  line-height: 1.55;
+  resize: vertical;
+}
+.reminder-help {
+  margin: 0;
+  line-height: 1.45;
+}
+.order-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .order-editor-modal-inner, .email-reminder-modal-inner, .whatsapp-reminder-modal-inner {
   background: var(--obs-700);
   border: 1px solid rgba(200,121,26,0.25);
