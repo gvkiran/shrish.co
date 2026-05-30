@@ -100,35 +100,77 @@ const PRODUCT_IMAGES = {
   palm_jelly: ['images/products/jellysnacks/img_palm_jelly.webp', 'images/products/jellysnacks/img_palm_jelly_2.webp']
 };
 
+const LOGO_PRODUCT_IMAGE = 'images/brand/logo-small.png';
+const LOGO_ONLY_PRODUCT_IDS = [
+  'picklespodi-brinjal-amla-pickle',
+  'picklespodi-carrot-pickle',
+  'picklespodi-cauliflower-pickle',
+  'picklespodi-chintakaya-pachadi-tamarind-pickle',
+  'picklespodi-garlic-pickle',
+  'picklespodi-karivepaku-pachadi-curry-leaf-pickle',
+  'picklespodi-mango-avakai-pickle',
+  'picklespodi-mango-thokku-magai-pickle',
+  'picklespodi-pandu-mirchi-pickle',
+  'picklespodi-boneless-chicken-pickle',
+  'picklespodi-boneless-mutton-pickle',
+  'picklespodi-fish-pickle-koramenu-pickle',
+  'picklespodi-gongura-chicken-pickle',
+  'picklespodi-gongura-mutton-pickle',
+  'picklespodi-gongura-prawn-pickle',
+  'picklespodi-natu-kodi-country-chicken-pickle',
+  'picklespodi-prawns-pickle',
+  'picklespodi-dhaniyalu-podi-coriander-spice-powder',
+  'picklespodi-drumstick-leaf-podi-munagaku-podi',
+  'picklespodi-kandi-podi',
+  'picklespodi-karapu-podi-with-garlic'
+];
+
 const PRODUCT_GALLERY_OVERRIDES = {
   banganapalli: [
+    'images/products/mangoes/img_banganapalli_2026_display.jpg',
     'images/products/mangoes/img_banganapalli_2026_1.jpg',
     'images/products/mangoes/img_banganapalli_2026_2.jpg',
     'images/products/mangoes/img_banganapalli.jpg'
   ],
   'picklespodi-drumstick-pickle': [
-    'images/products/pickles/drumstick-pickle-2026.jpg',
-    'images/products/pickles/drumstick-pickle.jpg'
+    'images/products/pickles/drumstick-pickle-display.jpg',
+    'images/products/pickles/drumstick-pickle-2026.jpg'
   ],
   'picklespodi-gongura-pickle': [
-    'images/products/pickles/gongura-pickle-2026.jpg',
-    'images/products/pickles/gongura-pickle.jpg'
+    'images/products/pickles/gongura-pickle-display.jpg',
+    'images/products/pickles/gongura-pickle-2026.jpg'
+  ],
+  'picklespodi-kothimeera-coriander-pickle': [
+    'images/products/pickles/kothimeera-pickle-display.jpg',
+    'images/products/pickles/kothimeera-pickle.jpg'
+  ],
+  'picklespodi-mango-ginger-pickle': [
+    'images/products/pickles/mango-ginger-pickle-display.jpg',
+    'images/products/pickles/mango-ginger-pickle.jpg'
   ],
   'picklespodi-mixed-vegetable-pickle': [
+    'images/products/pickles/mixed-vegetable-display.jpg',
     'images/products/pickles/mixed-vegetable-2026-1.jpg',
     'images/products/pickles/mixed-vegetable-2026-2.jpg',
-    'images/products/pickles/mixed-vegetable-2026-3.jpg',
-    'images/products/pickles/mixed-vegetable.jpg'
+    'images/products/pickles/mixed-vegetable-2026-3.jpg'
+  ],
+  'picklespodi-tomato-pickle': [
+    'images/products/pickles/tomato-pickle-display.jpg',
+    'images/products/pickles/tomato-pickle.jpg'
   ],
   'picklespodi-idli-podi': [
-    'images/products/podi/idli-podi-2026.jpg',
-    'images/products/podi/idli-podi.jpg'
+    'images/products/podi/idli-podi-display.jpg',
+    'images/products/podi/idli-podi-2026.jpg'
   ],
   'picklespodi-karivepaku-podi-curry-leaf-powder': [
-    'images/products/podi/karivepaku-podi-2026.jpg',
-    'images/products/podi/karivepaku-podi.jpg'
+    'images/products/podi/karivepaku-podi-display.jpg',
+    'images/products/podi/karivepaku-podi-2026.jpg'
   ]
 };
+
+LOGO_ONLY_PRODUCT_IDS.forEach((productId) => {
+  PRODUCT_GALLERY_OVERRIDES[productId] = [LOGO_PRODUCT_IMAGE];
+});
 
 const LEGACY_PRODUCT_IMAGE_PATHS = Object.fromEntries(
   Object.values(PRODUCT_IMAGES)
