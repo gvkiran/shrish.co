@@ -58,7 +58,12 @@ const SHRISH_DATA = {
       name: "Banganapalli (Safeda)", localName: "బంగినపల్లి", origin: "Andhra Pradesh",
       price: "$56", unit: "per box (~4kgs) (7 to 12)",
       available: true, displayOnly: false, tag: "",
-      image: "images/products/mangoes/img_banganapalli.jpg",
+      image: "images/products/mangoes/img_banganapalli_2026_1.jpg",
+      gallery: [
+        "images/products/mangoes/img_banganapalli_2026_1.jpg",
+        "images/products/mangoes/img_banganapalli_2026_2.jpg",
+        "images/products/mangoes/img_banganapalli.jpg"
+      ],
       description: "A large, golden-yellow beauty from Andhra Pradesh with a GI tag. Tender, fiberless flesh with a mild, sweet flavour and thin skin. One of the most widely consumed mangoes across South India - perfect for families who prefer a mild, non-overpowering sweetness.",
       season: "April - June", taste: "Mild Sweet  -  Tender  -  Fiberless",
       bestFor: "Eating fresh  -  Juices  -  Pickles"
@@ -398,7 +403,11 @@ const SHRISH_DATA = {
       name: "Drumstick Pickle", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
-      image: "images/products/pickles/drumstick-pickle.jpg",
+      image: "images/products/pickles/drumstick-pickle-2026.jpg",
+      gallery: [
+        "images/products/pickles/drumstick-pickle-2026.jpg",
+        "images/products/pickles/drumstick-pickle.jpg"
+      ],
       description: "Traditional drumstick pickle with spicy, tangy flavor. A good South Indian side for rice and dal.",
       ingredientsText: "Drumstick pieces, red chilli powder, mustard, fenugreek, lemon, salt, turmeric, peanut/groundnut oil",
       storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
@@ -440,7 +449,11 @@ const SHRISH_DATA = {
       name: "Gongura Pickle/Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
-      image: "images/products/pickles/gongura-pickle.jpg",
+      image: "images/products/pickles/gongura-pickle-2026.jpg",
+      gallery: [
+        "images/products/pickles/gongura-pickle-2026.jpg",
+        "images/products/pickles/gongura-pickle.jpg"
+      ],
       description: "Tangy gongura pickle with bold South Indian spice. A Telugu favorite that pairs beautifully with hot rice and ghee.",
       ingredientsText: "Gongura leaves, red chilli, garlic, mustard, fenugreek, salt, oil, tempering spices",
       storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
@@ -566,7 +579,13 @@ const SHRISH_DATA = {
       name: "Mixed Vegetable Pickle", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
-      image: "images/products/pickles/mixed-vegetable.jpg",
+      image: "images/products/pickles/mixed-vegetable-2026-1.jpg",
+      gallery: [
+        "images/products/pickles/mixed-vegetable-2026-1.jpg",
+        "images/products/pickles/mixed-vegetable-2026-2.jpg",
+        "images/products/pickles/mixed-vegetable-2026-3.jpg",
+        "images/products/pickles/mixed-vegetable.jpg"
+      ],
       description: "Andhra-style mixed vegetable pickle with carrot, cauliflower, green chilli, and seasonal vegetables in a bold chilli-mustard spice mix. A colorful, crunchy side for rice and tiffins.",
       ingredientsText: "Mixed vegetables such as beans, carrot, cauliflower, green chilli, and seasonal vegetables, red chilli powder, mustard powder, fenugreek, turmeric, salt, peanut/groundnut oil, lemon",
       storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
@@ -839,7 +858,11 @@ const SHRISH_DATA = {
       name: "Idli Podi", localName: "100g or 200g", origin: "Spice Powder",
       price: "$6.99", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
-      image: "images/products/podi/idli-podi.jpg",
+      image: "images/products/podi/idli-podi-2026.jpg",
+      gallery: [
+        "images/products/podi/idli-podi-2026.jpg",
+        "images/products/podi/idli-podi.jpg"
+      ],
       description: "Classic South Indian idli karam podi. Mix with ghee or oil and serve with idli, dosa, uttapam, or hot rice.",
       ingredientsText: "Chana dal, red chillies, curry leaves optional, garlic, salt, tamarind, cumin seeds",
       storageNote: "Use within 60-90 days after opening for best aroma. Keep airtight; refrigerate if your kitchen is humid. Store unopened packs cool, dry, and away from sunlight.",
@@ -902,7 +925,11 @@ const SHRISH_DATA = {
       name: "Karivepaku Podi / Curry Leaf Powder", localName: "100g or 200g", origin: "Spice Powder",
       price: "$7.49", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
-      image: "images/products/podi/karivepaku-podi.jpg",
+      image: "images/products/podi/karivepaku-podi-2026.jpg",
+      gallery: [
+        "images/products/podi/karivepaku-podi-2026.jpg",
+        "images/products/podi/karivepaku-podi.jpg"
+      ],
       description: "Aromatic curry leaf podi with traditional South Indian spices. Mix with hot rice and ghee or enjoy with idli, dosa, and upma.",
       ingredientsText: "Curry leaves, red chillies, chana dal, cumin, garlic optional, tamarind optional, salt",
       storageNote: "Use within 45-60 days after opening for best aroma. Keep airtight; refrigerate if humid. Store unopened packs cool, dry, and away from sunlight.",

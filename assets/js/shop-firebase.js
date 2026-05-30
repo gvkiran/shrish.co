@@ -100,6 +100,36 @@ const PRODUCT_IMAGES = {
   palm_jelly: ['images/products/jellysnacks/img_palm_jelly.webp', 'images/products/jellysnacks/img_palm_jelly_2.webp']
 };
 
+const PRODUCT_GALLERY_OVERRIDES = {
+  banganapalli: [
+    'images/products/mangoes/img_banganapalli_2026_1.jpg',
+    'images/products/mangoes/img_banganapalli_2026_2.jpg',
+    'images/products/mangoes/img_banganapalli.jpg'
+  ],
+  'picklespodi-drumstick-pickle': [
+    'images/products/pickles/drumstick-pickle-2026.jpg',
+    'images/products/pickles/drumstick-pickle.jpg'
+  ],
+  'picklespodi-gongura-pickle': [
+    'images/products/pickles/gongura-pickle-2026.jpg',
+    'images/products/pickles/gongura-pickle.jpg'
+  ],
+  'picklespodi-mixed-vegetable-pickle': [
+    'images/products/pickles/mixed-vegetable-2026-1.jpg',
+    'images/products/pickles/mixed-vegetable-2026-2.jpg',
+    'images/products/pickles/mixed-vegetable-2026-3.jpg',
+    'images/products/pickles/mixed-vegetable.jpg'
+  ],
+  'picklespodi-idli-podi': [
+    'images/products/podi/idli-podi-2026.jpg',
+    'images/products/podi/idli-podi.jpg'
+  ],
+  'picklespodi-karivepaku-podi-curry-leaf-powder': [
+    'images/products/podi/karivepaku-podi-2026.jpg',
+    'images/products/podi/karivepaku-podi.jpg'
+  ]
+};
+
 const LEGACY_PRODUCT_IMAGE_PATHS = Object.fromEntries(
   Object.values(PRODUCT_IMAGES)
     .flat()
@@ -419,6 +449,9 @@ function getCardSelectedVariant(product) {
 }
 
 function productImages(productId, product) {
+  if (PRODUCT_GALLERY_OVERRIDES[productId]?.length) {
+    return PRODUCT_GALLERY_OVERRIDES[productId].map((image) => normalizeCatalogImagePath(image, productId)).filter(Boolean);
+  }
   if (Array.isArray(product?.gallery) && product.gallery.length) {
     return product.gallery.map((image) => normalizeCatalogImagePath(image, productId)).filter(Boolean);
   }
