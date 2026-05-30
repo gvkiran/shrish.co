@@ -164,8 +164,8 @@ function normalizeCatalogProduct(product = {}) {
 const SHOP_CATEGORY_IDS = new Set(['mangoes', 'putharekulu', 'jellysnacks', 'snacks', 'picklespodi']);
 const SHOP_FILTERS = [
   { id: 'all', label: 'All Products', categories: ['mangoes', 'putharekulu', 'jellysnacks', 'snacks', 'picklespodi'] },
-  { id: 'sweets', label: 'Sweets', categories: ['putharekulu', 'jellysnacks'] },
   { id: 'mangoes', label: 'Fruits/Mangoes', categories: ['mangoes'] },
+  { id: 'sweets', label: 'Sweets', categories: ['putharekulu', 'jellysnacks'] },
   { id: 'snacks', label: 'Snacks', categories: ['snacks'] },
   { id: 'picklespodi', label: 'Pickles & Podi', categories: ['picklespodi'] }
 ];
