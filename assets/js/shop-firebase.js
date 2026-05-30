@@ -141,11 +141,11 @@ function normalizeCatalogImagePath(value = '', productId = '') {
   if (!raw) return '';
   if (raw === 'logo.png') return 'images/brand/logo.png';
   if (raw === 'logo-small.png') return 'images/brand/logo-small.png';
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith('images/')) return raw;
   const fileName = raw.split('/').pop();
   const mapped = LEGACY_PRODUCT_IMAGE_PATHS[fileName] || PRODUCT_IMAGES[productId]?.[0];
   if (mapped) return mapped;
-  if (/^https?:\/\//i.test(raw)) return raw;
-  if (raw.startsWith('images/')) return raw;
   return raw || 'images/brand/logo-small.png';
 }
 
