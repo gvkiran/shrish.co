@@ -605,6 +605,41 @@ button.btn-primary:active {
   display: block;
   transform: scale(1.01);
 }
+.hero-carousel-controls {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+.hero-carousel-btn {
+  position: absolute;
+  top: 50%;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(255,255,255,0.34);
+  border-radius: 50%;
+  background: rgba(20,11,4,0.58);
+  color: var(--white);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 34px;
+  line-height: 1;
+  pointer-events: auto;
+  transform: translateY(-50%);
+  transition: var(--transition);
+  backdrop-filter: blur(8px);
+}
+.hero-carousel-prev { left: max(18px, calc((100vw - 1440px) / 2 + 18px)); }
+.hero-carousel-next { right: max(18px, calc((100vw - 1440px) / 2 + 18px)); }
+.hero-carousel-btn:hover,
+.hero-carousel-btn:focus-visible {
+  border-color: var(--saffron);
+  background: var(--saffron);
+  box-shadow: 0 16px 34px rgba(0,0,0,0.28);
+}
 .hero-img-badge {
   position: absolute; bottom: 24px; left: -24px;
   background: var(--white); border-radius: var(--radius);
@@ -631,7 +666,7 @@ button.btn-primary:active {
         grid-template-columns: minmax(0, 1fr);
         text-align: center;
         align-content: start;
-        padding: 34px 18px 42px;
+        padding: 34px 18px 92px;
         gap: 22px;
         width: 100%;
         max-width: 100%;
@@ -703,6 +738,19 @@ button.btn-primary:active {
       min-width: 0;
     }
   .hero-img-frame { max-width: min(420px, 92vw); }
+  .hero-carousel-controls {
+        inset: auto 0 22px;
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+      }
+  .hero-carousel-btn {
+        position: static;
+        width: 44px;
+        height: 44px;
+        font-size: 30px;
+        transform: none;
+      }
   .hero-img-badge { left: 12px; }
 }
 /* -- MARQUEE -- */

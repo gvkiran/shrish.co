@@ -23,7 +23,7 @@
 <link rel="preload" as="image" href="images/site/hero-podi-2026.jpg">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="icon" href="images/brand/logo-small.png" type="image/png">
-<link rel="stylesheet" href="assets/css/styles.css?v=hero-slideshow-sync-20260529">
+<link rel="stylesheet" href="assets/css/styles.css?v=hero-carousel-controls-20260530">
 <script>
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
@@ -119,7 +119,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
     <div class="hero-grain"></div>
   </div>
 
-  <div class="hero-slide hero-slide-mango is-active">
+  <div class="hero-slide hero-slide-mango">
     <div class="hero-content">
       <div class="hero-badge">Farm-fresh . Direct to you</div>
       <h1 class="hero-title">
@@ -169,7 +169,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
     </div>
   </div>
 
-  <div class="hero-slide hero-slide-pickle">
+  <div class="hero-slide hero-slide-pickle is-active">
     <div class="hero-content">
       <div class="hero-badge">Andhra-style . Bold flavor</div>
       <h1 class="hero-title">
@@ -217,6 +217,11 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
     <div class="hero-visual">
       <div class="hero-img-frame"><img src="images/site/hero-podi-2026.jpg" alt="Fresh green podi spice powder" class="hero-img" width="1200" height="1600" loading="eager" decoding="async"></div>
     </div>
+  </div>
+
+  <div class="hero-carousel-controls" aria-label="Featured product slides">
+    <button type="button" class="hero-carousel-btn hero-carousel-prev" id="heroPrevSlide" aria-label="Previous featured product">&lsaquo;</button>
+    <button type="button" class="hero-carousel-btn hero-carousel-next" id="heroNextSlide" aria-label="Next featured product">&rsaquo;</button>
   </div>
 </section>
 
@@ -542,20 +547,61 @@ function toggleFaq(el){
   var slides = Array.prototype.slice.call(document.querySelectorAll('.hero-slide'));
   if (slides.length <= 1) return;
 
+  var desiredOrder = ['hero-slide-pickle', 'hero-slide-podi', 'hero-slide-mango', 'hero-slide-thati'];
+  slides.sort(function (a, b) {
+    function orderIndex(slide) {
+      for (var i = 0; i < desiredOrder.length; i += 1) {
+        if (slide.classList.contains(desiredOrder[i])) return i;
+      }
+      return desiredOrder.length;
+    }
+    return orderIndex(a) - orderIndex(b);
+  });
+
   var current = 0;
+  var timer = null;
+  var intervalMs = 6000;
+  var prevButton = document.getElementById('heroPrevSlide');
+  var nextButton = document.getElementById('heroNextSlide');
+
   function showSlide(index) {
+    current = (index + slides.length) % slides.length;
     slides.forEach(function (slide, slideIndex) {
-      var isActive = slideIndex === index;
+      var isActive = slideIndex === current;
       slide.classList.toggle('is-active', isActive);
       slide.setAttribute('aria-hidden', isActive ? 'false' : 'true');
     });
   }
 
+  function nextSlide() {
+    showSlide(current + 1);
+  }
+
+  function previousSlide() {
+    showSlide(current - 1);
+  }
+
+  function restartTimer() {
+    if (timer) window.clearInterval(timer);
+    timer = window.setInterval(nextSlide, intervalMs);
+  }
+
+  if (prevButton) {
+    prevButton.addEventListener('click', function () {
+      previousSlide();
+      restartTimer();
+    });
+  }
+
+  if (nextButton) {
+    nextButton.addEventListener('click', function () {
+      nextSlide();
+      restartTimer();
+    });
+  }
+
   showSlide(current);
-  window.setInterval(function () {
-    current = (current + 1) % slides.length;
-    showSlide(current);
-  }, 6000);
+  restartTimer();
 })();
 </script>
 </body>
