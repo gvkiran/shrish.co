@@ -1,4 +1,8 @@
 {
+  "redirects": [
+    { "source": "/index.html", "destination": "/", "permanent": true },
+    { "source": "/index", "destination": "/", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/shop/all-products", "destination": "/shop.html" },
     { "source": "/shop/all-products/", "destination": "/shop.html" },
