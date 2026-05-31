@@ -352,6 +352,7 @@ function applyCatalogFieldOverrides(product = {}) {
 
 const LEGACY_VARIANT_FALLBACKS = {
   puth_plain: {
+    name: 'Putharekulu - Classic Plain (Sugar)',
     price: '$7.49',
     unit: '5 count or 10 count',
     variants: [
@@ -360,6 +361,7 @@ const LEGACY_VARIANT_FALLBACKS = {
     ]
   },
   puth_sugar_kaju: {
+    name: 'Putharekulu - Sugar - Kaju',
     price: '$7.99',
     unit: '5 count or 10 count',
     variants: [
@@ -477,7 +479,8 @@ function usesVariantUI(product) {
 }
 
 function usesDirectVariantButtons(product) {
-  return normalizeProductCategory(product?.category) === 'picklespodi' && usesVariantUI(product);
+  return ['picklespodi', 'putharekulu', 'jellysnacks'].includes(normalizeProductCategory(product?.category))
+    && usesVariantUI(product);
 }
 
 function buildCartItemId(productId, variantId = 'default') {

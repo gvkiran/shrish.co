@@ -1716,6 +1716,7 @@ const FORCE_CATALOG_FIELD_OVERRIDE_IDS = new Set([
 const SWEET_CATALOG_OVERRIDE_CATEGORIES = new Set(['putharekulu', 'jellysnacks']);
 const LEGACY_SWEET_VARIANT_FALLBACKS = {
   puth_plain: {
+    name: 'Putharekulu - Classic Plain (Sugar)',
     price: '$7.49',
     unit: '5 count or 10 count',
     variants: [
@@ -1724,6 +1725,7 @@ const LEGACY_SWEET_VARIANT_FALLBACKS = {
     ]
   },
   puth_sugar_kaju_plain: {
+    name: 'Putharekulu - Sugar - Kaju',
     price: '$7.99',
     unit: '5 count or 10 count',
     variants: [
