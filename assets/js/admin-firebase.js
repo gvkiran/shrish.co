@@ -276,6 +276,60 @@ function localGrowthSummary(days = growthDays()) {
   };
 }
 
+function localTopOrderedProducts(days = growthDays()) {
+  const cutoff = dateDaysAgo(days);
+  const products = new Map();
+  state.orders.forEach((order) => {
+    const key = orderDateKey(order);
+    if (!key || key < cutoff || NON_REVENUE_ORDER_STATUSES.includes(order.status || 'pending')) return;
+    (order.items || []).forEach((item) => {
+      const name = String(item.name || item.productTitle || item.id || 'Unknown product').trim();
+      const current = products.get(name) || { product: name, boxes: 0, revenue: 0, orders: 0 };
+      const qty = Number(item.qty || item.quantity || item.boxes || 0);
+      const lineRevenue = Number(item.lineTotal || 0) || (moneyNumber(item.price || item.unitPrice || 0) * qty);
+      current.boxes += qty;
+      current.revenue += lineRevenue;
+      current.orders += 1;
+      products.set(name, current);
+    });
+  });
+  return [...products.values()]
+    .sort((a, b) => b.revenue - a.revenue || b.boxes - a.boxes)
+    .slice(0, 12);
+}
+
+function localOrderMix(days = growthDays()) {
+  const cutoff = dateDaysAgo(days);
+  const locations = new Map();
+  const statuses = new Map();
+  const paymentMethods = new Map();
+
+  state.orders.forEach((order) => {
+    const key = orderDateKey(order);
+    if (!key || key < cutoff) return;
+    const location = order.pickupLocationLabel || order.locationLabel || order.location || order.pickupLocation || 'Unknown pickup';
+    const status = order.status || 'pending';
+    const method = order.paymentMethodLabel || order.paymentMethod || order.payment || 'Not selected';
+
+    locations.set(location, (locations.get(location) || 0) + 1);
+    statuses.set(status, (statuses.get(status) || 0) + 1);
+    paymentMethods.set(method, (paymentMethods.get(method) || 0) + 1);
+  });
+
+  const rows = [];
+  [...locations.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([label, total]) => rows.push({ group: 'Pickup', label, total }));
+  [...statuses.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([label, total]) => rows.push({ group: 'Status', label: orderStatusLabel(label), total }));
+  [...paymentMethods.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([label, total]) => rows.push({ group: 'Payment', label, total }));
+
+  return rows.slice(0, 16);
+}
+
 function renderGrowthKpis(summary) {
   const connected = state.ownerAnalytics?.connected;
   const cards = [
@@ -283,8 +337,10 @@ function renderGrowthKpis(summary) {
     { label: 'Product clicks', value: connected ? numberCompact(eventTotal('product_details_opened')) : 'Setup', note: 'Products opened' },
     { label: 'Cart adds', value: connected ? numberCompact(eventTotal('product_added_to_cart')) : 'Setup', note: 'Purchase interest' },
     { label: 'Orders', value: numberCompact(summary.orderCount), note: `Last ${growthDays()} days from orders` },
+    { label: 'Fulfilled', value: numberCompact(summary.fulfilledCount), note: 'Completed pickups' },
     { label: 'Revenue', value: formatCurrency(summary.revenue), note: 'Pending + fulfilled, excluding cancelled/no-show' },
     { label: 'Avg order', value: formatCurrency(summary.avgOrder), note: `${summary.boxes} boxes total` },
+    { label: 'New subscribers', value: numberCompact(summary.subscribers), note: 'Email + notify requests' },
   ];
 
   document.getElementById('growthKpis').innerHTML = cards.map((card) => `
@@ -369,6 +425,19 @@ function renderGrowthTables() {
     { key: 'adds', label: 'Adds', format: numberCompact },
     { key: 'people', label: 'People', format: numberCompact },
   ], 'Cart adds are tracked as product_added_to_cart.');
+
+  renderGrowthTable('growthOrderedProducts', localTopOrderedProducts(), [
+    { key: 'product', label: 'Product' },
+    { key: 'boxes', label: 'Boxes', format: numberCompact },
+    { key: 'revenue', label: 'Revenue', format: formatCurrency },
+    { key: 'orders', label: 'Lines', format: numberCompact },
+  ], 'No ordered products found for this date range.');
+
+  renderGrowthTable('growthOrderMix', localOrderMix(), [
+    { key: 'group', label: 'Type' },
+    { key: 'label', label: 'Value' },
+    { key: 'total', label: 'Orders', format: numberCompact },
+  ], 'No orders found for this date range.');
 }
 
 function renderGrowthActions(summary) {
@@ -382,7 +451,8 @@ function renderGrowthActions(summary) {
   const topAdded = state.ownerAnalytics?.addedProducts?.[0];
 
   if (!connected) {
-    actions.push('Connect the PostHog personal API key so this page can show visitors, page views, product clicks, and drop-off.');
+    actions.push('Orders, revenue, top ordered products, pickup demand, and subscribers are visible now from Firestore.');
+    actions.push('Connect and deploy the PostHog analytics function to unlock visitor paths, page views, product clicks before cart, and true drop-off.');
   }
   if (connected && productClicks > 0 && cartAdds / productClicks < 0.25) {
     actions.push('Many shoppers open products but do not add to cart. Improve product photos, price clarity, or the add-to-cart button near the top.');
@@ -428,7 +498,9 @@ function renderGrowthSetup() {
       'PostHog is the main source for product clicks and funnel drop-off.'
     ]
     : [
-      'Firebase secret needed: POSTHOG_PERSONAL_API_KEY with PostHog query:read access.',
+      'PostHog is not connected to this dashboard yet, so visitor paths and click/drop-off tables are missing.',
+      'Deploy Cloud Function needed: getOwnerAnalytics. If this function is not deployed, the dashboard cannot query PostHog.',
+      'Firebase secret needed before deploy: POSTHOG_PERSONAL_API_KEY with PostHog query:read access.',
       'Project ID currently defaults to 409686. Set POSTHOG_PROJECT_ID only if that changes.',
       'After the secret is saved, redeploy Firebase Functions and refresh this tab.',
       'Vercel Analytics is already installed on public pages; use Vercel for page/device/referrer metrics.'
@@ -455,7 +527,10 @@ function renderOwnerAnalytics() {
     return;
   }
   if (state.ownerAnalyticsError) {
-    status.textContent = `PostHog could not load: ${state.ownerAnalyticsError}. Local order metrics are still shown.`;
+    const friendly = state.ownerAnalyticsError === 'internal'
+      ? 'the analytics function is not deployed yet or its PostHog secret is missing'
+      : state.ownerAnalyticsError;
+    status.textContent = `PostHog could not load: ${friendly}. Local order, revenue, product, pickup, and subscriber metrics are still shown.`;
     status.className = 'growth-status warn';
     return;
   }
