@@ -329,6 +329,7 @@ const FORCE_BASE_PRODUCT_OVERRIDES = {};
 const FORCE_CATALOG_FIELD_OVERRIDE_IDS = new Set([
   'picklespodi-drumstick-leaf-podi-munagaku-podi'
 ]);
+const SWEET_CATALOG_OVERRIDE_CATEGORIES = new Set(['putharekulu', 'jellysnacks']);
 const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
 
 function hasAdminManagedCatalogFields(product = {}) {
@@ -337,7 +338,9 @@ function hasAdminManagedCatalogFields(product = {}) {
 
 function applyCatalogFieldOverrides(product = {}) {
   const override = CATALOG_FIELD_OVERRIDES[product.id];
-  if (!override || (hasAdminManagedCatalogFields(product) && !FORCE_CATALOG_FIELD_OVERRIDE_IDS.has(product.id))) return product;
+  const shouldForce = FORCE_CATALOG_FIELD_OVERRIDE_IDS.has(product.id)
+    || SWEET_CATALOG_OVERRIDE_CATEGORIES.has(override?.category);
+  if (!override || (hasAdminManagedCatalogFields(product) && !shouldForce)) return product;
   return {
     ...product,
     ...override,
@@ -349,19 +352,19 @@ function applyCatalogFieldOverrides(product = {}) {
 
 const LEGACY_VARIANT_FALLBACKS = {
   puth_plain: {
-    price: '$6.99',
+    price: '$7.49',
     unit: '5 count or 10 count',
     variants: [
-      { id: 'opt1', label: '5 count', price: '$6.99', sku: 'POPJKBP5' },
-      { id: 'opt2', label: '10 count', price: '$12.99', sku: 'POPJKBP10' }
+      { id: 'opt1', label: '5 count', price: '$7.49', sku: 'POPJKP5' },
+      { id: 'opt2', label: '10 count', price: '$13.99', sku: 'POPJKP10' }
     ]
   },
   puth_sugar_kaju: {
-    price: '$6.99',
+    price: '$7.99',
     unit: '5 count or 10 count',
     variants: [
-      { id: 'opt1', label: '5 count', price: '$6.99', sku: 'PSK5' },
-      { id: 'opt2', label: '10 count', price: '$12.99', sku: 'PSK10' }
+      { id: 'opt1', label: '5 count', price: '$7.99', sku: 'PSK5' },
+      { id: 'opt2', label: '10 count', price: '$14.99', sku: 'PSK10' }
     ]
   }
 };

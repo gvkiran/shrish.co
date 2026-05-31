@@ -1704,7 +1704,7 @@ function mergeProductsWithBase(docs = []) {
   const mergedBase = BASE_PRODUCTS.map((product) => applyCatalogFieldOverrides({ ...product, ...(byId.get(product.id) || {}) }));
   const extraProducts = normalizedDocs
     .filter((product) => !BASE_PRODUCTS.some((baseProduct) => baseProduct.id === product.id))
-    .map((product) => applyCatalogFieldOverrides({ ...product }));
+    .map((product) => applyCatalogFieldOverrides(applyLegacySweetVariantFallback({ ...product })));
 
   return [...mergedBase, ...extraProducts];
 }
@@ -1713,6 +1713,25 @@ const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
 const FORCE_CATALOG_FIELD_OVERRIDE_IDS = new Set([
   'picklespodi-drumstick-leaf-podi-munagaku-podi'
 ]);
+const SWEET_CATALOG_OVERRIDE_CATEGORIES = new Set(['putharekulu', 'jellysnacks']);
+const LEGACY_SWEET_VARIANT_FALLBACKS = {
+  puth_plain: {
+    price: '$7.49',
+    unit: '5 count or 10 count',
+    variants: [
+      { id: 'opt1', label: '5 count', price: '$7.49', sku: 'POPJKP5' },
+      { id: 'opt2', label: '10 count', price: '$13.99', sku: 'POPJKP10' }
+    ]
+  },
+  puth_sugar_kaju_plain: {
+    price: '$7.99',
+    unit: '5 count or 10 count',
+    variants: [
+      { id: 'opt1', label: '5 count', price: '$7.99', sku: 'PSK5' },
+      { id: 'opt2', label: '10 count', price: '$14.99', sku: 'PSK10' }
+    ]
+  }
+};
 
 function hasAdminManagedCatalogFields(product = {}) {
   return Boolean(product.catalogManagedAt);
@@ -1720,13 +1739,45 @@ function hasAdminManagedCatalogFields(product = {}) {
 
 function applyCatalogFieldOverrides(product = {}) {
   const override = CATALOG_FIELD_OVERRIDES[product.id];
-  if (!override || (hasAdminManagedCatalogFields(product) && !FORCE_CATALOG_FIELD_OVERRIDE_IDS.has(product.id))) return product;
+  const shouldForce = FORCE_CATALOG_FIELD_OVERRIDE_IDS.has(product.id)
+    || SWEET_CATALOG_OVERRIDE_CATEGORIES.has(override?.category);
+  if (!override || (hasAdminManagedCatalogFields(product) && !shouldForce)) return product;
   return {
     ...product,
     ...override,
     variants: Array.isArray(override.variants)
       ? override.variants.map((variant) => ({ ...variant }))
       : product.variants
+  };
+}
+
+function getLegacySweetVariantFallback(product = {}) {
+  if (product?.id === 'puth_plain') return LEGACY_SWEET_VARIANT_FALLBACKS.puth_plain;
+
+  const normalizedName = String(product?.name || '')
+    .toLowerCase()
+    .replace(/â€”/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (normalizedName === 'putharekulu - classic plain (sugar)') {
+    return LEGACY_SWEET_VARIANT_FALLBACKS.puth_plain;
+  }
+
+  if (normalizedName === 'putharekulu - sugar, kaju' || normalizedName === 'putharekulu - sugar - kaju') {
+    return LEGACY_SWEET_VARIANT_FALLBACKS.puth_sugar_kaju_plain;
+  }
+
+  return null;
+}
+
+function applyLegacySweetVariantFallback(product = {}) {
+  const fallback = getLegacySweetVariantFallback(product);
+  if (!fallback) return product;
+  return {
+    ...product,
+    ...fallback,
+    variants: fallback.variants.map((variant) => ({ ...variant }))
   };
 }
 

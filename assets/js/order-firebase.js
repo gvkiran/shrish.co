@@ -340,6 +340,7 @@ const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
 const FORCE_CATALOG_FIELD_OVERRIDE_IDS = new Set([
   'picklespodi-drumstick-leaf-podi-munagaku-podi'
 ]);
+const SWEET_CATALOG_OVERRIDE_CATEGORIES = new Set(['putharekulu', 'jellysnacks']);
 
 function hasAdminManagedCatalogFields(product = {}) {
   return Boolean(product.catalogManagedAt);
@@ -347,7 +348,9 @@ function hasAdminManagedCatalogFields(product = {}) {
 
 function applyCatalogFieldOverrides(product = {}) {
   const override = CATALOG_FIELD_OVERRIDES[product.id];
-  if (!override || (hasAdminManagedCatalogFields(product) && !FORCE_CATALOG_FIELD_OVERRIDE_IDS.has(product.id))) return product;
+  const shouldForce = FORCE_CATALOG_FIELD_OVERRIDE_IDS.has(product.id)
+    || SWEET_CATALOG_OVERRIDE_CATEGORIES.has(override?.category);
+  if (!override || (hasAdminManagedCatalogFields(product) && !shouldForce)) return product;
   return {
     ...product,
     ...override,
