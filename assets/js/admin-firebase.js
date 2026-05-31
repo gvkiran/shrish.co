@@ -35,6 +35,7 @@ window._firestoreExports = { collection, doc, updateDoc, addDoc: typeof addDoc !
 const NON_REVENUE_ORDER_STATUSES = ['cancelled', 'no_show'];
 const ADMIN_EMAIL = normalizeLookup(window.SHRISH_APP_CONFIG?.adminEmailHint || 'contact@shrish.co');
 const deleteCustomerAccount = httpsCallable(cloudFunctions, 'deleteCustomerAccount');
+const getOwnerAnalytics = httpsCallable(cloudFunctions, 'getOwnerAnalytics');
 
 const state = {
   orders: [],
@@ -45,6 +46,9 @@ const state = {
   accountingBatches: {},
   accounting2Records: {},
   accountingView: 'open',
+  ownerAnalytics: null,
+  ownerAnalyticsLoading: false,
+  ownerAnalyticsError: '',
   selectedAccountingBatch: '',
   productFilter: 'all',
   selectedReminderOrderIds: new Set(),
@@ -203,6 +207,284 @@ function renderStats() {
     <div class="stat-card"><div class="s-label">Boxes</div><div class="s-value">${totalBoxes}</div></div>
     <div class="stat-card"><div class="s-label">Products Live</div><div class="s-value">${available} / ${totalProducts}</div></div>
     <div class="stat-card"><div class="s-label">Subscribers</div><div class="s-value">${totalSubscribers}</div></div>`;
+}
+
+function growthDays() {
+  const value = Number(document.getElementById('growthRange')?.value || 30);
+  return Number.isFinite(value) ? value : 30;
+}
+
+function dateDaysAgo(days) {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString().slice(0, 10);
+}
+
+function numberCompact(value) {
+  const num = Number(value || 0);
+  return new Intl.NumberFormat('en-US', { notation: num >= 10000 ? 'compact' : 'standard' }).format(num);
+}
+
+function percentText(value) {
+  if (!Number.isFinite(value)) return '--';
+  return `${Math.round(value * 100)}%`;
+}
+
+function analyticsCountMap() {
+  const rows = state.ownerAnalytics?.eventCounts || [];
+  return rows.reduce((acc, row) => {
+    acc[row.event] = {
+      total: Number(row.totalEvents || 0),
+      people: Number(row.uniquePeople || 0)
+    };
+    return acc;
+  }, {});
+}
+
+function eventPeople(eventName) {
+  return analyticsCountMap()[eventName]?.people || 0;
+}
+
+function eventTotal(eventName) {
+  return analyticsCountMap()[eventName]?.total || 0;
+}
+
+function localGrowthSummary(days = growthDays()) {
+  const cutoff = dateDaysAgo(days);
+  const orders = state.orders.filter((order) => {
+    const key = orderDateKey(order);
+    return key && key >= cutoff;
+  });
+  const revenueOrders = orders.filter((order) => !NON_REVENUE_ORDER_STATUSES.includes(order.status || 'pending'));
+  const fulfilledOrders = revenueOrders.filter((order) => order.status === 'fulfilled');
+  const revenue = revenueOrders.reduce((sum, order) => sum + orderRevenueValue(order), 0);
+  const boxes = revenueOrders.reduce((sum, order) => sum + Number(order.totalBoxes || 0), 0);
+  const avgOrder = revenueOrders.length ? revenue / revenueOrders.length : 0;
+  const subscribers = state.subscribers.filter((entry) => {
+    const raw = entry?.createdAt?.toDate ? entry.createdAt.toDate() : new Date(entry?.createdAt || 0);
+    return !Number.isNaN(raw.getTime()) && raw.toISOString().slice(0, 10) >= cutoff;
+  });
+
+  return {
+    orders,
+    orderCount: orders.length,
+    fulfilledCount: fulfilledOrders.length,
+    revenue,
+    boxes,
+    avgOrder,
+    subscribers: subscribers.length
+  };
+}
+
+function renderGrowthKpis(summary) {
+  const connected = state.ownerAnalytics?.connected;
+  const cards = [
+    { label: 'Website visitors', value: connected ? numberCompact(eventPeople('page_viewed')) : 'Setup', note: 'PostHog unique visitors' },
+    { label: 'Product clicks', value: connected ? numberCompact(eventTotal('product_details_opened')) : 'Setup', note: 'Products opened' },
+    { label: 'Cart adds', value: connected ? numberCompact(eventTotal('product_added_to_cart')) : 'Setup', note: 'Purchase interest' },
+    { label: 'Orders', value: numberCompact(summary.orderCount), note: `Last ${growthDays()} days from orders` },
+    { label: 'Revenue', value: formatCurrency(summary.revenue), note: 'Pending + fulfilled, excluding cancelled/no-show' },
+    { label: 'Avg order', value: formatCurrency(summary.avgOrder), note: `${summary.boxes} boxes total` },
+  ];
+
+  document.getElementById('growthKpis').innerHTML = cards.map((card) => `
+    <div class="growth-kpi">
+      <span>${escapeHtml(card.label)}</span>
+      <strong>${escapeHtml(card.value)}</strong>
+      <small>${escapeHtml(card.note)}</small>
+    </div>
+  `).join('');
+}
+
+function renderGrowthFunnel(summary) {
+  const connected = state.ownerAnalytics?.connected;
+  const steps = [
+    { label: 'Website visitors', value: eventPeople('page_viewed'), source: 'PostHog' },
+    { label: 'Shop visitors', value: eventPeople('shop_viewed'), source: 'PostHog' },
+    { label: 'Product detail opens', value: eventPeople('product_details_opened'), source: 'PostHog' },
+    { label: 'Add to cart', value: eventPeople('product_added_to_cart'), source: 'PostHog' },
+    { label: 'Checkout started', value: eventPeople('checkout_started'), source: 'PostHog' },
+    { label: 'Orders placed', value: Math.max(eventPeople('order_submitted'), summary.orderCount), source: 'Orders + PostHog' },
+  ];
+  const max = Math.max(...steps.map((step) => Number(step.value || 0)), 1);
+
+  document.getElementById('growthFunnel').innerHTML = steps.map((step, index) => {
+    const previous = index ? steps[index - 1].value : step.value;
+    const keepRate = previous ? step.value / previous : 0;
+    const dropRate = index ? Math.max(0, 1 - keepRate) : 0;
+    const width = connected || step.value ? Math.max(8, (step.value / max) * 100) : 8;
+    return `
+      <div class="growth-funnel-row">
+        <div class="growth-funnel-label">
+          <strong>${escapeHtml(step.label)}</strong>
+          <span>${escapeHtml(step.source)}</span>
+        </div>
+        <div class="growth-funnel-bar">
+          <div style="width:${width}%"></div>
+        </div>
+        <div class="growth-funnel-value">
+          <strong>${numberCompact(step.value)}</strong>
+          <span>${index ? `${percentText(dropRate)} drop` : 'Start'}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderGrowthTable(targetId, rows, columns, emptyText) {
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  if (!rows?.length) {
+    target.innerHTML = `<div class="growth-empty">${escapeHtml(emptyText)}</div>`;
+    return;
+  }
+
+  target.innerHTML = `
+    <table>
+      <thead><tr>${columns.map((column) => `<th>${escapeHtml(column.label)}</th>`).join('')}</tr></thead>
+      <tbody>
+        ${rows.map((row) => `
+          <tr>${columns.map((column) => `<td>${escapeHtml(column.format ? column.format(row[column.key], row) : row[column.key])}</td>`).join('')}</tr>
+        `).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderGrowthTables() {
+  const analytics = state.ownerAnalytics || {};
+  renderGrowthTable('growthPages', analytics.topPages || [], [
+    { key: 'page', label: 'Page' },
+    { key: 'views', label: 'Views', format: numberCompact },
+    { key: 'visitors', label: 'People', format: numberCompact },
+  ], 'PostHog page data will show here after the API secret is connected.');
+
+  renderGrowthTable('growthClickedProducts', analytics.clickedProducts || [], [
+    { key: 'productTitle', label: 'Product' },
+    { key: 'clicks', label: 'Clicks', format: numberCompact },
+    { key: 'people', label: 'People', format: numberCompact },
+  ], 'Product clicks are tracked as product_details_opened.');
+
+  renderGrowthTable('growthAddedProducts', analytics.addedProducts || [], [
+    { key: 'productTitle', label: 'Product' },
+    { key: 'adds', label: 'Adds', format: numberCompact },
+    { key: 'people', label: 'People', format: numberCompact },
+  ], 'Cart adds are tracked as product_added_to_cart.');
+}
+
+function renderGrowthActions(summary) {
+  const actions = [];
+  const connected = state.ownerAnalytics?.connected;
+  const productClicks = eventPeople('product_details_opened');
+  const cartAdds = eventPeople('product_added_to_cart');
+  const checkoutStarts = eventPeople('checkout_started');
+  const orders = Math.max(eventPeople('order_submitted'), summary.orderCount);
+  const topClicked = state.ownerAnalytics?.clickedProducts?.[0];
+  const topAdded = state.ownerAnalytics?.addedProducts?.[0];
+
+  if (!connected) {
+    actions.push('Connect the PostHog personal API key so this page can show visitors, page views, product clicks, and drop-off.');
+  }
+  if (connected && productClicks > 0 && cartAdds / productClicks < 0.25) {
+    actions.push('Many shoppers open products but do not add to cart. Improve product photos, price clarity, or the add-to-cart button near the top.');
+  }
+  if (connected && checkoutStarts > 0 && orders / checkoutStarts < 0.65) {
+    actions.push('Checkout is leaking orders. Review pickup date clarity, payment wording, required fields, and error messages.');
+  }
+  if (topClicked && topAdded && topClicked.productId !== topAdded.productId) {
+    actions.push(`${topClicked.productTitle} gets the most clicks, but ${topAdded.productTitle} gets the most cart adds. Feature the cart-winning product higher.`);
+  }
+  if (summary.orderCount > 0 && summary.avgOrder < 50) {
+    actions.push('Average order is below $50. Try bundles or "add one more box" suggestions before checkout.');
+  }
+  if (!actions.length) {
+    actions.push('The main funnel looks healthy. Watch the top clicked products and keep improving the pages that bring orders.');
+  }
+
+  document.getElementById('growthActions').innerHTML = actions.map((action) => `
+    <div class="growth-action-item">${escapeHtml(action)}</div>
+  `).join('');
+}
+
+function renderGrowthSetup() {
+  const connected = state.ownerAnalytics?.connected;
+  const requiredEvents = [
+    'page_viewed',
+    'shop_viewed',
+    'product_details_opened',
+    'product_added_to_cart',
+    'checkout_started',
+    'order_submitted',
+    'order_confirmed'
+  ];
+  const countMap = analyticsCountMap();
+  const missingEvents = connected
+    ? requiredEvents.filter((event) => !countMap[event])
+    : requiredEvents;
+
+  const setupItems = connected
+    ? [
+      missingEvents.length ? `Missing or zero events: ${missingEvents.join(', ')}` : 'All key PostHog events are present.',
+      'Vercel page/device/referrer metrics stay in Vercel Analytics; use the Open Vercel button for that view.',
+      'PostHog is the main source for product clicks and funnel drop-off.'
+    ]
+    : [
+      'Firebase secret needed: POSTHOG_PERSONAL_API_KEY with PostHog query:read access.',
+      'Project ID currently defaults to 409686. Set POSTHOG_PROJECT_ID only if that changes.',
+      'After the secret is saved, redeploy Firebase Functions and refresh this tab.',
+      'Vercel Analytics is already installed on public pages; use Vercel for page/device/referrer metrics.'
+    ];
+
+  document.getElementById('growthSetup').innerHTML = setupItems.map((item) => `
+    <div class="growth-setup-row ${item.startsWith('Missing') ? 'warn' : ''}">${escapeHtml(item)}</div>
+  `).join('');
+}
+
+function renderOwnerAnalytics() {
+  const status = document.getElementById('growthStatus');
+  if (!status) return;
+  const summary = localGrowthSummary();
+  renderGrowthKpis(summary);
+  renderGrowthFunnel(summary);
+  renderGrowthTables();
+  renderGrowthActions(summary);
+  renderGrowthSetup();
+
+  if (state.ownerAnalyticsLoading) {
+    status.textContent = 'Loading PostHog data...';
+    status.className = 'growth-status';
+    return;
+  }
+  if (state.ownerAnalyticsError) {
+    status.textContent = `PostHog could not load: ${state.ownerAnalyticsError}. Local order metrics are still shown.`;
+    status.className = 'growth-status warn';
+    return;
+  }
+  if (state.ownerAnalytics?.connected) {
+    const updated = state.ownerAnalytics.updatedAt ? formatDateTime(state.ownerAnalytics.updatedAt) : 'just now';
+    status.textContent = `Live PostHog data connected. Showing last ${growthDays()} days. Last updated ${updated}.`;
+    status.className = 'growth-status good';
+    return;
+  }
+  status.textContent = 'Local order metrics are shown now. Connect the PostHog API secret to unlock visitor, page, click, and drop-off charts.';
+  status.className = 'growth-status warn';
+}
+
+async function refreshOwnerAnalytics() {
+  if (state.ownerAnalyticsLoading) return;
+  state.ownerAnalyticsLoading = true;
+  state.ownerAnalyticsError = '';
+  renderOwnerAnalytics();
+
+  try {
+    const result = await getOwnerAnalytics({ days: growthDays() });
+    state.ownerAnalytics = result.data || null;
+  } catch (error) {
+    console.error('Owner analytics failed', error);
+    state.ownerAnalyticsError = error?.message || 'Analytics function is not deployed or not configured yet';
+  } finally {
+    state.ownerAnalyticsLoading = false;
+    renderOwnerAnalytics();
+  }
 }
 
 function orderDateKey(order) {
@@ -3769,6 +4051,7 @@ function switchTab(tab, btn) {
   document.getElementById('tab-customers').style.display = tab === 'customers' ? 'block' : 'none';
   document.getElementById('tab-feedback').style.display = tab === 'feedback' ? 'block' : 'none';
   document.getElementById('tab-subscribers').style.display = tab === 'subscribers' ? 'block' : 'none';
+  document.getElementById('tab-growth').style.display = tab === 'growth' ? 'block' : 'none';
   document.getElementById('tab-accounting').style.display = tab === 'accounting' ? 'block' : 'none';
   document.getElementById('tab-pickup-tally').style.display = tab === 'pickup-tally' ? 'block' : 'none';
   const refundsPanel = document.getElementById('tab-refunds');
@@ -3778,6 +4061,10 @@ function switchTab(tab, btn) {
   if (tab === 'customers') renderCustomers();
   if (tab === 'feedback') renderFeedback();
   if (tab === 'subscribers') renderSubscribers();
+  if (tab === 'growth') {
+    renderOwnerAnalytics();
+    if (!state.ownerAnalytics && !state.ownerAnalyticsError) refreshOwnerAnalytics();
+  }
   if (tab === 'accounting') renderAccounting();
   if (tab === 'pickup-tally') renderExcelCalculations();
   if (tab === 'refunds') loadRefundTab();
@@ -3800,6 +4087,7 @@ function subscribeData() {
     renderCustomers();
     renderAccounting();
     renderFeedback();
+    renderOwnerAnalytics();
   }, (error) => {
     console.error(error);
     showToast('Orders sync failed');
@@ -3842,6 +4130,7 @@ function subscribeData() {
     state.subscribers = merged;
     renderSubscribers();
     renderStats();
+    renderOwnerAnalytics();
   };
 
   state.unsubSubscribersGeneral = onSnapshot(collection(db, 'email_subscribers'), (snapshot) => {
@@ -3980,6 +4269,7 @@ window.deleteCustomerAccountFromAdmin = deleteCustomerAccountFromAdmin;
 window.renderFeedback = renderFeedback;
 window.exportFeedbackCSV = exportFeedbackCSV;
 window.exportSubscribersCSV = exportSubscribersCSV;
+window.refreshOwnerAnalytics = refreshOwnerAnalytics;
 window.deleteSubscriber = deleteSubscriber;
 window.renderAccounting = renderAccounting;
 window.setAccountingView = setAccountingView;

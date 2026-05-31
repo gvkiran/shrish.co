@@ -56,6 +56,7 @@
           <button class="admin-tab" onclick="switchTab('products',this)">🛒 Manage Products</button>
           <button class="admin-tab" onclick="switchTab('customers',this)">Customer Accounts</button>
           <button class="admin-tab" onclick="switchTab('feedback',this)">Feedback</button>
+          <button class="admin-tab" onclick="switchTab('growth',this)">Growth Dashboard</button>
           <button class="admin-tab" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
           <button class="admin-tab" onclick="switchTab('refunds',this);loadRefundTab()">💸 Refunds</button>
             <button class="admin-tab" onclick="switchTab('accounting',this)">📒 Accounting</button>
@@ -480,6 +481,80 @@
               </thead>
               <tbody id="feedbackBody"></tbody>
             </table>
+          </div>
+        </div>
+
+        <div id="tab-growth" style="display:none;">
+          <div class="growth-toolbar">
+            <div>
+              <h2>Growth Dashboard</h2>
+              <p class="orders-help">Plain-English view of traffic, shopping drop-off, product interest, and order signals.</p>
+            </div>
+            <div class="toolbar-actions">
+              <select id="growthRange" class="filter-input" onchange="refreshOwnerAnalytics()">
+                <option value="7">Last 7 days</option>
+                <option value="30" selected>Last 30 days</option>
+                <option value="90">Last 90 days</option>
+              </select>
+              <button class="toolbar-btn" onclick="refreshOwnerAnalytics()">Refresh</button>
+              <a class="toolbar-btn growth-link" href="https://us.posthog.com/project/409686/dashboard/1543847" target="_blank" rel="noopener">Open PostHog</a>
+              <a class="toolbar-btn growth-link" href="https://vercel.com/dashboard" target="_blank" rel="noopener">Open Vercel</a>
+            </div>
+          </div>
+
+          <div class="growth-status" id="growthStatus">Loading owner dashboard...</div>
+          <div class="growth-kpis" id="growthKpis"></div>
+
+          <div class="growth-grid">
+            <section class="growth-card growth-card-wide">
+              <div class="growth-card-head">
+                <h3>Customer Drop-off Funnel</h3>
+                <p>Where people stop before ordering.</p>
+              </div>
+              <div class="growth-funnel" id="growthFunnel"></div>
+            </section>
+
+            <section class="growth-card">
+              <div class="growth-card-head">
+                <h3>What To Do Next</h3>
+                <p>Quick owner notes based on the numbers.</p>
+              </div>
+              <div class="growth-actions-list" id="growthActions"></div>
+            </section>
+          </div>
+
+          <div class="growth-grid">
+            <section class="growth-card">
+              <div class="growth-card-head">
+                <h3>Most Visited Pages</h3>
+                <p>What customers are looking at.</p>
+              </div>
+              <div class="growth-table" id="growthPages"></div>
+            </section>
+
+            <section class="growth-card">
+              <div class="growth-card-head">
+                <h3>Products Customers Click</h3>
+                <p>High interest before cart.</p>
+              </div>
+              <div class="growth-table" id="growthClickedProducts"></div>
+            </section>
+
+            <section class="growth-card">
+              <div class="growth-card-head">
+                <h3>Products Added To Cart</h3>
+                <p>Closest signal to purchase intent.</p>
+              </div>
+              <div class="growth-table" id="growthAddedProducts"></div>
+            </section>
+
+            <section class="growth-card">
+              <div class="growth-card-head">
+                <h3>Missing Metrics Setup</h3>
+                <p>Only needed if a section says it is missing.</p>
+              </div>
+              <div class="growth-setup" id="growthSetup"></div>
+            </section>
           </div>
         </div>
 

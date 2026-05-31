@@ -18,6 +18,7 @@ const posthog = new PostHog(process.env.POSTHOG_API_KEY, {
 const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
 const STRIPE_SECRET_KEY = defineSecret("STRIPE_SECRET_KEY");
 const STRIPE_WEBHOOK_SECRET = defineSecret("STRIPE_WEBHOOK_SECRET");
+const POSTHOG_PERSONAL_API_KEY = defineSecret("POSTHOG_PERSONAL_API_KEY");
 
 const SHRISH_FROM_EMAIL = "Shrish Orders <contact@shrish.co>";
 const SHRISH_ADMIN_EMAIL = "contact@shrish.co";
@@ -48,6 +49,65 @@ function callableOptions(options = {}) {
 
 function stripeClient() {
   return new Stripe(normalizedSecret(STRIPE_SECRET_KEY));
+}
+
+function normalizedPostHogApiHost(value = "") {
+  const fallback = "https://us.posthog.com";
+  const raw = String(value || fallback).trim().replace(/\/+$/, "");
+  if (!raw) return fallback;
+  return raw.replace("://us.i.posthog.com", "://us.posthog.com");
+}
+
+function postHogProjectId() {
+  return String(process.env.POSTHOG_PROJECT_ID || "409686").trim();
+}
+
+function postHogPersonalApiKey() {
+  try {
+    return normalizedSecret(POSTHOG_PERSONAL_API_KEY);
+  } catch {
+    return "";
+  }
+}
+
+async function runPostHogHogql(query, name) {
+  const apiKey = postHogPersonalApiKey();
+  const projectId = postHogProjectId();
+  const host = normalizedPostHogApiHost(process.env.POSTHOG_HOST);
+
+  if (!apiKey || !projectId) {
+    return { connected: false, rows: [], missing: !apiKey ? ["POSTHOG_PERSONAL_API_KEY"] : ["POSTHOG_PROJECT_ID"] };
+  }
+
+  const response = await fetch(`${host}/api/projects/${encodeURIComponent(projectId)}/query/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      query: {
+        kind: "HogQLQuery",
+        query,
+      },
+      name,
+    }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const detail = payload?.detail || payload?.error || payload?.message || `HTTP ${response.status}`;
+    throw new Error(`PostHog query failed: ${detail}`);
+  }
+
+  return { connected: true, rows: Array.isArray(payload.results) ? payload.results : [] };
+}
+
+function rowsToObjects(rows, columns) {
+  return rows.map((row) => columns.reduce((acc, column, index) => {
+    acc[column] = row[index];
+    return acc;
+  }, {}));
 }
 
 function allowedCheckoutOrigin(value = "") {
@@ -1489,6 +1549,128 @@ exports.sendCustomerPasswordReset = onCall(
     }
 
     return { status: "accepted" };
+  }
+);
+
+exports.getOwnerAnalytics = onCall(
+  callableOptions({
+    secrets: [POSTHOG_PERSONAL_API_KEY],
+    timeoutSeconds: 45,
+    memory: "512MiB",
+  }),
+  async (request) => {
+    if (!isAdminRequest(request)) {
+      throw new HttpsError("permission-denied", "Only the Shrish admin can view owner analytics.");
+    }
+
+    const rawDays = Number(request.data?.days || 30);
+    const days = Math.min(90, Math.max(7, Number.isFinite(rawDays) ? Math.round(rawDays) : 30));
+    const sinceClause = `timestamp >= now() - INTERVAL ${days} DAY`;
+    const trackedEvents = [
+      "page_viewed",
+      "home_viewed",
+      "shop_viewed",
+      "product_details_opened",
+      "product_added_to_cart",
+      "cart_opened",
+      "checkout_started",
+      "pickup_location_selected",
+      "checkout_payment_method_selected",
+      "order_submitted",
+      "order_submit_failed",
+      "order_confirmed",
+      "stripe_checkout_started",
+    ];
+    const eventList = trackedEvents.map((event) => `'${event}'`).join(", ");
+
+    if (!postHogPersonalApiKey()) {
+      return {
+        connected: false,
+        days,
+        projectId: postHogProjectId(),
+        posthogHost: normalizedPostHogApiHost(process.env.POSTHOG_HOST),
+        missing: ["POSTHOG_PERSONAL_API_KEY"],
+        setup: [
+          "Create a PostHog personal API key with query:read access.",
+          "Save it as the Firebase secret POSTHOG_PERSONAL_API_KEY.",
+          "Optional: set POSTHOG_PROJECT_ID if the project changes from 409686.",
+          "Redeploy Firebase Functions, then refresh this Growth tab.",
+        ],
+      };
+    }
+
+    try {
+      const [eventCounts, topPages, clickedProducts, addedProducts] = await Promise.all([
+        runPostHogHogql(`
+          SELECT event, count() AS total_events, uniq(distinct_id) AS unique_people
+          FROM events
+          WHERE ${sinceClause}
+            AND event IN (${eventList})
+          GROUP BY event
+          ORDER BY total_events DESC
+        `, "owner dashboard event counts"),
+        runPostHogHogql(`
+          SELECT
+            coalesce(
+              nullIf(toString(properties.page_path), ''),
+              nullIf(toString(properties.$pathname), ''),
+              nullIf(toString(properties.$current_url), ''),
+              'Unknown page'
+            ) AS page,
+            count() AS views,
+            uniq(distinct_id) AS visitors
+          FROM events
+          WHERE ${sinceClause}
+            AND event = 'page_viewed'
+          GROUP BY page
+          ORDER BY views DESC
+          LIMIT 12
+        `, "owner dashboard top pages"),
+        runPostHogHogql(`
+          SELECT
+            coalesce(nullIf(toString(properties.product_title), ''), 'Unknown product') AS product_title,
+            coalesce(nullIf(toString(properties.product_id), ''), '') AS product_id,
+            coalesce(nullIf(toString(properties.category), ''), '') AS category,
+            count() AS clicks,
+            uniq(distinct_id) AS people
+          FROM events
+          WHERE ${sinceClause}
+            AND event = 'product_details_opened'
+          GROUP BY product_title, product_id, category
+          ORDER BY clicks DESC
+          LIMIT 12
+        `, "owner dashboard clicked products"),
+        runPostHogHogql(`
+          SELECT
+            coalesce(nullIf(toString(properties.product_title), ''), 'Unknown product') AS product_title,
+            coalesce(nullIf(toString(properties.product_id), ''), '') AS product_id,
+            coalesce(nullIf(toString(properties.category), ''), '') AS category,
+            count() AS adds,
+            uniq(distinct_id) AS people
+          FROM events
+          WHERE ${sinceClause}
+            AND event = 'product_added_to_cart'
+          GROUP BY product_title, product_id, category
+          ORDER BY adds DESC
+          LIMIT 12
+        `, "owner dashboard added products"),
+      ]);
+
+      return {
+        connected: true,
+        days,
+        projectId: postHogProjectId(),
+        posthogHost: normalizedPostHogApiHost(process.env.POSTHOG_HOST),
+        updatedAt: new Date().toISOString(),
+        eventCounts: rowsToObjects(eventCounts.rows, ["event", "totalEvents", "uniquePeople"]),
+        topPages: rowsToObjects(topPages.rows, ["page", "views", "visitors"]),
+        clickedProducts: rowsToObjects(clickedProducts.rows, ["productTitle", "productId", "category", "clicks", "people"]),
+        addedProducts: rowsToObjects(addedProducts.rows, ["productTitle", "productId", "category", "adds", "people"]),
+      };
+    } catch (error) {
+      console.error("Owner analytics query failed", error);
+      throw new HttpsError("unavailable", error.message || "PostHog analytics could not be loaded.");
+    }
   }
 );
 
