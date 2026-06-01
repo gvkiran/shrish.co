@@ -1574,12 +1574,16 @@ exports.getOwnerAnalytics = onCall(
       "product_added_to_cart",
       "cart_opened",
       "checkout_started",
+      "checkout_viewed",
+      "order_submit_attempted",
       "pickup_location_selected",
       "checkout_payment_method_selected",
       "order_submitted",
+      "order_item_submitted",
       "order_submit_failed",
       "order_confirmed",
       "stripe_checkout_started",
+      "product_detail_time_spent",
     ];
     const eventList = trackedEvents.map((event) => `'${event}'`).join(", ");
 

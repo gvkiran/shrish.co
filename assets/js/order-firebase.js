@@ -1337,6 +1337,7 @@ async function submitOrder() {
       referral: referral || 'Not specified',
       payment_method: selectedPaymentMethod
     };
+    const submittedCartItems = cart.map((item) => ({ ...item }));
 
     sessionStorage.removeItem('shrish_cart');
     cart = [];
@@ -1401,6 +1402,21 @@ async function submitOrder() {
 
     trackCheckoutEvent('order_submitted', {
       ...submittedOrderAnalytics
+    });
+    submittedCartItems.forEach((item) => {
+      const productId = cartItemProductId(item);
+      const product = productId ? window.SHRISH_DATA?.products?.find((entry) => entry.id === productId) : null;
+      trackCheckoutEvent('order_item_submitted', {
+        product_id: productId,
+        product_title: item.name || product?.name || '',
+        category: product?.category || '',
+        filter_group: product?.filterGroup || '',
+        quantity: Number(item.qty || 1),
+        line_total: Number((moneyValue(item.price) * (item.qty || 1)).toFixed(2)),
+        pickup_location: selectedLoc,
+        payment_method: selectedPaymentMethod,
+        ...submittedOrderAnalytics
+      });
     });
 
     window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -476,7 +476,8 @@ function renderGrowthKpis(summary) {
     { label: 'Website visitors', value: connected ? numberCompact(eventPeople('page_viewed')) : 'Setup', note: 'PostHog unique visitors' },
     { label: 'Product clicks', value: connected ? numberCompact(eventTotal('product_details_opened')) : 'Setup', note: 'Products opened' },
     { label: 'Cart adds', value: connected ? numberCompact(eventTotal('product_added_to_cart')) : 'Setup', note: 'Purchase interest' },
-    { label: 'Orders', value: numberCompact(summary.orderCount), note: `Last ${growthDays()} days from orders` },
+    { label: 'Orders database', value: numberCompact(summary.orderCount), note: `Business total, not funnel` },
+    { label: 'Tracked orders', value: connected ? numberCompact(eventTotal('order_submitted')) : 'Setup', note: 'PostHog order events' },
     { label: 'Fulfilled', value: numberCompact(summary.fulfilledCount), note: 'Completed pickups' },
     { label: 'Revenue', value: formatCurrency(summary.revenue), note: 'Pending + fulfilled, excluding cancelled/no-show' },
     { label: 'Avg order', value: formatCurrency(summary.avgOrder), note: `${summary.boxes} boxes total` },
@@ -497,10 +498,10 @@ function renderGrowthFunnel(summary) {
   const steps = [
     { label: 'Website visitors', value: eventPeople('page_viewed'), source: 'PostHog' },
     { label: 'Shop visitors', value: eventPeople('shop_viewed'), source: 'PostHog' },
-    { label: 'Product detail opens', value: eventPeople('product_details_opened'), source: 'PostHog' },
-    { label: 'Add to cart', value: eventPeople('product_added_to_cart'), source: 'PostHog' },
-    { label: 'Checkout started', value: eventPeople('checkout_started'), source: 'PostHog' },
-    { label: 'Orders placed', value: Math.max(eventPeople('order_submitted'), summary.orderCount), source: 'Orders + PostHog' },
+    { label: 'Cart adders', value: eventPeople('product_added_to_cart'), source: 'PostHog' },
+    { label: 'Checkout visitors', value: Math.max(eventPeople('checkout_viewed'), eventPeople('checkout_started')), source: 'PostHog' },
+    { label: 'Submit attempted', value: eventPeople('order_submit_attempted'), source: 'PostHog' },
+    { label: 'Orders submitted', value: eventPeople('order_submitted'), source: 'PostHog' },
   ];
   const max = Math.max(...steps.map((step) => Number(step.value || 0)), 1);
 
@@ -615,7 +616,7 @@ function renderGrowthActions(summary) {
   const productClicks = eventPeople('product_details_opened');
   const cartAdds = eventPeople('product_added_to_cart');
   const checkoutStarts = eventPeople('checkout_started');
-  const orders = Math.max(eventPeople('order_submitted'), summary.orderCount);
+  const orders = eventPeople('order_submitted');
   const topClicked = state.ownerAnalytics?.clickedProducts?.[0];
   const topAdded = state.ownerAnalytics?.addedProducts?.[0];
 
@@ -650,7 +651,8 @@ function renderGrowthIssues(summary) {
   const productClicks = eventPeople('product_details_opened');
   const cartAdds = eventPeople('product_added_to_cart');
   const checkoutStarts = eventPeople('checkout_started');
-  const orders = Math.max(eventPeople('order_submitted'), summary.orderCount);
+  const orders = eventPeople('order_submitted');
+  const trackedOrderEvents = eventTotal('order_submitted');
   const submitFailures = eventTotal('order_submit_failed');
 
   if (!connected) {
@@ -664,6 +666,12 @@ function renderGrowthIssues(summary) {
   }
   if (connected && checkoutStarts > 0 && orders / checkoutStarts < 0.65) {
     issues.push({ level: 'critical', text: 'Checkout start to order completion is weak. Review pickup selection, validation errors, phone/email requirements, and payment wording.' });
+  }
+  if (connected && summary.orderCount > 0 && trackedOrderEvents > 0) {
+    const orderGap = Math.abs(summary.orderCount - trackedOrderEvents) / summary.orderCount;
+    if (orderGap > 0.1) {
+      issues.push({ level: 'warn', text: `Data quality note: orders database shows ${numberCompact(summary.orderCount)} orders, while PostHog has ${numberCompact(trackedOrderEvents)} order_submitted events. The funnel now uses PostHog only; database orders are shown separately as the business total.` });
+    }
   }
   if (submitFailures > 0) {
     issues.push({ level: 'critical', text: `${numberCompact(submitFailures)} order submit failures were tracked. These should be reviewed first because they are closest to lost revenue.` });
