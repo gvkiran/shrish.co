@@ -306,10 +306,25 @@ function cartAnalyticsSummary() {
     const price = parseFloat(String(item.price || '0').replace(/[^0-9.]/g, ''));
     return sum + (Number.isNaN(price) ? 0 : price * (item.qty || 1));
   }, 0);
+  const productIds = [];
+  const productTitles = [];
+  const categories = new Set();
+  cart.forEach((item) => {
+    const productId = item.productId || String(item.id || '').split('__')[0] || '';
+    const product = productId ? window.SHRISH_DATA.products.find((entry) => entry.id === productId) : null;
+    if (productId) productIds.push(productId);
+    if (item.name) productTitles.push(item.name);
+    if (product?.category) categories.add(product.category);
+  });
   return {
     cart_total_items: totalItems,
     cart_distinct_items: cart.length,
-    cart_estimated_total: Number(estimatedTotal.toFixed(2))
+    cart_estimated_total: Number(estimatedTotal.toFixed(2)),
+    cart_product_ids: productIds,
+    cart_product_titles: productTitles,
+    cart_categories: [...categories],
+    cart_primary_category: [...categories][0] || '',
+    cart_distinct_products: new Set(productIds).size
   };
 }
 

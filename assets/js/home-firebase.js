@@ -59,6 +59,29 @@ function getCart() {
   return JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
 }
 
+function cartAnalyticsSummary(cart = getCart()) {
+  const totalItems = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
+  const productIds = [];
+  const productTitles = [];
+  const categories = new Set();
+  cart.forEach((item) => {
+    const productId = item.productId || String(item.id || '').split('__')[0] || '';
+    const product = productId ? window.SHRISH_DATA?.products?.find((entry) => entry.id === productId) : null;
+    if (productId) productIds.push(productId);
+    if (item.name) productTitles.push(item.name);
+    if (product?.category) categories.add(product.category);
+  });
+  return {
+    cart_total_items: totalItems,
+    cart_distinct_items: cart.length,
+    cart_product_ids: productIds,
+    cart_product_titles: productTitles,
+    cart_categories: [...categories],
+    cart_primary_category: [...categories][0] || '',
+    cart_distinct_products: new Set(productIds).size
+  };
+}
+
 function saveCart(cart) {
   sessionStorage.setItem('shrish_cart', JSON.stringify(cart));
 }
@@ -175,8 +198,7 @@ function addToCart(productId, qty = 1) {
   trackHomeEvent('product_added_to_cart', {
     ...homeProductProps(product),
     quantity: qty,
-    cart_total_items: cart.reduce((sum, item) => sum + (item.qty || 0), 0),
-    cart_distinct_items: cart.length,
+    ...cartAnalyticsSummary(cart),
     source_area: 'home_featured_products'
   });
 }
@@ -214,8 +236,7 @@ function homeCardQtyChange(productId, delta) {
     trackHomeEvent('cart_item_removed', {
       product_id: productId,
       source_area: 'home_featured_products',
-      cart_total_items: nextCart.reduce((sum, cartItem) => sum + (cartItem.qty || 0), 0),
-      cart_distinct_items: nextCart.length
+      ...cartAnalyticsSummary(nextCart)
     });
     return;
   }
@@ -229,8 +250,7 @@ function homeCardQtyChange(productId, delta) {
     quantity_delta: delta,
     next_quantity: item.qty,
     source_area: 'home_featured_products',
-    cart_total_items: cart.reduce((sum, cartItem) => sum + (cartItem.qty || 0), 0),
-    cart_distinct_items: cart.length
+    ...cartAnalyticsSummary(cart)
   });
 }
 

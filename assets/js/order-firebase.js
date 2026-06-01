@@ -287,9 +287,25 @@ function cartAnalyticsSummary() {
   const totalValue = cart.reduce((sum, item) => {
     return sum + (moneyValue(item.price) * (item.qty || 1));
   }, 0);
+  const productIds = [];
+  const productTitles = [];
+  const categories = new Set();
+  cart.forEach((item) => {
+    const productId = cartItemProductId(item);
+    const product = productId ? window.SHRISH_DATA?.products?.find((entry) => entry.id === productId) : null;
+    if (productId) productIds.push(productId);
+    if (item.name) productTitles.push(item.name);
+    if (product?.category) categories.add(product.category);
+  });
   return {
     cart_total_items: totalItems,
-    cart_estimated_total: Number(totalValue.toFixed(2))
+    cart_distinct_items: cart.length,
+    cart_estimated_total: Number(totalValue.toFixed(2)),
+    cart_product_ids: productIds,
+    cart_product_titles: productTitles,
+    cart_categories: [...categories],
+    cart_primary_category: [...categories][0] || '',
+    cart_distinct_products: new Set(productIds).size
   };
 }
 
