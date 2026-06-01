@@ -1140,6 +1140,7 @@ async function submitOrder() {
   if (isSubmitting) return;
 
   const submitBtn = document.getElementById('submitBtn');
+  const attemptCartAnalytics = cartAnalyticsSummary();
   const firstName = document.getElementById('firstName').value.trim();
   const lastName = document.getElementById('lastName').value.trim();
   const phoneInput = document.getElementById('phone');
@@ -1152,7 +1153,7 @@ async function submitOrder() {
   const phoneDigits = extractUsPhoneDigits(phone);
   const emailValid = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email);
   trackCheckoutEvent('order_submit_attempted', {
-    ...cartAnalyticsSummary(),
+    ...attemptCartAnalytics,
     pickup_location: selectedLoc || '',
     referral: referral || 'Not specified',
     payment_method: selectedPaymentMethod,
@@ -1291,10 +1292,7 @@ async function submitOrder() {
       if (!currentCustomer && pendingLockStatus === 'pending') {
         const pendingLockData = pendingLock.data() || {};
         if (pendingLockData.orderId) {
-          const linkedOrder = await transaction.get(doc(db, 'orders', pendingLockData.orderId));
-          if (linkedOrder.exists() && (linkedOrder.data()?.status || 'pending') === 'pending') {
-            throw new Error('DUPLICATE_PENDING_ORDER');
-          }
+          throw new Error('DUPLICATE_PENDING_ORDER');
         }
       }
 
@@ -1428,6 +1426,12 @@ async function submitOrder() {
         : error?.message === 'LIVE_PRODUCT_CHECK_FAILED'
           ? 'live_product_check_failed'
           : (error?.code || 'submit_error'),
+      attempt_cart_total_items: attemptCartAnalytics.cart_total_items || 0,
+      attempt_cart_distinct_items: attemptCartAnalytics.cart_distinct_items || 0,
+      attempt_cart_estimated_total: attemptCartAnalytics.cart_estimated_total || 0,
+      attempt_cart_product_ids: attemptCartAnalytics.cart_product_ids || [],
+      attempt_cart_product_titles: attemptCartAnalytics.cart_product_titles || [],
+      attempt_cart_categories: attemptCartAnalytics.cart_categories || [],
       ...cartAnalyticsSummary(),
       pickup_location: selectedLoc || ''
     });
