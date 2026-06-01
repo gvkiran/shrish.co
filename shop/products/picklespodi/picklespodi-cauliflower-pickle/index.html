@@ -14,6 +14,10 @@
   <meta property="og:site_name" content="Shrish">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#C8791A">
+  <script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="../../../../images/brand/logo-small.png" type="image/png">
@@ -137,13 +141,32 @@
 
     </div>
         <div class="product-actions">
-          <a class="btn-primary" href="../../../../shop.html?category=picklespodi&product=picklespodi-cauliflower-pickle">Order from shop</a>
-          <a class="btn-secondary" href="../../../../shop.html">Back to shop</a>
+          <a class="btn-primary" href="../../../../shop.html?category=picklespodi&product=picklespodi-cauliflower-pickle" data-product-action="order_from_shop">Order from shop</a>
+          <a class="btn-secondary" href="../../../../shop.html" data-product-action="back_to_shop">Back to shop</a>
         </div>
         <div class="product-detail-list"><div class="product-detail-row"><span>Origin</span><strong>Veg Pickle</strong></div><div class="product-detail-row"><span>Local name</span><strong>250g or 500g</strong></div><div class="product-detail-row"><span>Season</span><strong>Available Now</strong></div><div class="product-detail-row"><span>Taste</span><strong>Spice: Medium-Hot</strong></div><div class="product-detail-row"><span>Best for</span><strong>Curd rice - hot rice with ghee - dosa - idli - chapati - upma</strong></div><div class="product-detail-row"><span>Ingredients</span><strong>Cauliflower florets, red chilli powder, mustard powder, fenugreek, turmeric, salt, peanut/groundnut oil, lemon</strong></div><div class="product-detail-row"><span>Shelf life</span><strong>Best taste: 30-45 days. Refrigerate after opening, use a clean dry spoon, keep airtight, and follow the package Best Before date as final.</strong></div><div class="product-detail-row"><span>Storage</span><strong>Refrigerate after opening. Use a clean, dry spoon, keep the container tightly closed, and consume within 30-45 days for best taste. Follow the package Best Before date and storage instructions as final.</strong></div><div class="product-detail-row"><span>Shipping</span><strong>Shipping eligible</strong></div><div class="product-detail-row"><span>Best Before</span><strong>Ingredients, spice level, oil coverage, and shelf life may vary by supplier batch. Contact us before ordering if you have allergies or ingredient concerns.</strong></div></div>
       </article>
     </section>
   </main>
   <footer class="product-footer">Product photos and details are for reference. Availability, batch, pickup timing, and final package details may vary.</footer>
+  <script src="../../../../assets/js/analytics.js?v=product-pages-1"></script>
+  <script>
+  (function () {
+    var props = {"product_id":"picklespodi-cauliflower-pickle","product_title":"Cauliflower Pickle","category":"picklespodi","filter_group":"Veg Pickles","preorder":false,"available":true,"source":"seo_product_page"};
+    function track(eventName, extra) {
+      window.SHRISH_ANALYTICS?.track(eventName, Object.assign({}, props, extra || {}));
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () { track('product_page_viewed'); }, { once: true });
+    } else {
+      track('product_page_viewed');
+    }
+    document.querySelectorAll('[data-product-action]').forEach(function (link) {
+      link.addEventListener('click', function () {
+        track('product_page_action_clicked', { action: link.getAttribute('data-product-action') || 'unknown' });
+      });
+    });
+  })();
+  </script>
 </body>
 </html>

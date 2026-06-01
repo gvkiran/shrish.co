@@ -496,6 +496,14 @@
                 <option value="30" selected>Last 30 days</option>
                 <option value="90">Last 90 days</option>
               </select>
+              <select id="growthCategory" class="filter-input" onchange="renderOwnerAnalytics()">
+                <option value="all">All categories</option>
+                <option value="mangoes">Mangoes</option>
+                <option value="sweets">Sweets</option>
+                <option value="pickles">Pickles</option>
+                <option value="podi">Podi</option>
+                <option value="snacks">Snacks</option>
+              </select>
               <button class="toolbar-btn" onclick="refreshOwnerAnalytics()">Refresh</button>
               <a class="toolbar-btn growth-link" href="https://us.posthog.com/project/409686/dashboard/1543847" target="_blank" rel="noopener">Open PostHog</a>
               <a class="toolbar-btn growth-link" href="https://vercel.com/dashboard" target="_blank" rel="noopener">Open Vercel</a>
@@ -520,6 +528,22 @@
                 <p>Quick owner notes based on the numbers.</p>
               </div>
               <div class="growth-actions-list" id="growthActions"></div>
+            </section>
+
+            <section class="growth-card">
+              <div class="growth-card-head">
+                <h3>Category Performance</h3>
+                <p>Which categories are creating demand.</p>
+              </div>
+              <div class="growth-chart-list" id="growthCategoryBreakdown"></div>
+            </section>
+
+            <section class="growth-card">
+              <div class="growth-card-head">
+                <h3>Website Issues To Fix</h3>
+                <p>Signals that point to lost orders or missing data.</p>
+              </div>
+              <div class="growth-actions-list" id="growthIssues"></div>
             </section>
           </div>
 

@@ -214,6 +214,22 @@ function growthDays() {
   return Number.isFinite(value) ? value : 30;
 }
 
+function growthCategory() {
+  return document.getElementById('growthCategory')?.value || 'all';
+}
+
+function growthCategoryLabel(category = growthCategory()) {
+  const labels = {
+    all: 'All categories',
+    mangoes: 'Mangoes',
+    sweets: 'Sweets',
+    pickles: 'Pickles',
+    podi: 'Podi',
+    snacks: 'Snacks'
+  };
+  return labels[category] || category;
+}
+
 function dateDaysAgo(days) {
   const date = new Date();
   date.setDate(date.getDate() - days);
@@ -249,22 +265,110 @@ function eventTotal(eventName) {
   return analyticsCountMap()[eventName]?.total || 0;
 }
 
+function productLookupById() {
+  return state.products.reduce((acc, product) => {
+    if (product?.id) acc[product.id] = product;
+    return acc;
+  }, {});
+}
+
+function productLookupByName() {
+  return state.products.reduce((acc, product) => {
+    if (product?.name) acc[normalizeLookup(product.name)] = product;
+    return acc;
+  }, {});
+}
+
+function growthCategoryFromProduct(product = {}) {
+  const category = normalizeProductCategory(product.category || '');
+  const filterGroup = String(product.filterGroup || '').toLowerCase();
+  if (category === 'mangoes') return 'mangoes';
+  if (category === 'putharekulu' || category === 'jellysnacks') return 'sweets';
+  if (category === 'snacks') return 'snacks';
+  if (category === 'picklespodi') return filterGroup.includes('podi') ? 'podi' : 'pickles';
+  return category || 'unknown';
+}
+
+function growthCategoryFromAnalytics(row = {}) {
+  const category = normalizeProductCategory(row.category || '');
+  const filterGroup = String(row.filterGroup || '').toLowerCase();
+  if (category === 'mangoes') return 'mangoes';
+  if (category === 'putharekulu' || category === 'jellysnacks') return 'sweets';
+  if (category === 'snacks') return 'snacks';
+  if (category === 'picklespodi') return filterGroup.includes('podi') ? 'podi' : 'pickles';
+  return category || 'unknown';
+}
+
+function orderItemProductId(item = {}) {
+  return String(item.productId || item.id || '').split('__')[0];
+}
+
+function productForOrderItem(item = {}) {
+  const byId = productLookupById();
+  const id = orderItemProductId(item);
+  if (id && byId[id]) return byId[id];
+  return productLookupByName()[normalizeLookup(item.name || '')] || null;
+}
+
+function selectedCategoryMatches(category) {
+  const selected = growthCategory();
+  return selected === 'all' || selected === category;
+}
+
+function localSubscriberCount(days = growthDays()) {
+  const cutoff = dateDaysAgo(days);
+  return state.subscribers.filter((entry) => {
+    const raw = entry?.createdAt?.toDate ? entry.createdAt.toDate() : new Date(entry?.createdAt || 0);
+    return !Number.isNaN(raw.getTime()) && raw.toISOString().slice(0, 10) >= cutoff;
+  }).length;
+}
+
 function localGrowthSummary(days = growthDays()) {
   const cutoff = dateDaysAgo(days);
   const orders = state.orders.filter((order) => {
     const key = orderDateKey(order);
     return key && key >= cutoff;
   });
+  if (growthCategory() !== 'all') {
+    const matchingOrderIds = new Set();
+    let revenue = 0;
+    let boxes = 0;
+    let fulfilledCount = 0;
+
+    orders.forEach((order) => {
+      let orderMatches = false;
+      (order.items || []).forEach((item) => {
+        const catalogProduct = productForOrderItem(item);
+        if (!selectedCategoryMatches(growthCategoryFromProduct(catalogProduct || {}))) return;
+        orderMatches = true;
+        if (!NON_REVENUE_ORDER_STATUSES.includes(order.status || 'pending')) {
+          const qty = Number(item.qty || item.quantity || item.boxes || 0);
+          boxes += qty;
+          revenue += Number(item.lineTotal || 0) || (moneyNumber(item.price || item.unitPrice || 0) * qty);
+        }
+      });
+      if (orderMatches) {
+        matchingOrderIds.add(order.id || order.orderNumber || JSON.stringify(order.createdAt || ''));
+        if (order.status === 'fulfilled') fulfilledCount += 1;
+      }
+    });
+
+    const orderCount = matchingOrderIds.size;
+    return {
+      orders: orders.filter((order) => matchingOrderIds.has(order.id || order.orderNumber || JSON.stringify(order.createdAt || ''))),
+      orderCount,
+      fulfilledCount,
+      revenue,
+      boxes,
+      avgOrder: orderCount ? revenue / orderCount : 0,
+      subscribers: localSubscriberCount(days)
+    };
+  }
   const revenueOrders = orders.filter((order) => !NON_REVENUE_ORDER_STATUSES.includes(order.status || 'pending'));
   const fulfilledOrders = revenueOrders.filter((order) => order.status === 'fulfilled');
   const revenue = revenueOrders.reduce((sum, order) => sum + orderRevenueValue(order), 0);
   const boxes = revenueOrders.reduce((sum, order) => sum + Number(order.totalBoxes || 0), 0);
   const avgOrder = revenueOrders.length ? revenue / revenueOrders.length : 0;
-  const subscribers = state.subscribers.filter((entry) => {
-    const raw = entry?.createdAt?.toDate ? entry.createdAt.toDate() : new Date(entry?.createdAt || 0);
-    return !Number.isNaN(raw.getTime()) && raw.toISOString().slice(0, 10) >= cutoff;
-  });
-
   return {
     orders,
     orderCount: orders.length,
@@ -272,7 +376,7 @@ function localGrowthSummary(days = growthDays()) {
     revenue,
     boxes,
     avgOrder,
-    subscribers: subscribers.length
+    subscribers: localSubscriberCount(days)
   };
 }
 
@@ -283,8 +387,11 @@ function localTopOrderedProducts(days = growthDays()) {
     const key = orderDateKey(order);
     if (!key || key < cutoff || NON_REVENUE_ORDER_STATUSES.includes(order.status || 'pending')) return;
     (order.items || []).forEach((item) => {
+      const catalogProduct = productForOrderItem(item);
+      const category = growthCategoryFromProduct(catalogProduct || {});
+      if (!selectedCategoryMatches(category)) return;
       const name = String(item.name || item.productTitle || item.id || 'Unknown product').trim();
-      const current = products.get(name) || { product: name, boxes: 0, revenue: 0, orders: 0 };
+      const current = products.get(name) || { product: name, category: growthCategoryLabel(category), boxes: 0, revenue: 0, orders: 0 };
       const qty = Number(item.qty || item.quantity || item.boxes || 0);
       const lineRevenue = Number(item.lineTotal || 0) || (moneyNumber(item.price || item.unitPrice || 0) * qty);
       current.boxes += qty;
@@ -296,6 +403,39 @@ function localTopOrderedProducts(days = growthDays()) {
   return [...products.values()]
     .sort((a, b) => b.revenue - a.revenue || b.boxes - a.boxes)
     .slice(0, 12);
+}
+
+function localCategoryBreakdown(days = growthDays()) {
+  const cutoff = dateDaysAgo(days);
+  const categories = new Map();
+
+  state.orders.forEach((order) => {
+    const key = orderDateKey(order);
+    if (!key || key < cutoff || NON_REVENUE_ORDER_STATUSES.includes(order.status || 'pending')) return;
+    (order.items || []).forEach((item) => {
+      const catalogProduct = productForOrderItem(item);
+      const category = growthCategoryFromProduct(catalogProduct || {});
+      if (!category || category === 'unknown') return;
+      const current = categories.get(category) || {
+        category,
+        label: growthCategoryLabel(category),
+        boxes: 0,
+        revenue: 0,
+        lines: 0
+      };
+      const qty = Number(item.qty || item.quantity || item.boxes || 0);
+      current.boxes += qty;
+      current.revenue += Number(item.lineTotal || 0) || (moneyNumber(item.price || item.unitPrice || 0) * qty);
+      current.lines += 1;
+      categories.set(category, current);
+    });
+  });
+
+  return [...categories.values()].sort((a, b) => b.revenue - a.revenue);
+}
+
+function filteredAnalyticsRows(rows = []) {
+  return rows.filter((row) => selectedCategoryMatches(growthCategoryFromAnalytics(row)));
 }
 
 function localOrderMix(days = growthDays()) {
@@ -414,20 +554,23 @@ function renderGrowthTables() {
     { key: 'visitors', label: 'People', format: numberCompact },
   ], 'PostHog page data will show here after the API secret is connected.');
 
-  renderGrowthTable('growthClickedProducts', analytics.clickedProducts || [], [
+  renderGrowthTable('growthClickedProducts', filteredAnalyticsRows(analytics.clickedProducts || []), [
     { key: 'productTitle', label: 'Product' },
+    { key: 'category', label: 'Category', format: (_value, row) => growthCategoryLabel(growthCategoryFromAnalytics(row)) },
     { key: 'clicks', label: 'Clicks', format: numberCompact },
     { key: 'people', label: 'People', format: numberCompact },
   ], 'Product clicks are tracked as product_details_opened.');
 
-  renderGrowthTable('growthAddedProducts', analytics.addedProducts || [], [
+  renderGrowthTable('growthAddedProducts', filteredAnalyticsRows(analytics.addedProducts || []), [
     { key: 'productTitle', label: 'Product' },
+    { key: 'category', label: 'Category', format: (_value, row) => growthCategoryLabel(growthCategoryFromAnalytics(row)) },
     { key: 'adds', label: 'Adds', format: numberCompact },
     { key: 'people', label: 'People', format: numberCompact },
   ], 'Cart adds are tracked as product_added_to_cart.');
 
   renderGrowthTable('growthOrderedProducts', localTopOrderedProducts(), [
     { key: 'product', label: 'Product' },
+    { key: 'category', label: 'Category' },
     { key: 'boxes', label: 'Boxes', format: numberCompact },
     { key: 'revenue', label: 'Revenue', format: formatCurrency },
     { key: 'orders', label: 'Lines', format: numberCompact },
@@ -438,6 +581,32 @@ function renderGrowthTables() {
     { key: 'label', label: 'Value' },
     { key: 'total', label: 'Orders', format: numberCompact },
   ], 'No orders found for this date range.');
+}
+
+function renderGrowthCategoryBreakdown() {
+  const target = document.getElementById('growthCategoryBreakdown');
+  if (!target) return;
+  const rows = localCategoryBreakdown();
+  const filtered = growthCategory() === 'all'
+    ? rows
+    : rows.filter((row) => row.category === growthCategory());
+  if (!filtered.length) {
+    target.innerHTML = '<div class="growth-empty">No category demand found for this date range.</div>';
+    return;
+  }
+  const maxRevenue = Math.max(...filtered.map((row) => row.revenue), 1);
+  target.innerHTML = filtered.map((row) => `
+    <div class="growth-chart-row">
+      <div class="growth-chart-label">
+        <strong>${escapeHtml(row.label)}</strong>
+        <span>${numberCompact(row.boxes)} boxes / ${numberCompact(row.lines)} order lines</span>
+      </div>
+      <div class="growth-chart-track">
+        <div style="width:${Math.max(8, (row.revenue / maxRevenue) * 100)}%"></div>
+      </div>
+      <div class="growth-chart-value">${formatCurrency(row.revenue)}</div>
+    </div>
+  `).join('');
 }
 
 function renderGrowthActions(summary) {
@@ -472,6 +641,42 @@ function renderGrowthActions(summary) {
 
   document.getElementById('growthActions').innerHTML = actions.map((action) => `
     <div class="growth-action-item">${escapeHtml(action)}</div>
+  `).join('');
+}
+
+function renderGrowthIssues(summary) {
+  const issues = [];
+  const connected = state.ownerAnalytics?.connected;
+  const productClicks = eventPeople('product_details_opened');
+  const cartAdds = eventPeople('product_added_to_cart');
+  const checkoutStarts = eventPeople('checkout_started');
+  const orders = Math.max(eventPeople('order_submitted'), summary.orderCount);
+  const submitFailures = eventTotal('order_submit_failed');
+
+  if (!connected) {
+    issues.push({ level: 'warn', text: 'PostHog API is not connected to this dashboard yet. We can see orders, but not true visitor drop-off or product-click behavior here.' });
+  }
+  if (connected && productClicks === 0 && summary.orderCount > 0) {
+    issues.push({ level: 'warn', text: 'Orders exist but product click events are zero. Check that PostHog script loads before shop-firebase.js and that ad blockers are not hiding all events.' });
+  }
+  if (connected && productClicks > 0 && cartAdds / productClicks < 0.2) {
+    issues.push({ level: 'warn', text: 'Low product-click to cart-add conversion. Improve product photo, visible price, availability, and add-to-cart position.' });
+  }
+  if (connected && checkoutStarts > 0 && orders / checkoutStarts < 0.65) {
+    issues.push({ level: 'critical', text: 'Checkout start to order completion is weak. Review pickup selection, validation errors, phone/email requirements, and payment wording.' });
+  }
+  if (submitFailures > 0) {
+    issues.push({ level: 'critical', text: `${numberCompact(submitFailures)} order submit failures were tracked. These should be reviewed first because they are closest to lost revenue.` });
+  }
+  if (summary.orderCount > 0 && summary.subscribers <= 2) {
+    issues.push({ level: 'info', text: 'Subscriber capture is low compared with order volume. Add a stronger "notify me / seasonal alert" prompt after ordering and on sold-out products.' });
+  }
+  if (!issues.length) {
+    issues.push({ level: 'good', text: 'No urgent issues detected for this filter. Keep monitoring checkout completion and product click-to-cart conversion.' });
+  }
+
+  document.getElementById('growthIssues').innerHTML = issues.map((issue) => `
+    <div class="growth-action-item ${escapeHtml(issue.level)}">${escapeHtml(issue.text)}</div>
   `).join('');
 }
 
@@ -518,7 +723,9 @@ function renderOwnerAnalytics() {
   renderGrowthKpis(summary);
   renderGrowthFunnel(summary);
   renderGrowthTables();
+  renderGrowthCategoryBreakdown();
   renderGrowthActions(summary);
+  renderGrowthIssues(summary);
   renderGrowthSetup();
 
   if (state.ownerAnalyticsLoading) {
@@ -4344,6 +4551,7 @@ window.deleteCustomerAccountFromAdmin = deleteCustomerAccountFromAdmin;
 window.renderFeedback = renderFeedback;
 window.exportFeedbackCSV = exportFeedbackCSV;
 window.exportSubscribersCSV = exportSubscribersCSV;
+window.renderOwnerAnalytics = renderOwnerAnalytics;
 window.refreshOwnerAnalytics = refreshOwnerAnalytics;
 window.deleteSubscriber = deleteSubscriber;
 window.renderAccounting = renderAccounting;

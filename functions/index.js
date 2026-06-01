@@ -1624,33 +1624,35 @@ exports.getOwnerAnalytics = onCall(
             AND event = 'page_viewed'
           GROUP BY page
           ORDER BY views DESC
-          LIMIT 12
+          LIMIT 60
         `, "owner dashboard top pages"),
         runPostHogHogql(`
           SELECT
             coalesce(nullIf(toString(properties.product_title), ''), 'Unknown product') AS product_title,
             coalesce(nullIf(toString(properties.product_id), ''), '') AS product_id,
             coalesce(nullIf(toString(properties.category), ''), '') AS category,
+            coalesce(nullIf(toString(properties.filter_group), ''), '') AS filter_group,
             count() AS clicks,
             uniq(distinct_id) AS people
           FROM events
           WHERE ${sinceClause}
             AND event = 'product_details_opened'
-          GROUP BY product_title, product_id, category
+          GROUP BY product_title, product_id, category, filter_group
           ORDER BY clicks DESC
-          LIMIT 12
+          LIMIT 60
         `, "owner dashboard clicked products"),
         runPostHogHogql(`
           SELECT
             coalesce(nullIf(toString(properties.product_title), ''), 'Unknown product') AS product_title,
             coalesce(nullIf(toString(properties.product_id), ''), '') AS product_id,
             coalesce(nullIf(toString(properties.category), ''), '') AS category,
+            coalesce(nullIf(toString(properties.filter_group), ''), '') AS filter_group,
             count() AS adds,
             uniq(distinct_id) AS people
           FROM events
           WHERE ${sinceClause}
             AND event = 'product_added_to_cart'
-          GROUP BY product_title, product_id, category
+          GROUP BY product_title, product_id, category, filter_group
           ORDER BY adds DESC
           LIMIT 12
         `, "owner dashboard added products"),
@@ -1664,8 +1666,8 @@ exports.getOwnerAnalytics = onCall(
         updatedAt: new Date().toISOString(),
         eventCounts: rowsToObjects(eventCounts.rows, ["event", "totalEvents", "uniquePeople"]),
         topPages: rowsToObjects(topPages.rows, ["page", "views", "visitors"]),
-        clickedProducts: rowsToObjects(clickedProducts.rows, ["productTitle", "productId", "category", "clicks", "people"]),
-        addedProducts: rowsToObjects(addedProducts.rows, ["productTitle", "productId", "category", "adds", "people"]),
+        clickedProducts: rowsToObjects(clickedProducts.rows, ["productTitle", "productId", "category", "filterGroup", "clicks", "people"]),
+        addedProducts: rowsToObjects(addedProducts.rows, ["productTitle", "productId", "category", "filterGroup", "adds", "people"]),
       };
     } catch (error) {
       console.error("Owner analytics query failed", error);

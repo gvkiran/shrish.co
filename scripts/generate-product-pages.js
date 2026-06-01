@@ -168,6 +168,22 @@ function jsonLd(product, image) {
   }, null, 2).replace(/</g, '\\u003c');
 }
 
+function jsonScript(value) {
+  return JSON.stringify(value).replace(/</g, '\\u003c');
+}
+
+function productAnalyticsProps(product) {
+  return {
+    product_id: product.id || '',
+    product_title: product.name || '',
+    category: normalizeCategory(product.category || ''),
+    filter_group: product.filterGroup || '',
+    preorder: Boolean(product.preorderOnly),
+    available: Boolean(product.available && !product.displayOnly),
+    source: 'seo_product_page'
+  };
+}
+
 function cleanGeneratedHtml(html) {
   return html.split('\n').map((line) => line.replace(/\s+$/g, '')).join('\n');
 }
@@ -198,6 +214,10 @@ function renderProductPage(product) {
   <meta property="og:site_name" content="Shrish">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#C8791A">
+  <script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="${ROOT_PREFIX}images/brand/logo-small.png" type="image/png">
@@ -281,14 +301,33 @@ function renderProductPage(product) {
         ${tags.length ? `<div class="product-tags">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join('')}</div>` : ''}
         ${variantsHtml(product)}
         <div class="product-actions">
-          <a class="btn-primary" href="${shopProductUrl(product)}">Order from shop</a>
-          <a class="btn-secondary" href="${ROOT_PREFIX}shop.html">Back to shop</a>
+          <a class="btn-primary" href="${shopProductUrl(product)}" data-product-action="order_from_shop">Order from shop</a>
+          <a class="btn-secondary" href="${ROOT_PREFIX}shop.html" data-product-action="back_to_shop">Back to shop</a>
         </div>
         ${rows.length ? `<div class="product-detail-list">${rows.map(([label, value]) => `<div class="product-detail-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('')}</div>` : ''}
       </article>
     </section>
   </main>
   <footer class="product-footer">Product photos and details are for reference. Availability, batch, pickup timing, and final package details may vary.</footer>
+  <script src="${ROOT_PREFIX}assets/js/analytics.js?v=product-pages-1"></script>
+  <script>
+  (function () {
+    var props = ${jsonScript(productAnalyticsProps(product))};
+    function track(eventName, extra) {
+      window.SHRISH_ANALYTICS?.track(eventName, Object.assign({}, props, extra || {}));
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () { track('product_page_viewed'); }, { once: true });
+    } else {
+      track('product_page_viewed');
+    }
+    document.querySelectorAll('[data-product-action]').forEach(function (link) {
+      link.addEventListener('click', function () {
+        track('product_page_action_clicked', { action: link.getAttribute('data-product-action') || 'unknown' });
+      });
+    });
+  })();
+  </script>
 </body>
 </html>
 `);
@@ -309,6 +348,10 @@ function renderProductsIndex(products) {
   <title>Shrish Product Pages</title>
   <meta name="description" content="Browse Shrish product pages by category.">
   <link rel="canonical" href="${SITE_URL}/shop/products/">
+  <script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
   <link rel="icon" href="../../images/brand/logo-small.png" type="image/png">
   <link rel="stylesheet" href="../../assets/css/styles.css">
   <style>
@@ -332,6 +375,10 @@ function renderProductsIndex(products) {
       </section>
     `).join('')}
   </main>
+  <script src="../../assets/js/analytics.js?v=product-pages-1"></script>
+  <script>
+  window.SHRISH_ANALYTICS?.track('product_directory_viewed');
+  </script>
 </body>
 </html>
 `);

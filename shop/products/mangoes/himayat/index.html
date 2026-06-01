@@ -14,6 +14,10 @@
   <meta property="og:site_name" content="Shrish">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#C8791A">
+  <script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="../../../../images/brand/logo-small.png" type="image/png">
@@ -117,13 +121,32 @@
         <div class="product-tags"><span>Premium</span><span>June - July</span><span>Creamy  -  Sweet  -  Fiberless  -  Melt-in-mouth</span><span>Very sweet</span><span>Creamy</span><span>Fiberless</span><span>Royal</span><span>Aromatic</span><span>Melt in mouth</span><span>Cut and eat</span></div>
         <div class="product-price">$58<span>per box (~4kgs) (6 to 9)</span></div>
         <div class="product-actions">
-          <a class="btn-primary" href="../../../../shop.html?category=mangoes&product=himayat">Order from shop</a>
-          <a class="btn-secondary" href="../../../../shop.html">Back to shop</a>
+          <a class="btn-primary" href="../../../../shop.html?category=mangoes&product=himayat" data-product-action="order_from_shop">Order from shop</a>
+          <a class="btn-secondary" href="../../../../shop.html" data-product-action="back_to_shop">Back to shop</a>
         </div>
         <div class="product-detail-list"><div class="product-detail-row"><span>Origin</span><strong>Hyderabad, Telangana</strong></div><div class="product-detail-row"><span>Local name</span><strong>హిమాయత్</strong></div><div class="product-detail-row"><span>Season</span><strong>June - July</strong></div><div class="product-detail-row"><span>Taste</span><strong>Creamy  -  Sweet  -  Fiberless  -  Melt-in-mouth</strong></div><div class="product-detail-row"><span>Best for</span><strong>Eating fresh  -  Kulfi  -  Premium desserts</strong></div></div>
       </article>
     </section>
   </main>
   <footer class="product-footer">Product photos and details are for reference. Availability, batch, pickup timing, and final package details may vary.</footer>
+  <script src="../../../../assets/js/analytics.js?v=product-pages-1"></script>
+  <script>
+  (function () {
+    var props = {"product_id":"himayat","product_title":"Himayat (Imam Pasand)","category":"mangoes","filter_group":"","preorder":false,"available":true,"source":"seo_product_page"};
+    function track(eventName, extra) {
+      window.SHRISH_ANALYTICS?.track(eventName, Object.assign({}, props, extra || {}));
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () { track('product_page_viewed'); }, { once: true });
+    } else {
+      track('product_page_viewed');
+    }
+    document.querySelectorAll('[data-product-action]').forEach(function (link) {
+      link.addEventListener('click', function () {
+        track('product_page_action_clicked', { action: link.getAttribute('data-product-action') || 'unknown' });
+      });
+    });
+  })();
+  </script>
 </body>
 </html>
