@@ -2,6 +2,8 @@ import { db, collection, doc, getDoc, onSnapshot, setDoc, serverTimestamp, escap
 
 let homeModalProductId = null;
 let homeModalQty = 1;
+let homeModalOpenedAt = 0;
+let homeModalOpenProps = null;
 
 const HOME_PRODUCT_IMAGES = {
   alphonso: ['images/products/mangoes/img_alphonso.jpeg'],
@@ -255,6 +257,7 @@ function homeCardQtyChange(productId, delta) {
 }
 
 function renderHomeModal(productId) {
+  trackHomeModalDuration('replaced');
   const product = window.SHRISH_DATA?.products?.find((item) => item.id === productId);
   const modal = document.getElementById('homeProductModal');
   const media = document.getElementById('homeProductModalMedia');
@@ -296,16 +299,33 @@ function renderHomeModal(productId) {
   modal.classList.add('open');
   modal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
-  trackHomeEvent('product_details_opened', {
+  homeModalOpenedAt = Date.now();
+  homeModalOpenProps = {
     ...homeProductProps(product),
     source_area: 'home_featured_products'
+  };
+  trackHomeEvent('product_details_opened', homeModalOpenProps);
+}
+
+function trackHomeModalDuration(closeReason = 'closed') {
+  if (!homeModalOpenedAt || !homeModalOpenProps) return;
+  const cart = getCart();
+  const durationSeconds = Math.max(0, Number(((Date.now() - homeModalOpenedAt) / 1000).toFixed(2)));
+  trackHomeEvent('product_detail_time_spent', {
+    ...homeModalOpenProps,
+    duration_seconds: durationSeconds,
+    close_reason: closeReason,
+    added_to_cart_during_view: cart.some((item) => (item.productId || String(item.id || '').split('__')[0]) === homeModalOpenProps.product_id)
   });
+  homeModalOpenedAt = 0;
+  homeModalOpenProps = null;
 }
 
 function closeHomeProductModal() {
   const modal = document.getElementById('homeProductModal');
   if (!modal) return;
 
+  if (modal.classList.contains('open')) trackHomeModalDuration('closed');
   modal.classList.remove('open');
   modal.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
@@ -404,6 +424,7 @@ function applyCatalogFieldOverrides(product = {}) {
 function init() {
   initFooterSubscribe();
   trackHomeEvent('home_viewed');
+  window.addEventListener('pagehide', () => trackHomeModalDuration('pagehide'));
   if (!window.SHRISH_DATA?.products) return;
   const baseProducts = JSON.parse(JSON.stringify(window.SHRISH_DATA.products));
   updateNavCartState();

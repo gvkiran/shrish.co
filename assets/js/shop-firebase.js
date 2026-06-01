@@ -8,6 +8,8 @@ let baseProducts = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || [])
 let modalQty = 1;
 let modalProductId = null;
 let modalVariantId = null;
+let modalOpenedAt = 0;
+let modalOpenProps = null;
 let cardVariantSelections = {};
 let notifyTarget = null;
 let picklePodiFilter = 'all';
@@ -678,6 +680,7 @@ function showToast(msg) {
 }
 
 function openModal(productId, options = {}) {
+  trackModalDuration('replaced');
   const p = window.SHRISH_DATA.products.find((x) => x.id === productId);
   if (!p) return;
   modalProductId = productId;
@@ -690,7 +693,9 @@ function openModal(productId, options = {}) {
   const isSoon = liveReady && p.displayOnly;
   const imgs = productImages(productId, p);
   const selectedVariant = getSelectedVariant(p, modalVariantId);
-  trackShopEvent('product_details_opened', productEventProps(p, selectedVariant));
+  modalOpenedAt = Date.now();
+  modalOpenProps = productEventProps(p, selectedVariant);
+  trackShopEvent('product_details_opened', modalOpenProps);
 
   const mainWrap = document.getElementById('modalMainImgWrap');
   if (mainWrap) {
@@ -785,6 +790,19 @@ function openModal(productId, options = {}) {
   }
 }
 
+function trackModalDuration(closeReason = 'closed') {
+  if (!modalOpenedAt || !modalOpenProps) return;
+  const durationSeconds = Math.max(0, Number(((Date.now() - modalOpenedAt) / 1000).toFixed(2)));
+  trackShopEvent('product_detail_time_spent', {
+    ...modalOpenProps,
+    duration_seconds: durationSeconds,
+    close_reason: closeReason,
+    added_to_cart_during_view: cart.some((item) => (item.productId || String(item.id || '').split('__')[0]) === modalOpenProps.product_id)
+  });
+  modalOpenedAt = 0;
+  modalOpenProps = null;
+}
+
 function switchModalImg(src, thumb) {
   const main = document.getElementById('modalMainImg');
   if (main) main.src = src;
@@ -795,6 +813,7 @@ function switchModalImg(src, thumb) {
 function closeModal(options = {}) {
   const modal = document.getElementById('productModal');
   const wasOpen = Boolean(modal?.classList.contains('open'));
+  if (wasOpen) trackModalDuration(options.reason || 'closed');
   modal?.classList.remove('open');
   document.body.style.overflow = '';
   modalProductId = null;
@@ -1457,6 +1476,7 @@ function init() {
   bindNotifyForm();
   bindLiveSearchEvents();
   window.addEventListener('popstate', handleShopHistoryChange);
+  window.addEventListener('pagehide', () => trackModalDuration('pagehide'));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeCart(); closeNotifyModal(); } });
   buildFilters();
   renderShop();
