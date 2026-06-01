@@ -36,6 +36,7 @@ const NON_REVENUE_ORDER_STATUSES = ['cancelled', 'no_show'];
 const ADMIN_EMAIL = normalizeLookup(window.SHRISH_APP_CONFIG?.adminEmailHint || 'contact@shrish.co');
 const deleteCustomerAccount = httpsCallable(cloudFunctions, 'deleteCustomerAccount');
 const getOwnerAnalytics = httpsCallable(cloudFunctions, 'getOwnerAnalytics');
+const sendProductAvailabilityEmails = httpsCallable(cloudFunctions, 'sendProductAvailabilityEmails');
 
 const state = {
   orders: [],
@@ -2572,6 +2573,37 @@ function galleryFromInput(value) {
     .filter(Boolean);
 }
 
+function shouldSendAvailabilityNotification(previousProduct, nextProduct) {
+  if (!previousProduct || !nextProduct) return false;
+  const wasUnavailable = !previousProduct.available || previousProduct.displayOnly || previousProduct.hidden;
+  const isNowLive = nextProduct.available && !nextProduct.displayOnly && !nextProduct.hidden;
+  return wasUnavailable && isNowLive;
+}
+
+async function notifyProductSubscribersIfNeeded(productId, previousProduct, nextProduct) {
+  if (!shouldSendAvailabilityNotification(previousProduct, nextProduct)) return null;
+
+  try {
+    const result = await sendProductAvailabilityEmails({ productId });
+    const sent = Number(result?.data?.sent || 0);
+    const total = Number(result?.data?.totalSubscribers || 0);
+    if (sent > 0) {
+      showToast(`${nextProduct.name} is live; emailed ${sent} subscriber${sent === 1 ? '' : 's'}`);
+    } else if (total === 0) {
+      showToast(`${nextProduct.name} is live; no product subscribers yet`);
+    }
+    return result?.data || null;
+  } catch (error) {
+    console.error('Product availability email failed', {
+      code: error?.code,
+      message: error?.message,
+      productId
+    });
+    showToast(`${nextProduct.name} is live, but notification emails did not send`);
+    return null;
+  }
+}
+
 function openAddProductForm() {
   document.getElementById('addProductForm')?.reset();
   document.getElementById('editingProductId').value = '';
@@ -2735,6 +2767,7 @@ async function submitAddProduct(event) {
   try {
     await setDoc(doc(db, 'products', id), payload);
     showToast(editingProductId ? `${name} updated` : `${name} added to catalog`);
+    await notifyProductSubscribersIfNeeded(id, existingProduct, payload);
     resetAddProductForm();
     closeAddProductForm();
   } catch (error) {
@@ -3241,6 +3274,7 @@ async function toggleAvailable(id, available) {
   };
   await updateDoc(doc(db, 'products', id), payload);
   showToast(`${product.name} ${available ? 'is live' : 'is off'}`);
+  await notifyProductSubscribersIfNeeded(id, product, { ...product, ...payload });
 }
 
 async function toggleProductHidden(id, hidden) {

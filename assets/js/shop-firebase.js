@@ -735,7 +735,7 @@ function openModal(productId, options = {}) {
   if (!liveReady) {
     actionHtml = `<button class="modal-add-btn" style="background:#ccc;cursor:not-allowed" disabled>${catalogSyncFailed ? 'Refresh Required' : 'Checking Availability'}</button>`;
   } else if (isSoon) {
-    actionHtml = `<button class="modal-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify Me</button>`;
+    actionHtml = `<button class="modal-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify when available</button>`;
   } else if (isAvail) {
     const variants = getProductVariants(p);
     const variantSelect = usesVariantUI(p)
@@ -743,7 +743,7 @@ function openModal(productId, options = {}) {
       : '';
     actionHtml = `${variantSelect}<div class="modal-qty-row"><div class="modal-qty-ctrl"><button class="modal-qty-btn" onclick="modalChangeQty(-1)">-</button><span class="modal-qty-num" id="modalQtyNum">1</span><button class="modal-qty-btn" onclick="modalChangeQty(1)">+</button></div><button class="modal-add-btn" id="modalAddBtn" onclick="modalAddToCart()">${isPreorder ? 'Preorder' : 'Add to Cart'}</button></div>`;
   } else {
-    actionHtml = `<button class="modal-add-btn" style="background:#ccc;cursor:not-allowed" disabled>Currently Not Available</button>`;
+    actionHtml = `<button class="modal-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify when available</button>`;
   }
 
   const info = document.getElementById('modalInfo');
@@ -864,7 +864,7 @@ async function notifyMe(productId, productName) {
   const msg = document.getElementById('notifyMessage');
   const modal = document.getElementById('notifyModal');
 
-  if (title) title.textContent = 'Get Notified';
+  if (title) title.textContent = 'Notify when available';
   if (text) text.textContent = `Enter your email and we'll let you know when "${productName}" is available.`;
   if (email) email.value = '';
   if (msg) {
@@ -1003,7 +1003,7 @@ function renderCard(p) {
   if (!liveReady) {
     actionHtml = `<div class="pc-card-actions" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" disabled>${catalogSyncFailed ? 'Refresh Required' : 'Checking...'}</button></div>`;
   } else if (isSoon) {
-    actionHtml = `<button class="pc-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify Me</button>`;
+    actionHtml = `<button class="pc-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify when available</button>`;
   } else if (isAvail && hasChoices && usesDirectVariantButtons(p)) {
     actionHtml = `<div class="pc-card-actions pc-card-actions-variant pc-card-actions-direct" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button>${renderDirectVariantButtons(p, variants)}</div>`;
   } else if (isAvail && hasChoices) {
@@ -1011,7 +1011,7 @@ function renderCard(p) {
   } else if (isAvail) {
     actionHtml = `<div class="pc-card-actions" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" onclick="quickAdd('${escapeHtml(p.id)}')">${isPreorder ? '+ Preorder' : '+ Add to Cart'}</button></div>`;
   } else {
-    actionHtml = `<div class="pc-card-actions"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" disabled>Not Available</button></div>`;
+    actionHtml = `<div class="pc-card-actions"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify when available</button></div>`;
   }
 
   return `<div class="pc ${isSoon ? 'display-only' : ''} ${liveReady && !isAvail && !isSoon ? 'sold-out' : ''}">

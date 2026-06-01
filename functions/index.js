@@ -29,6 +29,7 @@ const SHRISH_LOGO_URL = "https://gvkiran.github.io/shrish.co/images/brand/logo-s
 const SHRISH_SITE_URL = "https://shrish.co";
 const ORDER_COUNTER_START = 671499;
 const MAX_REMINDER_EMAILS_PER_SEND = 50;
+const MAX_PRODUCT_NOTIFY_EMAILS_PER_SEND = 250;
 const STRIPE_PAYMENTS_ENABLED = false;
 
 function isAdminRequest(request) {
@@ -537,6 +538,153 @@ async function sendOrderConfirmationEmails(orderRef, order, source = "order_crea
   });
   await posthog.flush();
 }
+
+function buildProductAvailableEmail(product) {
+  const productId = String(product?.id || "").trim();
+  const productName = escapeHtml(product?.name || "Your requested Shrish product");
+  const productDescription = escapeHtml(product?.description || "");
+  const shopUrl = `${SHRISH_SITE_URL}/shop.html?product=${encodeURIComponent(productId)}`;
+
+  return `
+  <!doctype html>
+  <html>
+    <body style="margin:0; padding:0; background:#ece7df; font-family: Arial, Helvetica, sans-serif; color:#2b2218;">
+      <div style="padding:32px 12px;">
+        <div style="max-width:620px; margin:0 auto; background:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.08);">
+          <div style="background:#b87512; padding:28px 24px 24px; text-align:center;">
+            <img src="${SHRISH_LOGO_URL}" alt="Shrish" style="display:block; width:104px; height:104px; object-fit:contain; margin:0 auto 16px auto;" />
+            <div style="font-size:12px; letter-spacing:1.6px; font-weight:700; color:#f8ebd4; text-transform:uppercase;">SHRISH LLC</div>
+            <div style="margin-top:10px; font-size:22px; line-height:1.3; font-weight:700; color:#ffffff;">${productName} is available now</div>
+          </div>
+          <div style="padding:26px 24px;">
+            <p style="margin:0 0 16px; font-size:15px; line-height:1.7;">You asked us to let you know when <strong>${productName}</strong> is available.</p>
+            ${productDescription ? `<p style="margin:0 0 22px; font-size:15px; line-height:1.7; color:#3d3225;">${productDescription}</p>` : ""}
+            <div style="text-align:center; margin:28px 0;">
+              <a href="${shopUrl}" style="display:inline-block; background:#c8791a; color:#ffffff; text-decoration:none; padding:14px 24px; border-radius:999px; font-weight:700;">Shop now</a>
+            </div>
+            <div style="background:#f6f1e8; border-radius:14px; padding:14px 16px; font-size:13px; line-height:1.6; color:#3d3225;">
+              Availability can be limited and pickup timing depends on the current batch. Payment is collected at pickup unless the website says otherwise.
+            </div>
+            <p style="margin:22px 0 0; font-size:12px; line-height:1.6; color:#7a6853;">You received this because you requested a product availability notification on shrish.co. To stop these updates, reply to this email.</p>
+          </div>
+        </div>
+      </div>
+    </body>
+  </html>
+  `;
+}
+
+exports.sendProductAvailabilityEmails = onCall(
+  callableOptions({
+    secrets: [RESEND_API_KEY],
+  }),
+  async (request) => {
+    if (!isAdminRequest(request)) {
+      throw new HttpsError("permission-denied", "Only the Shrish admin can send product availability emails.");
+    }
+
+    const productId = String(request.data?.productId || "").trim();
+    if (!productId) {
+      throw new HttpsError("invalid-argument", "Product id is required.");
+    }
+
+    const db = admin.firestore();
+    const productRef = db.collection("products").doc(productId);
+    const productSnap = await productRef.get();
+    if (!productSnap.exists) {
+      throw new HttpsError("not-found", "Product was not found.");
+    }
+
+    const product = { id: productId, ...productSnap.data() };
+    if (!product.available || product.displayOnly || product.hidden) {
+      throw new HttpsError("failed-precondition", "Product must be visible and available before notifying customers.");
+    }
+
+    const notifySnap = await db.collection("notify_requests")
+      .where("productId", "==", productId)
+      .get();
+
+    const requestsByEmail = new Map();
+    notifySnap.docs.forEach((docSnap) => {
+      const data = docSnap.data() || {};
+      const email = String(data.email || "").trim().toLowerCase();
+      const status = String(data.status || "subscribed").toLowerCase();
+      if (!email || status !== "subscribed") return;
+      if (!requestsByEmail.has(email)) requestsByEmail.set(email, { ref: docSnap.ref, data });
+    });
+
+    const requests = [...requestsByEmail.entries()].slice(0, MAX_PRODUCT_NOTIFY_EMAILS_PER_SEND);
+    if (!requests.length) {
+      return { sent: 0, skipped: 0, totalSubscribers: 0 };
+    }
+
+    const resend = new Resend(RESEND_API_KEY.value());
+    const sentBy = request.auth.token?.email || request.auth.uid || "admin";
+    const subject = `${product.name || "Shrish product"} is available now`;
+    const html = buildProductAvailableEmail(product);
+    const skipped = [];
+    let sent = 0;
+
+    for (const [email, entry] of requests) {
+      try {
+        await resend.emails.send({
+          from: SHRISH_FROM_EMAIL,
+          to: [email],
+          subject,
+          html,
+        });
+
+        await entry.ref.set({
+          status: "notified",
+          notifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+          notifiedBy: sentBy,
+          lastNotificationSubject: subject,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+
+        sent += 1;
+      } catch (error) {
+        console.error("Product availability email failed", {
+          productId,
+          email,
+          error: error?.message || String(error),
+        });
+        skipped.push({ email, reason: "send_failed" });
+      }
+    }
+
+    await productRef.set({
+      availabilityNotificationLastSentAt: admin.firestore.FieldValue.serverTimestamp(),
+      availabilityNotificationLastSentBy: sentBy,
+      availabilityNotificationLastSentCount: sent,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    posthog.capture({
+      distinctId: sentBy,
+      event: "product_availability_emails_sent",
+      properties: {
+        product_id: productId,
+        product_title: product.name || "",
+        sent_count: sent,
+        skipped_count: skipped.length,
+        total_subscribers: requestsByEmail.size,
+      },
+    });
+    await posthog.flush();
+
+    if (!sent && skipped.length) {
+      throw new HttpsError("failed-precondition", "No product availability emails were sent. Check Firebase Functions logs and Resend setup.");
+    }
+
+    return {
+      sent,
+      skipped: skipped.length,
+      totalSubscribers: requestsByEmail.size,
+      capped: requestsByEmail.size > MAX_PRODUCT_NOTIFY_EMAILS_PER_SEND,
+    };
+  }
+);
 
 function buildPasswordResetEmail(email, resetLink) {
   const safeEmail = escapeHtml(email);
