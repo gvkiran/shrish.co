@@ -30,7 +30,7 @@ let selectedPaymentMethod = 'pickup';
 let guestStripeConfirmed = false;
 const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
 const CHECKOUT_ACCOUNT_PREFILL_KEY = 'shrish_checkout_account_prefill';
-const CONFIRMATION_WAIT_MS = 15000;
+const CONFIRMATION_WAIT_MS = 30000;
 const createStripeCheckoutSession = httpsCallable(cloudFunctions, 'createStripeCheckoutSession');
 const LOCATION_LABELS = {
   shortpump: 'Short Pump, VA',
@@ -53,7 +53,7 @@ function isCustomerUser(user) {
 function recentOrderClaimPayload(orderRef, order, displayNumber) {
   return {
     orderId: orderRef.id,
-    orderNumber: displayNumber || order.orderNumber || orderRef.id,
+    orderNumber: friendlyOrderLabel(displayNumber || order.orderNumber),
     email: order.email || '',
     phone: order.phone || '',
     phoneDigits: order.phoneDigits || '',
@@ -87,7 +87,7 @@ function rememberExistingOrderForAccount(orderId, displayNumber) {
     RECENT_ORDER_CLAIM_KEY,
     JSON.stringify({
       orderId,
-      orderNumber: displayNumber || orderId,
+      orderNumber: friendlyOrderLabel(displayNumber),
       email,
       phone,
       phoneDigits,
@@ -115,12 +115,21 @@ function accountCheckoutHref(mode) {
   return `account.html?mode=${encodeURIComponent(mode)}&return=checkout`;
 }
 
+function isShrishOrderNumber(value) {
+  return typeof value === 'string' && /^SHR-\d+$/.test(value);
+}
+
+function friendlyOrderLabel(displayNumber) {
+  return isShrishOrderNumber(displayNumber) ? displayNumber : 'your recent order';
+}
+
 function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
   const prompt = document.getElementById('successAccountPrompt');
   if (!prompt || !customerAccountsEnabled()) return;
 
   const signupHref = 'account.html?claim=recent&mode=signup';
   const signinHref = 'account.html?claim=recent&mode=signin';
+  const orderLabel = friendlyOrderLabel(displayNumber);
   if (currentCustomer) {
     prompt.classList.add('show');
     prompt.innerHTML = `
@@ -128,7 +137,7 @@ function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
       <p>This order is saved to your Shrish account. You can <strong>view history</strong>, <strong>change pending quantities</strong>, or <strong>cancel before pickup is confirmed</strong>.</p>
       <div class="success-account-actions">
         <a href="account.html" class="btn-primary">View My Orders</a>
-        <span class="success-account-note"><strong>${escapeHtml(displayNumber)}</strong> is ready in your account.</span>
+        <span class="success-account-note"><strong>${escapeHtml(orderLabel)}</strong> is ready in your account.</span>
       </div>`;
     return;
   }
@@ -140,7 +149,7 @@ function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
     <div class="success-account-actions">
       <a href="${signupHref}" class="btn-primary">Create Account</a>
       <a href="${signinHref}" class="btn-outline">Sign In</a>
-      <span class="success-account-note">Use <strong>${escapeHtml(order.email || 'the same email')}</strong> to link <strong>${escapeHtml(displayNumber)}</strong>.</span>
+      <span class="success-account-note">Use <strong>${escapeHtml(order.email || 'the same email')}</strong> to link <strong>${escapeHtml(orderLabel)}</strong>.</span>
     </div>`;
 }
 
@@ -1345,11 +1354,11 @@ async function submitOrder() {
     document.getElementById('successScreen').style.display = 'block';
     document.getElementById('successOrderNum').textContent = 'Generating confirmation number...';
 
-    const confirmationNumber = await waitForOrderConfirmationNumber(orderRef);
-    const displayNumber = confirmationNumber || orderRef.id;
+    const confirmationNumber = currentCustomer ? await waitForOrderConfirmationNumber(orderRef) : '';
+    const displayNumber = confirmationNumber || '';
     document.getElementById('successOrderNum').textContent = confirmationNumber
       ? `Order Confirmation No: ${confirmationNumber}`
-      : `Order received - Ref ${orderRef.id}`;
+      : 'Order received - your SHR confirmation number will be sent by email.';
 
     const itemLines = order.items
       .map((item) => {
@@ -1381,7 +1390,7 @@ async function submitOrder() {
       <div class="ss-row"><span>Name</span><span>${escapeHtml(`${firstName} ${lastName}`.trim())}</span></div>
       <div class="ss-row"><span>Phone</span><span>${escapeHtml(phone)}</span></div>
       <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Pay at Pickup</span></div>
-      <div class="ss-row"><span>Order Confirmation No</span><span>${escapeHtml(displayNumber)}</span></div>`;
+      <div class="ss-row"><span>Order Confirmation No</span><span>${escapeHtml(confirmationNumber || 'Sending by email')}</span></div>`;
 
     rememberRecentOrderForAccount(orderRef, order, displayNumber);
     renderSuccessAccountPrompt(orderRef, order, displayNumber);
