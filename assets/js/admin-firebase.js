@@ -28,6 +28,24 @@ const BASE_PRODUCTS = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || 
 const GO_LIVE_STATS_DATE = '2026-04-10';
 const EXCEL_CALC_DOC_PREFIX = 'excel_sheet__';
 const DAMAGED_BOX_UNIT_PRICE = 56; // Default spoiled box price — override per product in tally
+const PICKUP_TALLY_MANGOES = [
+  { id: 'alphonso', label: 'Alphonso', code: 'A', price: 56 },
+  { id: 'kesar', label: 'Kesar', code: 'K', price: 55 },
+  { id: 'banganapalli', label: 'Banganapalli', code: 'B', price: 56 },
+  { id: 'himayat', label: 'Himayat', code: 'H', price: 58 },
+  { id: 'rasalu', label: 'Rasalu', code: 'R', price: 55 },
+  { id: 'payari', label: 'Payari', code: 'P', price: 55 },
+  { id: 'langra', label: 'Langra', code: 'L', price: 55 }
+];
+const PICKUP_TALLY_LEGACY_PRICES = {
+  alphonso: 54,
+  kesar: 52,
+  banganapalli: 53,
+  himayat: 56,
+  rasalu: 52,
+  payari: 50,
+  langra: 50
+};
 const REMINDER_EMAIL_BATCH_SIZE = 50;
 // Expose for refund module
 window._firestoreExports = { collection, doc, updateDoc, addDoc: typeof addDoc !== 'undefined' ? addDoc : null, onSnapshot, orderBy, query };
@@ -863,7 +881,19 @@ function excelCalcCountValue(value) {
 }
 
 function accounting2Products() {
-  return getSortedProducts(state.products).filter((product) => !product.displayOnly && normalizeProductCategory(product.category) === 'mangoes');
+  const productsById = new Map(
+    getSortedProducts(state.products)
+      .filter((product) => normalizeProductCategory(product.category) === 'mangoes')
+      .map((product) => [product.id, product])
+  );
+  return PICKUP_TALLY_MANGOES.map((item) => ({
+    ...(productsById.get(item.id) || {}),
+    id: item.id,
+    name: item.label,
+    tallyLabel: item.label,
+    tallyCode: item.code,
+    price: `$${item.price}`
+  }));
 }
 
 function accounting2ProductPrice(product) {
@@ -871,7 +901,11 @@ function accounting2ProductPrice(product) {
 }
 
 function accounting2ProductUnitPrice(product, productPrices = {}) {
-  return excelCalcMoneyValue(productPrices[product.id] ?? accounting2ProductPrice(product));
+  const savedPrice = productPrices[product.id];
+  const savedValue = excelCalcMoneyValue(savedPrice);
+  const legacyValue = PICKUP_TALLY_LEGACY_PRICES[product.id];
+  if (savedPrice !== undefined && savedPrice !== '' && savedValue !== legacyValue) return savedValue;
+  return accounting2ProductPrice(product);
 }
 
 function accounting2DefaultDenominations() {
@@ -1035,7 +1069,8 @@ function accounting2ComputedTotals(batchName = accounting2BatchName()) {
     sum + (excelCalcCountValue(remainingQty[product.id]) * accounting2ProductUnitPrice(product, productPrices))
   ), 0);
   const damagedCount = excelCalcCountValue(record.damagedCount);
-  const damagedAmount = damagedCount * DAMAGED_BOX_UNIT_PRICE;
+  const damagedPrice = moneyValue(record.damagedPrice || DAMAGED_BOX_UNIT_PRICE);
+  const damagedAmount = damagedCount * damagedPrice;
   const orderedBoxesTotal = Object.values(orderedCounts).reduce((sum, qty) => sum + excelCalcCountValue(qty), 0);
   const extraBoxesTotal = Object.values(extraBoxes).reduce((sum, qty) => sum + excelCalcCountValue(qty), 0);
   const invoiceBalance = batchOrderTotal - invoiceTotal;
@@ -1070,6 +1105,7 @@ function accounting2ComputedTotals(batchName = accounting2BatchName()) {
     orderedBoxesValue,
     remainingValue,
     damagedCount,
+    damagedPrice,
     damagedAmount,
     orderedBoxesTotal,
     extraBoxesTotal,
@@ -3850,16 +3886,12 @@ function renderExcelCalculations() {
     ...savedSheetNames.map((name) => `<option value="${escapeHtml(name)}" ${name === batchName ? 'selected' : ''}>${escapeHtml(name)}</option>`)
   ].join('');
 
-  // Variety definitions: id, label, code, default price
-  const VARIETIES = [
-    { id: 'alphonso',      label: 'Alphonso',      code: 'A', price: 54 },
-    { id: 'kesar',         label: 'Kesar',         code: 'K', price: 52 },
-    { id: 'banganapalli',  label: 'Banganapalli',  code: 'B', price: 53 },
-    { id: 'himayat',       label: 'Himayat',       code: 'H', price: 56 },
-    { id: 'rasalu',        label: 'Rasalu',        code: 'R', price: 52 },
-    { id: 'payari',        label: 'Payari',        code: 'P', price: 50 },
-    { id: 'langra',        label: 'Langra',        code: 'L', price: 50 },
-  ];
+  const VARIETIES = accounting2Products().map((product) => ({
+    id: product.id,
+    label: product.tallyLabel || product.name,
+    code: product.tallyCode || '',
+    price: accounting2ProductPrice(product)
+  }));
 
   // Get values from record
   const extraBoxes   = accounting2MutableMap(record, 'extraBoxes');
@@ -3872,7 +3904,7 @@ function renderExcelCalculations() {
     ? moneyValue(record.zelleAmount)
     : legacyZelleEntries.reduce((s, e) => s + (Number(e.amount) || 0), 0);
 
-  const priceOf = (v) => Number(productPrices[v.id] || v.price || 0);
+  const priceOf = (v) => accounting2ProductUnitPrice(v, productPrices);
 
   // Computed totals
   const totalExtraBoxes = VARIETIES.reduce((s, v) => s + (Number(extraBoxes[v.id]) || 0), 0);
@@ -3899,7 +3931,8 @@ function renderExcelCalculations() {
     return s + qty * priceOf(v);
   }, 0);
   const damagedCount = Number(record.damagedCount || 0);
-  const damagedValue = damagedCount * (Number(record.damagedPrice || 56));
+  const damagedPrice = Number(record.damagedPrice || DAMAGED_BOX_UNIT_PRICE);
+  const damagedValue = damagedCount * damagedPrice;
   const totalRemDamaged = remainingValue + damagedValue;
 
   const tally = totalInvoice - totalReceived - totalRemDamaged;
@@ -4074,7 +4107,7 @@ function renderExcelCalculations() {
         <tr>
           <td>Damaged/Spoiled boxes
             <input class="ptally-price-input" type="number" min="0" step="1"
-              value="${record.damagedPrice||56}" style="width:50px;margin-left:4px"
+              value="${damagedPrice}" style="width:50px;margin-left:4px"
               onchange="setExcelCalcValue('damagedPrice',this.value)"> $/box
           </td>
           <td><input class="ptally-count-input" type="number" min="0" step="1"
@@ -4118,8 +4151,8 @@ function renderExcelCalculations() {
         const r = accounting2SavedRecord(accounting2BatchName());
         const isClosed = (r?.status || 'open') === 'closed';
         return isClosed
-          ? `<button class="toolbar-btn" onclick="reopenExcelCalculations()">🔓 Reopen Batch</button>`
-          : `<button class="toolbar-btn" style="background:var(--saffron);color:white" onclick="closeExcelCalculations()">🔒 Close Batch</button>`;
+          ? `<button class="toolbar-btn" onclick="reopenExcelCalculations()">Reopen Batch</button>`
+          : `<button class="toolbar-btn" style="background:var(--saffron);color:white" onclick="closeExcelCalculations()">Close Batch</button>`;
       })()}
     </div>
 
@@ -4158,7 +4191,7 @@ function setExcelCalcProductMap(key, productId, value) {
   accounting2SetMapValue(key, productId, value === '' ? '' : excelCalcMoneyValue(value));
 }
 
-async function saveExcelCalculations() {
+async function saveExcelCalculations(options = {}) {
   const dateInput = document.getElementById('excelCalcDate');
   const saveBtn = document.getElementById('excelCalcSaveBtn');
   if (!dateInput) return;
@@ -4166,6 +4199,8 @@ async function saveExcelCalculations() {
   const batchName = accounting2BatchName();
   const existing = accounting2SavedRecord(batchName) || {};
   const computed = accounting2ComputedTotals(batchName);
+  const nowIso = new Date().toISOString();
+  const status = options.closeBatch ? 'closed' : (options.reopenBatch ? 'open' : (existing.status || 'open'));
   const payload = {
     batchName,
     batchDate: dateInput.value || todayDateInputValue(),
@@ -4182,7 +4217,11 @@ async function saveExcelCalculations() {
     productPrices: accounting2MutableMap(existing, 'productPrices'),
     remainingQty: accounting2MutableMap(existing, 'remainingQty'),
     cashCounts: accounting2MutableMap(existing, 'cashCounts'),
-    updatedAt: new Date().toISOString()
+    status,
+    closedAt: options.closeBatch ? nowIso : (options.reopenBatch ? null : (existing.closedAt || null)),
+    updatedAt: nowIso,
+    recordType: 'excel_sheet',
+    sheetName: batchName
   };
 
   if (saveBtn) {
@@ -4191,22 +4230,44 @@ async function saveExcelCalculations() {
   }
 
   try {
-    await setDoc(doc(db, 'accounting_batches', accounting2DocId(batchName)), {
-      ...payload,
-      recordType: 'excel_sheet',
-      sheetName: batchName
-    }, { merge: true });
+    await setDoc(doc(db, 'accounting_batches', accounting2DocId(batchName)), payload, { merge: true });
     state.accounting2Records[batchName] = payload;
-    showToast('Excel calculations saved');
+    if (options.closeBatch) {
+      showToast('Pickup tally batch closed');
+    } else if (options.reopenBatch) {
+      showToast('Pickup tally batch reopened');
+    } else {
+      showToast('Excel calculations saved');
+    }
+    renderExcelCalculations();
+    return true;
   } catch (error) {
     console.error(error);
     showToast('Could not save Excel calculations right now');
+    return false;
   } finally {
     if (saveBtn) {
       saveBtn.disabled = false;
       saveBtn.textContent = 'Save Sheet';
     }
   }
+}
+
+async function closeExcelCalculations() {
+  const batchName = accounting2BatchName();
+  const computed = accounting2ComputedTotals(batchName);
+  const tallyOff = Math.abs(computed.tallyValue || 0) >= 1;
+  const message = tallyOff
+    ? `Close ${batchName}? Tally is still ${formatCurrency(computed.tallyValue)}. You can reopen it later if needed.`
+    : `Close ${batchName}? You can reopen it later if needed.`;
+  if (!window.confirm(message)) return;
+  await saveExcelCalculations({ closeBatch: true });
+}
+
+async function reopenExcelCalculations() {
+  const batchName = accounting2BatchName();
+  if (!window.confirm(`Reopen ${batchName}? This lets you continue editing the tally.`)) return;
+  await saveExcelCalculations({ reopenBatch: true });
 }
 
 function renderAccounting() {
@@ -4624,6 +4685,8 @@ window.setExcelCalcValue = setExcelCalcValue;
 window.setExcelCalcCashCount = setExcelCalcCashCount;
 window.setExcelCalcProductMap = setExcelCalcProductMap;
 window.saveExcelCalculations = saveExcelCalculations;
+window.closeExcelCalculations = closeExcelCalculations;
+window.reopenExcelCalculations = reopenExcelCalculations;
 
 bindUi();
 initAuthWatch();
