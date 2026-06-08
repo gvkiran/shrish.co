@@ -79,6 +79,7 @@ const state = {
   },
   orderFilters: {
     active: { status: 'pending', dateFrom: '', dateTo: '', search: '', location: 'all' },
+    specialty: { status: 'pending', dateFrom: '', dateTo: '', search: '', location: 'all' },
     processed: { status: 'all', dateFrom: '', dateTo: '', search: '', location: 'all' },
     all: { status: 'all', dateFrom: '', dateTo: '', search: '', location: 'all' }
   },
@@ -1265,8 +1266,58 @@ function syncAccountingInputs(batchName, batchRecord = {}, force = false) {
   });
 }
 
+function specialtyProductForOrderItem(item = {}) {
+  const productId = orderItemProductId(item);
+  const products = state.products.length ? state.products : BASE_PRODUCTS;
+  const byId = products.find((product) => product.id === productId);
+  if (byId) return byId;
+
+  const itemName = String(item.name || '').trim().toLowerCase();
+  if (!itemName) return null;
+  return [...products]
+    .sort((a, b) => String(b.name || '').length - String(a.name || '').length)
+    .find((product) => itemName.startsWith(String(product.name || '').trim().toLowerCase())) || null;
+}
+
+function isNonMangoOrderItem(item = {}) {
+  const explicitCategory = normalizeProductCategory(item.category || '');
+  if (explicitCategory) return explicitCategory !== 'mangoes';
+
+  const product = specialtyProductForOrderItem(item);
+  if (product) return normalizeProductCategory(product.category) !== 'mangoes';
+
+  const productId = orderItemProductId(item).toLowerCase();
+  if (productId.startsWith('puth_') || productId.startsWith('picklespodi-')) return true;
+  if (['mango_jelly_sugar', 'mango_jelly_jaggery', 'palm_jelly'].includes(productId)) return true;
+
+  const knownMangoNames = state.products
+    .filter((candidate) => normalizeProductCategory(candidate.category) === 'mangoes')
+    .map((candidate) => String(candidate.name || '').toLowerCase())
+    .filter(Boolean);
+  const itemName = String(item.name || '').toLowerCase();
+  return !knownMangoNames.some((name) => itemName.includes(name));
+}
+
+function orderItemsForSheet(order = {}, sheet = state.orderSheet) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  return sheet === 'specialty' ? items.filter(isNonMangoOrderItem) : items;
+}
+
+function orderItemsTotal(items = []) {
+  return items.reduce((sum, item) => {
+    const qty = Math.max(1, Number(item.qty || 1));
+    const lineTotal = moneyNumber(item.lineTotal);
+    return sum + (lineTotal > 0 ? lineTotal : moneyNumber(item.price) * qty);
+  }, 0);
+}
+
 function getOrdersForSheet(sheet = state.orderSheet) {
   if (sheet === 'active') return state.orders.filter((order) => (order.status || 'pending') === 'pending');
+  if (sheet === 'specialty') {
+    return state.orders.filter((order) =>
+      (order.status || 'pending') === 'pending' && orderItemsForSheet(order, 'specialty').length > 0
+    );
+  }
   if (sheet === 'processed') {
     return state.orders.filter((order) => {
       const status = order.status || 'pending';
@@ -1318,7 +1369,7 @@ function getFilteredOrders(sheet = state.orderSheet) {
         order.phone || '',
         order.email || '',
         order.locationLabel || order.location || '',
-        ...(order.items || []).map((item) => item?.name || '')
+        ...orderItemsForSheet(order, sheet).map((item) => item?.name || '')
       ].join(' ').toLowerCase();
 
       return haystack.includes(filterSearch);
@@ -1334,17 +1385,21 @@ function updateOrdersSheetUi() {
       title: 'Active Orders',
       help: 'Active Orders shows your current pending pickup list.',
     },
-      processed: {
-        title: 'Processed Orders',
-        help: 'Processed Orders shows fulfilled pickups that still need payment or accounting review. Cancelled and no-show records live in All Orders.',
-      },
+    specialty: {
+      title: 'Pickles / Sweets / Snacks Orders',
+      help: 'Pending orders containing non-mango items. Combo orders also remain in Active Orders.',
+    },
+    processed: {
+      title: 'Processed Orders',
+      help: 'Processed Orders shows fulfilled pickups that still need payment or accounting review. Cancelled and no-show records live in All Orders.',
+    },
     all: {
       title: 'All Orders',
       help: 'All Orders is the permanent master history in date order. Status can still be updated, but nothing is deleted here.',
     }
   };
 
-  document.querySelectorAll('.sheet-pill').forEach((button) => button.classList.remove('active'));
+  document.querySelectorAll('#ordersSheetSwitcher .sheet-pill').forEach((button) => button.classList.remove('active'));
   document.getElementById(`ordersSheet${state.orderSheet.charAt(0).toUpperCase()}${state.orderSheet.slice(1)}`)?.classList.add('active');
 
   const title = document.getElementById('ordersSectionTitle');
@@ -1356,15 +1411,22 @@ function updateOrdersSheetUi() {
   const filterStatus = document.getElementById('filterStatus');
   const filterDateFrom = document.getElementById('filterDateFrom');
   const filterDateTo = document.getElementById('filterDateTo');
+  const printButton = document.getElementById('printChecklistBtn');
   const exportButton = document.querySelector('.toolbar-actions button[onclick="exportCSV()"]');
   const currentFilters = state.orderFilters[state.orderSheet] || { status: 'all', dateFrom: '', dateTo: '', search: '', location: 'all' };
   if (title) title.textContent = config[state.orderSheet].title;
   if (help) help.textContent = config[state.orderSheet].help;
   if (bulkButton) bulkButton.style.display = state.orderSheet === 'active' ? 'inline-flex' : 'none';
   if (sheetSwitcher) sheetSwitcher.style.display = document.getElementById('tab-orders')?.style.display === 'none' ? 'none' : 'flex';
+  if (printButton) {
+    const isSpecialty = state.orderSheet === 'specialty';
+    printButton.textContent = isSpecialty ? 'Print Pickles / Sweets / Snacks' : 'Print Checklist';
+    printButton.title = isSpecialty ? 'Print the non-mango pickup checklist' : 'Print pickup checklist for today';
+  }
   if (exportButton) {
     const exportLabels = {
       active: '⬇ Export Active Excel',
+      specialty: '⬇ Export Pickles / Sweets / Snacks',
       processed: '⬇ Export Processed Excel',
       all: '⬇ Export All Excel'
     };
@@ -1397,7 +1459,7 @@ function renderActiveOrderSummary(orders = []) {
   const summaryEl = document.getElementById('activeOrderSummary');
   if (!summaryEl) return;
 
-  if (state.orderSheet !== 'active' || !orders.length) {
+  if (!['active', 'specialty'].includes(state.orderSheet) || !orders.length) {
     summaryEl.classList.remove('show');
     summaryEl.innerHTML = '';
     return;
@@ -1405,7 +1467,7 @@ function renderActiveOrderSummary(orders = []) {
 
   const counts = new Map();
   orders.forEach((order) => {
-    (order.items || []).forEach((item) => {
+    orderItemsForSheet(order).forEach((item) => {
       const name = String(item?.name || '').trim();
       if (!name) return;
       counts.set(name, (counts.get(name) || 0) + Number(item.qty || 0));
@@ -1427,7 +1489,7 @@ function renderActiveOrderSummary(orders = []) {
   const totalBoxes = summaryItems.reduce((sum, [, qty]) => sum + Number(qty || 0), 0);
 
   summaryEl.innerHTML = `
-    <div class="summary-label">Active Counts</div>
+    <div class="summary-label">${state.orderSheet === 'specialty' ? 'Pickles / Sweets / Snacks Counts' : 'Active Counts'}</div>
     <div class="summary-totals">
       <span>${orders.length} orders</span>
       <span>${totalBoxes} boxes</span>
@@ -2156,9 +2218,11 @@ async function sendSelectedReminderEmails() {
 function renderOrders() {
   const orders = getFilteredOrders();
   const isActiveSheet = state.orderSheet === 'active';
+  const isSpecialtySheet = state.orderSheet === 'specialty';
+  const isPendingSheet = isActiveSheet || isSpecialtySheet;
   updateOrdersSheetUi();
   renderActiveOrderSummary(orders);
-  renderOrdersTableHead(isActiveSheet);
+  renderOrdersTableHead(isPendingSheet, isSpecialtySheet);
 
   const tbody = document.getElementById('ordersBody');
   if (!tbody) return;
@@ -2171,8 +2235,10 @@ function renderOrders() {
   }
 
   tbody.innerHTML = orders.map((order) => {
-    const itemsHtml = order.items?.length
-      ? `<div class="items-list">${order.items.map((item) => `<div class="item-row"><strong>${escapeHtml(item.name)}</strong> <span>× ${item.qty} · ${escapeHtml(item.price)}</span></div>`).join('')}</div>`
+    const visibleItems = orderItemsForSheet(order);
+    const visibleTotal = isSpecialtySheet ? orderItemsTotal(visibleItems) : moneyNumber(order.totalPrice || 0);
+    const itemsHtml = visibleItems.length
+      ? `<div class="items-list">${visibleItems.map((item) => `<div class="item-row"><strong>${escapeHtml(item.name)}</strong> <span>× ${item.qty} · ${escapeHtml(item.price)}</span></div>`).join('')}</div>`
       : '<span style="color:#ccc">—</span>';
 
     const status = order.status || 'pending';
@@ -2192,7 +2258,7 @@ function renderOrders() {
       : '';
     const paymentCellHtml = status === 'no_show'
       ? `<div class="payment-note">No show. Accounting total is $0.</div>`
-      : state.orderSheet === 'active'
+      : isPendingSheet
       ? `<div class="payment-note">Collect at pickup. Add method after processing.</div>`
       : `<div class="payment-cell">
           ${quickPaymentButtons}
@@ -2216,14 +2282,14 @@ function renderOrders() {
       <td style="font-size:12px;color:var(--text-light)">${formatDate(order.createdAt)}</td>
       <td><div class="customer-name">${escapeHtml(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim())}</div><div class="customer-phone">${escapeHtml(order.phone)}</div><div class="customer-email">${escapeHtml(order.email)}</div></td>
       <td>${itemsHtml}</td>
-      <td><div class="total-amount">${formatCurrency(order.totalPrice || 0)}</div></td>
+      <td><div class="total-amount">${formatCurrency(visibleTotal)}</div></td>
       <td style="font-size:13px">${escapeHtml(order.locationLabel || order.location || '—')}</td>
-      ${isActiveSheet ? '' : `<td>${paymentCellHtml}</td><td><span class="status-badge ${statusClass}">${statusLabel}</span></td>`}
+      ${isPendingSheet ? '' : `<td>${paymentCellHtml}</td><td><span class="status-badge ${statusClass}">${statusLabel}</span></td>`}
       <td><div class="action-btns"><button class="action-btn btn-fulfill" onclick="setStatus('${escapeHtml(order.id)}','fulfilled')">✓ Fulfill</button><button class="action-btn btn-noshow" onclick="setStatus('${escapeHtml(order.id)}','no_show')">No Show</button><button class="action-btn btn-cancel" onclick="setStatus('${escapeHtml(order.id)}','cancelled')">✕ Cancel</button><button class="action-btn btn-reset" onclick="setStatus('${escapeHtml(order.id)}','pending')">↺ Reset</button></div></td>
     </tr>`;
   }).join('');
 
-  if (isActiveSheet) {
+  if (isPendingSheet) {
     orders.forEach((order) => {
       if ((order.status || 'pending') !== 'pending') return;
       const row = document.getElementById(`row-${order.id}`);
@@ -2242,10 +2308,10 @@ function renderOrders() {
   updateReminderActionUi();
 }
 
-function renderOrdersTableHead(isActiveSheet = state.orderSheet === 'active') {
+function renderOrdersTableHead(isPendingSheet = ['active', 'specialty'].includes(state.orderSheet), isSpecialtySheet = state.orderSheet === 'specialty') {
   const headRow = document.querySelector('.orders-table thead tr');
   if (!headRow) return;
-  const selectAllHtml = isActiveSheet
+  const selectAllHtml = state.orderSheet === 'active'
     ? '<input type="checkbox" id="selectAllActiveOrders" onchange="toggleVisibleReminderOrders(this.checked)" aria-label="Select all visible active orders">'
     : '';
   headRow.innerHTML = `
@@ -2254,9 +2320,9 @@ function renderOrdersTableHead(isActiveSheet = state.orderSheet === 'active') {
     <th>Received Date</th>
     <th>Customer</th>
     <th>Products &amp; Qty</th>
-    <th>Total</th>
+    <th>${isSpecialtySheet ? 'Non-Mango Total' : 'Total'}</th>
     <th>Location</th>
-    ${isActiveSheet ? '' : '<th>Payment</th><th>Status</th>'}
+    ${isPendingSheet ? '' : '<th>Payment</th><th>Status</th>'}
     <th>Actions</th>
   `;
 }
@@ -3602,14 +3668,17 @@ function exportCSV() {
     'Location', 'Pickup Date', 'Payment', 'Payment Method', 'Collected', 'Status', 'Created'
   ]];
   orders.forEach((order) => {
+    const visibleItems = orderItemsForSheet(order);
+    const visibleBoxes = visibleItems.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+    const visibleTotal = state.orderSheet === 'specialty' ? orderItemsTotal(visibleItems) : order.totalPrice || 0;
     rows.push([
       order.orderNumber || order.id,
       order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim(),
       order.phone || '',
       order.email || '',
-      orderItemsSummary(order.items || []),
-      order.totalBoxes || 0,
-      order.totalPrice || 0,
+      orderItemsSummary(visibleItems),
+      state.orderSheet === 'specialty' ? visibleBoxes : order.totalBoxes || 0,
+      visibleTotal,
       order.locationLabel || order.location || '',
       order.pickupDate || '',
       order.payment || 'pending',
@@ -3651,29 +3720,31 @@ async function markFilteredActiveFulfilled() {
   showToast(`${orders.length} active order${orders.length === 1 ? '' : 's'} marked fulfilled.`);
 }
 
-function printableItems(order) {
-  return (order.items || [])
+function printableItems(order, items = order.items || []) {
+  return items
     .map((item) => `${escapeHtml(item.name || 'Item')} x ${escapeHtml(String(item.qty || 1))}`)
     .join('<br>');
 }
 
-function printableQty(order) {
-  return order.totalBoxes || (order.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0);
+function printableQty(order, items = order.items || [], useOrderTotal = true) {
+  if (useOrderTotal && order.totalBoxes) return order.totalBoxes;
+  return items.reduce((sum, item) => sum + Number(item.qty || 0), 0);
 }
 
-function printableTotal(order) {
-  const explicit = moneyNumber(order.totalPrice);
+function printableTotal(order, items = order.items || [], useOrderTotal = true) {
+  const explicit = useOrderTotal ? moneyNumber(order.totalPrice) : 0;
   if (explicit > 0) return explicit;
-  return (order.items || []).reduce((sum, item) => {
-    const qty = Number(item.qty || 1);
-    const lineTotal = moneyNumber(item.lineTotal);
-    return sum + (lineTotal > 0 ? lineTotal : moneyNumber(item.price) * qty);
-  }, 0);
+  return orderItemsTotal(items);
 }
 
 function printActiveOrders() {
-  const allActive = getFilteredOrders('active');
-  if (!allActive.length) { showToast('No active orders to print.'); return; }
+  const printSheet = state.orderSheet === 'specialty' ? 'specialty' : 'active';
+  const isSpecialty = printSheet === 'specialty';
+  const allActive = getFilteredOrders(printSheet);
+  if (!allActive.length) {
+    showToast(isSpecialty ? 'No pickles, sweets, or snacks orders to print.' : 'No active orders to print.');
+    return;
+  }
 
   const locationOrder = { shortpump: 1, chesterfield: 2, mechanicsville: 3 };
   const orders = [...allActive].sort((a, b) => {
@@ -3690,11 +3761,19 @@ function printActiveOrders() {
     groups[loc].push(o);
   });
 
-  const totalBoxes = orders.reduce((s, o) => s + (printableQty(o) || 0), 0);
-  const totalAmount = orders.reduce((s, o) => s + printableTotal(o), 0);
+  const totalBoxes = orders.reduce((sum, order) => {
+    const items = orderItemsForSheet(order, printSheet);
+    return sum + printableQty(order, items, !isSpecialty);
+  }, 0);
+  const totalAmount = orders.reduce((sum, order) => {
+    const items = orderItemsForSheet(order, printSheet);
+    return sum + printableTotal(order, items, !isSpecialty);
+  }, 0);
   const now = new Date();
   const printDate = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
   const printTime = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+  const printHeading = isSpecialty ? 'Pickles / Sweets / Snacks Checklist' : 'Pickup Day Checklist';
+  const printSubheading = isSpecialty ? 'Pending non-mango items only' : 'Pending orders only';
 
   let rowNum = 1;
   let bodyHtml = '';
@@ -3703,9 +3782,10 @@ function printActiveOrders() {
     locOrders.forEach(order => {
       const name  = escapeHtml((order.fullName || `${order.firstName||''} ${order.lastName||''}`.trim()).trim());
       const phone = escapeHtml(order.phone || '');
-      const items = (order.items || []).map(it => `<span class="pill">${escapeHtml(it.name||'Item')} &times;${it.qty||1}</span>`).join(' ');
-      const qty   = printableQty(order);
-      const total = escapeHtml(formatCurrency(printableTotal(order)));
+      const visibleItems = orderItemsForSheet(order, printSheet);
+      const items = visibleItems.map(it => `<span class="pill">${escapeHtml(it.name||'Item')} &times;${it.qty||1}</span>`).join(' ');
+      const qty   = printableQty(order, visibleItems, !isSpecialty);
+      const total = escapeHtml(formatCurrency(printableTotal(order, visibleItems, !isSpecialty)));
       const onum  = escapeHtml(String(order.orderNumber || order.id || ''));
       const pref  = (order.paymentMethod || '').toLowerCase();
       const Z = pref === 'zelle' ? ' pre' : '';
@@ -3735,7 +3815,7 @@ function printActiveOrders() {
 
   pw.document.write(`<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
-<title>Shrish Pickup Checklist</title>
+<title>Shrish ${escapeHtml(printHeading)}</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:Arial,Helvetica,sans-serif;font-size:11.5px;color:#111;background:#fff;padding:14px 18px}
@@ -3820,8 +3900,8 @@ function printActiveOrders() {
 
 <div class="hdr">
   <div class="hdr-left">
-    <h1>&#129389; Shrish LLC &mdash; Pickup Day Checklist</h1>
-    <div class="sub">Printed: ${escapeHtml(printDate)} &nbsp;&bull;&nbsp; ${escapeHtml(printTime)} &nbsp;&bull;&nbsp; Pending orders only</div>
+    <h1>&#129389; Shrish LLC &mdash; ${escapeHtml(printHeading)}</h1>
+    <div class="sub">Printed: ${escapeHtml(printDate)} &nbsp;&bull;&nbsp; ${escapeHtml(printTime)} &nbsp;&bull;&nbsp; ${escapeHtml(printSubheading)}</div>
   </div>
   <div class="hdr-right">
     <span class="big">${orders.length} orders &nbsp; ${totalBoxes} boxes</span>
