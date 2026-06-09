@@ -299,6 +299,24 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
   </div>
 </div>
 
+<!-- TRUST STRIP -->
+<div class="marquee-wrap trust-marquee" aria-label="Why shop with Shrish">
+  <div class="marquee-track trust-track">
+    <span>🌱 Farm-Direct Sourcing</span><span class="dot">◆</span>
+    <span>💵 Pay at Pickup</span><span class="dot">◆</span>
+    <span>⭐ 5.0 Customer Rating</span><span class="dot">◆</span>
+    <span>📍 3 Pickup Locations</span><span class="dot">◆</span>
+    <span>🥭 Small Fresh Batches</span><span class="dot">◆</span>
+    <span>🤝 Customer First</span><span class="dot">◆</span>
+    <span>🌱 Farm-Direct Sourcing</span><span class="dot">◆</span>
+    <span>💵 Pay at Pickup</span><span class="dot">◆</span>
+    <span>⭐ 5.0 Customer Rating</span><span class="dot">◆</span>
+    <span>📍 3 Pickup Locations</span><span class="dot">◆</span>
+    <span>🥭 Small Fresh Batches</span><span class="dot">◆</span>
+    <span>🤝 Customer First</span><span class="dot">◆</span>
+  </div>
+</div>
+
 <!-- HOW IT WORKS -->
 <section class="how section">
   <div class="container">
@@ -450,7 +468,9 @@ function toggleFaq(el){
       <div class="section-label">What Customers Say</div>
       <h2 class="section-title">Loved by the <em>Community</em></h2>
     </div>
-    <div class="testimonials-grid">
+    <div class="testimonial-carousel">
+      <button type="button" class="testimonial-nav testimonial-prev" id="testimonialPrev" aria-label="Previous testimonials">&lsaquo;</button>
+      <div class="testimonial-track" id="testimonialTrack">
       <div class="testimonial-card">
         <div class="stars">★★★★★</div>
         <p>"The Indian sweets from Shrish LLC are absolutely delightful! The mangoes are fresh and juicy. Highly recommend for anyone craving authentic Indian flavors!"</p>
@@ -475,7 +495,10 @@ function toggleFaq(el){
           <div><strong>Anita Nair</strong><span>Chesterfield, VA</span></div>
         </div>
       </div>
+      </div>
+      <button type="button" class="testimonial-nav testimonial-next" id="testimonialNext" aria-label="Next testimonials">&rsaquo;</button>
     </div>
+    <div class="testimonial-dots" id="testimonialDots" aria-label="Testimonial pages"></div>
   </div>
 </section>
 

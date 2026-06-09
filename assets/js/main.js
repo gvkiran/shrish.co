@@ -1605,3 +1605,70 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+
+// -- Testimonial carousel (auto-advance, dots, swipe via native scroll) --
+document.addEventListener('DOMContentLoaded', function () {
+  const track = document.getElementById('testimonialTrack');
+  if (!track) return;
+  const carousel = track.closest('.testimonial-carousel');
+  const dotsWrap = document.getElementById('testimonialDots');
+  const prevBtn = document.getElementById('testimonialPrev');
+  const nextBtn = document.getElementById('testimonialNext');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let autoTimer = null;
+
+  function pageCount() {
+    return Math.max(1, Math.round(track.scrollWidth / track.clientWidth));
+  }
+  function currentPage() {
+    return Math.round(track.scrollLeft / track.clientWidth);
+  }
+  function goTo(page) {
+    const pages = pageCount();
+    const target = ((page % pages) + pages) % pages;
+    track.scrollTo({ left: target * track.clientWidth, behavior: reduceMotion ? 'auto' : 'smooth' });
+  }
+  function buildDots() {
+    const pages = pageCount();
+    const hasOverflow = pages > 1;
+    if (carousel) carousel.classList.toggle('has-overflow', hasOverflow);
+    if (!dotsWrap) return;
+    dotsWrap.innerHTML = '';
+    dotsWrap.classList.toggle('visible', hasOverflow);
+    for (let i = 0; i < pages; i++) {
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'testimonial-dot' + (i === currentPage() ? ' active' : '');
+      dot.setAttribute('aria-label', 'Go to testimonials page ' + (i + 1));
+      dot.addEventListener('click', function () { goTo(i); restartAuto(); });
+      dotsWrap.appendChild(dot);
+    }
+  }
+  function updateDots() {
+    if (!dotsWrap) return;
+    const page = currentPage();
+    dotsWrap.querySelectorAll('.testimonial-dot').forEach(function (d, i) {
+      d.classList.toggle('active', i === page);
+    });
+  }
+  function stopAuto() { if (autoTimer) { clearInterval(autoTimer); autoTimer = null; } }
+  function startAuto() {
+    if (reduceMotion || pageCount() < 2) return;
+    stopAuto();
+    autoTimer = setInterval(function () { goTo(currentPage() + 1); }, 5000);
+  }
+  function restartAuto() { stopAuto(); startAuto(); }
+
+  if (prevBtn) prevBtn.addEventListener('click', function () { goTo(currentPage() - 1); restartAuto(); });
+  if (nextBtn) nextBtn.addEventListener('click', function () { goTo(currentPage() + 1); restartAuto(); });
+  track.addEventListener('scroll', function () { window.requestAnimationFrame(updateDots); }, { passive: true });
+  ['mouseenter', 'touchstart', 'focusin'].forEach(function (evt) {
+    track.addEventListener(evt, stopAuto, { passive: true });
+  });
+  ['mouseleave', 'focusout'].forEach(function (evt) {
+    track.addEventListener(evt, startAuto);
+  });
+  window.addEventListener('resize', function () { buildDots(); startAuto(); });
+  buildDots();
+  startAuto();
+});
