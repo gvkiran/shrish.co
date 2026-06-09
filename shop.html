@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="icon" href="images/brand/logo-small.png" type="image/png">
-<link rel="stylesheet" href="assets/css/styles.css?v=shop-toolbar-20260609">
+<link rel="stylesheet" href="assets/css/styles.css?v=shop-sidebar-20260609">
 <style>
 /* ── HERO ── */
 .shop-hero{background:linear-gradient(135deg,var(--dark),var(--dark-m));padding:64px 24px 44px;text-align:center;position:relative;overflow:hidden}
@@ -293,22 +293,34 @@
 .cart-pay-note{font-size:12px;color:var(--text-light);background:var(--cream-d);border-radius:8px;padding:10px 12px;margin-bottom:14px}
 .cart-checkout-btn{width:100%;padding:15px;background:var(--saffron);color:#fff;border:none;border-radius:50px;font-family:var(--font-body);font-size:16px;font-weight:700;cursor:pointer;transition:all .3s}
 .cart-checkout-btn:hover{background:var(--saffron-d)}
-/* -- SHOP TOOLBAR -- */
-.shop-toolbar{display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;padding:18px 24px 0;font-family:var(--font-body)}
-.st-group{display:flex;align-items:center;gap:8px}
-.st-group label{font-size:12px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em}
-.st-avail-btn{padding:8px 16px;border-radius:50px;border:1.5px solid #E0D0B8;background:#fff;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .3s;color:var(--text-light);font-family:var(--font-body)}
+/* -- SHOP SIDEBAR FILTERS -- */
+.shop-layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:36px;max-width:1520px;margin:0 auto;padding:28px 24px 0;align-items:start}
+.shop-sidebar{position:sticky;top:96px;display:flex;flex-direction:column;gap:26px;padding:24px 20px;background:#fff;border:1px solid var(--cream-d);border-radius:var(--radius-lg);box-shadow:var(--shadow)}
+.sb-title{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--dark);padding-bottom:10px;border-bottom:1px solid var(--cream-d);margin-bottom:14px;font-family:var(--font-body)}
+.st-avail{display:flex;flex-direction:column;gap:8px}
+.st-avail-btn{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;padding:9px 14px;border-radius:10px;border:1.5px solid #E0D0B8;background:#fff;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .3s;color:var(--text-light);font-family:var(--font-body);text-align:left}
 .st-avail-btn.active,.st-avail-btn:hover{background:var(--saffron);color:#fff;border-color:var(--saffron)}
-.st-avail-btn .filter-count{background:rgba(0,0,0,.08)}
+.st-avail-btn .filter-count{background:rgba(0,0,0,.08);border-radius:50px;padding:1px 8px;font-size:11px}
 .st-avail-btn.active .filter-count{background:rgba(255,255,255,.25)}
-.st-price input{width:72px;padding:8px 10px;border:1.5px solid #E0D0B8;border-radius:10px;font-size:14px;font-family:var(--font-body)}
+.sb-price-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.st-price input{width:100%;min-width:0;padding:9px 10px;border:1.5px solid #E0D0B8;border-radius:10px;font-size:14px;font-family:var(--font-body)}
 .st-price input:focus{outline:none;border-color:var(--saffron)}
-.st-price-apply{padding:8px 16px;border-radius:50px;border:none;background:var(--dark);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:background .3s}
+.st-price-apply{width:100%;padding:10px 16px;border-radius:50px;border:none;background:var(--dark);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:background .3s}
 .st-price-apply:hover{background:var(--saffron)}
-.st-price-clear{background:none;border:none;color:var(--saffron);font-size:13px;cursor:pointer;text-decoration:underline;font-family:var(--font-body)}
-.st-sort select{padding:8px 12px;border:1.5px solid #E0D0B8;border-radius:10px;font-size:14px;background:#fff;cursor:pointer;font-family:var(--font-body)}
-.st-sort select:focus{outline:none;border-color:var(--saffron)}
-@media (max-width:640px){.shop-toolbar{gap:12px}.st-price input{width:62px}}
+.st-price-clear{width:100%;margin-top:8px;background:none;border:none;color:var(--saffron);font-size:13px;cursor:pointer;text-decoration:underline;font-family:var(--font-body)}
+.shop-sort-row{display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:0 24px 4px}
+.shop-sort-row label{font-size:12px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;font-family:var(--font-body)}
+.st-sort-select{padding:9px 12px;border:1.5px solid #E0D0B8;border-radius:10px;font-size:14px;background:#fff;cursor:pointer;font-family:var(--font-body)}
+.st-sort-select:focus{outline:none;border-color:var(--saffron)}
+.shop-main .shop-section{padding-left:0;padding-right:0}
+.shop-main .shop-sort-row{padding-right:0}
+@media (max-width:1100px){.shop-main .products-grid-v2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:900px){
+  .shop-layout{grid-template-columns:1fr;gap:14px;padding-top:18px}
+  .shop-sidebar{position:static;flex-direction:row;flex-wrap:wrap;gap:22px}
+  .sb-section{flex:1 1 220px;min-width:200px}
+}
+@media (max-width:640px){.shop-main .products-grid-v2{grid-template-columns:1fr}}
 /* -- CART UPSELL -- */
 .cart-upsell{margin-top:18px;border-top:1px solid var(--cream-d);padding-top:16px}
 .cu-head{font-family:var(--font-display);font-size:19px;color:var(--dark);margin-bottom:12px}
@@ -416,33 +428,40 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <!-- FILTERS -->
 <div class="filter-bar" id="filterBar"></div>
 
-<div class="shop-toolbar" id="shopToolbar" hidden>
-  <div class="st-group st-avail" role="group" aria-label="Filter by availability">
-    <button type="button" class="st-avail-btn active" data-avail="all">All <span class="filter-count">0</span></button>
-    <button type="button" class="st-avail-btn" data-avail="in">In Stock <span class="filter-count">0</span></button>
-    <button type="button" class="st-avail-btn" data-avail="out">Out of Stock <span class="filter-count">0</span></button>
-  </div>
-  <div class="st-group st-price">
-    <label for="stPriceMin">Price $</label>
-    <input type="number" id="stPriceMin" min="0" placeholder="Min" inputmode="numeric">
-    <span aria-hidden="true">&ndash;</span>
-    <input type="number" id="stPriceMax" min="0" placeholder="Max" inputmode="numeric">
-    <button type="button" class="st-price-apply" id="stPriceApply">Apply</button>
-    <button type="button" class="st-price-clear" id="stPriceClear" hidden>Clear</button>
-  </div>
-  <div class="st-group st-sort">
-    <label for="stSort">Sort by</label>
-    <select id="stSort">
-      <option value="featured">Featured</option>
-      <option value="price-asc">Price: Low to High</option>
-      <option value="price-desc">Price: High to Low</option>
-      <option value="name-asc">Name: A to Z</option>
-    </select>
+<div class="shop-layout">
+  <aside class="shop-sidebar" id="shopToolbar" hidden aria-label="Product filters">
+    <div class="sb-section">
+      <div class="sb-title">Availability</div>
+      <div class="st-avail" role="group" aria-label="Filter by availability">
+        <button type="button" class="st-avail-btn active" data-avail="all"><span>All</span> <span class="filter-count">0</span></button>
+        <button type="button" class="st-avail-btn" data-avail="in"><span>In Stock</span> <span class="filter-count">0</span></button>
+        <button type="button" class="st-avail-btn" data-avail="out"><span>Out of Stock</span> <span class="filter-count">0</span></button>
+      </div>
+    </div>
+    <div class="sb-section st-price">
+      <div class="sb-title">Price ($)</div>
+      <div class="sb-price-row">
+        <input type="number" id="stPriceMin" min="0" placeholder="Min" inputmode="numeric" aria-label="Minimum price">
+        <span aria-hidden="true">&ndash;</span>
+        <input type="number" id="stPriceMax" min="0" placeholder="Max" inputmode="numeric" aria-label="Maximum price">
+      </div>
+      <button type="button" class="st-price-apply" id="stPriceApply">Apply</button>
+      <button type="button" class="st-price-clear" id="stPriceClear" hidden>Clear</button>
+    </div>
+  </aside>
+  <div class="shop-main">
+    <div class="shop-sort-row">
+      <label for="stSort">Sort by</label>
+      <select id="stSort" class="st-sort-select">
+        <option value="featured">Featured</option>
+        <option value="price-asc">Price: Low to High</option>
+        <option value="price-desc">Price: High to Low</option>
+        <option value="name-asc">Name: A to Z</option>
+      </select>
+    </div>
+    <div id="shopContent"></div>
   </div>
 </div>
-
-<!-- PRODUCTS -->
-<div id="shopContent"></div>
 <div style="max-width:1200px;margin:6px auto 0;padding:0 24px 8px;font-size:11px;line-height:1.6;color:var(--text-light)">
   Product images are for visual reference only. Actual fruit, sweets, size, color, and presentation may vary by variety, batch, and seasonal availability.
 </div>
