@@ -576,7 +576,38 @@ function renderCartDrawer() {
       </div>
       <button class="ci-remove" onclick="cartRemove('${escapeHtml(item.id)}')">x</button>
     </div>`;
+  }).join('') + renderCartUpsell();
+}
+
+function renderCartUpsell() {
+  const inCart = new Set(cart.map((item) => item.productId || String(item.id).split('__')[0]));
+  const cartCategories = new Set();
+  inCart.forEach((id) => {
+    const product = window.SHRISH_DATA.products.find((entry) => entry.id === id);
+    if (product) cartCategories.add(product.category);
+  });
+  const pool = window.SHRISH_DATA.products.filter((p) => !p.hidden && productInStock(p) && !p.preorderOnly && !inCart.has(p.id));
+  const preferred = pool.filter((p) => cartCategories.has(p.category));
+  const rest = pool.filter((p) => !cartCategories.has(p.category));
+  const picks = [...preferred, ...rest].slice(0, 3);
+  if (!picks.length) return '';
+  const rows = picks.map((p) => {
+    const img = productImages(p.id, p)[0] || p.image || '';
+    const price = usesVariantUI(p)
+      ? (getVariantPriceRange(getProductVariants(p)) || p.price || '')
+      : (p.price || '');
+    const button = usesVariantUI(p)
+      ? `<button type="button" class="cu-add" onclick="openModal('${escapeHtml(p.id)}')">Choose Size</button>`
+      : `<button type="button" class="cu-add" onclick="cartUpsellAdd('${escapeHtml(p.id)}')">Add To Cart</button>`;
+    const imgHtml = img ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" onerror="this.remove()">` : '';
+    return `<div class="cu-item"><div class="cu-img">${imgHtml}</div><div class="cu-info"><div class="cu-name">${escapeHtml(p.name)}</div><div class="cu-price">${escapeHtml(price)}</div></div>${button}</div>`;
   }).join('');
+  return `<div class="cart-upsell"><div class="cu-head">You May Also Like</div>${rows}</div>`;
+}
+
+function cartUpsellAdd(productId) {
+  const added = addToCart(productId, 1);
+  if (added) trackShopEvent('cart_upsell_added', { product_id: productId, ...cartAnalyticsSummary() });
 }
 
 function cartQty(id, delta) {
@@ -1180,6 +1211,143 @@ function cardVariantQtyChange(productId, variantId, delta) {
   });
 }
 
+// -- Shop refinements: availability / price / sort ------------
+let shopAvailability = 'all';
+let shopSort = 'featured';
+let shopPriceMin = null;
+let shopPriceMax = null;
+
+function parsePriceNumber(value) {
+  const n = parseFloat(String(value || '').replace(/[^0-9.]/g, ''));
+  return Number.isFinite(n) ? n : null;
+}
+
+function productMinPrice(product) {
+  const prices = getProductVariants(product)
+    .map((variant) => parsePriceNumber(variant.price))
+    .filter((n) => n !== null);
+  if (prices.length) return Math.min(...prices);
+  return parsePriceNumber(product.price);
+}
+
+function productInStock(product) {
+  return Boolean(product.available && !product.displayOnly);
+}
+
+function shopRefinementsActive() {
+  return shopAvailability !== 'all' || shopPriceMin !== null || shopPriceMax !== null;
+}
+
+function applyShopRefinements(items) {
+  let out = items;
+  if (shopAvailability === 'in') out = out.filter(productInStock);
+  else if (shopAvailability === 'out') out = out.filter((p) => !productInStock(p));
+  if (shopPriceMin !== null || shopPriceMax !== null) {
+    out = out.filter((p) => {
+      const price = productMinPrice(p);
+      if (price === null) return false;
+      if (shopPriceMin !== null && price < shopPriceMin) return false;
+      if (shopPriceMax !== null && price > shopPriceMax) return false;
+      return true;
+    });
+  }
+  if (shopSort !== 'featured') {
+    const rank = (p) => (p.displayOnly ? 2 : productInStock(p) ? 0 : 1);
+    out = [...out].sort((a, b) => {
+      const r = rank(a) - rank(b);
+      if (r !== 0) return r;
+      if (shopSort === 'price-asc') return (productMinPrice(a) ?? Infinity) - (productMinPrice(b) ?? Infinity);
+      if (shopSort === 'price-desc') return (productMinPrice(b) ?? -Infinity) - (productMinPrice(a) ?? -Infinity);
+      if (shopSort === 'name-asc') return String(a.name || '').localeCompare(String(b.name || ''));
+      return 0;
+    });
+  }
+  return out;
+}
+
+function activeFilterProducts() {
+  const config = SHOP_FILTERS.find((filter) => filter.id === activeFilter) || SHOP_FILTERS[0];
+  return window.SHRISH_DATA.products.filter((p) => !p.hidden
+    && config.categories.includes(normalizeProductCategory(p.category))
+    && productMatchesSearch(p));
+}
+
+function updateShopToolbarCounts() {
+  const wrap = document.getElementById('shopToolbar');
+  if (!wrap) return;
+  wrap.hidden = false;
+  const pool = activeFilterProducts();
+  const inCount = pool.filter(productInStock).length;
+  const counts = { all: pool.length, in: inCount, out: pool.length - inCount };
+  wrap.querySelectorAll('.st-avail-btn').forEach((btn) => {
+    const key = btn.dataset.avail;
+    const span = btn.querySelector('.filter-count');
+    if (span) span.textContent = counts[key] ?? 0;
+    btn.classList.toggle('active', key === shopAvailability);
+  });
+  const clearBtn = document.getElementById('stPriceClear');
+  if (clearBtn) clearBtn.hidden = shopPriceMin === null && shopPriceMax === null;
+}
+
+function applyShopPriceFilter() {
+  shopPriceMin = parsePriceNumber(document.getElementById('stPriceMin')?.value);
+  shopPriceMax = parsePriceNumber(document.getElementById('stPriceMax')?.value);
+  trackShopEvent('shop_price_filter_applied', { price_min: shopPriceMin, price_max: shopPriceMax });
+  renderShop();
+}
+
+function clearShopRefinements() {
+  shopAvailability = 'all';
+  shopSort = 'featured';
+  shopPriceMin = null;
+  shopPriceMax = null;
+  const minEl = document.getElementById('stPriceMin');
+  if (minEl) minEl.value = '';
+  const maxEl = document.getElementById('stPriceMax');
+  if (maxEl) maxEl.value = '';
+  const sortEl = document.getElementById('stSort');
+  if (sortEl) sortEl.value = 'featured';
+  renderShop();
+}
+
+function initShopToolbar() {
+  const wrap = document.getElementById('shopToolbar');
+  if (!wrap) return;
+  wrap.querySelectorAll('.st-avail-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      shopAvailability = btn.dataset.avail || 'all';
+      trackShopEvent('shop_availability_filter_clicked', { availability: shopAvailability });
+      renderShop();
+    });
+  });
+  const sortEl = document.getElementById('stSort');
+  if (sortEl) {
+    sortEl.addEventListener('change', () => {
+      shopSort = sortEl.value;
+      trackShopEvent('shop_sort_changed', { sort: shopSort });
+      renderShop();
+    });
+  }
+  const applyBtn = document.getElementById('stPriceApply');
+  if (applyBtn) applyBtn.addEventListener('click', applyShopPriceFilter);
+  ['stPriceMin', 'stPriceMax'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyShopPriceFilter(); });
+  });
+  const clearBtn = document.getElementById('stPriceClear');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      const minEl = document.getElementById('stPriceMin');
+      if (minEl) minEl.value = '';
+      const maxEl = document.getElementById('stPriceMax');
+      if (maxEl) maxEl.value = '';
+      shopPriceMin = null;
+      shopPriceMax = null;
+      renderShop();
+    });
+  }
+}
+
 function buildFilters() {
   const bar = document.getElementById('filterBar');
   if (!bar) return;
@@ -1305,6 +1473,7 @@ function renderShop() {
   const container = document.getElementById('shopContent');
   if (!container) return;
   container.innerHTML = '';
+  updateShopToolbarCounts();
   const escapedSearchQuery = escapeHtml(productSearchQuery);
 
   const sortWithinAvailability = (arr) => [
@@ -1341,11 +1510,13 @@ function renderShop() {
   cats.forEach((catId) => {
     const allCatItems = sortWithinAvailability(window.SHRISH_DATA.products.filter((p) => !p.hidden && p.category === catId));
     const searchedItems = allCatItems.filter((product) => productMatchesSearch(product));
-    const items = catId === 'picklespodi' ? searchedItems.filter(picklesPodiMatches) : searchedItems;
+    const baseItems = catId === 'picklespodi' ? searchedItems.filter(picklesPodiMatches) : searchedItems;
+    const items = applyShopRefinements(baseItems);
     const m = catMeta[catId] || { title: catId, em: '', sub: '', banner: false };
     const showEmptyCategory = activeFilter === catId && ['snacks'].includes(catId);
     if (!allCatItems.length && !showEmptyCategory) return;
     if (productSearchQuery && !items.length) return;
+    if (shopRefinementsActive() && !items.length) return;
     const hasLiveItems = allCatItems.some((product) => product.available && !product.displayOnly);
     let sectionSub = m.sub;
     if (catId === 'putharekulu' && hasLiveItems) {
@@ -1372,7 +1543,9 @@ function renderShop() {
     renderedSections += 1;
   });
 
-  if (!renderedSections) {
+  if (!renderedSections && shopRefinementsActive()) {
+    container.innerHTML = '<div class="no-results"><div class="nr-icon">!</div><p>No products match your current filters.</p><button class="btn-primary" onclick="clearShopRefinements()" style="border:none;cursor:pointer">Clear filters</button></div>';
+  } else if (!renderedSections) {
     container.innerHTML = productSearchQuery
       ? `<div class="no-results"><div class="nr-icon">!</div><p>No products matched "${escapedSearchQuery}". Try sweet, spicy, tangy, podi, avakai, putharekulu, or mango.</p><a class="btn-primary" href="shop.html">Clear search</a></div>`
       : '<div class="no-results"><div class="nr-icon">!</div><p>No products in this category yet.</p></div>';
@@ -1479,6 +1652,7 @@ function init() {
   window.addEventListener('pagehide', () => trackModalDuration('pagehide'));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeCart(); closeNotifyModal(); } });
   buildFilters();
+  initShopToolbar();
   renderShop();
   updateCartUI();
   trackShopViewedOnce();
@@ -1508,6 +1682,8 @@ window.notifyMe = notifyMe;
 window.closeNotifyModal = closeNotifyModal;
 window.handleNotifyOverlayClick = handleNotifyOverlayClick;
 window.goCheckout = goCheckout;
+window.cartUpsellAdd = cartUpsellAdd;
+window.clearShopRefinements = clearShopRefinements;
 
 init();
 

@@ -1,18 +1,76 @@
 {
   "redirects": [
-    { "source": "/index.html", "destination": "/", "permanent": true },
-    { "source": "/index", "destination": "/", "permanent": true }
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/index",
+      "destination": "/",
+      "permanent": true
+    }
   ],
   "rewrites": [
-    { "source": "/shop/all-products", "destination": "/shop.html" },
-    { "source": "/shop/all-products/", "destination": "/shop.html" },
-    { "source": "/shop/mangoes", "destination": "/shop.html" },
-    { "source": "/shop/mangoes/", "destination": "/shop.html" },
-    { "source": "/shop/sweets", "destination": "/shop.html" },
-    { "source": "/shop/sweets/", "destination": "/shop.html" },
-    { "source": "/shop/snacks", "destination": "/shop.html" },
-    { "source": "/shop/snacks/", "destination": "/shop.html" },
-    { "source": "/shop/pickles-podi", "destination": "/shop.html" },
-    { "source": "/shop/pickles-podi/", "destination": "/shop.html" }
+    {
+      "source": "/shop/all-products",
+      "destination": "/shop.html"
+    },
+    {
+      "source": "/shop/all-products/",
+      "destination": "/shop.html"
+    },
+    {
+      "source": "/shop/mangoes",
+      "destination": "/shop.html"
+    },
+    {
+      "source": "/shop/mangoes/",
+      "destination": "/shop.html"
+    },
+    {
+      "source": "/shop/sweets",
+      "destination": "/shop.html"
+    },
+    {
+      "source": "/shop/sweets/",
+      "destination": "/shop.html"
+    },
+    {
+      "source": "/shop/snacks",
+      "destination": "/shop.html"
+    },
+    {
+      "source": "/shop/snacks/",
+      "destination": "/shop.html"
+    },
+    {
+      "source": "/shop/pickles-podi",
+      "destination": "/shop.html"
+    },
+    {
+      "source": "/shop/pickles-podi/",
+      "destination": "/shop.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/images/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, stale-while-revalidate=86400"
+        }
+      ]
+    }
   ]
 }
