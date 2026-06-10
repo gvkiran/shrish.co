@@ -443,6 +443,16 @@ body.luxe .marquee-track span[data-img]{cursor:pointer;transition:color .3s}
 body.luxe .marquee-track span[data-img]:hover{color:#FFF3C4;text-shadow:0 0 18px rgba(240,200,74,.6)}
 body.luxe .lx-marq-tilt .marquee-wrap:hover .marquee-track{animation-play-state:paused}
 
+/* v2.3 — scrollable sidebar + nested pickle filter */
+body.luxe .shop-sidebar{max-height:calc(100vh - 116px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#3a2a12 transparent}
+body.luxe .shop-sidebar::-webkit-scrollbar{width:6px}
+body.luxe .shop-sidebar::-webkit-scrollbar-thumb{background:#3a2a12;border-radius:6px}
+body.luxe .shop-sidebar::-webkit-scrollbar-thumb:hover{background:var(--gold)}
+@media (max-width:900px){body.luxe .shop-sidebar{max-height:none;overflow:visible}}
+.sb-nested{margin-top:10px;padding:10px 0 2px 14px;border-left:2px solid rgba(212,160,23,.3)}
+.sb-nested-label{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9D8C70;font-weight:700;margin-bottom:8px;font-family:'Jost',sans-serif}
+body.luxe .sb-nested .pickle-type-btn{padding:8px 12px;font-size:13px;border-radius:10px}
+
 /* ---------- scroll reveal utility (applied by luxe.js) ---------- */
 body.luxe .lx-reveal{opacity:0;transform:translateY(42px);filter:blur(6px);transition:opacity .85s var(--ease),transform .85s var(--ease),filter .85s}
 body.luxe .lx-reveal.lx-in{opacity:1;transform:none;filter:none}

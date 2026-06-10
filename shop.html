@@ -22,7 +22,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,650;1,9..144,400;1,9..144,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" href="images/brand/logo-small.png" type="image/png">
 <link rel="stylesheet" href="assets/css/styles.css?v=shop-sidebar-20260609">
-<link rel="stylesheet" href="assets/css/luxe.css?v=luxe22-20260610">
+<link rel="stylesheet" href="assets/css/luxe.css?v=luxe23-20260610">
 <style>
 /* ── HERO ── */
 .shop-hero{background:linear-gradient(135deg,var(--dark),var(--dark-m));padding:64px 24px 44px;text-align:center;position:relative;overflow:hidden}
@@ -441,6 +441,10 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
     <div class="sb-section">
       <div class="sb-title">Categories</div>
       <div class="filter-bar" id="filterBar"></div>
+      <div class="sb-nested" id="sbPickleSub" hidden>
+        <div class="sb-nested-label">Pickle type</div>
+        <div id="sbPickleSubList"></div>
+      </div>
     </div>
     <div class="sb-section">
       <div class="sb-title">Availability</div>
@@ -449,10 +453,6 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
         <button type="button" class="st-avail-btn" data-avail="in"><span>In Stock</span> <span class="filter-count">0</span></button>
         <button type="button" class="st-avail-btn" data-avail="out"><span>Out of Stock</span> <span class="filter-count">0</span></button>
       </div>
-    </div>
-    <div class="sb-section" id="sbPickleSub" hidden>
-      <div class="sb-title">Pickle Type</div>
-      <div id="sbPickleSubList"></div>
     </div>
     <div class="sb-section st-price">
       <div class="sb-title">Price ($)</div>
