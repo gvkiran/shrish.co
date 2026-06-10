@@ -176,5 +176,75 @@
       }, { passive: true });
       document.addEventListener('mouseleave', function () { glow.style.opacity = '0'; });
     }
+
+    /* -- gold spotlight follows cursor across product cards ---- */
+    if (canHover) {
+      var spotRaf = null, spotEvent = null;
+      document.addEventListener('mousemove', function (e) {
+        spotEvent = e;
+        if (spotRaf) return;
+        spotRaf = window.requestAnimationFrame(function () {
+          spotRaf = null;
+          var card = spotEvent.target.closest('.pc, .product-card');
+          if (!card) return;
+          var r = card.getBoundingClientRect();
+          card.style.setProperty('--mx', ((spotEvent.clientX - r.left) / r.width * 100) + '%');
+          card.style.setProperty('--my', ((spotEvent.clientY - r.top) / r.height * 100) + '%');
+        });
+      }, { passive: true });
+    }
+
+    /* -- flying gold droplet on add-to-cart -------------------- */
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.pc-add-btn, .pc-size-add-btn, .cu-add, .modal-add-btn');
+      if (!btn || btn.disabled) return;
+      var fab = document.getElementById('cartFab') || document.getElementById('globalCartFab') || document.getElementById('navCartLink');
+      if (!fab) return;
+      var from = btn.getBoundingClientRect();
+      var to = fab.getBoundingClientRect();
+      var drop = document.createElement('div');
+      drop.className = 'lx-drop';
+      drop.style.left = (from.left + from.width / 2 - 11) + 'px';
+      drop.style.top = (from.top + from.height / 2 - 11) + 'px';
+      document.body.appendChild(drop);
+      var dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+      var dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+      var anim = drop.animate([
+        { transform: 'translate(0,0) scale(1)', opacity: 1, borderRadius: '46% 54% 52% 48%/58% 44% 56% 42%' },
+        { transform: 'translate(' + dx * 0.5 + 'px,' + (dy * 0.5 - 90) + 'px) scale(.85) rotate(120deg)', opacity: 1, borderRadius: '58% 42% 46% 54%/44% 58% 42% 56%', offset: 0.55 },
+        { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.25) rotate(240deg)', opacity: .9 }
+      ], { duration: 720, easing: 'cubic-bezier(.4,0,.6,1)' });
+      anim.onfinish = function () {
+        drop.remove();
+        fab.classList.remove('lx-fab-pulse');
+        void fab.offsetWidth;
+        fab.classList.add('lx-fab-pulse');
+      };
+    }, true);
+
+    /* -- scroll-velocity reactive marquees ---------------------- */
+    var marqs = document.querySelectorAll('.marquee-wrap');
+    if (marqs.length) {
+      var lastY = window.scrollY, vel = 0, skew = 0, marqRaf = null;
+      var marqTick = function () {
+        skew += (vel - skew) * 0.12;
+        vel *= 0.86;
+        marqs.forEach(function (m) {
+          m.style.transform = (m.closest('.lx-marq-tilt') ? 'skewX(' + skew + 'deg)' : 'skewX(' + skew + 'deg)');
+        });
+        if (Math.abs(skew) > 0.05 || Math.abs(vel) > 0.05) {
+          marqRaf = window.requestAnimationFrame(marqTick);
+        } else {
+          marqs.forEach(function (m) { m.style.transform = ''; });
+          marqRaf = null;
+        }
+      };
+      window.addEventListener('scroll', function () {
+        var y = window.scrollY;
+        vel = Math.max(-8, Math.min(8, (y - lastY) * 0.35));
+        lastY = y;
+        if (!marqRaf) marqRaf = window.requestAnimationFrame(marqTick);
+      }, { passive: true });
+    }
   }
 })();
