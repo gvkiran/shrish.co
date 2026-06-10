@@ -222,6 +222,78 @@
       };
     }, true);
 
+    /* -- hero mouse parallax + repelling MANGO letters ---------- */
+    if (canHover) {
+      var hero = document.querySelector('.lx-hero');
+      var layers = [
+        { el: document.querySelector('.lx-orb-a'), d: 22 },
+        { el: document.querySelector('.lx-orb-b'), d: 34 },
+        { el: document.querySelector('.lx-blob-wrap'), d: 10 },
+        { el: document.querySelector('.lx-chip-a'), d: 28 },
+        { el: document.querySelector('.lx-chip-b'), d: 40 }
+      ].filter(function (l) { return l.el; });
+      var letters = Array.prototype.slice.call(document.querySelectorAll('#lxWord i'));
+      if (hero && (layers.length || letters.length)) {
+        layers.forEach(function (l) { l.el.classList.add('lx-parallax'); });
+        var heroRaf = null, hx = 0, hy = 0;
+        hero.addEventListener('mousemove', function (e) {
+          hx = (e.clientX / window.innerWidth - 0.5);
+          hy = (e.clientY / window.innerHeight - 0.5);
+          if (heroRaf) return;
+          heroRaf = window.requestAnimationFrame(function () {
+            heroRaf = null;
+            layers.forEach(function (l) {
+              l.el.style.transform = 'translate(' + (-hx * l.d) + 'px,' + (-hy * l.d) + 'px)';
+            });
+            letters.forEach(function (ltr) {
+              var r = ltr.getBoundingClientRect();
+              var dx = e.clientX - (r.left + r.width / 2);
+              var dy = e.clientY - (r.top + r.height / 2);
+              var dist = Math.hypot(dx, dy);
+              if (dist < 180) {
+                var force = (180 - dist) / 180;
+                ltr.style.transform = 'translate(' + (dx / dist * -22 * force) + 'px,' + (dy / dist * -16 * force) + 'px) rotate(' + (dx / dist * -4 * force) + 'deg)';
+              } else {
+                ltr.style.transform = '';
+              }
+            });
+          });
+        }, { passive: true });
+        hero.addEventListener('mouseleave', function () {
+          layers.forEach(function (l) { l.el.style.transform = ''; });
+          letters.forEach(function (ltr) { ltr.style.transform = ''; });
+        });
+      }
+
+      /* -- marquee hover: floating variety photo ---------------- */
+      var marqSpans = document.querySelectorAll('.marquee-track span[data-img]');
+      if (marqSpans.length) {
+        var peek = document.createElement('div');
+        peek.className = 'lx-marq-peek';
+        peek.innerHTML = '<img alt="">';
+        document.body.appendChild(peek);
+        var peekImg = peek.querySelector('img');
+        var hideTimer = null;
+        document.addEventListener('mouseover', function (e) {
+          var sp = e.target.closest('.marquee-track span[data-img]');
+          if (!sp) return;
+          if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+          peekImg.src = sp.dataset.img;
+          peek.classList.add('show');
+        });
+        document.addEventListener('mousemove', function (e) {
+          if (!peek.classList.contains('show')) return;
+          peek.style.left = e.clientX + 'px';
+          peek.style.top = e.clientY + 'px';
+        }, { passive: true });
+        document.addEventListener('mouseout', function (e) {
+          if (e.target.closest && e.target.closest('.marquee-track span[data-img]')) {
+            hideTimer = setTimeout(function () { peek.classList.remove('show'); }, 120);
+          }
+        });
+      }
+    }
+
     /* -- scroll-velocity reactive marquees ---------------------- */
     var marqs = document.querySelectorAll('.marquee-wrap');
     if (marqs.length) {

@@ -1469,11 +1469,21 @@ function updateProductSearch(query, { updateUrl = true } = {}) {
   }
 }
 
+function updatePickleSidebarFilters(items) {
+  const wrap = document.getElementById('sbPickleSub');
+  const list = document.getElementById('sbPickleSubList');
+  if (!wrap || !list) return;
+  list.innerHTML = renderPicklesPodiFilters(items);
+  wrap.hidden = false;
+}
+
 function renderShop() {
   const container = document.getElementById('shopContent');
   if (!container) return;
   container.innerHTML = '';
   updateShopToolbarCounts();
+  const sbPickle = document.getElementById('sbPickleSub');
+  if (sbPickle) sbPickle.hidden = true;
   const escapedSearchQuery = escapeHtml(productSearchQuery);
 
   const sortWithinAvailability = (arr) => [
@@ -1528,10 +1538,10 @@ function renderShop() {
     if (catId === 'picklespodi') {
       sectionSub = 'Traditional Andhra-style pickles and podi. Non-veg pickles are preorder only and depend on supplier batch and pickup timing.';
     }
-    const subFilters = catId === 'picklespodi' ? renderPicklesPodiFilters(allCatItems) : '';
+    if (catId === 'picklespodi') updatePickleSidebarFilters(allCatItems);
     const searchNote = productSearchQuery ? `<div class="shop-search-note">Showing matches for <strong>${escapedSearchQuery}</strong>. <a href="${escapeHtml(shopUrlForFilter(activeFilter, { clearSearch: true, clearProduct: true }))}">Clear search</a></div>` : '';
     const safetyNotice = `<div class="shop-safety-notice"><strong>Food allergy and spice notice:</strong> ${escapeHtml(SHOP_ALLERGEN_NOTICE)} ${escapeHtml(SHOP_SPICE_NOTICE)}</div>`;
-    let html = `<div class="shop-section"><div class="shop-section-head"><div><div class="shop-section-title">${m.title} <em>${m.em}</em></div><div class="section-divider"></div></div>${subFilters}</div>${searchNote}<p style="color:var(--text-light);font-size:14px;margin-bottom:14px">${sectionSub}</p>${safetyNotice}`;
+    let html = `<div class="shop-section"><div class="shop-section-head"><div><div class="shop-section-title">${m.title} <em>${m.em}</em></div><div class="section-divider"></div></div></div>${searchNote}<p style="color:var(--text-light);font-size:14px;margin-bottom:14px">${sectionSub}</p>${safetyNotice}`;
     const showBanner = m.banner && (!hasLiveItems || activeFilter === catId);
     if (showBanner) {
       const bannerTitle = m.bannerTitle || 'Coming Soon to Shrish!';
