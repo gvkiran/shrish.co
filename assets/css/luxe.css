@@ -1,120 +1,238 @@
 /* ============================================================
-   SHRISH - LUXE EDITORIAL THEME
-   Dark cinematic layer. Loaded only on pages with body.luxe.
-   Restyles existing components; never changes JS hooks.
+   SHRISH — LUXE v2 "LIQUID GOLD"
+   Full design system for the rebuilt Home + themed Shop.
+   Scoped to body.luxe. No JS hooks are styled away.
    ============================================================ */
 
 body.luxe{
-  --cream:#0C0803; --cream-d:#231809; --white:#16100A;
+  --cream:#0A0702; --cream-d:#221708; --white:#16100A;
   --dark:#F4EADA; --dark-m:#E4D2AC;
   --text-light:#B3A287;
   --saffron:#E29A33; --saffron-d:#F0B45A;
   --gold:#D4A017; --gold-l:#F0C84A;
+  --font-disp:'Fraunces','Cormorant Garamond',serif;
+  --ease:cubic-bezier(.16,1,.3,1);
   --shadow:0 12px 44px rgba(0,0,0,.5);
   --shadow-lg:0 32px 90px rgba(0,0,0,.65);
-  background:#0C0803;
+  background:#0A0702;
   color:#D9CBB2;
   background-image:
-    radial-gradient(1200px 700px at 85% -10%, rgba(212,160,23,.07), transparent 60%),
-    radial-gradient(900px 600px at -10% 30%, rgba(200,121,26,.05), transparent 55%);
+    radial-gradient(1100px 640px at 88% -8%, rgba(212,160,23,.08), transparent 60%),
+    radial-gradient(900px 600px at -8% 36%, rgba(200,121,26,.05), transparent 55%);
+  overflow-x:hidden;
 }
 body.luxe ::selection{background:var(--gold);color:#120B03}
 body.luxe::-webkit-scrollbar{width:11px}
-body.luxe::-webkit-scrollbar-track{background:#0C0803}
+body.luxe::-webkit-scrollbar-track{background:#0A0702}
 body.luxe::-webkit-scrollbar-thumb{background:#3a2a12;border-radius:8px}
 body.luxe::-webkit-scrollbar-thumb:hover{background:var(--gold)}
+body.luxe h1,body.luxe h2,body.luxe h3{font-family:var(--font-disp)}
 
-/* ---------- NAV: floating glass ---------- */
-body.luxe .nav{background:rgba(12,8,3,.42);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);border-bottom:1px solid rgba(212,160,23,.10);box-shadow:none;transition:background .4s,border-color .4s,box-shadow .4s}
-body.luxe .nav.lx-scrolled{background:rgba(10,7,2,.85);border-bottom-color:rgba(212,160,23,.22);box-shadow:0 12px 40px rgba(0,0,0,.5)}
-body.luxe .nav-link{color:#CDBC9D;position:relative;transition:color .3s}
-body.luxe .nav-link::after{content:'';position:absolute;left:0;bottom:-4px;width:100%;height:1.5px;background:linear-gradient(90deg,var(--gold),var(--gold-l));transform:scaleX(0);transform-origin:left;transition:transform .35s cubic-bezier(.16,1,.3,1)}
+/* ---------- scroll progress ---------- */
+.lx-progress{position:fixed;top:0;left:0;right:0;height:3px;z-index:5000;background:rgba(212,160,23,.08)}
+.lx-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,#C8791A,var(--gold-l));box-shadow:0 0 12px rgba(240,200,74,.6)}
+
+/* ---------- announcement ---------- */
+body.luxe .lx-announce{background:#070401;color:var(--gold-l);border-bottom:1px solid rgba(212,160,23,.15);font-size:13px;letter-spacing:.06em}
+
+/* ---------- nav ---------- */
+body.luxe .nav{background:rgba(10,7,2,.4);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);border-bottom:1px solid rgba(212,160,23,.1);box-shadow:none;transition:background .4s,border-color .4s,box-shadow .4s}
+body.luxe .nav.lx-scrolled{background:rgba(8,5,1,.88);border-bottom-color:rgba(212,160,23,.22);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+body.luxe .nav-link{color:#CDBC9D;position:relative;transition:color .3s;letter-spacing:.05em}
+body.luxe .nav-link::after{content:'';position:absolute;left:0;bottom:-4px;width:100%;height:1.5px;background:linear-gradient(90deg,var(--gold),var(--gold-l));transform:scaleX(0);transform-origin:left;transition:transform .35s var(--ease)}
 body.luxe .nav-link:hover,body.luxe .nav-link.active{color:var(--gold-l)}
 body.luxe .nav-link:hover::after,body.luxe .nav-link.active::after{transform:scaleX(1)}
 body.luxe .nav-logo img{filter:drop-shadow(0 0 14px rgba(212,160,23,.35))}
 body.luxe .nav-cart-btn{background:linear-gradient(135deg,var(--gold),#B8860B);box-shadow:0 6px 24px rgba(212,160,23,.35)}
-body.luxe .nav-mobile{background:rgba(10,7,2,.97);backdrop-filter:blur(20px)}
+body.luxe .nav-mobile{background:rgba(8,5,1,.97);backdrop-filter:blur(20px)}
 body.luxe .nav-mobile a{color:#E4D2AC;border-color:rgba(212,160,23,.12)}
 body.luxe .nav-hamburger span{background:var(--gold-l)}
 
-/* ---------- HERO: cinematic ---------- */
-body.luxe .hero{background:transparent}
-body.luxe .hero-orb-1{background:radial-gradient(circle,rgba(212,160,23,.22),transparent 65%)}
-body.luxe .hero-orb-2{background:radial-gradient(circle,rgba(200,121,26,.15),transparent 65%)}
-body.luxe .hero-badge{background:rgba(212,160,23,.08);border:1px solid rgba(212,160,23,.35);color:var(--gold-l);letter-spacing:.22em;text-transform:uppercase;font-size:11px;font-weight:600;backdrop-filter:blur(6px)}
-body.luxe .hero-title{color:#F7EFDF;font-size:clamp(2.9rem,6.2vw,5.6rem);line-height:1.02;letter-spacing:-.01em;text-wrap:balance}
-body.luxe .hero-title em,body.luxe .hero-title-accent{background:linear-gradient(110deg,#9A7212 8%,var(--gold-l) 38%,#FFF3C4 50%,var(--gold-l) 62%,#9A7212 92%);background-size:220% auto;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:lxShimmer 5.5s linear infinite}
+/* ============================================================
+   HERO — LIQUID GOLD
+   ============================================================ */
+.lx-hero{position:relative;min-height:calc(100vh - 110px);display:flex;align-items:center;padding:70px 24px 90px;overflow:visible}
+.lx-hero-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.lx-orb{position:absolute;border-radius:50%;filter:blur(70px)}
+.lx-orb-a{width:55vw;height:55vw;top:-22vw;right:-14vw;background:radial-gradient(circle,rgba(212,160,23,.2),transparent 65%);animation:lxDrift 16s ease-in-out infinite alternate}
+.lx-orb-b{width:38vw;height:38vw;bottom:-16vw;left:-10vw;background:radial-gradient(circle,rgba(200,121,26,.13),transparent 65%);animation:lxDrift 19s ease-in-out infinite alternate-reverse}
+@keyframes lxDrift{from{transform:translate(0,0) scale(1)}to{transform:translate(-4vw,3vw) scale(1.12)}}
+
+.lx-hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;max-width:1440px;margin:0 auto;width:100%}
+.lx-kicker{font-family:'Jost',sans-serif;font-size:12px;font-weight:600;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);margin-bottom:26px}
+.lx-display{font-weight:500;line-height:.92;margin:0 0 28px;color:#F7EFDF}
+.lx-line{display:block;font-size:clamp(3.2rem,7.6vw,7.2rem)}
+.lx-line em{font-style:italic;font-weight:400;background:linear-gradient(110deg,#9A7212 8%,var(--gold-l) 38%,#FFF3C4 50%,var(--gold-l) 62%,#9A7212 92%);background-size:220% auto;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:lxShimmer 5.5s linear infinite}
 @keyframes lxShimmer{to{background-position:-220% center}}
-body.luxe .hero-sub{color:#BCAB8E;font-size:clamp(16px,1.4vw,19px)}
-body.luxe .hero-img-frame{border-radius:28px;border:1px solid rgba(212,160,23,.28);box-shadow:0 40px 110px rgba(0,0,0,.65),0 0 0 8px rgba(212,160,23,.05);overflow:hidden;will-change:transform}
-body.luxe .hero-img-frame img{animation:lxKenBurns 16s ease-in-out infinite alternate}
-@keyframes lxKenBurns{from{transform:scale(1)}to{transform:scale(1.07)}}
-body.luxe .hero-stats .stat-num{color:var(--gold-l);font-family:var(--font-display);font-size:34px}
-body.luxe .hero-stats .stat-label{color:#9D8C70}
-body.luxe .stat-divider{background:rgba(212,160,23,.25)}
-body.luxe .hero-carousel-btn{background:rgba(20,13,5,.6);border:1px solid rgba(212,160,23,.3);color:var(--gold-l);backdrop-filter:blur(8px)}
-body.luxe .hero-carousel-btn:hover{background:var(--gold);color:#120B03}
+.lx-outline{font-family:'Jost',sans-serif;font-weight:700;letter-spacing:.08em;color:transparent;-webkit-text-stroke:1.6px rgba(240,200,74,.85);font-size:clamp(3.6rem,9vw,8.6rem);transform:translateX(-3px)}
+.lx-lede{max-width:480px;font-size:clamp(16px,1.4vw,19px);line-height:1.7;color:#BCAB8E;margin-bottom:36px}
+.lx-hero-cta{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:44px}
 
-/* hero entrance choreography (retriggers on slide change) */
-body.luxe .hero-slide.is-active .hero-badge{animation:lxRise .8s .1s cubic-bezier(.16,1,.3,1) both}
-body.luxe .hero-slide.is-active .hero-title{animation:lxRise .9s .22s cubic-bezier(.16,1,.3,1) both}
-body.luxe .hero-slide.is-active .hero-sub{animation:lxRise .9s .36s cubic-bezier(.16,1,.3,1) both}
-body.luxe .hero-slide.is-active .hero-actions{animation:lxRise .9s .5s cubic-bezier(.16,1,.3,1) both}
-body.luxe .hero-slide.is-active .hero-stats{animation:lxRise 1s .64s cubic-bezier(.16,1,.3,1) both}
-body.luxe .hero-slide.is-active .hero-visual{animation:lxVisual 1.2s .25s cubic-bezier(.16,1,.3,1) both}
-@keyframes lxRise{from{opacity:0;transform:translateY(34px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
-@keyframes lxVisual{from{opacity:0;transform:translateX(40px) scale(.96);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+/* staggered entrance */
+.lx-l1{animation:lxUp .9s .05s var(--ease) both}
+.lx-l2{animation:lxClip 1s .15s var(--ease) both}
+.lx-l3{animation:lxClip 1s .28s var(--ease) both}
+.lx-l4{animation:lxClip 1s .41s var(--ease) both}
+.lx-l5{animation:lxUp .9s .55s var(--ease) both}
+.lx-l6{animation:lxUp .9s .68s var(--ease) both}
+.lx-l7{animation:lxUp 1s .82s var(--ease) both}
+@keyframes lxUp{from{opacity:0;transform:translateY(36px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes lxClip{from{opacity:0;clip-path:inset(0 0 100% 0);transform:translateY(30px)}to{opacity:1;clip-path:inset(0 0 -10% 0);transform:none}}
 
-/* ---------- Buttons ---------- */
-body.luxe .btn-primary{background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;font-weight:700;letter-spacing:.04em;border:none;position:relative;overflow:hidden;box-shadow:0 10px 34px rgba(212,160,23,.35);transition:transform .3s,box-shadow .3s}
-body.luxe .btn-primary::after{content:'';position:absolute;top:0;left:-80%;width:50%;height:100%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);transition:left .6s ease}
-body.luxe .btn-primary:hover{transform:translateY(-3px);box-shadow:0 18px 50px rgba(212,160,23,.5)}
-body.luxe .btn-primary:hover::after{left:130%}
-body.luxe .btn-ghost,body.luxe .btn-outline{border:1.5px solid rgba(212,160,23,.5);color:var(--gold-l);background:transparent;transition:all .35s}
-body.luxe .btn-ghost:hover,body.luxe .btn-outline:hover{background:rgba(212,160,23,.12);border-color:var(--gold-l);transform:translateY(-2px)}
+body.luxe .hero-stats,.lx-stats{display:flex;align-items:center;gap:26px}
+body.luxe .stat-num{display:block;color:var(--gold-l);font-family:var(--font-disp);font-size:36px;font-weight:500;line-height:1}
+body.luxe .stat-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9D8C70}
+body.luxe .stat-divider{width:1px;height:40px;background:rgba(212,160,23,.25)}
 
-/* ---------- Marquees ---------- */
-body.luxe .marquee-wrap{background:#070401;border-top:1px solid rgba(212,160,23,.14);border-bottom:1px solid rgba(212,160,23,.14)}
-body.luxe .marquee-track{color:var(--gold-l)}
+/* liquid blob art */
+.lx-hero-art{display:flex;justify-content:center}
+.lx-blob-wrap{position:relative;will-change:transform;transition:transform .25s ease-out;animation:lxUp 1.1s .3s var(--ease) both}
+.lx-blob{width:min(42vw,520px);aspect-ratio:.92;overflow:hidden;border:1px solid rgba(212,160,23,.3);box-shadow:0 50px 120px rgba(0,0,0,.65),0 0 0 10px rgba(212,160,23,.05);border-radius:58% 42% 55% 45%/52% 56% 44% 48%;animation:lxMorph 14s ease-in-out infinite alternate}
+.lx-blob img{width:100%;height:100%;object-fit:cover;animation:lxKen 18s ease-in-out infinite alternate}
+@keyframes lxMorph{
+  0%{border-radius:58% 42% 55% 45%/52% 56% 44% 48%}
+  33%{border-radius:46% 54% 42% 58%/58% 44% 56% 42%}
+  66%{border-radius:54% 46% 58% 42%/44% 58% 42% 56%}
+  100%{border-radius:42% 58% 46% 54%/56% 42% 58% 44%}
+}
+@keyframes lxKen{from{transform:scale(1)}to{transform:scale(1.09)}}
+.lx-blob-sm{width:min(38vw,440px)}
+.lx-stamp{position:absolute;width:158px;height:158px;top:-34px;right:-22px;animation:lxSpin 24s linear infinite;filter:drop-shadow(0 8px 24px rgba(0,0,0,.5))}
+.lx-stamp text{font-family:'Jost',sans-serif;font-size:14.5px;font-weight:600;letter-spacing:.22em;fill:var(--gold-l)}
+@keyframes lxSpin{to{transform:rotate(360deg)}}
+.lx-chip{position:absolute;padding:10px 18px;border-radius:50px;background:rgba(16,10,4,.72);border:1px solid rgba(212,160,23,.35);backdrop-filter:blur(10px);font-size:13px;font-weight:600;color:#EFE4CE;box-shadow:var(--shadow);white-space:nowrap}
+.lx-chip-a{bottom:14%;left:-7%;animation:lxFloat 5.2s ease-in-out infinite}
+.lx-chip-b{top:16%;left:-12%;animation:lxFloat 6.4s .8s ease-in-out infinite}
+@keyframes lxFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+
+/* scroll cue */
+.lx-cue{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);width:26px;height:42px;border:1.5px solid rgba(212,160,23,.5);border-radius:20px;display:flex;justify-content:center;padding-top:7px}
+.lx-cue span{width:3px;height:8px;border-radius:3px;background:var(--gold-l);animation:lxCue 1.8s ease-in-out infinite}
+@keyframes lxCue{0%{opacity:0;transform:translateY(0)}35%{opacity:1}100%{opacity:0;transform:translateY(14px)}}
+
+/* ============================================================
+   LIQUID BUTTONS
+   ============================================================ */
+.lx-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;padding:16px 34px;border-radius:60px;font-family:'Jost',sans-serif;font-size:15px;font-weight:600;letter-spacing:.06em;text-decoration:none;overflow:hidden;isolation:isolate;transition:color .4s,border-color .4s,transform .35s var(--ease),box-shadow .4s;cursor:pointer}
+.lx-btn span{position:relative;z-index:2}
+.lx-btn::before{content:'';position:absolute;z-index:1;left:50%;bottom:-40%;width:140%;aspect-ratio:1;border-radius:42% 58% 52% 48%/56% 44% 56% 44%;transform:translate(-50%,100%) rotate(0deg);transition:transform .65s var(--ease)}
+.lx-btn:hover::before{transform:translate(-50%,18%) rotate(120deg)}
+.lx-btn-liquid{color:#140C03;background:linear-gradient(135deg,#E8A93C,#C8791A);box-shadow:0 10px 34px rgba(212,160,23,.32)}
+.lx-btn-liquid::before{background:radial-gradient(circle at 35% 35%,#FFE9AE,#F0C84A 60%,#E8A93C)}
+.lx-btn-liquid:hover{transform:translateY(-3px);box-shadow:0 20px 52px rgba(212,160,23,.5)}
+.lx-btn-ghost{color:var(--gold-l);border:1.5px solid rgba(212,160,23,.5);background:transparent}
+.lx-btn-ghost::before{background:linear-gradient(135deg,#E8A93C,#C8791A)}
+.lx-btn-ghost:hover{color:#140C03;border-color:transparent;transform:translateY(-3px)}
+.lx-btn-xl{padding:20px 48px;font-size:17px}
+body.luxe .btn-primary,body.luxe .btn-ghost,body.luxe .btn-outline{border-radius:60px}
+
+/* ============================================================
+   STICKY STACK SHOWCASE
+   ============================================================ */
+.lx-stack{padding:4vh 24px 8vh;max-width:1440px;margin:0 auto}
+.lx-panel{position:sticky;top:96px;min-height:78vh;display:grid;grid-template-columns:1.08fr .92fr;border-radius:36px;overflow:hidden;background:#130D06;border:1px solid rgba(212,160,23,.18);box-shadow:0 40px 110px rgba(0,0,0,.55);margin-bottom:7vh;transition:transform .5s var(--ease),filter .5s var(--ease)}
+.lx-panel.lx-covered{transform:scale(.94) translateY(-12px);filter:brightness(.55) blur(1px)}
+.lx-panel-media{position:relative;min-height:340px;overflow:hidden}
+.lx-panel-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--ease)}
+.lx-panel:hover .lx-panel-media img{transform:scale(1.06)}
+.lx-panel-media::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 55%,#130D06 100%)}
+.lx-panel-copy{padding:clamp(32px,5vw,72px);display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:20px}
+.lx-panel-title{font-size:clamp(2rem,3.6vw,3.4rem);line-height:1.05;color:#F4EADA;font-weight:500}
+.lx-panel-title em{color:var(--gold-l);font-style:italic;font-weight:400}
+.lx-panel-sub{color:#B3A287;font-size:16.5px;line-height:1.7;max-width:46ch}
+.lx-panel-tags{display:flex;gap:10px;flex-wrap:wrap}
+.lx-panel-tags span{padding:7px 16px;border-radius:50px;border:1px solid rgba(212,160,23,.3);background:rgba(212,160,23,.07);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:#CDBC9D}
+
+/* ---------- angled marquee ---------- */
+.lx-marq-tilt{transform:rotate(-1.6deg) scale(1.04);margin:40px 0 64px}
+body.luxe .marquee-wrap{background:#070401;border-top:1px solid rgba(212,160,23,.16);border-bottom:1px solid rgba(212,160,23,.16)}
+body.luxe .marquee-track{color:var(--gold-l);font-family:var(--font-disp);font-size:20px}
+body.luxe .marquee-track .dot{color:var(--gold)}
 body.luxe .trust-marquee{background:linear-gradient(90deg,#1A1004,#2A1A06,#1A1004)}
-body.luxe .trust-marquee .marquee-track{color:#E8D5AC}
+body.luxe .trust-marquee .marquee-track{color:#E8D5AC;font-family:'Jost',sans-serif;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
 
-/* ---------- Sections ---------- */
-body.luxe .section-alt{background:rgba(212,160,23,.03)}
-body.luxe .section-label{color:var(--gold);letter-spacing:.3em}
-body.luxe .section-title{color:#F4EADA}
+/* ============================================================
+   SECTIONS / GHOST NUMBERS
+   ============================================================ */
+.lx-section{position:relative;padding:110px 0}
+body.luxe .section-alt{background:transparent}
+.lx-sechead{position:relative;text-align:left !important;max-width:1100px;margin:0 0 56px;padding-left:8px}
+.lx-ghost{position:absolute;top:-78px;left:-14px;font-family:var(--font-disp);font-size:clamp(7rem,14vw,12rem);line-height:1;font-weight:600;color:transparent;-webkit-text-stroke:1px rgba(212,160,23,.16);pointer-events:none;user-select:none}
+body.luxe .section-label{color:var(--gold);letter-spacing:.34em;text-transform:uppercase;font-size:12px;text-align:inherit}
+body.luxe .section-title{color:#F4EADA;font-size:clamp(2.2rem,4.6vw,3.8rem);text-align:inherit}
 body.luxe .section-title em{color:var(--gold-l)}
-body.luxe .section-desc{color:#A8977B}
+body.luxe .section-desc{color:#A8977B;text-align:inherit;margin-left:0}
+.lx-center{display:flex;justify-content:center;margin-top:48px}
+.lx-wide{max-width:1440px}
 
-/* about teaser */
-body.luxe .about-img{box-shadow:0 30px 80px rgba(0,0,0,.6);border:1px solid rgba(212,160,23,.2)}
-body.luxe .about-img-overlay{background:linear-gradient(135deg,#241708,#120B03);border:1px solid rgba(212,160,23,.3)}
-body.luxe .about-teaser-text p{color:#A8977B}
-
-/* product cards (home) */
-body.luxe .product-card{background:#16100A;border:1px solid rgba(212,160,23,.13);transition:transform .45s cubic-bezier(.16,1,.3,1),box-shadow .45s,border-color .45s}
-body.luxe .product-card:hover{transform:translateY(-10px);border-color:rgba(212,160,23,.5);box-shadow:0 30px 70px rgba(0,0,0,.6),0 0 40px rgba(212,160,23,.12)}
-body.luxe .product-card-body h3{color:#F4EADA}
+/* ============================================================
+   BENTO PRODUCTS (home, JS-rendered .product-card)
+   ============================================================ */
+body.luxe .lx-bento{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(180px,auto);gap:22px}
+body.luxe .lx-bento .product-card{grid-column:span 1}
+body.luxe .lx-bento .product-card:nth-child(6n+1){grid-column:span 2;grid-row:span 2}
+body.luxe .lx-bento .product-card:nth-child(6n+1) .product-card-img{height:100%;min-height:300px}
+body.luxe .lx-bento .product-card:nth-child(6n+4){grid-column:span 2}
+body.luxe .product-card{background:#150E07;border:1px solid rgba(212,160,23,.14);border-radius:26px;overflow:hidden;box-shadow:none;display:flex;flex-direction:column;transition:transform .5s var(--ease),border-color .5s,box-shadow .5s}
+body.luxe .product-card:hover{transform:translateY(-10px);border-color:rgba(212,160,23,.55);box-shadow:0 30px 70px rgba(0,0,0,.6),0 0 44px rgba(212,160,23,.14)}
+body.luxe .product-card .product-card-img{flex:1 0 auto}
+body.luxe .product-card-img img{transition:transform .8s var(--ease)}
+body.luxe .product-card:hover .product-card-img img{transform:scale(1.08)}
+body.luxe .product-card-body h3{color:#F4EADA;font-family:var(--font-disp)}
+body.luxe .product-card-body p{color:#A8977B}
 body.luxe .product-card-badge{background:linear-gradient(135deg,var(--gold),#B8860B);color:#140C03}
+body.luxe .product-price{color:var(--gold-l)}
 
-/* how-it-works */
-body.luxe .how-step{background:#16100A;border:1px solid rgba(212,160,23,.12)}
+/* ============================================================
+   STORY
+   ============================================================ */
+.lx-story-grid{display:grid;grid-template-columns:.92fr 1.08fr;gap:72px;align-items:center}
+.lx-story-art{position:relative}
+.lx-quote-card{position:absolute;bottom:-26px;right:-8px;background:linear-gradient(135deg,#241708,#120B03);border:1px solid rgba(212,160,23,.35);border-radius:18px;padding:22px 26px;box-shadow:var(--shadow-lg)}
+.lx-quote-card blockquote{font-family:var(--font-disp);font-style:italic;font-size:24px;color:var(--gold-l);margin:0 0 6px}
+.lx-quote-card cite{font-size:12px;color:#9D8C70;font-style:normal;letter-spacing:.1em}
+.lx-story-copy{text-align:left}
+.lx-story-p{color:#A8977B;font-size:17px;line-height:1.8;margin-bottom:18px}
 
-/* recipes */
-body.luxe .recipe-card{background:#16100A;border:1px solid rgba(212,160,23,.12)}
+/* ============================================================
+   TIMELINE (how it works)
+   ============================================================ */
+.lx-tl{position:relative;max-width:860px;margin:0 auto;padding-left:34px}
+.lx-tl-line{position:absolute;left:9px;top:8px;bottom:8px;width:2px;background:rgba(212,160,23,.14);border-radius:2px;overflow:hidden}
+.lx-tl-line span{display:block;width:100%;height:100%;background:linear-gradient(180deg,var(--gold),var(--gold-l));transform:scaleY(0);transform-origin:top;transition:transform .2s linear}
+body.luxe .lx-tl-step{position:relative;display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:start;background:#130D06;border:1px solid rgba(212,160,23,.15);border-radius:24px;padding:34px 38px;margin-bottom:26px;transition:border-color .4s,transform .4s var(--ease)}
+body.luxe .lx-tl-step:hover{border-color:rgba(212,160,23,.45);transform:translateX(8px)}
+.lx-tl-dot{position:absolute;left:-31px;top:44px;width:12px;height:12px;border-radius:50%;background:var(--gold-l);box-shadow:0 0 0 5px rgba(212,160,23,.18),0 0 18px rgba(240,200,74,.7)}
+.lx-tl-num{font-family:var(--font-disp);font-size:54px;font-weight:600;line-height:1;color:transparent;-webkit-text-stroke:1.2px rgba(240,200,74,.55)}
+.lx-tl-body h3{color:#F4EADA;font-size:24px;margin-bottom:8px}
+.lx-tl-body p{color:#A8977B;line-height:1.7;font-size:15.5px}
+
+/* ============================================================
+   RECIPES
+   ============================================================ */
+body.luxe .recipe-card{background:#150E07;border:1px solid rgba(212,160,23,.14);border-radius:26px;overflow:hidden;transition:border-color .4s;transform-style:preserve-3d;will-change:transform}
+body.luxe .recipe-card:hover{border-color:rgba(212,160,23,.5)}
+body.luxe .recipe-card-img{transition:transform .8s var(--ease)}
+body.luxe .recipe-card:hover .recipe-card-img{transform:scale(1.06)}
 body.luxe .recipe-card-body h3{color:#F4EADA}
+body.luxe .recipe-card-body p{color:#A8977B}
+body.luxe .recipe-tag{color:var(--gold-l)}
 
-/* FAQ */
-body.luxe .faq-item{background:#150F08;border:1px solid rgba(212,160,23,.14);border-radius:16px;transition:border-color .3s}
-body.luxe .faq-item:hover{border-color:rgba(212,160,23,.4)}
+/* ============================================================
+   FAQ / TESTIMONIALS
+   ============================================================ */
+body.luxe .faq-item{background:#130D06;border:1px solid rgba(212,160,23,.15);border-radius:18px;box-shadow:none;transition:border-color .3s}
+body.luxe .faq-item:hover{border-color:rgba(212,160,23,.45);box-shadow:none}
 body.luxe .faq-q{color:#EFE4CE}
 body.luxe .faq-icon{color:var(--gold-l)}
 body.luxe .faq-a{color:#A8977B}
 
-/* testimonials */
-body.luxe .testimonial-card{background:#16100A;border:1px solid rgba(212,160,23,.14);box-shadow:none}
-body.luxe .testimonial-card p{color:#BCAB8E}
-body.luxe .testimonial-featured{background:linear-gradient(150deg,#2A1B07,#120B03);border-color:rgba(212,160,23,.4)}
+body.luxe .testimonial-card{background:#130D06;border:1px solid rgba(212,160,23,.15);border-radius:26px;box-shadow:none;position:relative;padding-top:52px}
+body.luxe .testimonial-card::before{content:'\201C';position:absolute;top:-6px;left:20px;font-family:var(--font-disp);font-size:110px;line-height:1;color:rgba(240,200,74,.25)}
+body.luxe .testimonial-card p{color:#BCAB8E;font-family:var(--font-disp);font-size:18px;line-height:1.65}
+body.luxe .testimonial-featured{background:linear-gradient(150deg,#2A1B07,#120B03);border-color:rgba(212,160,23,.4);color:#EFE4CE}
+body.luxe .testimonial-featured p{color:rgba(244,234,218,.85)}
+body.luxe .stars{color:var(--gold-l)}
 body.luxe .testimonial-author strong{color:#F4EADA}
 body.luxe .author-avatar{background:linear-gradient(135deg,var(--gold),#B8860B);color:#140C03}
 body.luxe .testimonial-nav{background:#1D1306;color:var(--gold-l);border:1px solid rgba(212,160,23,.3)}
@@ -122,9 +240,59 @@ body.luxe .testimonial-nav:hover{background:var(--gold);color:#140C03}
 body.luxe .testimonial-dot{background:#33240F}
 body.luxe .testimonial-dot.active{background:var(--gold-l)}
 
-/* footer + newsletter */
-body.luxe .footer{background:#070401;border-top:1px solid rgba(212,160,23,.16)}
-body.luxe .footer input[type="email"]{background:#16100A;border:1px solid rgba(212,160,23,.25);color:#EFE4CE}
+/* ============================================================
+   CTA BAND + FOOTER
+   ============================================================ */
+.lx-cta-band{position:relative;padding:120px 24px 130px;text-align:center;overflow:hidden;border-top:1px solid rgba(212,160,23,.12)}
+.lx-cta-marq{white-space:nowrap;margin-bottom:44px}
+.lx-cta-track{display:inline-flex;animation:lxMarq 26s linear infinite}
+.lx-cta-track span{font-family:var(--font-disp);font-style:italic;font-size:clamp(2.6rem,6vw,5.4rem);color:transparent;-webkit-text-stroke:1.2px rgba(240,200,74,.5);padding-right:14px}
+@keyframes lxMarq{to{transform:translateX(-50%)}}
+
+body.luxe .lx-footer{position:relative;background:#070401;border-top:1px solid rgba(212,160,23,.16);color:#BCAB9D;overflow:hidden}
+.lx-wordmark{font-family:'Jost',sans-serif;font-weight:700;font-size:clamp(5rem,17vw,16rem);line-height:.8;text-align:center;letter-spacing:.06em;color:transparent;-webkit-text-stroke:1px rgba(212,160,23,.14);user-select:none;pointer-events:none;margin-top:30px}
+body.luxe .lx-footer-grid{position:relative;z-index:1;margin-top:-30px}
+body.luxe .footer h4{color:#EFE4CE}
+body.luxe .footer a{transition:color .3s}
+body.luxe .footer a:hover{color:var(--gold-l)}
+body.luxe .footer input[type="email"]{background:#150E07;border:1px solid rgba(212,160,23,.25);color:#EFE4CE}
+body.luxe .subscribe-form button{background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;font-weight:700}
+body.luxe .footer-bottom{border-top:1px solid rgba(212,160,23,.12)}
+
+/* home product modal (dark) */
+body.luxe .home-product-modal-box{background:#130D06;border:1px solid rgba(212,160,23,.22);color:#D9CBB2}
+body.luxe .home-product-modal-box h2,body.luxe .home-product-modal-box h3{color:#F4EADA}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:1100px){
+  body.luxe .lx-bento{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body.luxe .lx-bento .product-card:nth-child(6n+1),body.luxe .lx-bento .product-card:nth-child(6n+4){grid-column:span 2;grid-row:auto}
+}
+@media (max-width:980px){
+  .lx-hero{min-height:auto;padding-top:48px}
+  .lx-hero-grid{grid-template-columns:1fr;gap:54px}
+  .lx-hero-art{order:-1}
+  .lx-blob{width:min(78vw,420px)}
+  .lx-chip-b{left:auto;right:-4%}
+  .lx-panel{position:relative;top:0;grid-template-columns:1fr;min-height:0}
+  .lx-panel.lx-covered{transform:none;filter:none}
+  .lx-panel-media{min-height:280px}
+  .lx-panel-media::after{background:linear-gradient(180deg,transparent 55%,#130D06 100%)}
+  .lx-story-grid{grid-template-columns:1fr;gap:64px}
+  .lx-ghost{font-size:6.4rem;top:-52px}
+  .lx-section{padding:72px 0}
+}
+@media (max-width:640px){
+  body.luxe .lx-bento{grid-template-columns:1fr}
+  body.luxe .lx-bento .product-card:nth-child(6n+1),body.luxe .lx-bento .product-card:nth-child(6n+4){grid-column:span 1}
+  .lx-tl{padding-left:26px}
+  .lx-tl-num{font-size:38px}
+  body.luxe .lx-tl-step{padding:24px 22px;gap:16px}
+  .lx-stamp{width:110px;height:110px;top:-20px;right:-8px}
+  .lx-cue{display:none}
+}
 
 /* ============================================================
    SHOP PAGE
@@ -227,7 +395,7 @@ body.luxe .about-img-overlay{color:#EFE4CE}
 body.luxe .pc-tag.t-coming{background:#070401;border:1px solid rgba(212,160,23,.4)}
 
 /* ---------- scroll reveal utility (applied by luxe.js) ---------- */
-body.luxe .lx-reveal{opacity:0;transform:translateY(42px);filter:blur(6px);transition:opacity .85s cubic-bezier(.16,1,.3,1),transform .85s cubic-bezier(.16,1,.3,1),filter .85s}
+body.luxe .lx-reveal{opacity:0;transform:translateY(42px);filter:blur(6px);transition:opacity .85s var(--ease),transform .85s var(--ease),filter .85s}
 body.luxe .lx-reveal.lx-in{opacity:1;transform:none;filter:none}
 
 /* ---------- ambient cursor glow ---------- */
@@ -238,4 +406,5 @@ body.luxe .lx-glow{position:fixed;width:520px;height:520px;border-radius:50%;poi
   body.luxe *,body.luxe *::before,body.luxe *::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
   body.luxe .lx-reveal{opacity:1;transform:none;filter:none}
   body.luxe .lx-glow{display:none}
+  .lx-panel.lx-covered{transform:none;filter:none}
 }

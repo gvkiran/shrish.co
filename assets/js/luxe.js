@@ -1,11 +1,12 @@
 /* ============================================================
-   SHRISH - LUXE ANIMATION ENGINE
-   Scroll reveals, parallax, counters, glass nav, magnetic
-   buttons, ambient glow. Reduced-motion safe. No dependencies.
+   SHRISH — LUXE v2 ANIMATION ENGINE
+   Scroll progress, liquid blob tilt, sticky-stack depth,
+   timeline draw, counters, magnetic buttons, recipe tilt,
+   glass nav, ambient glow. Reduced-motion safe. Zero deps.
    ============================================================ */
 (function () {
   'use strict';
-  if (!document.body || !document.body.classList.contains('luxe')) {
+  if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
@@ -19,20 +20,48 @@
 
     /* -- glass nav condenses on scroll ------------------------ */
     var nav = document.querySelector('.nav');
-    if (nav) {
-      var onScrollNav = function () {
-        nav.classList.toggle('lx-scrolled', window.scrollY > 40);
-      };
-      window.addEventListener('scroll', onScrollNav, { passive: true });
-      onScrollNav();
+    var progress = document.getElementById('lxProgressBar');
+    var tlDraw = document.getElementById('lxTlDraw');
+    var tlWrap = document.getElementById('lxTimeline');
+    var onScroll = function () {
+      var y = window.scrollY;
+      if (nav) nav.classList.toggle('lx-scrolled', y > 40);
+      if (progress) {
+        var h = document.documentElement.scrollHeight - window.innerHeight;
+        progress.style.width = (h > 0 ? (y / h) * 100 : 0) + '%';
+      }
+      if (tlDraw && tlWrap) {
+        var r = tlWrap.getBoundingClientRect();
+        var vh = window.innerHeight;
+        var p = Math.min(1, Math.max(0, (vh * 0.75 - r.top) / (r.height || 1)));
+        tlDraw.style.transform = 'scaleY(' + p + ')';
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    /* -- sticky stack: dim/scale covered panels --------------- */
+    var panels = Array.prototype.slice.call(document.querySelectorAll('.lx-panel'));
+    if (panels.length > 1 && 'IntersectionObserver' in window) {
+      panels.forEach(function (panel, i) {
+        if (i === 0) return;
+        var prev = panels[i - 1];
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            prev.classList.toggle('lx-covered', entry.intersectionRatio > 0.28);
+          });
+        }, { threshold: [0, 0.28, 0.6] });
+        io.observe(panel);
+      });
     }
 
-    if (reduce) return; /* everything below is pure decoration */
+    if (reduce) return; /* decoration below */
 
-    /* -- scroll reveals (elements main.js does not handle) ---- */
+    /* -- scroll reveals --------------------------------------- */
     var revealTargets = document.querySelectorAll(
-      '.sweets-spotlight-inner, .shop-sidebar, .about-img-wrap, .about-teaser-img-wrap, ' +
-      '.faq-item, .footer-brand, .footer-col, .coming-banner, .shop-safety-notice, .section-cta'
+      '.lx-panel-copy > *, .lx-story-art, .lx-quote-card, .faq-item, ' +
+      '.footer-brand, .footer-nav, .footer-subscribe, .shop-sidebar, ' +
+      '.sweets-spotlight-inner, .coming-banner, .shop-safety-notice'
     );
     if ('IntersectionObserver' in window && revealTargets.length) {
       var io = new IntersectionObserver(function (entries) {
@@ -45,31 +74,34 @@
       }, { threshold: 0.12 });
       revealTargets.forEach(function (el, i) {
         var rect = el.getBoundingClientRect();
-        if (rect.top > window.innerHeight * 0.9) {
+        if (rect.top > window.innerHeight * 0.88) {
           el.classList.add('lx-reveal');
-          el.style.transitionDelay = (i % 4) * 70 + 'ms';
+          el.style.transitionDelay = (i % 5) * 60 + 'ms';
           io.observe(el);
         }
       });
     }
 
-    /* -- hero parallax ---------------------------------------- */
-    var heroVisuals = document.querySelectorAll('.hero-img-frame');
-    if (heroVisuals.length) {
-      var ticking = false;
-      window.addEventListener('scroll', function () {
-        if (ticking) return;
-        ticking = true;
-        window.requestAnimationFrame(function () {
-          var y = window.scrollY;
-          if (y < window.innerHeight * 1.2) {
-            heroVisuals.forEach(function (el) {
-              el.style.translate = '0 ' + y * 0.12 + 'px';
-            });
-          }
-          ticking = false;
+    var canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+    /* -- 3D tilt: hero blob + recipe cards --------------------- */
+    if (canHover) {
+      var tiltTargets = [{ el: document.getElementById('lxBlob'), max: 7 }];
+      document.querySelectorAll('.lx-tilt').forEach(function (el) {
+        tiltTargets.push({ el: el, max: 5 });
+      });
+      tiltTargets.forEach(function (t) {
+        if (!t.el) return;
+        t.el.addEventListener('mousemove', function (e) {
+          var r = t.el.getBoundingClientRect();
+          var rx = ((e.clientY - r.top) / r.height - 0.5) * -2 * t.max;
+          var ry = ((e.clientX - r.left) / r.width - 0.5) * 2 * t.max;
+          t.el.style.transform = 'perspective(900px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
         });
-      }, { passive: true });
+        t.el.addEventListener('mouseleave', function () {
+          t.el.style.transform = '';
+        });
+      });
     }
 
     /* -- stat counters ----------------------------------------- */
@@ -103,10 +135,9 @@
     }
 
     /* -- magnetic buttons -------------------------------------- */
-    var canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     if (canHover) {
       document.addEventListener('mousemove', function (e) {
-        var btn = e.target.closest('.btn-primary, .btn-ghost, .cart-checkout-btn, .st-price-apply');
+        var btn = e.target.closest('.lx-btn, .btn-primary, .btn-ghost, .cart-checkout-btn, .st-price-apply');
         document.querySelectorAll('.lx-magnet').forEach(function (el) {
           if (el !== btn) {
             el.classList.remove('lx-magnet');

@@ -20,10 +20,10 @@
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://images.unsplash.com">
 <link rel="preload" as="image" href="images/site/hero-mango-2026.jpg" fetchpriority="high">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,650;1,9..144,400;1,9..144,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" href="images/brand/logo-small.png" type="image/png">
 <link rel="stylesheet" href="assets/css/styles.css?v=trust-marquee-20260609">
-<link rel="stylesheet" href="assets/css/luxe.css?v=luxe-20260610">
+<link rel="stylesheet" href="assets/css/luxe.css?v=luxe2-20260610">
 <script>
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
@@ -68,14 +68,15 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 }
 </script>
 </head>
-<body class="luxe">
+<body class="luxe luxe2">
 
-<!-- ANNOUNCEMENT BAR -->
-<div class="announcement-bar">
-  <span>🥭 Fresh Indian Mangoes Now Available — Pickup in Short Pump, Chesterfield & Mechanicsville</span>
+<div class="lx-progress" aria-hidden="true"><span id="lxProgressBar"></span></div>
+
+<!-- ANNOUNCEMENT -->
+<div class="announcement-bar lx-announce">
+  <span>🥭 Fresh Indian Mangoes Now Available — Pickup in Short Pump, Chesterfield &amp; Mechanicsville</span>
 </div>
 
-<!-- NAVIGATION -->
 <nav class="nav" id="nav">
   <div class="nav-inner">
     <a href="index.html" class="nav-logo">
@@ -111,27 +112,27 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
   </div>
 </nav>
 
-<!-- HERO -->
-<section class="hero" aria-label="Shrish seasonal highlights">
-  <div class="hero-bg">
-    <div class="hero-orb hero-orb-1"></div>
-    <div class="hero-orb hero-orb-2"></div>
-    <div class="hero-grain"></div>
+<!-- ============ HERO : LIQUID GOLD ============ -->
+<header class="lx-hero" id="top" aria-label="Shrish - fresh Indian mangoes">
+  <div class="lx-hero-bg" aria-hidden="true">
+    <div class="lx-orb lx-orb-a"></div>
+    <div class="lx-orb lx-orb-b"></div>
   </div>
 
-  <div class="hero-slide hero-slide-mango">
-    <div class="hero-content">
-      <div class="hero-badge">Farm-fresh . Direct to you</div>
-      <h1 class="hero-title">
-        <em>Golden boxes of</em> Mango Season<br>
-        <span class="hero-title-accent">are here</span>
+  <div class="lx-hero-grid">
+    <div class="lx-hero-copy">
+      <p class="lx-kicker lx-l1">Farm-fresh &mdash; India to Virginia</p>
+      <h1 class="lx-display">
+        <span class="lx-line lx-l2"><em>Golden</em></span>
+        <span class="lx-line lx-outline lx-l3">MANGO</span>
+        <span class="lx-line lx-l4">season <em>is here.</em></span>
       </h1>
-      <p class="hero-sub">Every mango carries a little summer from India - fragrant, sweet, and ready for pickup close to home.</p>
-      <div class="hero-actions">
-        <a href="shop.html?filter=mangoes" class="btn-primary">Order Mangoes</a>
-        <a href="shop.html?filter=mangoes" class="btn-ghost">View Varieties</a>
+      <p class="lx-lede lx-l5">Every box carries a little summer from India &mdash; fragrant, sweet, and ready for pickup close to home in Richmond, VA.</p>
+      <div class="lx-hero-cta lx-l6">
+        <a href="shop.html?filter=mangoes" class="lx-btn lx-btn-liquid"><span>Order Mangoes</span></a>
+        <a href="shop.html" class="lx-btn lx-btn-ghost"><span>Browse the Pantry</span></a>
       </div>
-      <div class="hero-stats">
+      <div class="hero-stats lx-stats lx-l7">
         <div class="stat"><span class="stat-num">9+</span><span class="stat-label">Mango Varieties</span></div>
         <div class="stat-divider"></div>
         <div class="stat"><span class="stat-num">3</span><span class="stat-label">Pickup Locations</span></div>
@@ -139,154 +140,87 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
         <div class="stat"><span class="stat-num">5.0</span><span class="stat-label">Customer Rating</span></div>
       </div>
     </div>
-    <div class="hero-visual">
-      <div class="hero-img-frame"><img src="images/site/hero-mango-2026.jpg" alt="Fresh Indian mangoes packed for pickup" class="hero-img" width="1200" height="1600" loading="eager" fetchpriority="high" decoding="async"></div>
+
+    <div class="lx-hero-art" aria-hidden="false">
+      <div class="lx-blob-wrap" id="lxBlob">
+        <div class="lx-blob">
+          <img src="images/site/hero-mango-2026.jpg" alt="Fresh Indian mangoes packed for pickup" width="1200" height="1600" loading="eager" fetchpriority="high" decoding="async">
+        </div>
+        <svg class="lx-stamp" viewBox="0 0 200 200" aria-hidden="true">
+          <defs><path id="lxCircle" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0"/></defs>
+          <text><textPath href="#lxCircle">FARM FRESH&#160;&#160;·&#160;&#160;INDIA TO VIRGINIA&#160;&#160;·&#160;&#160;SINCE 2020&#160;&#160;·&#160;&#160;PAY AT PICKUP&#160;&#160;·&#160;&#160;</textPath></text>
+        </svg>
+        <div class="lx-chip lx-chip-a">🥭 Alphonso &amp; Kesar</div>
+        <div class="lx-chip lx-chip-b">⭐ 5.0 community rating</div>
+      </div>
     </div>
   </div>
 
-  <div class="hero-slide hero-slide-thati">
-    <div class="hero-content">
-      <div class="hero-badge">Atreyapuram special . Limited batch</div>
-      <h1 class="hero-title">
-        <em>Rustic palm sweetness</em> Thati Thandra<br>
-        <span class="hero-title-accent">made to remember</span>
-      </h1>
-      <p class="hero-sub">Deep, earthy palm fruit jelly with the old Andhra taste - chewy, rich, and beautifully traditional.</p>
-      <div class="hero-actions">
-        <a href="shop.html?filter=sweets&product=palm_jelly" class="btn-primary">Order Thati Thandra</a>
-        <a href="shop.html?filter=sweets" class="btn-ghost">See Sweets</a>
-      </div>
-      <div class="hero-stats">
-        <div class="stat"><span class="stat-num">Palm</span><span class="stat-label">Fruit Jelly</span></div>
-        <div class="stat-divider"></div>
-        <div class="stat"><span class="stat-num">Rare</span><span class="stat-label">Seasonal Sweet</span></div>
-        <div class="stat-divider"></div>
-        <div class="stat"><span class="stat-num">AP</span><span class="stat-label">Andhra Style</span></div>
-      </div>
-    </div>
-    <div class="hero-visual">
-      <div class="hero-img-frame"><img src="images/site/hero-thati-thandra-2026.webp" alt="Thati Thandra palm fruit jelly sweet" class="hero-img" width="1000" height="1000" loading="lazy" decoding="async"></div>
-    </div>
-  </div>
+  <a href="#headliners" class="lx-cue" aria-label="Scroll to explore"><span></span></a>
+</header>
 
-  <div class="hero-slide hero-slide-pickle is-active">
-    <div class="hero-content">
-      <div class="hero-badge">Andhra-style . Bold flavor</div>
-      <h1 class="hero-title">
-        <em>Spice that wakes up</em> Pickles<br>
-        <span class="hero-title-accent">with every meal</span>
-      </h1>
-      <p class="hero-sub">Tangy, fiery, and packed in small batches - the kind of pickle that turns hot rice into comfort food.</p>
-      <div class="hero-actions">
-        <a href="shop.html?filter=picklespodi&type=veg" class="btn-primary">Order Pickles</a>
-        <a href="shop.html?filter=picklespodi&type=nonveg" class="btn-ghost">Non-Veg Pickles</a>
-      </div>
-      <div class="hero-stats">
-        <div class="stat"><span class="stat-num">Veg</span><span class="stat-label">Pickles</span></div>
-        <div class="stat-divider"></div>
-        <div class="stat"><span class="stat-num">Non-Veg</span><span class="stat-label">Preorder</span></div>
-        <div class="stat-divider"></div>
-        <div class="stat"><span class="stat-num">AP</span><span class="stat-label">Traditional Spice</span></div>
-      </div>
-    </div>
-    <div class="hero-visual">
-      <div class="hero-img-frame"><img src="images/site/hero-pickle-2026.jpg" alt="Homemade Indian pickle close-up" class="hero-img" width="1200" height="1600" loading="lazy" decoding="async"></div>
-    </div>
-  </div>
+<!-- ============ STICKY STACK SHOWCASE ============ -->
+<section class="lx-stack" id="headliners" aria-label="Featured collections">
 
-  <div class="hero-slide hero-slide-podi">
-    <div class="hero-content">
-      <div class="hero-badge">Moringa leaf powder . Wholesome daily option</div>
-      <h1 class="hero-title">
-        <em>Wholesome moringa</em>
-        Powder<br>
-        <span class="hero-title-accent">with rice &amp; ghee</span>
-      </h1>
-      <p class="hero-sub">A leafy, earthy podi made for everyday meals - a health-conscious option for hot rice, idli, dosa, or upma.</p>
-      <div class="hero-actions">
-        <a href="shop.html?filter=picklespodi&type=podi" class="btn-primary">Order Moringa Powder</a>
-        <a href="shop.html?filter=picklespodi" class="btn-ghost">All Pickles &amp; Podi</a>
-      </div>
-      <div class="hero-stats">
-        <div class="stat"><span class="stat-num">Leafy</span><span class="stat-label">Moringa Flavor</span></div>
-        <div class="stat-divider"></div>
-        <div class="stat"><span class="stat-num">Daily</span><span class="stat-label">Rice, Idli &amp; Dosa</span></div>
-        <div class="stat-divider"></div>
-        <div class="stat"><span class="stat-num">Wholesome</span><span class="stat-label">Meal Option</span></div>
-      </div>
+  <article class="lx-panel">
+    <div class="lx-panel-media"><img src="images/site/hero-thati-thandra-2026.webp" alt="Thati Thandra palm fruit jelly" loading="lazy" decoding="async"></div>
+    <div class="lx-panel-copy">
+      <p class="lx-kicker">Atreyapuram special &mdash; limited batch</p>
+      <h2 class="lx-panel-title"><em>Rustic palm sweetness,</em><br>Thati Thandra</h2>
+      <p class="lx-panel-sub">Deep, earthy palm fruit jelly with the old Andhra taste &mdash; chewy, rich, and beautifully traditional.</p>
+      <div class="lx-panel-tags"><span>Palm-fruit jelly</span><span>Rare seasonal</span><span>Andhra style</span></div>
+      <a class="lx-btn lx-btn-liquid" href="shop.html?filter=sweets&amp;product=palm_jelly"><span>Order Thati Thandra</span></a>
     </div>
-    <div class="hero-visual">
-      <div class="hero-img-frame"><img src="images/site/hero-podi-2026.jpg" alt="Moringa powder in a white bowl" class="hero-img" width="1200" height="1600" loading="lazy" decoding="async"></div>
-    </div>
-  </div>
+  </article>
 
-  <div class="hero-carousel-controls" aria-label="Featured product slides">
-    <button type="button" class="hero-carousel-btn hero-carousel-prev" id="heroPrevSlide" aria-label="Previous featured product">&lsaquo;</button>
-    <button type="button" class="hero-carousel-btn hero-carousel-next" id="heroNextSlide" aria-label="Next featured product">&rsaquo;</button>
-  </div>
+  <article class="lx-panel">
+    <div class="lx-panel-media"><img src="images/site/hero-pickle-2026.jpg" alt="Homemade Andhra pickle close-up" loading="lazy" decoding="async"></div>
+    <div class="lx-panel-copy">
+      <p class="lx-kicker">Andhra-style &mdash; bold flavor</p>
+      <h2 class="lx-panel-title"><em>Spice that wakes up</em><br>every meal</h2>
+      <p class="lx-panel-sub">Tangy, fiery, packed in small batches &mdash; the kind of pickle that turns hot rice into comfort food.</p>
+      <div class="lx-panel-tags"><span>Veg pickles</span><span>Non-veg preorder</span><span>Traditional spice</span></div>
+      <a class="lx-btn lx-btn-liquid" href="shop.html?filter=picklespodi"><span>Order Pickles</span></a>
+    </div>
+  </article>
+
+  <article class="lx-panel">
+    <div class="lx-panel-media"><img src="images/site/hero-podi-2026.jpg" alt="Moringa powder in a bowl" loading="lazy" decoding="async"></div>
+    <div class="lx-panel-copy">
+      <p class="lx-kicker">Moringa leaf powder &mdash; wholesome daily</p>
+      <h2 class="lx-panel-title"><em>Wholesome moringa</em><br>with rice &amp; ghee</h2>
+      <p class="lx-panel-sub">A leafy, earthy podi made for everyday meals &mdash; for hot rice, idli, dosa, or upma.</p>
+      <div class="lx-panel-tags"><span>Leafy moringa</span><span>Rice, idli &amp; dosa</span><span>Daily wholesome</span></div>
+      <a class="lx-btn lx-btn-liquid" href="shop.html?filter=picklespodi&amp;type=podi"><span>Order Moringa Podi</span></a>
+    </div>
+  </article>
+
 </section>
 
-<!-- MARQUEE -->
-<div class="marquee-wrap">
-  <div class="marquee-track">
-    <span>Alphonso</span><span class="dot">◆</span>
-    <span>Kesar</span><span class="dot">◆</span>
-    <span>Dasheri</span><span class="dot">◆</span>
-    <span>Langra</span><span class="dot">◆</span>
-    <span>Totapuri</span><span class="dot">◆</span>
-    <span>Banganapalli</span><span class="dot">◆</span>
-    <span>Malgova</span><span class="dot">◆</span>
-    <span>Neelam</span><span class="dot">◆</span>
-    <span>Imam Pasand</span><span class="dot">◆</span>
-    <span>Raspuri</span><span class="dot">◆</span>
-    <span>Alphonso</span><span class="dot">◆</span>
-    <span>Kesar</span><span class="dot">◆</span>
-    <span>Dasheri</span><span class="dot">◆</span>
-    <span>Langra</span><span class="dot">◆</span>
-    <span>Totapuri</span><span class="dot">◆</span>
-    <span>Banganapalli</span><span class="dot">◆</span>
-    <span>Malgova</span><span class="dot">◆</span>
-    <span>Neelam</span><span class="dot">◆</span>
-    <span>Imam Pasand</span><span class="dot">◆</span>
-    <span>Raspuri</span><span class="dot">◆</span>
+<!-- VARIETY MARQUEE (angled) -->
+<div class="lx-marq-tilt">
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <span>Alphonso</span><span class="dot">◆</span><span>Kesar</span><span class="dot">◆</span><span>Dasheri</span><span class="dot">◆</span><span>Langra</span><span class="dot">◆</span><span>Totapuri</span><span class="dot">◆</span><span>Banganapalli</span><span class="dot">◆</span><span>Malgova</span><span class="dot">◆</span><span>Neelam</span><span class="dot">◆</span><span>Imam Pasand</span><span class="dot">◆</span><span>Raspuri</span><span class="dot">◆</span>
+      <span>Alphonso</span><span class="dot">◆</span><span>Kesar</span><span class="dot">◆</span><span>Dasheri</span><span class="dot">◆</span><span>Langra</span><span class="dot">◆</span><span>Totapuri</span><span class="dot">◆</span><span>Banganapalli</span><span class="dot">◆</span><span>Malgova</span><span class="dot">◆</span><span>Neelam</span><span class="dot">◆</span><span>Imam Pasand</span><span class="dot">◆</span><span>Raspuri</span><span class="dot">◆</span>
+    </div>
   </div>
 </div>
 
-<!-- ABOUT TEASER -->
-<section class="about-teaser section">
-  <div class="container">
-    <div class="about-teaser-grid">
-      <div class="about-teaser-img-wrap">
-        <img src="https://images.unsplash.com/photo-1627001475812-42aa113d7d4b?auto=format&fit=crop&w=600&q=80" alt="Fresh mangoes at market" class="about-img" width="600" height="400" loading="lazy" decoding="async">
-        <div class="about-img-overlay">
-          <blockquote>"Customer First"</blockquote>
-          <cite>— Our Motto</cite>
-        </div>
-      </div>
-      <div class="about-teaser-text">
-        <div class="section-label">Our Story</div>
-        <h2 class="section-title">A Taste of Home, <em>Delivered</em></h2>
-        <p>It all began in 2020 in Richmond, Virginia, with a simple mission — to bring the authentic taste of sweet Indian mangoes to our local community. As an Indian parent, I was searching everywhere for mangoes that tasted like the ones I grew up with — juicy, fragrant, and truly sweet.</p>
-        <p>From Richmond, we expanded into Norfolk, Roanoke, and Fredericksburg — always staying true to our roots. We've introduced multiple mango varieties beloved by our Indian community, delivering not just fruit, but a slice of home.</p>
-        <a href="about.html" class="btn-outline">Read Our Story</a>
-      </div>
+<!-- ============ 01 / SEASON'S PICKS (bento) ============ -->
+<section class="products section lx-section" id="picks">
+  <div class="container lx-wide">
+    <div class="section-header lx-sechead">
+      <span class="lx-ghost" aria-hidden="true">01</span>
+      <div class="section-label">Currently available</div>
+      <h2 class="section-title">This Season&rsquo;s <em>Picks</em></h2>
+      <p class="section-desc">Live from our catalog &mdash; the selection changes with the season. Order now while supplies last.</p>
     </div>
-  </div>
-</section>
-
-<!-- FEATURED PRODUCTS -->
-<section class="products section section-alt">
-  <div class="container">
-    <div class="section-header">
-      <div class="section-label">Currently Available</div>
-      <h2 class="section-title">This Season's <em>Picks</em></h2>
-      <p class="section-desc">Our selection changes with the season. Order now while supplies last.</p>
-    </div>
-    <div class="products-grid" id="productsGrid" data-live-products="true">
+    <div class="products-grid lx-bento" id="productsGrid" data-live-products="true">
       <!-- Populated by JS from shared data -->
     </div>
-    <div class="products-cta">
-      <a href="shop.html" class="btn-primary">View All Varieties</a>
+    <div class="products-cta lx-center">
+      <a href="shop.html" class="lx-btn lx-btn-liquid lx-btn-xl"><span>View All Varieties</span></a>
     </div>
   </div>
 </section>
@@ -302,95 +236,103 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <!-- TRUST STRIP -->
 <div class="marquee-wrap trust-marquee" aria-label="Why shop with Shrish">
   <div class="marquee-track trust-track">
-    <span>🌱 Farm-Direct Sourcing</span><span class="dot">◆</span>
-    <span>💵 Pay at Pickup</span><span class="dot">◆</span>
-    <span>⭐ 5.0 Customer Rating</span><span class="dot">◆</span>
-    <span>📍 3 Pickup Locations</span><span class="dot">◆</span>
-    <span>🥭 Small Fresh Batches</span><span class="dot">◆</span>
-    <span>🤝 Customer First</span><span class="dot">◆</span>
-    <span>🌱 Farm-Direct Sourcing</span><span class="dot">◆</span>
-    <span>💵 Pay at Pickup</span><span class="dot">◆</span>
-    <span>⭐ 5.0 Customer Rating</span><span class="dot">◆</span>
-    <span>📍 3 Pickup Locations</span><span class="dot">◆</span>
-    <span>🥭 Small Fresh Batches</span><span class="dot">◆</span>
-    <span>🤝 Customer First</span><span class="dot">◆</span>
+    <span>🌱 Farm-Direct Sourcing</span><span class="dot">◆</span><span>💵 Pay at Pickup</span><span class="dot">◆</span><span>⭐ 5.0 Customer Rating</span><span class="dot">◆</span><span>📍 3 Pickup Locations</span><span class="dot">◆</span><span>🥭 Small Fresh Batches</span><span class="dot">◆</span><span>🤝 Customer First</span><span class="dot">◆</span>
+    <span>🌱 Farm-Direct Sourcing</span><span class="dot">◆</span><span>💵 Pay at Pickup</span><span class="dot">◆</span><span>⭐ 5.0 Customer Rating</span><span class="dot">◆</span><span>📍 3 Pickup Locations</span><span class="dot">◆</span><span>🥭 Small Fresh Batches</span><span class="dot">◆</span><span>🤝 Customer First</span><span class="dot">◆</span>
   </div>
 </div>
 
-<!-- HOW IT WORKS -->
-<section class="how section">
+<!-- ============ 02 / OUR STORY ============ -->
+<section class="section lx-section lx-story" id="story">
   <div class="container">
-    <div class="section-header">
-      <div class="section-label">Simple Process</div>
-      <h2 class="section-title">How It <em>Works</em></h2>
-    </div>
-    <div class="how-steps">
-      <div class="how-step">
-        <div class="step-num">01</div>
-        <div class="step-icon">🛒</div>
-        <h3>Place Your Order</h3>
-        <p>Select your mango variety, quantity, and preferred pickup location online in minutes.</p>
+    <div class="lx-story-grid">
+      <div class="lx-story-art">
+        <div class="lx-blob lx-blob-sm">
+          <img src="https://images.unsplash.com/photo-1627001475812-42aa113d7d4b?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Fresh mangoes at market" width="600" height="400" loading="lazy" decoding="async">
+        </div>
+        <div class="lx-quote-card">
+          <blockquote>&ldquo;Customer First&rdquo;</blockquote>
+          <cite>&mdash; Our Motto</cite>
+        </div>
       </div>
-      <div class="how-arrow">→</div>
-      <div class="how-step">
-        <div class="step-num">02</div>
-        <div class="step-icon">📦</div>
-        <h3>We Prepare</h3>
-        <p>We source your order fresh from our trusted farm suppliers and prepare it for pickup.</p>
+      <div class="section-header lx-story-copy">
+        <span class="lx-ghost" aria-hidden="true">02</span>
+        <div class="section-label">Our story</div>
+        <h2 class="section-title">A taste of home, <em>delivered.</em></h2>
+        <p class="lx-story-p">It all began in 2020 in Richmond, Virginia, with a simple mission &mdash; to bring the authentic taste of sweet Indian mangoes to our local community. As an Indian parent, I was searching everywhere for mangoes that tasted like the ones I grew up with &mdash; juicy, fragrant, and truly sweet.</p>
+        <p class="lx-story-p">From Richmond, we expanded into Norfolk, Roanoke, and Fredericksburg &mdash; always staying true to our roots. We deliver not just fruit, but a slice of home.</p>
+        <a href="about.html" class="lx-btn lx-btn-ghost"><span>Read Our Story</span></a>
       </div>
-      <div class="how-arrow">→</div>
-      <div class="how-step">
-        <div class="step-num">03</div>
-        <div class="step-icon">📍</div>
-        <h3>Pickup & Pay</h3>
-        <p>Collect your order at Short Pump, Chesterfield, or Mechanicsville and pay at pickup. Simple!</p>
-      </div>
-    </div>
-    <div class="how-cta">
-      <a href="shop.html" class="btn-primary">Order Now — Pay at Pickup</a>
     </div>
   </div>
 </section>
 
-<!-- RECIPES TEASER -->
-<section class="recipes-teaser section section-alt">
+<!-- ============ 03 / HOW IT WORKS (timeline) ============ -->
+<section class="how section lx-section lx-how" id="how">
   <div class="container">
-    <div class="section-header">
-      <div class="section-label">In the Kitchen</div>
-      <h2 class="section-title">Mango <em>Recipes</em></h2>
-      <p class="section-desc">From classic Mango Lassi to Kulfi — make the most of every mango.</p>
+    <div class="section-header lx-sechead">
+      <span class="lx-ghost" aria-hidden="true">03</span>
+      <div class="section-label">Simple process</div>
+      <h2 class="section-title">How it <em>works</em></h2>
     </div>
-    <div class="recipes-grid">
-      <a href="recipes.html" class="recipe-card">
+    <div class="lx-tl" id="lxTimeline">
+      <div class="lx-tl-line" aria-hidden="true"><span id="lxTlDraw"></span></div>
+      <div class="how-step lx-tl-step">
+        <div class="lx-tl-dot" aria-hidden="true"></div>
+        <span class="lx-tl-num" aria-hidden="true">01</span>
+        <div class="lx-tl-body">
+          <h3>Place your order</h3>
+          <p>Select your mango variety, quantity, and preferred pickup location online in minutes. No online payment.</p>
+        </div>
+      </div>
+      <div class="how-step lx-tl-step">
+        <div class="lx-tl-dot" aria-hidden="true"></div>
+        <span class="lx-tl-num" aria-hidden="true">02</span>
+        <div class="lx-tl-body">
+          <h3>We prepare</h3>
+          <p>We source your order fresh from trusted farm suppliers and pack it carefully for pickup.</p>
+        </div>
+      </div>
+      <div class="how-step lx-tl-step">
+        <div class="lx-tl-dot" aria-hidden="true"></div>
+        <span class="lx-tl-num" aria-hidden="true">03</span>
+        <div class="lx-tl-body">
+          <h3>Pickup &amp; pay</h3>
+          <p>Collect at Short Pump, Chesterfield, or Mechanicsville &mdash; pay by cash, card, or Zelle at pickup. Simple.</p>
+        </div>
+      </div>
+    </div>
+    <div class="how-cta lx-center">
+      <a href="shop.html" class="lx-btn lx-btn-liquid"><span>Order Now &mdash; Pay at Pickup</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 04 / RECIPES ============ -->
+<section class="recipes-teaser section lx-section" id="recipes">
+  <div class="container">
+    <div class="section-header lx-sechead">
+      <span class="lx-ghost" aria-hidden="true">04</span>
+      <div class="section-label">In the kitchen</div>
+      <h2 class="section-title">Mango <em>recipes</em></h2>
+      <p class="section-desc">From classic Mango Lassi to Kulfi &mdash; make the most of every mango.</p>
+    </div>
+    <div class="recipes-grid lx-recipes">
+      <a href="recipes.html" class="recipe-card lx-tilt">
         <div class="recipe-card-img" style="background-image:url('images/recipes/img_recipe_lassi.jpg')"></div>
-        <div class="recipe-card-body">
-          <span class="recipe-tag">Easy · 5 min</span>
-          <h3>Classic Mango Lassi</h3>
-          <p>Café-style with Alphonso or Kesar</p>
-        </div>
+        <div class="recipe-card-body"><span class="recipe-tag">Easy · 5 min</span><h3>Classic Mango Lassi</h3><p>Caf&eacute;-style with Alphonso or Kesar</p></div>
       </a>
-      <a href="recipes.html" class="recipe-card recipe-card-large">
+      <a href="recipes.html" class="recipe-card recipe-card-large lx-tilt">
         <div class="recipe-card-img" style="background-image:url('images/recipes/img_recipe_stickyrice.jpg')"></div>
-        <div class="recipe-card-body">
-          <span class="recipe-tag">Medium · 1 hr</span>
-          <h3>Thai Mango Sticky Rice</h3>
-          <p>Coconut milk & fresh ripe mango</p>
-        </div>
+        <div class="recipe-card-body"><span class="recipe-tag">Medium · 1 hr</span><h3>Thai Mango Sticky Rice</h3><p>Coconut milk &amp; fresh ripe mango</p></div>
       </a>
-      <a href="recipes.html" class="recipe-card">
+      <a href="recipes.html" class="recipe-card lx-tilt">
         <div class="recipe-card-img" style="background-image:url('images/recipes/img_recipe_kulfi.jpg')"></div>
-        <div class="recipe-card-body">
-          <span class="recipe-tag">Easy · 6 hr freeze</span>
-          <h3>Creamy Mango Kulfi</h3>
-          <p>No ice cream maker needed</p>
-        </div>
+        <div class="recipe-card-body"><span class="recipe-tag">Easy · 6 hr freeze</span><h3>Creamy Mango Kulfi</h3><p>No ice cream maker needed</p></div>
       </a>
     </div>
-    <div class="section-cta"><a href="recipes.html" class="btn-outline">All Recipes →</a></div>
+    <div class="section-cta lx-center"><a href="recipes.html" class="lx-btn lx-btn-ghost"><span>All Recipes →</span></a></div>
   </div>
 </section>
-
-<!-- TESTIMONIALS -->
 
 <!-- FAQ SECTION -->
 <section class="section" style="background:var(--cream-d)">
@@ -502,12 +444,23 @@ function toggleFaq(el){
   </div>
 </section>
 
+<!-- ============ CTA BAND ============ -->
+<section class="lx-cta-band" aria-label="Shop call to action">
+  <div class="lx-cta-marq" aria-hidden="true">
+    <div class="lx-cta-track">
+      <span>Taste the season before it&rsquo;s gone&nbsp;&mdash;&nbsp;</span><span>Taste the season before it&rsquo;s gone&nbsp;&mdash;&nbsp;</span><span>Taste the season before it&rsquo;s gone&nbsp;&mdash;&nbsp;</span><span>Taste the season before it&rsquo;s gone&nbsp;&mdash;&nbsp;</span>
+    </div>
+  </div>
+  <a class="lx-btn lx-btn-liquid lx-btn-xl" href="shop.html"><span>Shop All Products</span></a>
+</section>
+
 <!-- FOOTER -->
-<footer class="footer">
-  <div class="footer-top">
+<footer class="footer lx-footer">
+  <div class="lx-wordmark" aria-hidden="true">SHRISH</div>
+  <div class="footer-top lx-footer-grid">
     <div class="footer-brand">
       <img src="images/brand/logo-small.png" alt="Shrish LLC" class="footer-logo" loading="lazy" decoding="async">
-      <p>Authentic Indian mangoes & sweets, delivered with love to Richmond, VA and surrounding areas.</p>
+      <p>Authentic Indian mangoes &amp; sweets, delivered with love to Richmond, VA and surrounding areas.</p>
       <div class="footer-contact">
         <a href="mailto:contact@shrish.co">contact@shrish.co</a>
         <a href="tel:+17653255577">+1 (765) 325-5577</a>
@@ -529,29 +482,20 @@ function toggleFaq(el){
       <p>📍 Mechanicsville, VA</p>
       <br>
       <h4>Hours</h4>
-      <p>Mon – Fri: 9am – 5pm</p>
+      <p>Mon &ndash; Fri: 9am &ndash; 5pm</p>
     </div>
     <div class="footer-subscribe">
       <h4>Stay Updated</h4>
       <p>Get notified when new mango varieties arrive.</p>
       <form class="subscribe-form" id="footerSubscribeForm" novalidate>
-        <input
-          type="email"
-          id="footerSubscribeEmail"
-          placeholder="Your email address"
-          autocomplete="email"
-          aria-label="Email address for marketing updates"
-          required
-        >
+        <input type="email" id="footerSubscribeEmail" placeholder="Your email address" autocomplete="email" aria-label="Email address for marketing updates" required>
         <button type="submit" id="footerSubscribeButton">Subscribe</button>
       </form>
-      <p class="subscribe-consent" id="footerSubscribeConsent">
-        By subscribing, you agree to receive marketing and promotional emails from Shrish. You can unsubscribe anytime by contacting us.
-      </p>
+      <p class="subscribe-consent" id="footerSubscribeConsent">By subscribing, you agree to receive marketing and promotional emails from Shrish. You can unsubscribe anytime by contacting us.</p>
       <div class="subscribe-message" id="footerSubscribeMessage" aria-live="polite"></div>
     </div>
   </div>
-    <div class="footer-bottom">
+  <div class="footer-bottom">
     <span>© <span class="copy-year">2025</span> Shrish LLC. All rights reserved.</span>
     <div class="footer-legal">
       <a href="privacy.html">Privacy Policy</a>
@@ -561,73 +505,12 @@ function toggleFaq(el){
     </div>
   </div>
 </footer>
+
 <script defer src="assets/js/data.js?v=moringa-hero-fill-20260602"></script>
 <script defer src="assets/js/analytics.js?v=owner-insights-1"></script>
 <script defer src="assets/js/main.js?v=testimonial-carousel-20260609"></script>
-<script defer src="assets/js/luxe.js?v=luxe-20260610"></script>
+<script defer src="assets/js/luxe.js?v=luxe2-20260610"></script>
 <script defer src="assets/js/firebase-config.js"></script>
 <script type="module" src="assets/js/home-firebase.js?v=prod-merge-20260518"></script>
-<script>
-(function () {
-  var slides = Array.prototype.slice.call(document.querySelectorAll('.hero-slide'));
-  if (slides.length <= 1) return;
-
-  var desiredOrder = ['hero-slide-pickle', 'hero-slide-podi', 'hero-slide-mango', 'hero-slide-thati'];
-  slides.sort(function (a, b) {
-    function orderIndex(slide) {
-      for (var i = 0; i < desiredOrder.length; i += 1) {
-        if (slide.classList.contains(desiredOrder[i])) return i;
-      }
-      return desiredOrder.length;
-    }
-    return orderIndex(a) - orderIndex(b);
-  });
-
-  var current = 0;
-  var timer = null;
-  var intervalMs = 6000;
-  var prevButton = document.getElementById('heroPrevSlide');
-  var nextButton = document.getElementById('heroNextSlide');
-
-  function showSlide(index) {
-    current = (index + slides.length) % slides.length;
-    slides.forEach(function (slide, slideIndex) {
-      var isActive = slideIndex === current;
-      slide.classList.toggle('is-active', isActive);
-      slide.setAttribute('aria-hidden', isActive ? 'false' : 'true');
-    });
-  }
-
-  function nextSlide() {
-    showSlide(current + 1);
-  }
-
-  function previousSlide() {
-    showSlide(current - 1);
-  }
-
-  function restartTimer() {
-    if (timer) window.clearInterval(timer);
-    timer = window.setInterval(nextSlide, intervalMs);
-  }
-
-  if (prevButton) {
-    prevButton.addEventListener('click', function () {
-      previousSlide();
-      restartTimer();
-    });
-  }
-
-  if (nextButton) {
-    nextButton.addEventListener('click', function () {
-      nextSlide();
-      restartTimer();
-    });
-  }
-
-  showSlide(current);
-  restartTimer();
-})();
-</script>
 </body>
 </html>
