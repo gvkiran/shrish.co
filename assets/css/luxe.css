@@ -392,7 +392,7 @@ body.luxe .footer h4,body.luxe .footer strong{color:#EFE4CE}
 body.luxe .testimonial-featured{color:#EFE4CE}
 body.luxe .testimonial-featured p{color:rgba(244,234,218,.85)}
 body.luxe .about-img-overlay{color:#EFE4CE}
-body.luxe .pc-tag.t-coming{background:#070401;border:1px solid rgba(212,160,23,.4)}
+body.luxe .pc-tag.t-coming{background:#070401;border:1px solid rgba(212,160,23,.5);color:var(--gold-l);box-shadow:0 0 14px rgba(240,200,74,.18)}
 
 /* ============================================================
    SHOP v2.1 — sidebar categories + signature interactions
