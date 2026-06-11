@@ -294,6 +294,70 @@
       }
     }
 
+    /* -- living search: typewriter placeholder + craving chips -- */
+    (function enhanceSearch(tries) {
+      var input = document.getElementById('navProductSearchInput');
+      var form = document.getElementById('navProductSearch');
+      if (!input || !form) {
+        if (tries < 20) setTimeout(function () { enhanceSearch(tries + 1); }, 150);
+        return;
+      }
+      /* typewriter placeholder */
+      var phrases = [
+        'Craving Alphonso?',
+        'Try \u201Cavakai\u201D \uD83C\uDF36',
+        'Search \u201Cpodi\u201D for breakfast magic',
+        'Putharekulu, anyone?',
+        'Find your mango\u2026',
+        'Spicy? sweet? tangy?'
+      ];
+      var pi = 0, ci = 0, deleting = false, twTimer = null;
+      function type() {
+        if (document.activeElement === input || input.value) {
+          twTimer = setTimeout(type, 900);
+          return;
+        }
+        var phrase = phrases[pi];
+        ci += deleting ? -1 : 1;
+        input.setAttribute('placeholder', phrase.slice(0, ci) + (ci < phrase.length ? '\u258F' : ''));
+        var delay = deleting ? 28 : 62;
+        if (!deleting && ci === phrase.length) { delay = 1700; deleting = true; }
+        else if (deleting && ci === 0) { deleting = false; pi = (pi + 1) % phrases.length; delay = 350; }
+        twTimer = setTimeout(type, delay);
+      }
+      type();
+
+      /* craving chips on focus (when empty) */
+      var sugg = document.createElement('div');
+      sugg.className = 'lx-sugg';
+      var chips = [
+        ['\uD83E\uDD6D Alphonso', 'alphonso'],
+        ['\uD83C\uDF36 Avakai', 'avakai'],
+        ['\uD83C\uDF5A Podi', 'podi'],
+        ['\uD83C\uDF6F Putharekulu', 'putharekulu'],
+        ['\uD83D\uDC1F Fish pickle', 'fish'],
+        ['\uD83E\uDD2D Sweets', 'sweet']
+      ];
+      sugg.innerHTML = '<span class="lx-sugg-label">What are you craving today?</span>' +
+        chips.map(function (c) { return '<button type="button" data-q="' + c[1] + '">' + c[0] + '</button>'; }).join('');
+      form.appendChild(sugg);
+      function showSugg() { if (!input.value.trim()) sugg.classList.add('show'); }
+      function hideSugg() { sugg.classList.remove('show'); }
+      input.addEventListener('focus', showSugg);
+      input.addEventListener('input', function () { if (input.value.trim()) hideSugg(); else showSugg(); });
+      document.addEventListener('click', function (e) {
+        if (!form.contains(e.target)) hideSugg();
+      });
+      sugg.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-q]');
+        if (!b) return;
+        input.value = b.dataset.q;
+        hideSugg();
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.focus();
+      });
+    })(0);
+
     /* -- scroll-velocity reactive marquees ---------------------- */
     var marqs = document.querySelectorAll('.marquee-wrap');
     if (marqs.length) {

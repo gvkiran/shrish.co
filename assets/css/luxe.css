@@ -556,6 +556,37 @@ body.luxe .rx-ing.done::after{content:'✓';position:absolute;left:3px;top:2px;f
   .rx-side-item img{width:34px;height:34px}
 }
 
+/* ============================================================
+   v2.8 — LIVING SEARCH + account button
+   ============================================================ */
+body.luxe .nav-product-search{position:relative;display:flex;align-items:center;background:rgba(18,12,5,.7);border:1.5px solid rgba(212,160,23,.3);border-radius:50px;padding:4px 5px 4px 16px;backdrop-filter:blur(12px);transition:border-color .4s,box-shadow .4s,background .4s}
+body.luxe .nav-product-search::before{content:'✦';color:var(--gold);font-size:13px;margin-right:8px;animation:lxTwinkle 2.6s ease-in-out infinite}
+@keyframes lxTwinkle{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.25) rotate(20deg)}}
+body.luxe .nav-product-search:focus-within{border-color:var(--gold-l);box-shadow:0 0 0 3px rgba(240,200,74,.12),0 0 28px rgba(240,200,74,.18);background:rgba(22,15,6,.92)}
+body.luxe .nav-product-search input{background:transparent;border:none;outline:none;color:#EFE4CE;font-family:'Jost',sans-serif;font-size:14px;width:160px;transition:width .45s var(--ease);caret-color:var(--gold-l)}
+body.luxe .nav-product-search:focus-within input{width:230px}
+body.luxe .nav-product-search input::placeholder{color:#8E7D62}
+body.luxe .nav-product-search input::-webkit-search-cancel-button{filter:hue-rotate(10deg) saturate(3)}
+body.luxe .nav-product-search button{background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;border:none;border-radius:50px;padding:8px 18px;font-family:'Jost',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:transform .3s var(--ease),box-shadow .3s}
+body.luxe .nav-product-search button:hover{transform:scale(1.06);box-shadow:0 6px 20px rgba(212,160,23,.4)}
+body.luxe .product-search-results{background:rgba(16,11,5,.97);backdrop-filter:blur(18px);border:1px solid rgba(212,160,23,.3);border-radius:18px;box-shadow:0 30px 70px rgba(0,0,0,.7);overflow:hidden}
+body.luxe .product-search-results a{color:#D9CBB2;border-bottom:1px solid rgba(212,160,23,.1);transition:background .25s,padding-left .25s}
+body.luxe .product-search-results a:hover{background:rgba(212,160,23,.1);padding-left:22px}
+body.luxe .product-search-results .psr-name{color:#F4EADA}
+body.luxe .product-search-results .psr-meta{color:#8E7D62}
+body.luxe .product-search-empty{color:#8E7D62}
+/* suggestion chips */
+.lx-sugg{position:absolute;top:calc(100% + 10px);left:0;right:0;z-index:300;display:flex;flex-wrap:wrap;gap:8px;padding:14px;background:rgba(16,11,5,.97);backdrop-filter:blur(18px);border:1px solid rgba(212,160,23,.3);border-radius:18px;box-shadow:0 30px 70px rgba(0,0,0,.7);opacity:0;pointer-events:none;transform:translateY(-8px);transition:opacity .3s var(--ease),transform .3s var(--ease)}
+.lx-sugg.show{opacity:1;pointer-events:auto;transform:none}
+.lx-sugg-label{flex-basis:100%;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:#8E7D62;font-weight:700;font-family:'Jost',sans-serif}
+.lx-sugg button{border:1px solid rgba(212,160,23,.35);background:rgba(212,160,23,.07);color:#E4D2AC;border-radius:50px;padding:7px 14px;font-size:13px;font-family:'Jost',sans-serif;cursor:pointer;transition:all .25s}
+.lx-sugg button:hover{background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;border-color:transparent;transform:translateY(-2px)}
+/* account button */
+body.luxe .nav-account-btn{background:transparent;border:1.5px solid rgba(212,160,23,.45);color:var(--gold-l);transition:all .3s}
+body.luxe .nav-account-btn:hover{background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;border-color:transparent}
+body.luxe .mobile-product-search input{background:#150F08;border:1.5px solid rgba(212,160,23,.3);color:#EFE4CE}
+body.luxe .mobile-product-search button{background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;border:none}
+
 /* ---------- scroll reveal utility (applied by luxe.js) ---------- */
 body.luxe .lx-reveal{opacity:0;transform:translateY(42px);filter:blur(6px);transition:opacity .85s var(--ease),transform .85s var(--ease),filter .85s}
 body.luxe .lx-reveal.lx-in{opacity:1;transform:none;filter:none}
