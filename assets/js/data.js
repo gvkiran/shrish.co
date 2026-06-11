@@ -541,7 +541,6 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "",
       gallery: [
-        "images/products/pickles/mango-ginger-pickle.jpg"
       ],
       description: "A rare and flavorful pickle made with mango ginger. Fresh, aromatic, mildly tangy, and different from regular mango pickle.",
       ingredientsText: "Mango ginger, lemon or tamarind, green chilli or red chilli, mustard, salt, turmeric, oil",
@@ -633,7 +632,6 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "",
       gallery: [
-        "images/products/pickles/tomato-pickle.jpg"
       ],
       description: "Rich and spicy tomato pickle with a deep, tangy flavor. Great with rice, dosa, upma, idli, chapati, and curd rice.",
       ingredientsText: "Tomatoes, turmeric, red chilli powder, tamarind, mustard, fenugreek, salt, peanut/groundnut oil, garlic",
