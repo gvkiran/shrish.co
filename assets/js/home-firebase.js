@@ -371,7 +371,7 @@ function renderHomeProducts(products) {
     const hasMore = (p.description || '').length > 80;
     const imgSrc = cardImage(p);
     const imgHtml = imgSrc
-      ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover" onerror="this.onerror=null;this.src='images/brand/logo-small.png'">`
       : '';
     const fallbackStyle = imgSrc ? 'style="display:none"' : '';
     productsGrid.innerHTML += `

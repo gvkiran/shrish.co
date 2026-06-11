@@ -561,7 +561,7 @@ function renderCartDrawer() {
   const totalQty = cart.reduce((s, i) => s + i.qty, 0);
   totalEl.textContent = `${totalQty} box${totalQty !== 1 ? 'es' : ''}`;
   list.innerHTML = cart.map((item) => {
-    const imgHtml = `<img src="${escapeHtml(item.image || SHRISH_LOGO_PRODUCT_IMAGE)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async">`;
+    const imgHtml = `<img src="${escapeHtml(item.image || SHRISH_LOGO_PRODUCT_IMAGE)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='images/brand/logo-small.png'">`;
     return `<div class="cart-item">
       <div class="ci-img">${imgHtml}</div>
       <div class="ci-info">
@@ -599,7 +599,7 @@ function renderCartUpsell() {
     const button = usesVariantUI(p)
       ? `<button type="button" class="cu-add" onclick="openModal('${escapeHtml(p.id)}')">Choose Size</button>`
       : `<button type="button" class="cu-add" onclick="cartUpsellAdd('${escapeHtml(p.id)}')">Add To Cart</button>`;
-    const imgHtml = img ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" onerror="this.remove()">` : '';
+    const imgHtml = img ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='images/brand/logo-small.png'">` : '';
     return `<div class="cu-item"><div class="cu-img">${imgHtml}</div><div class="cu-info"><div class="cu-name">${escapeHtml(p.name)}</div><div class="cu-price">${escapeHtml(price)}</div></div>${button}</div>`;
   }).join('');
   return `<div class="cart-upsell"><div class="cu-head">You May Also Like</div>${rows}</div>`;

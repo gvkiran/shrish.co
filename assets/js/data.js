@@ -497,7 +497,6 @@ const SHRISH_DATA = {
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "",
       gallery: [
-        "images/products/pickles/kothimeera-pickle.jpg"
       ],
       description: "Fresh coriander-style pickle with a herby, spicy, and tangy taste. A good everyday pickle for rice, dosa, idli, and chapati.",
       ingredientsText: "Fresh coriander leaves, green chilli or red chilli, garlic, tamarind, mustard, salt, peanut/groundnut oil, tempering spices, jaggery",
