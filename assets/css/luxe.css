@@ -465,6 +465,21 @@ body.luxe details.shop-safety-notice summary:hover{border-color:var(--gold);colo
 body.luxe details.shop-safety-notice[open] summary{border-color:var(--gold);color:var(--gold-l)}
 body.luxe details.shop-safety-notice p{margin-top:10px;padding:14px 18px;background:#150F08;border:1px solid rgba(212,160,23,.18);border-radius:14px;color:#A8977B;font-size:13.5px;line-height:1.7;max-width:900px}
 
+/* v2.6 — inner pages (about / recipes / contact) + tighter shop hero */
+body.luxe .shop-hero h1{font-size:clamp(2.1rem,3.8vw,3.2rem)}
+body.luxe .shop-hero p{margin-top:8px;font-size:15px}
+body.luxe .sweets-spotlight{margin-top:18px}
+body.luxe .page-hero{background:transparent}
+body.luxe .page-hero::after{background:radial-gradient(ellipse at 50% 0%,rgba(212,160,23,.16),transparent 65%)}
+body.luxe .page-hero h1{font-family:var(--font-disp);font-weight:500;color:#F7EFDF}
+body.luxe .page-hero h1 em{color:var(--gold-l)}
+body.luxe .page-hero p{color:#A8977B}
+body.luxe [style*="background:#fff8ec"],body.luxe [style*="background: #fff8ec"]{background:#150F08 !important;border-color:rgba(212,160,23,.25) !important}
+body.luxe [style*="background:#fff"]:not(input):not(button){background:#150F08 !important}
+body.luxe input[type="text"],body.luxe input[type="email"],body.luxe input[type="tel"],body.luxe input[type="search"],body.luxe textarea{background:#150F08;border:1.5px solid rgba(212,160,23,.25);color:#EFE4CE;border-radius:12px}
+body.luxe input::placeholder,body.luxe textarea::placeholder{color:#7E6F58}
+body.luxe iframe{border-radius:18px;border:1px solid rgba(212,160,23,.2);filter:saturate(.92)}
+
 /* ---------- scroll reveal utility (applied by luxe.js) ---------- */
 body.luxe .lx-reveal{opacity:0;transform:translateY(42px);filter:blur(6px);transition:opacity .85s var(--ease),transform .85s var(--ease),filter .85s}
 body.luxe .lx-reveal.lx-in{opacity:1;transform:none;filter:none}
