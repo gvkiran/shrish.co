@@ -1531,7 +1531,7 @@ function renderShop() {
     if (catId === 'picklespodi') {
       sectionSub = 'Traditional Andhra-style pickles and podi. Non-veg pickles are preorder only and depend on supplier batch and pickup timing.';
     }
-    if (catId === 'picklespodi') updatePickleSidebarFilters(allCatItems);
+    if (catId === 'picklespodi' && activeFilter === 'picklespodi') updatePickleSidebarFilters(allCatItems);
     const searchNote = productSearchQuery ? `<div class="shop-search-note">Showing matches for <strong>${escapedSearchQuery}</strong>. <a href="${escapeHtml(shopUrlForFilter(activeFilter, { clearSearch: true, clearProduct: true }))}">Clear search</a></div>` : '';
     const safetyNotice = `<details class="shop-safety-notice"><summary>⚠ Food allergy &amp; spice notice — tap to read</summary><p>${escapeHtml(SHOP_ALLERGEN_NOTICE)} ${escapeHtml(SHOP_SPICE_NOTICE)}</p></details>`;
     let html = `<div class="shop-section"><div class="shop-section-head"><div><div class="shop-section-title">${m.title} <em>${m.em}</em></div><div class="section-divider"></div></div></div>${searchNote}<p style="color:var(--text-light);font-size:14px;margin-bottom:14px">${sectionSub}</p>${safetyNotice}`;
