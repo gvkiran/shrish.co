@@ -650,6 +650,47 @@ body.luxe .lx-glow{position:fixed;width:520px;height:520px;border-radius:50%;poi
   .lx-cta-band{padding:72px 16px 84px}
   .lx-wordmark{margin-top:14px}
 }
+/* ============================================================
+   MOBILE POLISH v35 — app-grade touch feel + Geet theme fix
+   ============================================================ */
+/* Geet launcher used var(--dark) which luxe remaps light -> was white-on-white */
+body.luxe .geet-launcher{background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;font-weight:800}
+body.luxe .geet-launcher:hover{background:linear-gradient(135deg,#F0B45A,#D98E2B)}
+body.luxe .geet-launcher-dot{background:#140C03;box-shadow:0 0 0 4px rgba(20,12,3,.18)}
+
+/* snappier taps everywhere */
+body.luxe{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+body.luxe a,body.luxe button,body.luxe input,body.luxe select{touch-action:manipulation}
+
+@media (max-width: 900px){
+  /* shop filters: app-style horizontal scroll rows instead of tall stacks */
+  body.luxe .shop-sidebar{flex-direction:column;gap:14px;padding:14px 12px}
+  body.luxe .shop-sidebar .sb-section{flex:none;width:100%;min-width:0}
+  body.luxe .shop-sidebar .filter-bar,
+  body.luxe .shop-sidebar .st-avail,
+  body.luxe .shop-sidebar .pickle-subfilters{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:8px;padding-bottom:4px;scrollbar-width:none}
+  body.luxe .shop-sidebar .filter-bar::-webkit-scrollbar,
+  body.luxe .shop-sidebar .st-avail::-webkit-scrollbar,
+  body.luxe .shop-sidebar .pickle-subfilters::-webkit-scrollbar{display:none}
+  body.luxe .shop-sidebar .filter-btn,
+  body.luxe .shop-sidebar .st-avail-btn,
+  body.luxe .shop-sidebar .pickle-type-btn{flex:0 0 auto;width:auto;white-space:nowrap;min-height:42px}
+  body.luxe .sb-nested{padding-left:10px}
+  body.luxe .sb-price-row{max-width:280px}
+}
+
+@media (max-width: 768px){
+  /* comfortable thumb targets */
+  body.luxe .nav-mobile a{padding:14px 16px;font-size:17px;min-height:48px;display:flex;align-items:center}
+  body.luxe .pc-add-btn,body.luxe .pc-size-add-btn,body.luxe .pc-details-btn,body.luxe .pc-notify-btn{min-height:44px}
+  body.luxe .cu-add{min-height:40px}
+  body.luxe .cart-checkout-btn{min-height:50px}
+  body.luxe .rx-cook-nav button{min-height:50px;flex:1;max-width:220px}
+  body.luxe .testimonial-nav{display:none}
+  /* cards breathe on small screens */
+  body.luxe .products-grid-v2{gap:18px}
+  body.luxe .pc-body{padding:16px 16px 18px}
+}
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion: reduce){
   body.luxe *,body.luxe *::before,body.luxe *::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
