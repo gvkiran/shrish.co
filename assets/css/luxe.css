@@ -480,6 +480,82 @@ body.luxe input[type="text"],body.luxe input[type="email"],body.luxe input[type=
 body.luxe input::placeholder,body.luxe textarea::placeholder{color:#7E6F58}
 body.luxe iframe{border-radius:18px;border:1px solid rgba(212,160,23,.2);filter:saturate(.92)}
 
+/* ============================================================
+   v2.7 — RECIPES EXPERIENCE
+   ============================================================ */
+body.luxe .page-hero{padding:30px 24px 18px}
+body.luxe .page-hero h1{font-size:clamp(2rem,3.6vw,3rem)}
+body.luxe .page-hero p{margin-top:6px;font-size:15px}
+
+.rx-layout{display:grid;grid-template-columns:280px minmax(0,1fr);gap:34px;max-width:1440px;margin:0 auto;padding:10px 24px 0;align-items:start}
+.rx-side{position:sticky;top:96px;max-height:calc(100vh - 116px);overflow-y:auto;background:rgba(22,16,10,.7);backdrop-filter:blur(14px);border:1px solid rgba(212,160,23,.18);border-radius:22px;padding:18px 14px;scrollbar-width:thin;scrollbar-color:#3a2a12 transparent}
+.rx-side::-webkit-scrollbar{width:6px}
+.rx-side::-webkit-scrollbar-thumb{background:#3a2a12;border-radius:6px}
+.rx-side-title{font-family:'Jost',sans-serif;font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);padding:0 8px 12px;border-bottom:1px solid rgba(212,160,23,.18);margin-bottom:10px;display:flex;justify-content:space-between}
+.rx-side-title span{background:rgba(212,160,23,.15);border-radius:50px;padding:1px 9px;font-size:11px;color:#CDBC9D}
+.rx-side-item{display:flex;gap:12px;align-items:center;padding:9px 8px;border-radius:14px;text-decoration:none;transition:background .3s,transform .3s var(--ease);border:1px solid transparent}
+.rx-side-item img{width:46px;height:46px;border-radius:12px;object-fit:cover;flex-shrink:0;border:1px solid rgba(212,160,23,.25)}
+.rx-side-item strong{display:block;font-size:13.5px;color:#E4D2AC;font-weight:600;line-height:1.3}
+.rx-side-item span{font-size:11px;color:#8E7D62}
+.rx-side-item:hover{background:rgba(212,160,23,.08);transform:translateX(4px)}
+.rx-side-item.active{background:rgba(212,160,23,.12);border-color:rgba(212,160,23,.4)}
+.rx-side-item.active strong{color:var(--gold-l)}
+.rx-main{min-width:0}
+body.luxe .recipes-list{padding:0 !important}
+body.luxe .recipe-full-card{background:#150F08;border:1px solid rgba(212,160,23,.15);border-radius:26px;overflow:hidden;scroll-margin-top:110px}
+body.luxe .recipe-full-body h2{color:#F4EADA}
+body.luxe .recipe-section h4{color:var(--gold)}
+body.luxe .nutrition-pill{background:rgba(212,160,23,.1);border:1px solid rgba(212,160,23,.25);color:#CDBC9D}
+
+/* checkable ingredients */
+body.luxe .rx-ing{cursor:pointer;position:relative;padding-left:30px;list-style:none;transition:color .3s;user-select:none}
+body.luxe .rx-ing::before{content:'';position:absolute;left:0;top:4px;width:17px;height:17px;border-radius:6px;border:1.5px solid rgba(212,160,23,.5);background:#120C05;transition:all .3s}
+body.luxe .rx-ing:hover::before{border-color:var(--gold-l)}
+body.luxe .rx-ing.done{color:#6E5F4A;text-decoration:line-through}
+body.luxe .rx-ing.done::before{background:linear-gradient(135deg,#E8A93C,#C8791A);border-color:transparent}
+body.luxe .rx-ing.done::after{content:'✓';position:absolute;left:3px;top:2px;font-size:12px;font-weight:800;color:#140C03}
+
+/* cook mode button */
+.rx-cook-btn{display:inline-flex;align-items:center;gap:8px;margin:10px 0 4px;padding:11px 22px;border:none;border-radius:50px;background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;font-family:'Jost',sans-serif;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 26px rgba(212,160,23,.3);transition:transform .3s var(--ease),box-shadow .3s}
+.rx-cook-btn em{font-style:normal;font-weight:500;opacity:.75;font-size:12px}
+.rx-cook-btn:hover{transform:translateY(-2px);box-shadow:0 14px 38px rgba(212,160,23,.45)}
+
+/* cook mode overlay */
+.rx-cook{position:fixed;inset:0;z-index:7000;background:rgba(8,5,1,.97);backdrop-filter:blur(20px);display:none;flex-direction:column;padding:max(18px,3vh) max(18px,4vw)}
+.rx-cook.open{display:flex}
+.rx-cook-head{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.rx-cook-title{font-family:var(--font-disp);font-size:clamp(20px,2.6vw,30px);color:var(--gold-l)}
+.rx-cook-close{background:none;border:1.5px solid rgba(212,160,23,.4);color:#CDBC9D;width:42px;height:42px;border-radius:50%;font-size:22px;cursor:pointer;transition:all .3s}
+.rx-cook-close:hover{background:var(--gold);color:#140C03}
+.rx-cook-prog{height:4px;background:rgba(212,160,23,.12);border-radius:4px;margin:16px 0}
+.rx-cook-prog span{display:block;height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,#C8791A,var(--gold-l));transition:width .45s var(--ease);box-shadow:0 0 12px rgba(240,200,74,.5)}
+.rx-cook-stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:22px;padding:12px}
+.rx-cook-stepnum{font-family:'Jost',sans-serif;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold)}
+.rx-cook-text{font-family:var(--font-disp);font-size:clamp(24px,3.6vw,42px);line-height:1.35;color:#F4EADA;max-width:21ch}
+.rx-timer-btn{padding:12px 26px;border-radius:50px;border:1.5px solid rgba(212,160,23,.5);background:rgba(212,160,23,.08);color:var(--gold-l);font-family:'Jost',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .3s}
+.rx-timer-btn:hover{background:var(--gold);color:#140C03}
+.rx-timer{font-family:'Jost',sans-serif;font-size:34px;font-weight:700;color:var(--gold-l);text-shadow:0 0 24px rgba(240,200,74,.5)}
+.rx-cook-ings{margin:0 auto 14px;max-width:680px;width:100%}
+.rx-cook-ings summary{cursor:pointer;list-style:none;text-align:center;font-size:13px;font-weight:600;letter-spacing:.08em;color:#C9A86A;padding:8px}
+.rx-cook-ings summary::-webkit-details-marker{display:none}
+.rx-cook-ings ul{background:#150F08;border:1px solid rgba(212,160,23,.2);border-radius:16px;padding:16px 20px 16px 36px;max-height:32vh;overflow-y:auto;color:#B3A287;font-size:14px;line-height:1.9}
+.rx-cook-nav{display:flex;justify-content:center;gap:14px;padding-top:6px}
+.rx-cook-nav button{padding:14px 34px;border-radius:50px;font-family:'Jost',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .3s;border:1.5px solid rgba(212,160,23,.4);background:transparent;color:#CDBC9D}
+.rx-cook-nav button:disabled{opacity:.35;cursor:default}
+.rx-cook-nav .rx-next{background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;border:none;box-shadow:0 10px 30px rgba(212,160,23,.35)}
+.rx-cook-nav .rx-next:hover{transform:translateY(-2px)}
+.rx-confetti{position:absolute;top:-30px;animation:rxFall 2.8s linear forwards;pointer-events:none;color:var(--gold-l)}
+@keyframes rxFall{to{transform:translateY(105vh) rotate(540deg);opacity:.2}}
+
+@media (max-width:900px){
+  .rx-layout{grid-template-columns:1fr;gap:14px}
+  .rx-side{position:static;max-height:none;display:flex;gap:8px;overflow-x:auto;padding:12px;border-radius:18px}
+  .rx-side-title{display:none}
+  .rx-side-item{flex:0 0 auto;border:1px solid rgba(212,160,23,.2)}
+  .rx-side-item span{display:none}
+  .rx-side-item img{width:34px;height:34px}
+}
+
 /* ---------- scroll reveal utility (applied by luxe.js) ---------- */
 body.luxe .lx-reveal{opacity:0;transform:translateY(42px);filter:blur(6px);transition:opacity .85s var(--ease),transform .85s var(--ease),filter .85s}
 body.luxe .lx-reveal.lx-in{opacity:1;transform:none;filter:none}
