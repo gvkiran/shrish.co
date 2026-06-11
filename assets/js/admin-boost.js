@@ -161,11 +161,22 @@
       '<tr><td><kbd>Ctrl</kbd>+<kbd>K</kbd></td><td>Command palette — anything, instantly</td></tr>' +
       '<tr><td><kbd>/</kbd></td><td>Focus order search</td></tr>' +
       '<tr><td><kbd>F</kbd></td><td>Focus mode (hide panels, big table)</td></tr>' +
-      '<tr><td><kbd>G</kbd> then <kbd>O</kbd>/<kbd>P</kbd>/<kbd>T</kbd></td><td>Go to Orders / Products / Pickup Tally</td></tr>' +
+      '<tr><td><kbd>D</kbd></td><td>Pickup Day Mode — tap-to-fulfill board</td></tr>' +
+      '<tr><td><kbd>G</kbd> then <kbd>O</kbd>/<kbd>P</kbd>/<kbd>T</kbd>/<kbd>C</kbd>/<kbd>S</kbd>/<kbd>A</kbd>/<kbd>R</kbd></td><td>Go to Orders / Products / Tally / Customers / Subscribers / Accounting / Refunds</td></tr>' +
+      '<tr><td><kbd>Esc</kbd></td><td>Close any overlay</td></tr>' +
       '<tr><td><kbd>?</kbd></td><td>This cheat sheet</td></tr>' +
       '</table><p>Hover any order row → 💬 copies a ready WhatsApp pickup message.</p><button onclick="this.closest(\'.boost-cheat\').classList.remove(\'open\')">Got it</button></div>';
     document.body.appendChild(cheat);
     cheat.addEventListener('click', function (e) { if (e.target === cheat) cheat.classList.remove('open'); });
+
+    var helpFab = document.createElement('button');
+    helpFab.type = 'button';
+    helpFab.className = 'boost-help-fab';
+    helpFab.title = 'Keyboard shortcuts & power features';
+    helpFab.setAttribute('aria-label', 'Show keyboard shortcuts');
+    helpFab.textContent = '?';
+    helpFab.addEventListener('click', function () { cheat.classList.toggle('open'); });
+    document.body.appendChild(helpFab);
 
     var gPending = false, gTimer = null;
     document.addEventListener('keydown', function (e) {
