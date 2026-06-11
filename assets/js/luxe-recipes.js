@@ -36,9 +36,19 @@
     main.appendChild(list);
 
     var recipes = [];
+    var cardRefs = [];
     cards.forEach(function (card, idx) {
       var h2 = card.querySelector('h2');
       var title = h2 ? h2.childNodes[0].textContent.trim() : 'Recipe ' + (idx + 1);
+      cardRefs.push({
+        titleNode: h2 ? h2.childNodes[0] : null,
+        smallNode: h2 ? h2.querySelector('small') : null,
+        metaSpans: card.querySelectorAll('.recipe-meta span'),
+        h4s: card.querySelectorAll('.recipe-section h4'),
+        ingLis: card.querySelectorAll('.recipe-section ul li'),
+        stepLis: card.querySelectorAll('.recipe-section ol li'),
+        notePs: card.querySelectorAll('p[style*="font-size:13px"]')
+      });
       var id = 'rx-' + slug(title);
       card.id = id;
       var img = card.querySelector('.recipe-full-img');
@@ -148,17 +158,19 @@
     }
     function render() {
       var total = cur.steps.length;
-      $('rxCookNum').textContent = 'Step ' + (step + 1) + ' of ' + total;
+      $('rxCookNum').textContent = T('stepOf').replace('{a}', step + 1).replace('{b}', total);
       $('rxCookText').textContent = cur.steps[step];
       $('rxCookProg').style.width = ((step + 1) / total * 100) + '%';
       $('rxPrev').disabled = step === 0;
-      $('rxNext').textContent = step === total - 1 ? 'Finish 🥭' : 'Next →';
+      $('rxPrev').textContent = T('back');
+      $('rxNext').textContent = step === total - 1 ? T('finish') : T('next');
+      overlay.querySelector('.rx-cook-ings summary').textContent = T('ings');
       stopTimer();
-      var m = cur.steps[step].match(/(\d+)\s*(?:-|–)?\s*(?:min|minute)/i);
+      var m = cur.steps[step].match(/(\d+)\s*(?:-|–)?\s*(?:min|minute|मिनट|मिनिट|निमिष|નિમિષ|મિનિટ|నిమిష)/i);
       var tb = $('rxTimerBtn');
       if (m) {
         tb.hidden = false;
-        tb.textContent = '⏱ Start ' + m[1] + '-minute timer';
+        tb.textContent = T('timer').replace('{n}', m[1]);
         tb.onclick = function () { startTimer(parseInt(m[1], 10) * 60); tb.hidden = true; };
       } else { tb.hidden = true; }
     }
@@ -172,7 +184,7 @@
         if (left <= 0) {
           stopTimer();
           el.hidden = false;
-          el.textContent = '✓ Time’s up!';
+          el.textContent = T('up');
           chime();
         }
       };
@@ -203,9 +215,9 @@
         overlay.appendChild(p);
         (function (pp) { setTimeout(function () { pp.remove(); }, 3200); })(p);
       }
-      $('rxCookText').textContent = 'Enjoy your ' + cur.title + '! Don’t forget to share. 🥭';
-      $('rxCookNum').textContent = 'All done';
-      $('rxNext').textContent = 'Close';
+      $('rxCookText').textContent = T('enjoy').replace('{t}', cur.title);
+      $('rxCookNum').textContent = T('done');
+      $('rxNext').textContent = T('close');
     }
     $('rxNext').addEventListener('click', function () {
       if (!cur) return;
@@ -219,6 +231,90 @@
       if (step > 0) { step--; render(); }
     });
     overlay.querySelector('.rx-cook-close').addEventListener('click', closeCook);
+
+    /* ============ LANGUAGE SWITCHER (en/hi/te/gu/mr) ============ */
+    var I18N = window.SHRISH_RX_I18N || null;
+    var curLang = 'en';
+    function T(key) {
+      var ui = I18N && I18N.ui[curLang] ? I18N.ui[curLang] : (I18N ? I18N.ui.en : null);
+      if (!ui) {
+        var fallback = { stepOf:'Step {a} of {b}', ings:'Ingredients', back:'← Back', next:'Next →', finish:'Finish 🥭', close:'Close', done:'All done', enjoy:'Enjoy your {t}! 🥭', timer:'⏱ Start {n}-minute timer', up:'✓ Time’s up!' };
+        return fallback[key] || key;
+      }
+      return ui[key] !== undefined ? ui[key] : (I18N.ui.en[key] || key);
+    }
+    window.__rxT = T;
+
+    if (I18N) {
+      var LANG_LABELS = { en:'EN', hi:'हिंदी', te:'తెలుగు', gu:'ગુજરાતી', mr:'मराठी' };
+      var switcher = document.createElement('div');
+      switcher.className = 'rx-lang';
+      switcher.setAttribute('role', 'group');
+      switcher.setAttribute('aria-label', 'Recipe language');
+      switcher.innerHTML = '<span class="rx-lang-icon">🌐</span>' + Object.keys(LANG_LABELS).map(function (c) {
+        return '<button type="button" data-lang="' + c + '"' + (c === 'en' ? ' class="active"' : '') + '>' + LANG_LABELS[c] + '</button>';
+      }).join('');
+      side.insertBefore(switcher, side.firstChild);
+
+      function applyLang(code) {
+        if (!I18N.ui[code]) code = 'en';
+        curLang = code;
+        try { localStorage.setItem('shrishRecipeLang', code); } catch (e) {}
+        switcher.querySelectorAll('button').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.lang === code);
+        });
+        var ui = I18N.ui[code];
+        var hero = document.querySelector('.page-hero h1');
+        if (hero) hero.innerHTML = ui.heroTitle;
+        var heroP = document.querySelector('.page-hero p');
+        if (heroP) heroP.textContent = ui.heroSub;
+        var st = side.querySelector('.rx-side-title');
+        if (st) st.firstChild.textContent = ui.all + ' ';
+        document.querySelectorAll('.rx-cook-btn').forEach(function (b) {
+          b.innerHTML = '👨‍🍳 ' + ui.cook + ' <em>' + ui.cookEm + '</em>';
+        });
+        var noteBox = document.querySelector('[style*="max-width:1100px"] strong');
+        if (noteBox) {
+          noteBox.textContent = ui.note;
+          var nb = noteBox.parentNode;
+          while (nb.childNodes.length > 1) nb.removeChild(nb.lastChild);
+          nb.appendChild(document.createTextNode(' ' + ui.noteText));
+        }
+        I18N.recipes.forEach(function (entry, i) {
+          var t = entry[code] || entry.en;
+          var refs = cardRefs[i];
+          if (!refs) return;
+          if (refs.titleNode) refs.titleNode.textContent = t.title + ' ';
+          if (refs.smallNode) refs.smallNode.textContent = t.small || '';
+          refs.metaSpans.forEach(function (sp, j) { if (t.meta[j]) sp.textContent = t.meta[j]; });
+          refs.h4s.forEach(function (h, j) { if (t.heads[j]) h.textContent = t.heads[j]; });
+          refs.ingLis.forEach(function (li, j) { if (t.ings[j]) li.textContent = t.ings[j]; });
+          refs.stepLis.forEach(function (li, j) { if (t.steps[j]) li.textContent = t.steps[j]; });
+          refs.notePs.forEach(function (pEl, j) { if (t.notes[j]) pEl.textContent = t.notes[j]; });
+          recipes[i].title = t.title;
+          recipes[i].steps = t.steps.slice();
+          recipes[i].ings = t.ings.slice();
+          var sideStrong = items[i] && items[i].querySelector('strong');
+          if (sideStrong) sideStrong.textContent = t.title;
+          var sideSpan = items[i] && items[i].querySelector('div span');
+          if (sideSpan) sideSpan.textContent = t.meta.join(' ');
+        });
+        if (overlay.classList.contains('open') && cur) {
+          var idx2 = recipes.indexOf(cur);
+          if (idx2 >= 0) { cur = recipes[idx2]; if (step >= cur.steps.length) step = cur.steps.length - 1; render(); }
+          $('rxCookTitle').textContent = cur.title;
+          $('rxCookIngs').innerHTML = cur.ings.map(function (g) { return '<li>' + g + '</li>'; }).join('');
+        }
+      }
+      switcher.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-lang]');
+        if (b) applyLang(b.dataset.lang);
+      });
+      var saved = 'en';
+      try { saved = localStorage.getItem('shrishRecipeLang') || 'en'; } catch (e) {}
+      if (saved !== 'en') applyLang(saved);
+    }
+
     document.addEventListener('keydown', function (e) {
       if (!overlay.classList.contains('open')) return;
       if (e.key === 'Escape') closeCook();

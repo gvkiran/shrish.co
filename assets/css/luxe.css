@@ -587,6 +587,14 @@ body.luxe .nav-account-btn:hover{background:linear-gradient(135deg,#E8A93C,#C879
 body.luxe .mobile-product-search input{background:#150F08;border:1.5px solid rgba(212,160,23,.3);color:#EFE4CE}
 body.luxe .mobile-product-search button{background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;border:none}
 
+/* v2.9 — recipe language switcher */
+.rx-lang{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:0 6px 12px;margin-bottom:10px;border-bottom:1px solid rgba(212,160,23,.18)}
+.rx-lang-icon{font-size:15px;margin-right:2px}
+.rx-lang button{border:1px solid rgba(212,160,23,.3);background:#120C05;color:#BCAB9D;border-radius:50px;padding:5px 11px;font-size:12px;font-family:'Jost',sans-serif;font-weight:600;cursor:pointer;transition:all .25s}
+.rx-lang button:hover{border-color:var(--gold-l);color:var(--gold-l)}
+.rx-lang button.active{background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;border-color:transparent}
+@media (max-width:900px){.rx-lang{border-bottom:none;padding-bottom:4px;flex-basis:100%}}
+
 /* ---------- scroll reveal utility (applied by luxe.js) ---------- */
 body.luxe .lx-reveal{opacity:0;transform:translateY(42px);filter:blur(6px);transition:opacity .85s var(--ease),transform .85s var(--ease),filter .85s}
 body.luxe .lx-reveal.lx-in{opacity:1;transform:none;filter:none}
