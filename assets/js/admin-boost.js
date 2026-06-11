@@ -232,7 +232,156 @@
         try { sessionStorage.setItem('boostSeenOrders', JSON.stringify(seen)); } catch (e) {}
       }
     }
-    new MutationObserver(function () { decorateRows(); refreshBriefing(); }).observe($('ordersBody'), { childList: true });
+    /* ================= 6. LOCATION QUICK PILLS ================= */
+    var locWrap = document.createElement('div');
+    locWrap.className = 'boost-locpills';
+    [['all','All locations'],['shortpump','📍 Short Pump'],['chesterfield','📍 Chesterfield'],['mechanicsville','📍 Mechanicsville']].forEach(function (L) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = L[1];
+      b.dataset.loc = L[0];
+      if (L[0] === 'all') b.classList.add('active');
+      b.addEventListener('click', function () {
+        var sel = $('filterLocation');
+        if (sel) { sel.value = L[0]; if (window.renderOrders) window.renderOrders(); }
+        locWrap.querySelectorAll('button').forEach(function (x) { x.classList.toggle('active', x === b); });
+      });
+      locWrap.appendChild(b);
+    });
+    var helpText = $('ordersHelpText');
+    if (helpText) helpText.parentNode.insertBefore(locWrap, helpText);
+
+    /* ================= 7. PICKUP DAY MODE ================= */
+    var pdBtn = document.createElement('button');
+    pdBtn.type = 'button';
+    pdBtn.className = 'toolbar-btn boost-pd-btn';
+    pdBtn.textContent = '🥭 Pickup Day Mode';
+    var toolbar = document.querySelector('.toolbar-actions');
+    if (toolbar) toolbar.appendChild(pdBtn);
+
+    var pd = document.createElement('div');
+    pd.className = 'boost-pd';
+    pd.innerHTML = '<div class="pd-head"><div><h2>🥭 Pickup Day</h2><p class="pd-sub" id="pdSub"></p></div><button type="button" class="pd-exit">✕ Exit</button></div><div class="pd-board" id="pdBoard"></div>';
+    document.body.appendChild(pd);
+    pd.querySelector('.pd-exit').addEventListener('click', closePickupMode);
+
+    function parseRowData(row) {
+      var cells = row.querySelectorAll('td');
+      return {
+        row: row,
+        num: (row.querySelector('.order-id') || {}).textContent || '',
+        name: (row.querySelector('.customer-name') || {}).textContent || '',
+        phone: ((row.querySelector('.customer-phone') || {}).textContent || '').trim(),
+        items: cells[4] ? cells[4].innerText.replace(/\s+/g, ' ').trim() : '',
+        total: (row.querySelector('.total-amount') || {}).textContent || '',
+        loc: cells[6] ? cells[6].textContent.trim() : 'Other'
+      };
+    }
+    function renderPickupBoard() {
+      if (!pd.classList.contains('open')) return;
+      var board = $('pdBoard');
+      var rows = Array.prototype.slice.call(document.querySelectorAll('#ordersBody tr[id^="row-"]'));
+      var groups = {};
+      rows.forEach(function (r) {
+        var d = parseRowData(r);
+        if (!d.num) return;
+        (groups[d.loc] = groups[d.loc] || []).push(d);
+      });
+      var locs = Object.keys(groups).sort();
+      var remaining = rows.length;
+      $('pdSub').textContent = remaining
+        ? remaining + ' pickup' + (remaining === 1 ? '' : 's') + ' remaining — tap the big button as customers collect'
+        : 'Nothing pending right now';
+      if (!remaining) {
+        board.innerHTML = '<div class="pd-done"><div class="pd-done-emoji">🎉</div><h3>All pickups done!</h3><p>Every active order is handled. Great day at the stand.</p></div>';
+        for (var i = 0; i < 24; i++) {
+          var c = document.createElement('div');
+          c.className = 'rx-confetti';
+          c.textContent = ['🥭', '✦', '●'][i % 3];
+          c.style.left = (10 + Math.random() * 80) + '%';
+          c.style.animationDelay = (Math.random() * 0.6) + 's';
+          c.style.fontSize = (14 + Math.random() * 16) + 'px';
+          pd.appendChild(c);
+          (function (cc) { setTimeout(function () { cc.remove(); }, 3400); })(c);
+        }
+        return;
+      }
+      board.innerHTML = locs.map(function (loc) {
+        return '<section class="pd-group"><h3>' + loc + ' <span>' + groups[loc].length + '</span></h3>' +
+          groups[loc].map(function (d) {
+            var tel = d.phone.replace(/[^0-9+]/g, '');
+            return '<article class="pd-card" data-row="' + d.row.id + '">' +
+              '<div class="pd-card-top"><strong>' + d.name + '</strong><span class="pd-num">' + d.num + '</span></div>' +
+              '<div class="pd-items">' + d.items + '</div>' +
+              '<div class="pd-meta">' + (tel ? '<a href="tel:' + tel + '" class="pd-call">📞 ' + d.phone + '</a>' : '') + '<span class="pd-total">' + d.total + '</span></div>' +
+              '<button type="button" class="pd-fulfill" data-row="' + d.row.id + '">✓ Picked Up</button>' +
+              '</article>';
+          }).join('') + '</section>';
+      }).join('');
+    }
+    pd.addEventListener('click', function (e) {
+      var b = e.target.closest('.pd-fulfill');
+      if (!b) return;
+      var row = document.getElementById(b.dataset.row);
+      var real = row && row.querySelector('.btn-fulfill');
+      if (real) { b.disabled = true; b.textContent = '…'; real.click(); }
+    });
+    function openPickupMode() {
+      var active = document.querySelector('.sheet-pill#ordersSheetActive');
+      if (active && !active.classList.contains('active')) active.click();
+      pd.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      renderPickupBoard();
+    }
+    function closePickupMode() {
+      pd.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    pdBtn.addEventListener('click', openPickupMode);
+    document.addEventListener('keydown', function (e) {
+      if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+      if (e.key.toLowerCase() === 'd' && !e.ctrlKey && !e.metaKey) {
+        if (pd.classList.contains('open')) closePickupMode(); else openPickupMode();
+      }
+      if (e.key === 'Escape' && pd.classList.contains('open')) closePickupMode();
+    });
+
+    /* ================= 8. TEL LINKS + STALE FLAGS ================= */
+    function enhanceRows() {
+      document.querySelectorAll('#ordersBody .customer-phone').forEach(function (ph) {
+        if (ph.dataset.boosted) return;
+        ph.dataset.boosted = '1';
+        var tel = ph.textContent.replace(/[^0-9+]/g, '');
+        if (tel.length >= 10) {
+          ph.innerHTML = '<a href="tel:' + tel + '" class="boost-tel">' + ph.textContent + '</a>';
+        }
+      });
+      var now = Date.now();
+      document.querySelectorAll('#ordersBody tr[id^="row-"]').forEach(function (row) {
+        if (row.dataset.staleChecked) return;
+        row.dataset.staleChecked = '1';
+        var dateCell = row.querySelectorAll('td')[2];
+        if (!dateCell) return;
+        var dt = new Date(dateCell.textContent.trim());
+        if (isNaN(dt)) return;
+        var days = Math.floor((now - dt.getTime()) / 86400000);
+        if (days >= 4) {
+          var dot = document.createElement('span');
+          dot.className = 'boost-stale';
+          dot.title = 'Waiting ' + days + ' days — consider a reminder';
+          dot.textContent = '⏳' + days + 'd';
+          dateCell.appendChild(dot);
+        }
+      });
+    }
+
+    new MutationObserver(function () {
+      decorateRows();
+      enhanceRows();
+      refreshBriefing();
+      renderPickupBoard();
+    }).observe($('ordersBody'), { childList: true });
     decorateRows();
+    enhanceRows();
   }
 })();
