@@ -173,6 +173,7 @@ body.luxe .lx-bento .product-card{grid-column:span 1}
 body.luxe .lx-bento .product-card:nth-child(6n+1){grid-column:span 2;grid-row:span 2}
 body.luxe .lx-bento .product-card:nth-child(6n+1) .product-card-img{height:100%;min-height:300px}
 body.luxe .lx-bento .product-card:nth-child(6n+4){grid-column:span 2}
+body.luxe .lx-bento{grid-template-columns:repeat(4,minmax(0,1fr))}
 body.luxe .product-card{background:#150E07;border:1px solid rgba(212,160,23,.14);border-radius:26px;overflow:hidden;box-shadow:none;display:flex;flex-direction:column;transition:transform .5s var(--ease),border-color .5s,box-shadow .5s}
 body.luxe .product-card:hover{transform:translateY(-10px);border-color:rgba(212,160,23,.55);box-shadow:0 30px 70px rgba(0,0,0,.6),0 0 44px rgba(212,160,23,.14)}
 body.luxe .product-card .product-card-img{flex:1 0 auto}

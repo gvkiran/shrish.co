@@ -353,22 +353,24 @@ function renderHomeProducts(products) {
   const visible = products.filter((p) => !p.hidden);
   const isLive = (p) => p.available && !p.displayOnly;
   const availMangoes = visible.filter((p) => p.category === 'mangoes' && isLive(p));
+  const cardImage = (p) => (Array.isArray(p.gallery) && p.gallery[0]) || p.image || '';
   const availOthers = visible
-    .filter((p) => p.category !== 'mangoes' && isLive(p) && p.image)
+    .filter((p) => p.category !== 'mangoes' && isLive(p) && cardImage(p))
     .sort((a, b) => ((a.category === 'picklespodi' ? 0 : 1) - (b.category === 'picklespodi' ? 0 : 1)));
   const soldMangoes = visible.filter((p) => p.category === 'mangoes' && !isLive(p));
-  // Available mangoes lead; pickles/podi/sweets backfill; sold-out mangoes last.
-  const toShow = [...availMangoes, ...availOthers, ...soldMangoes].slice(0, 6);
+  // Available mangoes lead; pickles/podi backfill; sold-out mangoes last. Max 4 cards.
+  const toShow = [...availMangoes, ...availOthers, ...soldMangoes].slice(0, 4);
 
   productsGrid.innerHTML = '';
 
   toShow.forEach((p) => {
     const description = (p.description || '').slice(0, 80);
     const hasMore = (p.description || '').length > 80;
-    const imgHtml = p.image
-      ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    const imgSrc = cardImage(p);
+    const imgHtml = imgSrc
+      ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : '';
-    const fallbackStyle = p.image ? 'style="display:none"' : '';
+    const fallbackStyle = imgSrc ? 'style="display:none"' : '';
     productsGrid.innerHTML += `
       <div class="product-card ${p.available ? '' : 'product-card-unavailable'}">
         ${p.tag ? `<div class="product-card-badge">${escapeHtml(p.tag)}</div>` : ''}

@@ -1406,6 +1406,13 @@ function renderPicklesPodiFilters(items) {
 
 function setPicklesPodiFilter(filterId) {
   picklePodiFilter = filterId;
+  if (activeFilter !== 'picklespodi') {
+    activeFilter = 'picklespodi';
+    document.querySelectorAll('.filter-btn').forEach((b) => {
+      b.classList.toggle('active', b.classList.contains('filter-btn-picklespodi'));
+    });
+    updateShopCategoryUrl('picklespodi');
+  }
   const url = new URL(window.location.href);
   if (filterId === 'all') url.searchParams.delete('type');
   else url.searchParams.set('type', filterId);
