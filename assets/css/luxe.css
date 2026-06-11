@@ -603,6 +603,12 @@ body.luxe .footer-bottom a:hover{color:var(--gold-l)}
 body.luxe .social-footer-strip{background:#070401;border-top:1px solid rgba(212,160,23,.12)}
 body.luxe .social-footer-strip span{color:#8E7D62}
 
+/* v2.11 — sold-out cards stay bright (badge carries the message) */
+body.luxe .product-card-unavailable{opacity:1;filter:none}
+body.luxe .product-card-unavailable .product-card-img img{filter:none}
+body.luxe .pc.sold-out{opacity:1}
+body.luxe .pc.display-only{opacity:1}
+
 /* ---------- scroll reveal utility (applied by luxe.js) ---------- */
 body.luxe .lx-reveal{opacity:0;transform:translateY(42px);filter:blur(6px);transition:opacity .85s var(--ease),transform .85s var(--ease),filter .85s}
 body.luxe .lx-reveal.lx-in{opacity:1;transform:none;filter:none}
