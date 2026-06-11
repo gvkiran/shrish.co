@@ -561,7 +561,7 @@ function renderCartDrawer() {
   const totalQty = cart.reduce((s, i) => s + i.qty, 0);
   totalEl.textContent = `${totalQty} box${totalQty !== 1 ? 'es' : ''}`;
   list.innerHTML = cart.map((item) => {
-    const imgHtml = item.image ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" onerror="this.parentElement.textContent='No Image'">` : 'No Image';
+    const imgHtml = `<img src="${escapeHtml(item.image || SHRISH_LOGO_PRODUCT_IMAGE)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async">`;
     return `<div class="cart-item">
       <div class="ci-img">${imgHtml}</div>
       <div class="ci-info">
@@ -592,7 +592,7 @@ function renderCartUpsell() {
   const picks = [...preferred, ...rest].slice(0, 3);
   if (!picks.length) return '';
   const rows = picks.map((p) => {
-    const img = productImages(p.id, p)[0] || p.image || '';
+    const img = productImages(p.id, p)[0] || p.image || SHRISH_LOGO_PRODUCT_IMAGE;
     const price = usesVariantUI(p)
       ? (getVariantPriceRange(getProductVariants(p)) || p.price || '')
       : (p.price || '');
@@ -660,7 +660,7 @@ function addToCart(productId, qty, variantId = null) {
     name: selectedVariant.id === 'default' ? p.name : `${p.name} (${selectedVariant.label})`,
     price: selectedVariant.price || p.price,
     unit: selectedVariant.unit || p.unit,
-    image: productImages(productId, p)[0] || p.image || null,
+    image: productImages(productId, p)[0] || p.image || SHRISH_LOGO_PRODUCT_IMAGE,
     qty
   });
   saveCart();
@@ -1015,7 +1015,7 @@ function renderCard(p) {
   const isSoon = liveReady && p.displayOnly;
   const stripCls = !liveReady ? 'soon' : isPreorder ? 'soon' : isSoon ? 'soon' : isAvail ? 'avail' : 'sold';
   const stripText = !liveReady ? (catalogSyncFailed ? 'Refresh Required' : 'Checking') : isPreorder ? 'Preorder Only' : isSoon ? 'Coming Soon' : isAvail ? 'Available' : 'Not Available';
-  const imgSrc = productImages(p.id, p)[0] || p.image || null;
+  const imgSrc = productImages(p.id, p)[0] || p.image || SHRISH_LOGO_PRODUCT_IMAGE;
   const imgHtml = imgSrc ? `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='images/brand/logo-small.png'">` : '';
   const emojiStyle = imgSrc ? 'style="display:none"' : '';
   const shortDesc = (p.description || '').length > 90 ? `${p.description.slice(0, 90)}...` : (p.description || '');

@@ -405,9 +405,8 @@ const SHRISH_DATA = {
       name: "Drumstick Pickle", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
-      image: "images/products/pickles/drumstick-pickle-display.jpg",
+      image: "",
       gallery: [
-        "images/products/pickles/drumstick-pickle-display.jpg",
         "images/products/pickles/drumstick-pickle-2026.jpg"
       ],
       description: "Traditional drumstick pickle with spicy, tangy flavor. A good South Indian side for rice and dal.",
@@ -451,9 +450,8 @@ const SHRISH_DATA = {
       name: "Gongura Pickle/Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
-      image: "images/products/pickles/gongura-pickle-display.jpg",
+      image: "",
       gallery: [
-        "images/products/pickles/gongura-pickle-display.jpg",
         "images/products/pickles/gongura-pickle-2026.jpg"
       ],
       description: "Tangy gongura pickle with bold South Indian spice. A Telugu favorite that pairs beautifully with hot rice and ghee.",
@@ -497,9 +495,8 @@ const SHRISH_DATA = {
       name: "Kothimeera Pachadi / Coriander Pickle", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
-      image: "images/products/pickles/kothimeera-pickle-display.jpg",
+      image: "",
       gallery: [
-        "images/products/pickles/kothimeera-pickle-display.jpg",
         "images/products/pickles/kothimeera-pickle.jpg"
       ],
       description: "Fresh coriander-style pickle with a herby, spicy, and tangy taste. A good everyday pickle for rice, dosa, idli, and chapati.",
@@ -543,9 +540,8 @@ const SHRISH_DATA = {
       name: "Mango Ginger Pickle / Pachadi", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
-      image: "images/products/pickles/mango-ginger-pickle-display.jpg",
+      image: "",
       gallery: [
-        "images/products/pickles/mango-ginger-pickle-display.jpg",
         "images/products/pickles/mango-ginger-pickle.jpg"
       ],
       description: "A rare and flavorful pickle made with mango ginger. Fresh, aromatic, mildly tangy, and different from regular mango pickle.",
@@ -589,9 +585,8 @@ const SHRISH_DATA = {
       name: "Mixed Vegetable Pickle", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
-      image: "images/products/pickles/mixed-vegetable-display.jpg",
+      image: "",
       gallery: [
-        "images/products/pickles/mixed-vegetable-display.jpg",
         "images/products/pickles/mixed-vegetable-2026-1.jpg",
         "images/products/pickles/mixed-vegetable-2026-2.jpg",
         "images/products/pickles/mixed-vegetable-2026-3.jpg"
@@ -637,9 +632,8 @@ const SHRISH_DATA = {
       name: "Tomato Pickle", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
-      image: "images/products/pickles/tomato-pickle-display.jpg",
+      image: "",
       gallery: [
-        "images/products/pickles/tomato-pickle-display.jpg",
         "images/products/pickles/tomato-pickle.jpg"
       ],
       description: "Rich and spicy tomato pickle with a deep, tangy flavor. Great with rice, dosa, upma, idli, chapati, and curd rice.",
@@ -872,9 +866,8 @@ const SHRISH_DATA = {
       name: "Idli Podi", localName: "100g or 200g", origin: "Spice Powder",
       price: "$6.99", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
-      image: "images/products/podi/idli-podi-display.jpg",
+      image: "",
       gallery: [
-        "images/products/podi/idli-podi-display.jpg",
         "images/products/podi/idli-podi-2026.jpg"
       ],
       description: "Classic South Indian idli karam podi. Mix with ghee or oil and serve with idli, dosa, uttapam, or hot rice.",
@@ -939,9 +932,8 @@ const SHRISH_DATA = {
       name: "Karivepaku Podi / Curry Leaf Powder", localName: "100g or 200g", origin: "Spice Powder",
       price: "$7.49", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
-      image: "images/products/podi/karivepaku-podi-display.jpg",
+      image: "",
       gallery: [
-        "images/products/podi/karivepaku-podi-display.jpg",
         "images/products/podi/karivepaku-podi-2026.jpg"
       ],
       description: "Aromatic curry leaf podi with traditional South Indian spices. Mix with hot rice and ghee or enjoy with idli, dosa, and upma.",
