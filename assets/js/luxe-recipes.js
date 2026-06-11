@@ -126,11 +126,11 @@
       '</div>';
     document.body.appendChild(overlay);
 
-    var cur = null, step = 0, timerInt = null;
+    var cur = null, step = 0, timerInt = null, done = false;
     var $ = function (id) { return document.getElementById(id); };
 
     function openCook(i) {
-      cur = recipes[i]; step = 0;
+      cur = recipes[i]; step = 0; done = false;
       $('rxCookTitle').textContent = cur.title;
       $('rxCookIngs').innerHTML = cur.ings.map(function (g) { return '<li>' + g + '</li>'; }).join('');
       overlay.classList.add('open');
@@ -206,15 +206,18 @@
       $('rxCookText').textContent = 'Enjoy your ' + cur.title + '! Don’t forget to share. 🥭';
       $('rxCookNum').textContent = 'All done';
       $('rxNext').textContent = 'Close';
-      $('rxNext').onclick = closeCook;
     }
     $('rxNext').addEventListener('click', function () {
       if (!cur) return;
+      if (done) { closeCook(); return; }
       if (step < cur.steps.length - 1) { step++; render(); }
-      else if ($('rxNext').textContent.indexOf('Finish') === 0) { celebrate(); }
-      else { closeCook(); }
+      else { done = true; celebrate(); }
     });
-    $('rxPrev').addEventListener('click', function () { if (cur && step > 0) { step--; render(); $('rxNext').onclick = null; } });
+    $('rxPrev').addEventListener('click', function () {
+      if (!cur) return;
+      if (done) { done = false; render(); return; }
+      if (step > 0) { step--; render(); }
+    });
     overlay.querySelector('.rx-cook-close').addEventListener('click', closeCook);
     document.addEventListener('keydown', function (e) {
       if (!overlay.classList.contains('open')) return;
