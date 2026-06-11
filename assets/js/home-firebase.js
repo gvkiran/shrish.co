@@ -353,7 +353,9 @@ function renderHomeProducts(products) {
   const visible = products.filter((p) => !p.hidden);
   const isLive = (p) => p.available && !p.displayOnly;
   const availMangoes = visible.filter((p) => p.category === 'mangoes' && isLive(p));
-  const availOthers = visible.filter((p) => p.category !== 'mangoes' && isLive(p));
+  const availOthers = visible
+    .filter((p) => p.category !== 'mangoes' && isLive(p) && p.image)
+    .sort((a, b) => ((a.category === 'picklespodi' ? 0 : 1) - (b.category === 'picklespodi' ? 0 : 1)));
   const soldMangoes = visible.filter((p) => p.category === 'mangoes' && !isLive(p));
   // Available mangoes lead; pickles/podi/sweets backfill; sold-out mangoes last.
   const toShow = [...availMangoes, ...availOthers, ...soldMangoes].slice(0, 6);

@@ -101,6 +101,16 @@
       });
     });
 
+    /* ---- deep link: jump to recipe from URL hash (ids are JS-assigned) ---- */
+    if (location.hash) {
+      var target = document.getElementById(location.hash.slice(1));
+      if (target && target.classList.contains('recipe-full-card')) {
+        setTimeout(function () {
+          target.scrollIntoView({ behavior: 'auto', block: 'start' });
+        }, 120);
+      }
+    }
+
     /* ---- scrollspy ---- */
     var items = side.querySelectorAll('.rx-side-item');
     if ('IntersectionObserver' in window) {
