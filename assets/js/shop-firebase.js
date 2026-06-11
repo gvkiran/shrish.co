@@ -1594,6 +1594,20 @@ function handleShopHistoryChange() {
   }
 }
 
+function applyCachedCatalog() {
+  try {
+    const raw = localStorage.getItem('shrishCatalogCache');
+    if (!raw) return false;
+    const cached = JSON.parse(raw);
+    if (!cached || !Array.isArray(cached.docs) || !cached.docs.length) return false;
+    if (Date.now() - (cached.t || 0) > 7 * 24 * 60 * 60 * 1000) return false;
+    mergeProducts(cached.docs);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 function subscribeCatalog() {
   onSnapshot(collection(db, 'products'), (snapshot) => {
     if (!snapshot.docs.length) {
@@ -1609,6 +1623,7 @@ function subscribeCatalog() {
     catalogSyncReady = true;
     catalogSyncFailed = false;
     const docs = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
+    try { localStorage.setItem('shrishCatalogCache', JSON.stringify({ t: Date.now(), docs })); } catch (e) {}
     mergeProducts(docs);
     buildFilters();
     renderShop();
@@ -1654,6 +1669,7 @@ function init() {
   window.addEventListener('popstate', handleShopHistoryChange);
   window.addEventListener('pagehide', () => trackModalDuration('pagehide'));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeCart(); closeNotifyModal(); } });
+  applyCachedCatalog();
   buildFilters();
   initShopToolbar();
   renderShop();

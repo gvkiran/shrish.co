@@ -435,8 +435,19 @@ function init() {
   updateNavCartState();
   renderHomeProducts(baseProducts);
 
+  try {
+    const raw = localStorage.getItem('shrishCatalogCache');
+    if (raw) {
+      const cached = JSON.parse(raw);
+      if (cached && Array.isArray(cached.docs) && cached.docs.length && Date.now() - (cached.t || 0) < 7 * 24 * 60 * 60 * 1000) {
+        window.SHRISH_DATA.products = mergeProducts(baseProducts, cached.docs);
+        renderHomeProducts(window.SHRISH_DATA.products);
+      }
+    }
+  } catch (e) {}
   onSnapshot(collection(db, 'products'), (snapshot) => {
     const docs = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
+    try { localStorage.setItem('shrishCatalogCache', JSON.stringify({ t: Date.now(), docs })); } catch (e) {}
     window.SHRISH_DATA.products = mergeProducts(baseProducts, docs);
     renderHomeProducts(window.SHRISH_DATA.products);
   }, (error) => {
