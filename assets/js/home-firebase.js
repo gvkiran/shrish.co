@@ -350,19 +350,13 @@ function renderHomeProducts(products) {
   const productsGrid = document.getElementById('productsGrid');
   if (!productsGrid) return;
 
-  const visible = products.filter((p) => !p.hidden);
+  const visible = products.filter((p) => !p.hidden && p.category === 'mangoes');
   const isLive = (p) => p.available && !p.displayOnly;
-  const availMangoes = visible.filter((p) => p.category === 'mangoes' && isLive(p));
+  const availMangoes = visible.filter(isLive);
   const realImage = (p) => (Array.isArray(p.gallery) && p.gallery[0]) || p.image || '';
   const cardImage = (p) => realImage(p) || 'images/brand/logo-small.png';
-  const availOthers = visible
-    .filter((p) => p.category !== 'mangoes' && isLive(p))
-    .sort((a, b) =>
-      ((realImage(a) ? 0 : 1) - (realImage(b) ? 0 : 1)) ||
-      ((a.category === 'picklespodi' ? 0 : 1) - (b.category === 'picklespodi' ? 0 : 1)));
-  const soldMangoes = visible.filter((p) => p.category === 'mangoes' && !isLive(p));
-  // Available mangoes lead; pickles/podi backfill; sold-out mangoes last. Max 4 cards.
-  const toShow = [...availMangoes, ...availOthers, ...soldMangoes].slice(0, 4);
+  const soldMangoes = visible.filter((p) => !isLive(p));
+  const toShow = [...availMangoes, ...soldMangoes].slice(0, 4);
 
   productsGrid.innerHTML = '';
 
