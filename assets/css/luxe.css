@@ -595,6 +595,14 @@ body.luxe .mobile-product-search button{background:linear-gradient(135deg,#E8A93
 .rx-lang button.active{background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;border-color:transparent}
 @media (max-width:900px){.rx-lang{border-bottom:none;padding-bottom:4px;flex-basis:100%}}
 
+/* v2.10 — footer fix for non-home pages + social strip */
+body.luxe .footer{background:#070401;color:#BCAB9D;border-top:1px solid rgba(212,160,23,.16)}
+body.luxe .footer-bottom{color:#8E7D62;border-top-color:rgba(212,160,23,.12)}
+body.luxe .footer-bottom a{color:#8E7D62}
+body.luxe .footer-bottom a:hover{color:var(--gold-l)}
+body.luxe .social-footer-strip{background:#070401;border-top:1px solid rgba(212,160,23,.12)}
+body.luxe .social-footer-strip span{color:#8E7D62}
+
 /* ---------- scroll reveal utility (applied by luxe.js) ---------- */
 body.luxe .lx-reveal{opacity:0;transform:translateY(42px);filter:blur(6px);transition:opacity .85s var(--ease),transform .85s var(--ease),filter .85s}
 body.luxe .lx-reveal.lx-in{opacity:1;transform:none;filter:none}
