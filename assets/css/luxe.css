@@ -703,6 +703,9 @@ body.luxe .pc-size-add-btn strong{color:#3A2305}
 body.luxe .pc-size-qty .pc-size-price{color:var(--gold-l)}
 body.luxe .pc-size-qty .pc-size-label,body.luxe .pc-size-qty .pc-size-count{color:#EFE4CE}
 
+/* v37: inline var(--dark) backgrounds flip light under luxe -> force near-black */
+body.luxe [style*="background:var(--dark)"],body.luxe [style*="background: var(--dark)"]{background:#070401 !important}
+
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion: reduce){
   body.luxe *,body.luxe *::before,body.luxe *::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
