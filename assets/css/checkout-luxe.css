@@ -3,7 +3,7 @@
    Dark packing-table shell; cream packing-slip cards; every
    element restyled. Pure visual layer over existing logic.
    ============================================================ */
-body.packing-room{background:#0E0903;background-image:radial-gradient(1100px 600px at 85% -5%,rgba(212,160,23,.08),transparent 60%),radial-gradient(800px 500px at -5% 40%,rgba(200,121,26,.05),transparent 55%)}
+body.packing-room{background:#100A04}
 body.packing-room .checkout-hero{background:transparent;padding-bottom:8px}
 
 /* ---------- journey strip ---------- */
@@ -17,7 +17,7 @@ body.packing-room .checkout-hero{background:transparent;padding-bottom:8px}
 .pk-line.fill span{transform:scaleX(1)}
 
 /* ---------- cards as packing slips ---------- */
-body.packing-room .review-card,body.packing-room .order-card,body.packing-room .info-card{border-radius:22px;box-shadow:0 10px 26px rgba(0,0,0,.32);border:1px solid rgba(212,160,23,.18)}
+body.packing-room .review-card,body.packing-room .order-card,body.packing-room .info-card{border-radius:22px;box-shadow:0 6px 16px rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.18)}
 body.packing-room .review-card-title,body.packing-room .order-card h2{position:relative;padding-bottom:12px}
 body.packing-room .review-card-title::after,body.packing-room .order-card h2::after{content:'';position:absolute;left:0;bottom:0;width:54px;height:3px;border-radius:3px;background:linear-gradient(90deg,#C8791A,#F0C84A)}
 
@@ -53,13 +53,13 @@ body.packing-room .step-label::before{content:attr(data-num);width:26px;height:2
 
 /* location cards */
 body.packing-room .loc-card{border-radius:16px;border-width:2px;padding:18px 14px;transition:transform .25s,box-shadow .25s,border-color .25s,background .25s}
-body.packing-room .loc-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(26,18,8,.14)}
-body.packing-room .loc-card.selected{border-color:var(--saffron);background:linear-gradient(160deg,#FFF6E6,#FFEFD6);box-shadow:0 12px 30px rgba(200,121,26,.22)}
+body.packing-room .loc-card:hover{transform:translateY(-3px);box-shadow:0 6px 14px rgba(26,18,8,.14)}
+body.packing-room .loc-card.selected{border-color:var(--saffron);background:linear-gradient(160deg,#FFF6E6,#FFEFD6);box-shadow:0 6px 14px rgba(200,121,26,.2)}
 body.packing-room .loc-card.selected .loc-check{animation:pkDrop .4s cubic-bezier(.34,1.56,.64,1)}
 
 /* payment */
 body.packing-room .payment-option{border-radius:16px;padding:18px}
-body.packing-room .payment-option.selected{border-color:var(--saffron);background:linear-gradient(160deg,#FFF6E6,#FFEFD6);box-shadow:0 10px 26px rgba(200,121,26,.16)}
+body.packing-room .payment-option.selected{border-color:var(--saffron);background:linear-gradient(160deg,#FFF6E6,#FFEFD6);box-shadow:0 5px 12px rgba(200,121,26,.15)}
 .pk-paychips{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .pk-paychips span{border:1px solid #E0D0B8;border-radius:50px;padding:4px 12px;font-size:12px;font-weight:700;color:#7A5A1E;background:#fff;font-family:'Jost',sans-serif}
 
@@ -67,7 +67,7 @@ body.packing-room .payment-option.selected{border-color:var(--saffron);backgroun
 body.packing-room .error-banner{border-radius:16px;border:1.5px solid rgba(192,57,43,.4);box-shadow:0 10px 30px rgba(192,57,43,.15)}
 
 /* ---------- THE BOX (sidebar) ---------- */
-.pk-box-card{background:linear-gradient(160deg,#241708,#170F05);border:1px solid rgba(212,160,23,.3);border-radius:22px;padding:22px;box-shadow:0 12px 30px rgba(0,0,0,.4);position:sticky;top:96px;z-index:2;transform:translateZ(0)}
+.pk-box-card{background:linear-gradient(160deg,#241708,#170F05);border:1px solid rgba(212,160,23,.3);border-radius:22px;padding:22px;box-shadow:0 8px 16px rgba(0,0,0,.35);position:sticky;top:96px;z-index:2;transform:translateZ(0)}
 .pk-box-kicker{font-family:'Jost',sans-serif;font-size:11px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:#D4A017;margin-bottom:4px}
 .pk-box-name{font-family:var(--font-display,'Cormorant Garamond'),serif;font-size:26px;color:#F4EADA;margin-bottom:14px;min-height:32px}
 .pk-box-name em{color:#F0C84A;font-style:italic}
@@ -90,8 +90,8 @@ body.packing-room .error-banner{border-radius:16px;border:1.5px solid rgba(192,5
 .pk-due-line b{color:#7FD98A}
 
 /* the seal button — a real, working CTA */
-.pk-seal{width:100%;margin-top:16px;padding:15px;border:none;border-radius:50px;font-family:'Jost',sans-serif;font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .35s;background:#1D1306;color:#8E7D62;border:1.5px dashed rgba(212,160,23,.4)}
-.pk-seal.ready{border-style:solid;border-color:transparent;background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;box-shadow:0 12px 34px rgba(212,160,23,.45);animation:pkPulse 2.2s ease-in-out infinite}
+.pk-seal{width:100%;margin-top:16px;padding:15px;border:none;border-radius:50px;font-family:'Jost',sans-serif;font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:background .35s,color .35s,border-color .35s,box-shadow .35s;background:#1D1306;color:#8E7D62;border:1.5px dashed rgba(212,160,23,.4)}
+.pk-seal.ready{border-style:solid;border-color:transparent;background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;box-shadow:0 8px 16px rgba(212,160,23,.4);animation:pkPulse 2.2s ease-in-out 3}
 .pk-seal:active{transform:scale(.98)}
 @keyframes pkPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
 
@@ -105,11 +105,11 @@ body.packing-room .info-card .ir-icon{background:linear-gradient(135deg,#E8A93C,
 
 /* charge-up submit + meter */
 body.packing-room .submit-btn{position:relative;overflow:hidden;isolation:isolate;transition:box-shadow .4s,transform .3s;min-height:56px;border-radius:50px}
-body.packing-room .submit-btn::before{content:'';position:absolute;inset:0;width:calc(var(--charge,0)*1%);background:linear-gradient(90deg,rgba(255,255,255,.25),rgba(255,255,255,.08));z-index:-1;transition:width .5s cubic-bezier(.16,1,.3,1)}
-body.packing-room .submit-btn.pk-ready{box-shadow:0 14px 44px rgba(200,121,26,.55);animation:pkPulse 2.4s ease-in-out infinite}
+body.packing-room .submit-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.25),rgba(255,255,255,.08));z-index:-1;transform:scaleX(calc(var(--charge,0)/100));transform-origin:left;transition:transform .5s cubic-bezier(.16,1,.3,1)}
+body.packing-room .submit-btn.pk-ready{box-shadow:0 8px 18px rgba(200,121,26,.5);animation:pkPulse 2.4s ease-in-out 3}
 .pk-meter{display:flex;align-items:center;gap:10px;margin:12px 0 4px;font-family:'Jost',sans-serif;font-size:12.5px;color:#7A6A4F}
 .pk-meter-bar{flex:1;height:6px;border-radius:6px;background:rgba(200,121,26,.15);overflow:hidden}
-.pk-meter-bar span{display:block;height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,#C8791A,#F0C84A);transition:width .5s cubic-bezier(.16,1,.3,1)}
+.pk-meter-bar span{display:block;height:100%;width:100%;border-radius:6px;background:linear-gradient(90deg,#C8791A,#F0C84A);transform:scaleX(0);transform-origin:left;transition:transform .5s cubic-bezier(.16,1,.3,1)}
 .pk-meter .pk-pct{font-weight:800;color:var(--saffron);min-width:46px;text-align:right}
 .pk-trust{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:12px;font-family:'Jost',sans-serif;font-size:12px;color:#7A6A4F}
 .pk-trust span{display:inline-flex;align-items:center;gap:5px}
@@ -122,7 +122,7 @@ body.packing-room [style*="background:var(--dark)"],body.packing-room [style*="b
 .pk-paybar{position:fixed;left:0;right:0;bottom:0;z-index:1500;display:none;align-items:center;gap:14px;padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(14,9,3,.97);backdrop-filter:blur(14px);border-top:1px solid rgba(212,160,23,.3)}
 .pk-paybar .pp-total{font-family:var(--font-display,'Cormorant Garamond'),serif;font-size:22px;color:#F0C84A;font-weight:700}
 .pk-paybar .pp-sub{font-family:'Jost',sans-serif;font-size:10.5px;color:#8E7D62;letter-spacing:.06em;text-transform:uppercase}
-.pk-paybar button{flex:1;min-height:50px;border:none;border-radius:50px;background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;font-family:'Jost',sans-serif;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 10px 26px rgba(212,160,23,.4)}
+.pk-paybar button{flex:1;min-height:50px;border:none;border-radius:50px;background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;font-family:'Jost',sans-serif;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 6px 14px rgba(212,160,23,.35)}
 .pk-paybar button:disabled{opacity:.55}
 @media (max-width: 900px){
   .pk-box-card{position:static}

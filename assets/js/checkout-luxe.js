@@ -259,7 +259,7 @@
           var pct = Math.round(steps.filter(Boolean).length / steps.length * 100);
           submit.style.setProperty('--charge', pct);
           submit.classList.toggle('pk-ready', pct === 100);
-          $('pkMeterFill').style.width = pct + '%';
+          $('pkMeterFill').style.transform = 'scaleX(' + (pct / 100) + ')';
           $('pkPct').textContent = pct + '%';
           var missing = [];
           if (!hasItems) missing.push('add an item');
