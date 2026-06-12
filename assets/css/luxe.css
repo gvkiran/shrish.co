@@ -331,7 +331,8 @@ body.luxe .shop-safety-notice{background:#150F08;border:1px solid rgba(212,160,2
 body.luxe .coming-banner{background:#1B1206;border:1px solid rgba(212,160,23,.3)}
 
 /* product cards (shop) with staggered entrance */
-body.luxe .pc{background:#16100A;border:1px solid rgba(212,160,23,.13);border-radius:22px;box-shadow:none;transition:transform .45s cubic-bezier(.16,1,.3,1),box-shadow .45s,border-color .45s;animation:lxCardIn .65s cubic-bezier(.16,1,.3,1) both}
+body.luxe .pc{background:#16100A;border:1px solid rgba(212,160,23,.13);border-radius:22px;box-shadow:none;transition:transform .45s cubic-bezier(.16,1,.3,1),box-shadow .45s,border-color .45s}
+body.luxe #shopContent:not(.lx-settled) .pc{animation:lxCardIn .65s cubic-bezier(.16,1,.3,1) both}
 body.luxe .products-grid-v2 .pc:nth-child(1){animation-delay:.03s}
 body.luxe .products-grid-v2 .pc:nth-child(2){animation-delay:.09s}
 body.luxe .products-grid-v2 .pc:nth-child(3){animation-delay:.15s}
@@ -691,6 +692,17 @@ body.luxe a,body.luxe button,body.luxe input,body.luxe select{touch-action:manip
   body.luxe .products-grid-v2{gap:18px}
   body.luxe .pc-body{padding:16px 16px 18px}
 }
+/* v36 fixes: cook-mode small screens, size-button price contrast */
+.rx-cook{overflow-y:auto}
+.rx-cook-stage{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;justify-content:center;justify-content:safe center}
+.rx-cook-stage>*{flex-shrink:0}
+.rx-cook-text{font-size:clamp(18px,min(3.4vw,3.8vh),40px)}
+.rx-cook-nav{padding:10px 0 max(10px,env(safe-area-inset-bottom));flex-shrink:0}
+.rx-cook-head,.rx-cook-prog,.rx-cook-ings{flex-shrink:0}
+body.luxe .pc-size-add-btn strong{color:#3A2305}
+body.luxe .pc-size-qty .pc-size-price{color:var(--gold-l)}
+body.luxe .pc-size-qty .pc-size-label,body.luxe .pc-size-qty .pc-size-count{color:#EFE4CE}
+
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion: reduce){
   body.luxe *,body.luxe *::before,body.luxe *::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}

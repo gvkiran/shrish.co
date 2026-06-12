@@ -1545,6 +1545,8 @@ function renderShop() {
     renderedSections += 1;
   });
 
+  if (catalogSyncReady) container.classList.add('lx-settled');
+
   if (!renderedSections && shopRefinementsActive()) {
     container.innerHTML = '<div class="no-results"><div class="nr-icon">!</div><p>No products match your current filters.</p><button class="btn-primary" onclick="clearShopRefinements()" style="border:none;cursor:pointer">Clear filters</button></div>';
   } else if (!renderedSections) {
