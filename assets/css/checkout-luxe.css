@@ -1,0 +1,69 @@
+/* ============================================================
+   SHRISH — THE PACKING ROOM (checkout experience)
+   Dark wood table, cream packing-slip cards, a living box.
+   Purely visual layer over existing checkout logic.
+   ============================================================ */
+body.packing-room{background:#0E0903;background-image:radial-gradient(1100px 600px at 85% -5%,rgba(212,160,23,.08),transparent 60%),radial-gradient(800px 500px at -5% 40%,rgba(200,121,26,.05),transparent 55%)}
+body.packing-room .checkout-hero{background:transparent}
+body.packing-room .checkout-wrap{position:relative;z-index:1}
+
+/* journey strip */
+.pk-journey{max-width:1200px;margin:26px auto 6px;padding:0 24px;display:flex;align-items:center;gap:0;font-family:'Jost',sans-serif}
+.pk-step{display:flex;align-items:center;gap:9px;color:#8E7D62;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.pk-step .pk-dot{width:30px;height:30px;border-radius:50%;border:1.5px solid rgba(212,160,23,.35);display:flex;align-items:center;justify-content:center;font-size:14px;background:#15100A;transition:all .45s cubic-bezier(.16,1,.3,1)}
+.pk-step.done .pk-dot{background:linear-gradient(135deg,#E8A93C,#C8791A);border-color:transparent;box-shadow:0 0 18px rgba(240,200,74,.4)}
+.pk-step.done{color:#F0C84A}
+.pk-line{flex:1;height:2px;background:rgba(212,160,23,.15);margin:0 12px;position:relative;overflow:hidden;border-radius:2px;min-width:30px}
+.pk-line span{position:absolute;inset:0;background:linear-gradient(90deg,#C8791A,#F0C84A);transform:scaleX(0);transform-origin:left;transition:transform .6s cubic-bezier(.16,1,.3,1)}
+.pk-line.fill span{transform:scaleX(1)}
+
+/* ---- THE BOX ---- */
+.pk-box-card{background:linear-gradient(160deg,#241708,#170F05);border:1px solid rgba(212,160,23,.3);border-radius:20px;padding:22px;box-shadow:0 24px 60px rgba(0,0,0,.5);position:sticky;top:96px}
+.pk-box-kicker{font-family:'Jost',sans-serif;font-size:11px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--gold,#D4A017);margin-bottom:4px}
+.pk-box-name{font-family:var(--font-display,'Cormorant Garamond'),serif;font-size:26px;color:#F4EADA;margin-bottom:14px;min-height:32px}
+.pk-box-name em{color:#F0C84A;font-style:italic}
+.pk-crate{position:relative;border:2px solid #6B4A20;border-radius:12px;background:repeating-linear-gradient(0deg,#3A2710 0 14px,#33220D 14px 28px);padding:14px 12px 12px;min-height:96px;box-shadow:inset 0 6px 18px rgba(0,0,0,.5)}
+.pk-crate::before{content:'';position:absolute;left:8%;right:8%;top:-2px;height:8px;background:#6B4A20;border-radius:0 0 6px 6px;opacity:.9}
+.pk-items{display:flex;flex-wrap:wrap;gap:8px}
+.pk-item{display:inline-flex;align-items:center;gap:7px;background:rgba(253,246,236,.95);color:#3A2305;border-radius:10px;padding:6px 11px;font-family:'Jost',sans-serif;font-size:12.5px;font-weight:700;box-shadow:0 6px 14px rgba(0,0,0,.35);animation:pkDrop .5s cubic-bezier(.34,1.56,.64,1) both}
+.pk-item .pk-qty{background:#C8791A;color:#fff;border-radius:50px;padding:1px 8px;font-size:11px}
+@keyframes pkDrop{from{opacity:0;transform:translateY(-26px) rotate(-4deg) scale(.8)}to{opacity:1;transform:none}}
+.pk-empty{color:#8E7D62;font-family:'Jost',sans-serif;font-size:13px;text-align:center;padding:14px 6px}
+.pk-empty a{color:#F0C84A}
+
+.pk-stamp{position:absolute;right:-8px;top:-14px;transform:rotate(8deg) scale(0);border:2.5px solid #C0392B;color:#E74C3C;border-radius:10px;padding:5px 12px;font-family:'Jost',sans-serif;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:rgba(20,12,3,.85);transition:transform .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+.pk-stamp.on{transform:rotate(8deg) scale(1)}
+
+.pk-due{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px;padding-top:14px;border-top:1px dashed rgba(212,160,23,.3);font-family:'Jost',sans-serif}
+.pk-due .lbl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#8E7D62;font-weight:700}
+.pk-due .amt{font-family:var(--font-display,'Cormorant Garamond'),serif;font-size:30px;color:#7FD98A;font-weight:700}
+.pk-due-sub{font-size:12px;color:#B3A287;font-family:'Jost',sans-serif;margin-top:2px;text-align:right}
+.pk-due-sub strong{color:#F0C84A}
+
+.pk-ribbon{margin-top:14px;text-align:center;font-family:'Jost',sans-serif;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:9px;border-radius:50px;border:1.5px dashed rgba(212,160,23,.4);color:#8E7D62;transition:all .4s}
+.pk-ribbon.ready{border-style:solid;border-color:transparent;background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;box-shadow:0 10px 30px rgba(212,160,23,.4);animation:pkPulse 2s ease-in-out infinite}
+@keyframes pkPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
+
+/* ---- charge-up submit ---- */
+body.packing-room .submit-btn{position:relative;overflow:hidden;isolation:isolate;transition:box-shadow .4s,transform .3s}
+body.packing-room .submit-btn::before{content:'';position:absolute;inset:0;width:calc(var(--charge,0)*1%);background:linear-gradient(90deg,rgba(255,255,255,.22),rgba(255,255,255,.08));z-index:-1;transition:width .5s cubic-bezier(.16,1,.3,1)}
+body.packing-room .submit-btn.pk-ready{box-shadow:0 14px 44px rgba(200,121,26,.55);animation:pkPulse 2.4s ease-in-out infinite}
+.pk-meter{display:flex;align-items:center;gap:10px;margin:10px 0 4px;font-family:'Jost',sans-serif;font-size:12.5px;color:var(--text-light,#7A6A4F)}
+.pk-meter-bar{flex:1;height:6px;border-radius:6px;background:rgba(200,121,26,.15);overflow:hidden}
+.pk-meter-bar span{display:block;height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,#C8791A,#F0C84A);transition:width .5s cubic-bezier(.16,1,.3,1)}
+.pk-meter .pk-pct{font-weight:800;color:var(--saffron,#C8791A);min-width:56px;text-align:right}
+
+/* trust row */
+.pk-trust{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:12px;font-family:'Jost',sans-serif;font-size:12px;color:var(--text-light,#7A6A4F)}
+.pk-trust span{display:inline-flex;align-items:center;gap:5px}
+.pk-trust b{color:#2E7D32}
+
+/* form polish on dark table */
+body.packing-room .form-control:focus{border-color:var(--saffron,#C8791A);box-shadow:0 0 0 3px rgba(200,121,26,.15)}
+body.packing-room .loc-card{transition:transform .25s,box-shadow .25s,border-color .25s}
+body.packing-room .loc-card:hover{transform:translateY(-2px)}
+
+@media (max-width: 1000px){
+  .pk-box-card{position:static}
+  .pk-journey{display:none}
+}
