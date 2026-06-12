@@ -187,11 +187,26 @@
       }
       $('pkSeal').addEventListener('click', sealAction);
 
-      /* ---------- master refresh ---------- */
+      /* ---------- master refresh (signature-gated: skips all DOM work
+         when nothing changed, so scrolling/typing stays 60fps) ---------- */
+      var lastSig = '';
       function refresh() {
         try {
           var cart = readCart();
           var hasItems = cart.items.length > 0;
+          var success = $('successScreen');
+          var done = !!(success && success.style.display && success.style.display !== 'none');
+          var sig = [
+            (($('firstName') || {}).value || ''),
+            (($('phone') || {}).value || ''),
+            (($('email') || {}).value || ''),
+            (document.querySelector('.loc-card.selected') || { dataset: {} }).dataset.loc || '',
+            cart.items.map(function (i) { return i.id + ':' + i.qty; }).join(','),
+            cart.total,
+            done ? 1 : 0
+          ].join('|');
+          if (sig === lastSig) return;
+          lastSig = sig;
           injectThumbs();
 
           var itemsEl = $('pkItems');
@@ -268,8 +283,6 @@
           });
 
           /* hide overlay widgets once success screen is visible */
-          var success = $('successScreen');
-          var done = success && getComputedStyle(success).display !== 'none';
           paybar.style.display = done ? 'none' : '';
           journey.style.display = done ? 'none' : '';
           box.style.display = done ? 'none' : '';
@@ -278,11 +291,11 @@
 
       var pending = null;
       function queueRefresh() { if (pending) clearTimeout(pending); pending = setTimeout(refresh, 60); }
-      ['input', 'change', 'click', 'keyup'].forEach(function (evt) {
+      ['input', 'change', 'click'].forEach(function (evt) {
         document.addEventListener(evt, queueRefresh, { passive: true });
       });
       new MutationObserver(function () { queueRefresh(); }).observe(review, { childList: true, subtree: true });
-      setInterval(refresh, 1500);
+      setInterval(queueRefresh, 4000);
       refresh();
     } catch (e) { /* never break checkout */ }
   }
