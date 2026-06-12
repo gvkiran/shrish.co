@@ -282,11 +282,45 @@
             if (lines[i]) lines[i].classList.toggle('fill', !!on);
           });
 
+          /* remember last good name/location for the ceremony */
+          if (fn) lastName2 = fn;
+          if (sel && LOC_LABELS[sel.dataset.loc]) lastLoc = LOC_LABELS[sel.dataset.loc];
+
           /* hide overlay widgets once success screen is visible */
           paybar.style.display = done ? 'none' : '';
           journey.style.display = done ? 'none' : '';
           box.style.display = done ? 'none' : '';
+          if (done && !sealedShown) { sealedShown = true; showCeremony(); }
         } catch (e) { /* decorative layer must never break checkout */ }
+      }
+
+      var lastName2 = '', lastLoc = '', sealedShown = false;
+      function showCeremony() {
+        try {
+          var success = $('successScreen');
+          if (!success || success.querySelector('.pk-sealed')) return;
+          var hero = document.createElement('div');
+          hero.className = 'pk-sealed';
+          hero.innerHTML =
+            '<div class="pk-crate"><div class="pk-stamp on">' + (lastLoc ? '→ ' + lastLoc : 'SEALED') + '</div>' +
+            '<div class="pk-items"><span class="pk-item">🥭 ' + (lastName2 ? esc(lastName2) + '’s box' : 'Your box') + '</span><span class="pk-item">✓ Sealed with care</span></div></div>' +
+            '<div class="pk-tape">SHRISH · SEALED</div>';
+          var h2 = success.querySelector('h2');
+          if (h2) {
+            h2.innerHTML = (lastName2 ? esc(lastName2) + ', your' : 'Your') + ' box is <em>sealed!</em>';
+            success.insertBefore(hero, h2);
+          } else success.insertBefore(hero, success.firstChild);
+          for (var i = 0; i < 28; i++) {
+            var c = document.createElement('div');
+            c.className = 'pk-confetti';
+            c.textContent = ['🥭', '✦', '●'][i % 3];
+            c.style.left = (8 + Math.random() * 84) + '%';
+            c.style.animationDelay = (Math.random() * 0.7) + 's';
+            success.appendChild(c);
+            (function (cc) { setTimeout(function () { cc.remove(); }, 3500); })(c);
+          }
+          window.scrollTo(0, 0);
+        } catch (e) {}
       }
 
       var pending = null;

@@ -132,3 +132,31 @@ body.packing-room [style*="background:var(--dark)"],body.packing-room [style*="b
   body.packing-room .geet-launcher{bottom:calc(150px + env(safe-area-inset-bottom,0px))}
   body.packing-room .global-cart-fab,body.packing-room .cart-fab{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 }
+
+/* ============================================================
+   BOX SEALED — order confirmation ceremony
+   ============================================================ */
+body.packing-room .success-screen{max-width:720px;margin:0 auto;padding:30px 20px 60px;color:#B3A287;font-family:'Jost',sans-serif}
+body.packing-room .success-screen .success-icon-big{display:none}
+body.packing-room .success-screen h2{font-family:var(--font-display,'Cormorant Garamond'),serif;font-size:clamp(2.2rem,5vw,3.4rem);color:#F4EADA;text-align:center;margin:18px 0 8px}
+body.packing-room .success-screen h2 em{color:#F0C84A}
+body.packing-room .success-screen > p{text-align:center;color:#B3A287;max-width:54ch;margin:8px auto}
+body.packing-room .order-badge{display:block;width:fit-content;margin:14px auto;background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;font-weight:800;letter-spacing:.06em;padding:12px 26px;border-radius:14px;box-shadow:0 8px 18px rgba(212,160,23,.35);position:relative}
+body.packing-room .order-badge::before,body.packing-room .order-badge::after{content:'';position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:#100A04;transform:translateY(-50%)}
+body.packing-room .order-badge::before{left:-7px}
+body.packing-room .order-badge::after{right:-7px}
+body.packing-room .success-account-prompt{background:#1A1206;border:1px solid rgba(212,160,23,.3);border-radius:18px;padding:20px;color:#B3A287}
+body.packing-room .success-account-prompt h3,body.packing-room .success-account-prompt h4,body.packing-room .success-account-prompt strong{color:#F4EADA}
+body.packing-room .success-summary{background:#FDF6EC;border-radius:18px;padding:20px;box-shadow:0 8px 18px rgba(0,0,0,.35);margin-top:18px}
+body.packing-room .success-actions{display:flex;gap:12px;justify-content:center;margin-top:22px;flex-wrap:wrap}
+body.packing-room .community-section{background:#1A1206;border:1px solid rgba(212,160,23,.25);border-radius:20px;padding:24px;margin-top:26px;text-align:center}
+body.packing-room .community-section h3{color:#F0C84A;font-family:var(--font-display,'Cormorant Garamond'),serif}
+body.packing-room .community-section p{color:#B3A287}
+
+/* sealed crate hero */
+.pk-sealed{position:relative;max-width:380px;margin:10px auto 0}
+.pk-sealed .pk-crate{min-height:110px}
+.pk-tape{position:absolute;left:-4%;right:-4%;top:42%;height:30px;background:repeating-linear-gradient(45deg,#E8A93C 0 16px,#D98E2B 16px 32px);transform:rotate(-3deg);box-shadow:0 4px 12px rgba(0,0,0,.4);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'Jost',sans-serif;font-size:11px;font-weight:900;letter-spacing:.3em;color:#140C03}
+.pk-sealed .pk-stamp{transform:rotate(8deg) scale(1)}
+.pk-confetti{position:absolute;top:-10px;font-size:16px;animation:pkFall 2.6s linear forwards;pointer-events:none;z-index:5}
+@keyframes pkFall{to{transform:translateY(70vh) rotate(480deg);opacity:0}}
