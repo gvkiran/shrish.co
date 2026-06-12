@@ -1,14 +1,13 @@
 /* ============================================================
-   SHRISH — THE PACKING ROOM (checkout experience)
-   Dark wood table, cream packing-slip cards, a living box.
-   Purely visual layer over existing checkout logic.
+   SHRISH — THE PACKING ROOM v2 (full checkout design pass)
+   Dark packing-table shell; cream packing-slip cards; every
+   element restyled. Pure visual layer over existing logic.
    ============================================================ */
 body.packing-room{background:#0E0903;background-image:radial-gradient(1100px 600px at 85% -5%,rgba(212,160,23,.08),transparent 60%),radial-gradient(800px 500px at -5% 40%,rgba(200,121,26,.05),transparent 55%)}
-body.packing-room .checkout-hero{background:transparent}
-body.packing-room .checkout-wrap{position:relative;z-index:1}
+body.packing-room .checkout-hero{background:transparent;padding-bottom:8px}
 
-/* journey strip */
-.pk-journey{max-width:1200px;margin:26px auto 6px;padding:0 24px;display:flex;align-items:center;gap:0;font-family:'Jost',sans-serif}
+/* ---------- journey strip ---------- */
+.pk-journey{max-width:1200px;margin:18px auto 8px;padding:0 24px;display:flex;align-items:center;font-family:'Jost',sans-serif}
 .pk-step{display:flex;align-items:center;gap:9px;color:#8E7D62;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
 .pk-step .pk-dot{width:30px;height:30px;border-radius:50%;border:1.5px solid rgba(212,160,23,.35);display:flex;align-items:center;justify-content:center;font-size:14px;background:#15100A;transition:all .45s cubic-bezier(.16,1,.3,1)}
 .pk-step.done .pk-dot{background:linear-gradient(135deg,#E8A93C,#C8791A);border-color:transparent;box-shadow:0 0 18px rgba(240,200,74,.4)}
@@ -17,9 +16,59 @@ body.packing-room .checkout-wrap{position:relative;z-index:1}
 .pk-line span{position:absolute;inset:0;background:linear-gradient(90deg,#C8791A,#F0C84A);transform:scaleX(0);transform-origin:left;transition:transform .6s cubic-bezier(.16,1,.3,1)}
 .pk-line.fill span{transform:scaleX(1)}
 
-/* ---- THE BOX ---- */
-.pk-box-card{background:linear-gradient(160deg,#241708,#170F05);border:1px solid rgba(212,160,23,.3);border-radius:20px;padding:22px;box-shadow:0 24px 60px rgba(0,0,0,.5);position:sticky;top:96px}
-.pk-box-kicker{font-family:'Jost',sans-serif;font-size:11px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--gold,#D4A017);margin-bottom:4px}
+/* ---------- cards as packing slips ---------- */
+body.packing-room .review-card,body.packing-room .order-card,body.packing-room .info-card{border-radius:22px;box-shadow:0 18px 50px rgba(0,0,0,.45),0 2px 0 rgba(255,255,255,.6) inset;border:1px solid rgba(212,160,23,.18)}
+body.packing-room .review-card-title,body.packing-room .order-card h2{position:relative;padding-bottom:12px}
+body.packing-room .review-card-title::after,body.packing-room .order-card h2::after{content:'';position:absolute;left:0;bottom:0;width:54px;height:3px;border-radius:3px;background:linear-gradient(90deg,#C8791A,#F0C84A)}
+
+/* ---------- order summary rows ---------- */
+body.packing-room .review-item{align-items:center;padding:14px 0;border-bottom:1px dashed #EBDCC3}
+.pk-thumb{width:52px;height:52px;border-radius:12px;object-fit:cover;margin-right:12px;box-shadow:0 4px 12px rgba(26,18,8,.18);flex:0 0 auto}
+body.packing-room .ri-info{display:flex;align-items:center}
+body.packing-room .ri-name{font-weight:800;font-size:15px}
+body.packing-room .ri-unit{font-size:12px}
+body.packing-room .ri-qty-ctrl{border:1.5px solid #E8D9C2;border-radius:50px;padding:3px;background:#FFFDF9}
+body.packing-room .ri-qty-btn{width:28px;height:28px;border-radius:50%;border:none;background:transparent;font-size:16px;cursor:pointer;transition:background .2s}
+body.packing-room .ri-qty-btn:hover{background:rgba(200,121,26,.12)}
+body.packing-room .ri-qty-value{font-weight:800;min-width:26px;text-align:center;display:inline-block}
+body.packing-room .ri-price{font-weight:800;color:var(--saffron)}
+body.packing-room .ri-remove{opacity:.4;transition:opacity .2s,transform .2s}
+body.packing-room .ri-remove:hover{opacity:1;transform:scale(1.15)}
+body.packing-room .review-total{padding-top:16px}
+body.packing-room .rt-price{font-size:24px}
+
+/* ---------- form fields ---------- */
+body.packing-room .form-control{min-height:52px;border-radius:14px;border:1.5px solid #E8D9C2;background:#FFFDF9;font-size:15px;transition:border-color .25s,box-shadow .25s}
+body.packing-room textarea.form-control{min-height:90px}
+body.packing-room .form-control:focus{border-color:var(--saffron);box-shadow:0 0 0 4px rgba(200,121,26,.13);outline:none}
+body.packing-room .form-group{position:relative}
+body.packing-room .form-group.pk-ok .form-control{border-color:#58A05E;background:#FBFFF9}
+.pk-tick{position:absolute;right:12px;top:38px;width:22px;height:22px;border-radius:50%;background:#58A05E;color:#fff;font-size:12px;font-weight:900;display:none;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(46,125,50,.3);animation:pkDrop .35s cubic-bezier(.34,1.56,.64,1)}
+.form-group.pk-ok .pk-tick{display:flex}
+
+/* step labels with number chips + done state */
+body.packing-room .step-label{display:flex;align-items:center;gap:10px;font-size:12px;margin:26px 0 16px}
+body.packing-room .step-label::before{content:attr(data-num);width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;letter-spacing:0}
+.pk-step-done{margin-left:auto;color:#2E7D32;font-weight:900;font-size:14px;animation:pkDrop .35s cubic-bezier(.34,1.56,.64,1)}
+
+/* location cards */
+body.packing-room .loc-card{border-radius:16px;border-width:2px;padding:18px 14px;transition:transform .25s,box-shadow .25s,border-color .25s,background .25s}
+body.packing-room .loc-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(26,18,8,.14)}
+body.packing-room .loc-card.selected{border-color:var(--saffron);background:linear-gradient(160deg,#FFF6E6,#FFEFD6);box-shadow:0 12px 30px rgba(200,121,26,.22)}
+body.packing-room .loc-card.selected .loc-check{animation:pkDrop .4s cubic-bezier(.34,1.56,.64,1)}
+
+/* payment */
+body.packing-room .payment-option{border-radius:16px;padding:18px}
+body.packing-room .payment-option.selected{border-color:var(--saffron);background:linear-gradient(160deg,#FFF6E6,#FFEFD6);box-shadow:0 10px 26px rgba(200,121,26,.16)}
+.pk-paychips{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.pk-paychips span{border:1px solid #E0D0B8;border-radius:50px;padding:4px 12px;font-size:12px;font-weight:700;color:#7A5A1E;background:#fff;font-family:'Jost',sans-serif}
+
+/* error banner */
+body.packing-room .error-banner{border-radius:16px;border:1.5px solid rgba(192,57,43,.4);box-shadow:0 10px 30px rgba(192,57,43,.15)}
+
+/* ---------- THE BOX (sidebar) ---------- */
+.pk-box-card{background:linear-gradient(160deg,#241708,#170F05);border:1px solid rgba(212,160,23,.3);border-radius:22px;padding:22px;box-shadow:0 24px 60px rgba(0,0,0,.5);position:sticky;top:96px;z-index:2}
+.pk-box-kicker{font-family:'Jost',sans-serif;font-size:11px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:#D4A017;margin-bottom:4px}
 .pk-box-name{font-family:var(--font-display,'Cormorant Garamond'),serif;font-size:26px;color:#F4EADA;margin-bottom:14px;min-height:32px}
 .pk-box-name em{color:#F0C84A;font-style:italic}
 .pk-crate{position:relative;border:2px solid #6B4A20;border-radius:12px;background:repeating-linear-gradient(0deg,#3A2710 0 14px,#33220D 14px 28px);padding:14px 12px 12px;min-height:96px;box-shadow:inset 0 6px 18px rgba(0,0,0,.5)}
@@ -27,43 +76,59 @@ body.packing-room .checkout-wrap{position:relative;z-index:1}
 .pk-items{display:flex;flex-wrap:wrap;gap:8px}
 .pk-item{display:inline-flex;align-items:center;gap:7px;background:rgba(253,246,236,.95);color:#3A2305;border-radius:10px;padding:6px 11px;font-family:'Jost',sans-serif;font-size:12.5px;font-weight:700;box-shadow:0 6px 14px rgba(0,0,0,.35);animation:pkDrop .5s cubic-bezier(.34,1.56,.64,1) both}
 .pk-item .pk-qty{background:#C8791A;color:#fff;border-radius:50px;padding:1px 8px;font-size:11px}
-@keyframes pkDrop{from{opacity:0;transform:translateY(-26px) rotate(-4deg) scale(.8)}to{opacity:1;transform:none}}
+@keyframes pkDrop{from{opacity:0;transform:translateY(-22px) scale(.85)}to{opacity:1;transform:none}}
 .pk-empty{color:#8E7D62;font-family:'Jost',sans-serif;font-size:13px;text-align:center;padding:14px 6px}
 .pk-empty a{color:#F0C84A}
-
-.pk-stamp{position:absolute;right:-8px;top:-14px;transform:rotate(8deg) scale(0);border:2.5px solid #C0392B;color:#E74C3C;border-radius:10px;padding:5px 12px;font-family:'Jost',sans-serif;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:rgba(20,12,3,.85);transition:transform .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+.pk-stamp{position:absolute;right:-8px;top:-14px;transform:rotate(8deg) scale(0);border:2.5px solid #C0392B;color:#E74C3C;border-radius:10px;padding:5px 12px;font-family:'Jost',sans-serif;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:rgba(20,12,3,.85);transition:transform .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none;z-index:3}
 .pk-stamp.on{transform:rotate(8deg) scale(1)}
 
-.pk-due{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px;padding-top:14px;border-top:1px dashed rgba(212,160,23,.3);font-family:'Jost',sans-serif}
-.pk-due .lbl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#8E7D62;font-weight:700}
-.pk-due .amt{font-family:var(--font-display,'Cormorant Garamond'),serif;font-size:30px;color:#7FD98A;font-weight:700}
-.pk-due-sub{font-size:12px;color:#B3A287;font-family:'Jost',sans-serif;margin-top:2px;text-align:right}
-.pk-due-sub strong{color:#F0C84A}
+/* totals: PRICE FIRST, due-today secondary */
+.pk-total{display:flex;justify-content:space-between;align-items:baseline;margin-top:18px;padding-top:14px;border-top:1px dashed rgba(212,160,23,.3);font-family:'Jost',sans-serif}
+.pk-total .lbl{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#B3A287;font-weight:700}
+.pk-total .amt{font-family:var(--font-display,'Cormorant Garamond'),serif;font-size:34px;color:#F0C84A;font-weight:700}
+.pk-due-line{font-family:'Jost',sans-serif;font-size:12.5px;color:#8E7D62;text-align:right;margin-top:2px}
+.pk-due-line b{color:#7FD98A}
 
-.pk-ribbon{margin-top:14px;text-align:center;font-family:'Jost',sans-serif;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:9px;border-radius:50px;border:1.5px dashed rgba(212,160,23,.4);color:#8E7D62;transition:all .4s}
-.pk-ribbon.ready{border-style:solid;border-color:transparent;background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;box-shadow:0 10px 30px rgba(212,160,23,.4);animation:pkPulse 2s ease-in-out infinite}
-@keyframes pkPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
+/* the seal button — a real, working CTA */
+.pk-seal{width:100%;margin-top:16px;padding:15px;border:none;border-radius:50px;font-family:'Jost',sans-serif;font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .35s;background:#1D1306;color:#8E7D62;border:1.5px dashed rgba(212,160,23,.4)}
+.pk-seal.ready{border-style:solid;border-color:transparent;background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;box-shadow:0 12px 34px rgba(212,160,23,.45);animation:pkPulse 2.2s ease-in-out infinite}
+.pk-seal:active{transform:scale(.98)}
+@keyframes pkPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
 
-/* ---- charge-up submit ---- */
-body.packing-room .submit-btn{position:relative;overflow:hidden;isolation:isolate;transition:box-shadow .4s,transform .3s}
-body.packing-room .submit-btn::before{content:'';position:absolute;inset:0;width:calc(var(--charge,0)*1%);background:linear-gradient(90deg,rgba(255,255,255,.22),rgba(255,255,255,.08));z-index:-1;transition:width .5s cubic-bezier(.16,1,.3,1)}
+/* sidebar info cards: interactive locations + numbered how-it-works */
+body.packing-room .info-card .ir{border-radius:12px;padding:10px;transition:background .25s,transform .25s;position:relative}
+body.packing-room .pk-loc-pick .ir{cursor:pointer}
+body.packing-room .pk-loc-pick .ir:hover{background:rgba(200,121,26,.07);transform:translateX(3px)}
+body.packing-room .pk-loc-pick .ir.pk-active{background:linear-gradient(160deg,#FFF6E6,#FFEFD6);box-shadow:inset 3px 0 0 var(--saffron)}
+body.packing-room .pk-loc-pick .ir.pk-active::after{content:'✓';position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#2E7D32;font-weight:900}
+body.packing-room .info-card .ir-icon{background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;font-weight:900}
+
+/* charge-up submit + meter */
+body.packing-room .submit-btn{position:relative;overflow:hidden;isolation:isolate;transition:box-shadow .4s,transform .3s;min-height:56px;border-radius:50px}
+body.packing-room .submit-btn::before{content:'';position:absolute;inset:0;width:calc(var(--charge,0)*1%);background:linear-gradient(90deg,rgba(255,255,255,.25),rgba(255,255,255,.08));z-index:-1;transition:width .5s cubic-bezier(.16,1,.3,1)}
 body.packing-room .submit-btn.pk-ready{box-shadow:0 14px 44px rgba(200,121,26,.55);animation:pkPulse 2.4s ease-in-out infinite}
-.pk-meter{display:flex;align-items:center;gap:10px;margin:10px 0 4px;font-family:'Jost',sans-serif;font-size:12.5px;color:var(--text-light,#7A6A4F)}
+.pk-meter{display:flex;align-items:center;gap:10px;margin:12px 0 4px;font-family:'Jost',sans-serif;font-size:12.5px;color:#7A6A4F}
 .pk-meter-bar{flex:1;height:6px;border-radius:6px;background:rgba(200,121,26,.15);overflow:hidden}
 .pk-meter-bar span{display:block;height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,#C8791A,#F0C84A);transition:width .5s cubic-bezier(.16,1,.3,1)}
-.pk-meter .pk-pct{font-weight:800;color:var(--saffron,#C8791A);min-width:56px;text-align:right}
-
-/* trust row */
-.pk-trust{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:12px;font-family:'Jost',sans-serif;font-size:12px;color:var(--text-light,#7A6A4F)}
+.pk-meter .pk-pct{font-weight:800;color:var(--saffron);min-width:46px;text-align:right}
+.pk-trust{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:12px;font-family:'Jost',sans-serif;font-size:12px;color:#7A6A4F}
 .pk-trust span{display:inline-flex;align-items:center;gap:5px}
 .pk-trust b{color:#2E7D32}
 
-/* form polish on dark table */
-body.packing-room .form-control:focus{border-color:var(--saffron,#C8791A);box-shadow:0 0 0 3px rgba(200,121,26,.15)}
-body.packing-room .loc-card{transition:transform .25s,box-shadow .25s,border-color .25s}
-body.packing-room .loc-card:hover{transform:translateY(-2px)}
+/* dark inline cards (Need Help) keep dark under packing room */
+body.packing-room [style*="background:var(--dark)"],body.packing-room [style*="background: var(--dark)"]{background:#1A1004 !important}
 
-@media (max-width: 1000px){
+/* ---------- mobile: sticky pay bar ---------- */
+.pk-paybar{position:fixed;left:0;right:0;bottom:0;z-index:1500;display:none;align-items:center;gap:14px;padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(14,9,3,.97);backdrop-filter:blur(14px);border-top:1px solid rgba(212,160,23,.3)}
+.pk-paybar .pp-total{font-family:var(--font-display,'Cormorant Garamond'),serif;font-size:22px;color:#F0C84A;font-weight:700}
+.pk-paybar .pp-sub{font-family:'Jost',sans-serif;font-size:10.5px;color:#8E7D62;letter-spacing:.06em;text-transform:uppercase}
+.pk-paybar button{flex:1;min-height:50px;border:none;border-radius:50px;background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;font-family:'Jost',sans-serif;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 10px 26px rgba(212,160,23,.4)}
+.pk-paybar button:disabled{opacity:.55}
+@media (max-width: 900px){
   .pk-box-card{position:static}
   .pk-journey{display:none}
+  .pk-paybar{display:flex}
+  body.packing-room{padding-bottom:84px}
+  body.packing-room .geet-launcher{bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+  body.packing-room .global-cart-fab,body.packing-room .cart-fab{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 }
