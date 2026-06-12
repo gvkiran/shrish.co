@@ -157,9 +157,15 @@
         } catch (e) { /* decorative layer must never break checkout */ }
       }
 
-      ['input', 'change', 'click'].forEach(function (evt) {
-        document.addEventListener(evt, function () { window.requestAnimationFrame(refresh); }, { passive: true });
+      var pkPending = null;
+      function queueRefresh() {
+        if (pkPending) clearTimeout(pkPending);
+        pkPending = setTimeout(refresh, 60);
+      }
+      ['input', 'change', 'click', 'keyup'].forEach(function (evt) {
+        document.addEventListener(evt, queueRefresh, { passive: true });
       });
+      setInterval(refresh, 1500); /* belt & braces: stays correct even if an event slips by */
       new MutationObserver(function () { refresh(); }).observe(review, { childList: true, subtree: true });
       refresh();
     } catch (e) { /* never break checkout */ }
