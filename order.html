@@ -14,6 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="icon" href="images/brand/logo-small.png" type="image/png">
 <link rel="stylesheet" href="assets/css/styles.css?v=trust-marquee-20260609">
+<link rel="stylesheet" href="assets/css/checkout-luxe.css?v=pack6-20260612">
 <style>
 /* Layout */
 .checkout-wrap{max-width:1520px;margin:0 auto;padding:60px 24px 80px;display:grid;grid-template-columns:1.2fr .95fr;gap:48px}
@@ -475,9 +476,16 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
       -->
 
       <div class="checkout-safety-note">
-        <strong>Food allergy and spice notice:</strong> Products may contain or be prepared with peanut/groundnut oil and other major allergens. Ingredients, spice level, labels, and packaging may vary by batch. Product images are for illustration only. If you have allergies, sensitivities, or medical dietary restrictions, contact us before ordering.
+        <strong>Food allergy and spice notice:</strong> Products may contain or be prepared with peanut/groundnut oil and other major allergens (including milk, egg, fish, shellfish, tree nuts, wheat, soy, and sesame). Ingredients, spice level, labels, and packaging may vary by supplier batch. Product images are for illustration only. If you have allergies, sensitivities, or medical dietary restrictions, contact us before ordering.
         <br><strong>Delivery note:</strong> Orders above $75 get free delivery on Sweets, Pickles, and Podi only; mangoes are excluded.
       </div>
+
+      <p class="order-consent" style="font-size:12px;color:var(--text-light);line-height:1.65;margin:12px 0 10px">
+        By clicking &ldquo;Place Order&rdquo;, you confirm that you have read the food allergy &amp; spice notice above and agree to our
+        <a href="terms.html" target="_blank" style="color:var(--saffron)">Terms &amp; Conditions</a>,
+        <a href="refund.html" target="_blank" style="color:var(--saffron)">Refund Policy</a> and
+        <a href="privacy.html" target="_blank" style="color:var(--saffron)">Privacy Policy</a>.
+      </p>
 
       <button class="submit-btn" id="submitBtn">
         Place Order - Pay at Pickup
@@ -558,6 +566,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="assets/js/firebase-config.js"></script>
 <script type="module" src="assets/js/order-firebase.js?v=order-confirmation-label-20260602"></script>
 
+<script defer src="assets/js/checkout-luxe.js?v=pack6-20260612"></script>
 </body>
 </html>
 

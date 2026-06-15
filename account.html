@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" href="images/brand/logo-small.png" type="image/png">
 <link rel="stylesheet" href="assets/css/styles.css">
+<link rel="stylesheet" href="assets/css/account-luxe.css?v=ledger1-20260612">
 <style>
 .account-shell{max-width:1320px;margin:0 auto;padding:56px 24px 84px;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.2fr);gap:28px;align-items:start}
 .account-shell.auth-only{grid-template-columns:minmax(320px,534px);justify-content:center}
@@ -141,7 +142,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
-<body>
+<body class="member-room">
 
 <div class="announcement-bar"><span>Fresh Indian Mangoes - Pickup in Short Pump, Chesterfield & Mechanicsville, VA</span></div>
 
@@ -404,5 +405,25 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="assets/js/firebase-config.js"></script>
 <script type="module" src="assets/js/account-firebase.js?v=customer-order-edit-20260528"></script>
 
+<script defer>
+document.addEventListener('DOMContentLoaded', function () {
+  try {
+    setInterval(function () {
+      document.querySelectorAll('.account-panel').forEach(function (panel) {
+        var h2 = panel.querySelector('h2');
+        if (!h2 || panel.querySelector('.ml-mono')) return;
+        if (!/profile/i.test(h2.textContent)) return;
+        var emailEl = panel.querySelector('.account-muted');
+        var name = (document.querySelector('#profileName, input[name="name"]') || {}).value || '';
+        var initials = (name || (emailEl ? emailEl.textContent : 'S')).trim().split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase() || 'S';
+        var head = document.createElement('div');
+        head.className = 'ml-card-head';
+        head.innerHTML = '<div class="ml-mono">' + initials + '</div><div><div class="ml-since">Shrish Pantry Member</div><div class="ml-name">' + (name ? name.replace(/</g, '&lt;') : 'Welcome back') + '</div></div>';
+        h2.insertAdjacentElement('afterend', head);
+      });
+    }, 1200);
+  } catch (e) {}
+});
+</script>
 </body>
 </html>

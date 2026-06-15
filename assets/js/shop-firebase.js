@@ -1044,7 +1044,6 @@ function renderCard(p) {
         <div class="pc-name" onclick="openModal('${escapeHtml(p.id)}')">${escapeHtml(p.name)}</div>
         ${p.localName ? `<div class="pc-local">${escapeHtml(p.localName)}</div>` : ''}
         <div class="pc-short-desc">${escapeHtml(shortDesc)}</div>
-        <div class="pc-safety-note">${escapeHtml(CARD_SAFETY_NOTE)}</div>
         ${recommendationTagHtml ? `<div class="pc-rec-tags">${recommendationTagHtml}</div>` : ''}
         <div class="pc-footer"><div class="pc-price-wrap"><div class="pc-price" id="card-price-${escapeHtml(p.id)}">${escapeHtml(cardPriceText)}</div></div></div>
         ${actionHtml}
@@ -1545,6 +1544,8 @@ function renderShop() {
     container.innerHTML += html;
     renderedSections += 1;
   });
+
+  if (catalogSyncReady) container.classList.add('lx-settled');
 
   if (!renderedSections && shopRefinementsActive()) {
     container.innerHTML = '<div class="no-results"><div class="nr-icon">!</div><p>No products match your current filters.</p><button class="btn-primary" onclick="clearShopRefinements()" style="border:none;cursor:pointer">Clear filters</button></div>';

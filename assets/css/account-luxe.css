@@ -1,0 +1,52 @@
+/* ============================================================
+   SHRISH — THE PANTRY LEDGER (account experience)
+   Member card, golden insight tokens, box-history ledger.
+   Visual layer only — all account logic untouched.
+   ============================================================ */
+body.member-room{background:#100A04}
+body.member-room .account-shell{position:relative;z-index:1}
+body.member-room .account-panel{background:linear-gradient(165deg,#1C1207,#140D05);border:1px solid rgba(212,160,23,.25);border-radius:24px;box-shadow:0 10px 26px rgba(0,0,0,.4);color:#B3A287}
+body.member-room .account-panel h2,body.member-room .account-panel h3{color:#F4EADA;font-family:var(--font-display,'Cormorant Garamond'),serif}
+body.member-room .account-muted{color:#8E7D62}
+body.member-room .account-message{border-radius:14px}
+
+/* tabs */
+body.member-room .account-tabs{background:#150E06;border:1px solid rgba(212,160,23,.25);border-radius:50px;padding:5px}
+body.member-room .account-tab{border-radius:50px;color:#B3A287;font-weight:700}
+body.member-room .account-tab.active{background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03}
+
+/* forms */
+body.member-room .form-label{color:#C9A86A}
+body.member-room .form-control{background:#0F0903;border:1.5px solid rgba(212,160,23,.3);color:#F4EADA;border-radius:14px;min-height:50px}
+body.member-room .form-control:focus{border-color:#E8A93C;box-shadow:0 0 0 4px rgba(200,121,26,.18);outline:none}
+body.member-room .form-control::placeholder{color:#6E5C42}
+body.member-room .account-button{background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;border:none;border-radius:50px;font-weight:800;min-height:48px;box-shadow:0 6px 16px rgba(212,160,23,.3)}
+body.member-room .account-button.secondary{background:transparent;border:1.5px solid rgba(212,160,23,.5);color:#F0C84A;box-shadow:none}
+body.member-room .account-button.subtle{background:transparent;border:none;color:#8E7D62;box-shadow:none;text-decoration:underline}
+
+/* member monogram (JS injects) */
+.ml-card-head{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+.ml-mono{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;display:flex;align-items:center;justify-content:center;font-family:'Jost',sans-serif;font-weight:900;font-size:22px;box-shadow:0 6px 16px rgba(212,160,23,.4);flex:0 0 58px}
+.ml-card-head .ml-since{font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#D4A017}
+.ml-card-head .ml-name{font-family:var(--font-display,'Cormorant Garamond'),serif;font-size:24px;color:#F4EADA}
+
+/* insight tokens */
+body.member-room .account-insights > div{background:#150E06;border:1px solid rgba(212,160,23,.3);border-radius:18px;color:#B3A287;transition:transform .25s,border-color .25s}
+body.member-room .account-insights > div:hover{transform:translateY(-3px);border-color:#E8A93C}
+body.member-room .account-insights strong,body.member-room .account-insights b{color:#F0C84A}
+
+/* the ledger: order history cards */
+body.member-room .order-history-card{background:#FDF6EC;border-radius:18px;border:1px solid rgba(212,160,23,.35);box-shadow:0 6px 16px rgba(0,0,0,.35);position:relative;overflow:hidden}
+body.member-room .order-history-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(180deg,#E8A93C,#C8791A)}
+body.member-room .order-history-id{font-weight:800;letter-spacing:.04em}
+body.member-room .order-history-status{border-radius:50px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;font-size:11px;padding:6px 14px;transform:rotate(3deg);box-shadow:0 3px 8px rgba(0,0,0,.18);border:2px solid currentColor;background:transparent !important}
+body.member-room .order-mini-btn{border-radius:50px;font-weight:700}
+body.member-room .empty-orders{background:#150E06;border:1.5px dashed rgba(212,160,23,.4);border-radius:18px;color:#8E7D62}
+
+/* order modal */
+body.member-room .order-modal-card{background:#1A1206;border:1px solid rgba(212,160,23,.35);color:#B3A287;border-radius:22px}
+body.member-room .order-modal-card h3,body.member-room .order-modal-card strong{color:#F4EADA}
+
+@media (max-width:768px){
+  body.member-room .account-panel{border-radius:18px}
+}
