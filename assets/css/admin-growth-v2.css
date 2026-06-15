@@ -1,0 +1,327 @@
+/* ============================================================
+   SHRISH GROWTH DASHBOARD v2 — Visual Redesign
+   Additive override on top of admin-luxury.css
+   Zero JS changes — CSS only, all element IDs preserved.
+   ============================================================ */
+
+/* ── TOOLBAR TITLE ── */
+.growth-toolbar h2 {
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* ── STATUS BAR ── */
+.growth-status {
+  border-radius: 12px !important;
+  font-size: 12px !important;
+  padding: 10px 16px !important;
+  margin-bottom: 18px !important;
+}
+.growth-status.good {
+  background: rgba(46,139,87,0.12) !important;
+  border-color: rgba(46,139,87,0.35) !important;
+}
+
+/* ── KPI CARDS GRID ── */
+.growth-kpis {
+  gap: 12px !important;
+  margin-bottom: 22px !important;
+}
+
+/* Base card */
+.growth-kpi {
+  border-radius: 16px !important;
+  padding: 18px 16px 14px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(201,146,42,0.22) !important;
+  background: linear-gradient(135deg, rgba(40,28,16,0.95), rgba(60,38,12,0.7)) !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+  cursor: default !important;
+}
+.growth-kpi:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35) !important;
+}
+/* Shimmer pseudo-element */
+.growth-kpi::before {
+  content: '' !important;
+  position: absolute !important;
+  top: -20px !important; right: -20px !important;
+  width: 80px !important; height: 80px !important;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,0.04) !important;
+  pointer-events: none !important;
+}
+
+/* Per-card accent colors */
+.growth-kpi:nth-child(1) {
+  border-color: rgba(99,144,233,0.38) !important;
+  background: linear-gradient(135deg, rgba(15,25,55,0.97), rgba(25,50,100,0.55)) !important;
+}
+.growth-kpi:nth-child(2) {
+  border-color: rgba(168,85,247,0.35) !important;
+  background: linear-gradient(135deg, rgba(35,12,65,0.97), rgba(70,25,130,0.55)) !important;
+}
+.growth-kpi:nth-child(3) {
+  border-color: rgba(224,112,48,0.45) !important;
+  background: linear-gradient(135deg, rgba(55,22,8,0.97), rgba(110,45,12,0.55)) !important;
+}
+.growth-kpi:nth-child(4) {
+  border-color: rgba(34,197,94,0.38) !important;
+  background: linear-gradient(135deg, rgba(8,38,18,0.97), rgba(16,75,36,0.55)) !important;
+}
+.growth-kpi:nth-child(5) {
+  border-color: rgba(20,184,166,0.38) !important;
+  background: linear-gradient(135deg, rgba(4,38,36,0.97), rgba(8,75,68,0.55)) !important;
+}
+.growth-kpi:nth-child(6) {
+  border-color: rgba(201,146,42,0.50) !important;
+  background: linear-gradient(135deg, rgba(48,33,5,0.97), rgba(95,66,8,0.55)) !important;
+}
+.growth-kpi:nth-child(7) {
+  border-color: rgba(201,146,42,0.62) !important;
+  background: linear-gradient(135deg, rgba(65,38,4,0.97), rgba(130,78,8,0.55)) !important;
+}
+.growth-kpi:nth-child(8) {
+  border-color: rgba(251,113,133,0.38) !important;
+  background: linear-gradient(135deg, rgba(55,12,22,0.97), rgba(110,22,45,0.55)) !important;
+}
+.growth-kpi:nth-child(9) {
+  border-color: rgba(244,114,182,0.38) !important;
+  background: linear-gradient(135deg, rgba(48,8,38,0.97), rgba(95,16,76,0.55)) !important;
+}
+
+/* KPI label */
+.growth-kpi > span {
+  display: block !important;
+  font-size: 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1.5px !important;
+  font-weight: 700 !important;
+  opacity: 0.72 !important;
+  margin-bottom: 8px !important;
+  color: #d0c4a8 !important;
+}
+
+/* KPI value */
+.growth-kpi > strong {
+  display: block !important;
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+  font-size: 34px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  margin-bottom: 7px !important;
+  color: #ffffff !important;
+  letter-spacing: -0.5px !important;
+}
+
+/* KPI subtitle */
+.growth-kpi > small {
+  display: block !important;
+  font-size: 11px !important;
+  opacity: 0.60 !important;
+  color: #c8b894 !important;
+  line-height: 1.35 !important;
+}
+
+/* ── SECTION DIVIDERS ── */
+.growth-section-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 22px 0 14px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2.5px !important;
+  color: rgba(201,146,42,0.65) !important;
+}
+.growth-section-label::after {
+  content: '' !important;
+  flex: 1 !important;
+  height: 1px !important;
+  background: linear-gradient(90deg, rgba(201,146,42,0.22), transparent) !important;
+}
+
+/* ── GROWTH CARDS ── */
+.growth-card {
+  border-radius: 18px !important;
+  border: 1px solid rgba(201,146,42,0.16) !important;
+  background: rgba(14,9,4,0.88) !important;
+  overflow: hidden !important;
+  transition: box-shadow 0.25s !important;
+}
+.growth-card:hover {
+  box-shadow: 0 6px 28px rgba(201,146,42,0.11) !important;
+}
+
+.growth-card-head {
+  padding: 16px 20px 13px !important;
+  border-bottom: 1px solid rgba(201,146,42,0.10) !important;
+  background: rgba(201,146,42,0.05) !important;
+}
+.growth-card-head h3 {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  margin-bottom: 3px !important;
+}
+.growth-card-head p {
+  font-size: 11.5px !important;
+  opacity: 0.60 !important;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+/* Content areas */
+.growth-funnel,
+.growth-actions-list,
+.growth-chart-list,
+.growth-table,
+.growth-setup {
+  padding: 14px 20px 16px !important;
+}
+
+/* ── FUNNEL ── */
+.growth-funnel-row {
+  display: grid !important;
+  grid-template-columns: 160px 1fr 72px !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin-bottom: 10px !important;
+}
+
+.growth-funnel-label strong {
+  display: block !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #e8dcc8 !important;
+  margin-bottom: 1px !important;
+}
+.growth-funnel-label span {
+  font-size: 10px !important;
+  opacity: 0.50 !important;
+}
+
+.growth-funnel-bar {
+  height: 28px !important;
+  border-radius: 8px !important;
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid rgba(201,146,42,0.12) !important;
+  overflow: hidden !important;
+}
+.growth-funnel-bar div {
+  height: 100% !important;
+  border-radius: 8px !important;
+  min-width: 16px !important;
+  transition: width 0.9s cubic-bezier(0.4,0,0.2,1) !important;
+  background: linear-gradient(90deg, #C9922A, #F0C060) !important;
+}
+
+/* Per-step funnel bar colors */
+.growth-funnel-row:nth-child(1) .growth-funnel-bar div { background: linear-gradient(90deg, #1a6b40, #2E8B57) !important; }
+.growth-funnel-row:nth-child(2) .growth-funnel-bar div { background: linear-gradient(90deg, #b07c20, #C9922A) !important; }
+.growth-funnel-row:nth-child(3) .growth-funnel-bar div { background: linear-gradient(90deg, #c06020, #e07030) !important; }
+.growth-funnel-row:nth-child(4) .growth-funnel-bar div { background: linear-gradient(90deg, #a02820, #C0392B) !important; }
+.growth-funnel-row:nth-child(5) .growth-funnel-bar div { background: linear-gradient(90deg, #a02820, #C0392B) !important; }
+.growth-funnel-row:nth-child(6) .growth-funnel-bar div { background: linear-gradient(90deg, #1a6b40, #2E8B57) !important; }
+
+.growth-funnel-value {
+  text-align: right !important;
+}
+.growth-funnel-value strong {
+  display: block !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+}
+.growth-funnel-value span {
+  font-size: 10px !important;
+  opacity: 0.60 !important;
+}
+
+/* ── ACTION / ISSUE ROWS ── */
+.growth-action-row,
+.growth-issue-row {
+  padding: 10px 0 !important;
+  border-bottom: 1px solid rgba(201,146,42,0.07) !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  color: #c8b894 !important;
+}
+.growth-action-row:last-child,
+.growth-issue-row:last-child { border-bottom: none !important; }
+
+/* ── CATEGORY CHART ── */
+.growth-chart-row { margin-bottom: 12px !important; }
+
+.growth-chart-label {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  margin-bottom: 5px !important;
+  color: #e8dcc8 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+}
+
+.growth-chart-track {
+  height: 18px !important;
+  border-radius: 6px !important;
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid rgba(201,146,42,0.10) !important;
+  overflow: hidden !important;
+}
+.growth-chart-track div {
+  height: 100% !important;
+  border-radius: 6px !important;
+  background: linear-gradient(90deg, #C9922A, #F0C060) !important;
+  min-width: 8px !important;
+}
+
+.growth-chart-row:nth-child(1) .growth-chart-track div { background: linear-gradient(90deg, #C9922A, #F0C060) !important; }
+.growth-chart-row:nth-child(2) .growth-chart-track div { background: linear-gradient(90deg, #E07030, #F09050) !important; }
+.growth-chart-row:nth-child(3) .growth-chart-track div { background: linear-gradient(90deg, #2E8B57, #50C090) !important; }
+.growth-chart-row:nth-child(4) .growth-chart-track div { background: linear-gradient(90deg, #3B82F6, #70AAFF) !important; }
+.growth-chart-row:nth-child(5) .growth-chart-track div { background: linear-gradient(90deg, #8B5CF6, #B090FF) !important; }
+
+.growth-chart-value {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: rgba(201,146,42,0.85) !important;
+  margin-top: 3px !important;
+}
+
+/* ── TABLES ── */
+.growth-table table { width: 100% !important; border-collapse: collapse !important; }
+
+.growth-table th {
+  font-size: 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1.2px !important;
+  padding: 9px 10px !important;
+  border-bottom: 1px solid rgba(201,146,42,0.22) !important;
+  background: rgba(201,146,42,0.07) !important;
+  color: rgba(201,146,42,0.9) !important;
+  font-weight: 700 !important;
+}
+.growth-table td {
+  padding: 9px 10px !important;
+  font-size: 13px !important;
+  border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+  vertical-align: middle !important;
+  color: #d0c4a8 !important;
+}
+.growth-table tr:hover td {
+  background: rgba(201,146,42,0.05) !important;
+}
+
+/* ── SETUP ROWS ── */
+.growth-setup-row {
+  padding: 9px 0 !important;
+  font-size: 12px !important;
+  line-height: 1.55 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+}
+.growth-setup-row:last-child { border-bottom: none !important; }
