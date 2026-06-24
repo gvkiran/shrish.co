@@ -4536,6 +4536,11 @@ function switchTab(tab, btn) {
   updateOrdersSheetUi();
 }
 
+function isAdminTabVisible(tab) {
+  const panel = document.getElementById(`tab-${tab}`);
+  return Boolean(panel && panel.style.display !== 'none');
+}
+
 function subscribeData() {
   state.unsubOrders?.();
   state.unsubProducts?.();
@@ -4549,10 +4554,11 @@ function subscribeData() {
   state.unsubOrders = onSnapshot(query(collection(db, 'orders'), orderBy('createdAt', 'desc')), (snapshot) => {
     state.orders = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
     renderOrders();
-    renderCustomers();
-    renderAccounting();
-    renderFeedback();
-    renderOwnerAnalytics();
+    if (isAdminTabVisible('customers')) renderCustomers();
+    if (isAdminTabVisible('accounting')) renderAccounting();
+    if (isAdminTabVisible('pickup-tally')) renderExcelCalculations();
+    if (isAdminTabVisible('feedback')) renderFeedback();
+    if (isAdminTabVisible('growth')) renderOwnerAnalytics();
   }, (error) => {
     console.error(error);
     showToast('Orders sync failed');
@@ -4562,7 +4568,7 @@ function subscribeData() {
     const docs = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
     state.products = mergeProductsWithBase(docs);
     window.SHRISH_DATA.products = [...state.products];
-    renderProducts();
+    if (isAdminTabVisible('products')) renderProducts();
     renderStats();
   }, (error) => {
     console.error(error);
@@ -4571,7 +4577,7 @@ function subscribeData() {
 
   state.unsubCustomers = onSnapshot(collection(db, 'user_profiles'), (snapshot) => {
     state.customers = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
-    renderCustomers();
+    if (isAdminTabVisible('customers')) renderCustomers();
   }, (error) => {
     console.error(error);
     showToast('Customer accounts sync failed');
@@ -4579,7 +4585,7 @@ function subscribeData() {
 
   state.unsubFeedback = onSnapshot(query(collection(db, 'order_feedback'), orderBy('createdAt', 'desc')), (snapshot) => {
     state.feedback = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
-    renderFeedback();
+    if (isAdminTabVisible('feedback')) renderFeedback();
   }, (error) => {
     console.error(error);
     showToast('Feedback sync failed');
@@ -4593,9 +4599,9 @@ function subscribeData() {
         return bTime - aTime;
       });
     state.subscribers = merged;
-    renderSubscribers();
+    if (isAdminTabVisible('subscribers')) renderSubscribers();
     renderStats();
-    renderOwnerAnalytics();
+    if (isAdminTabVisible('growth')) renderOwnerAnalytics();
   };
 
   state.unsubSubscribersGeneral = onSnapshot(collection(db, 'email_subscribers'), (snapshot) => {
@@ -4620,8 +4626,8 @@ function subscribeData() {
       return acc;
     }, {});
     syncAccounting2RecordsFromBatches();
-    renderAccounting();
-    renderExcelCalculations();
+    if (isAdminTabVisible('accounting')) renderAccounting();
+    if (isAdminTabVisible('pickup-tally')) renderExcelCalculations();
   }, (error) => {
     console.error(error);
     showToast('Accounting batches sync failed');
@@ -4697,8 +4703,12 @@ function initAuthWatch() {
 
     clearLoginError();
     setLoggedInUi(true, user.email || '');
-    await seedProductsIfNeeded();
     subscribeData();
+    window.setTimeout(() => {
+      seedProductsIfNeeded().catch((error) => {
+        console.warn('Deferred product seed failed', error);
+      });
+    }, 2200);
   });
 }
 

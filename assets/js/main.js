@@ -29,6 +29,16 @@ function shrishScriptAsset(fileName) {
   return SHRISH_MAIN_SCRIPT_BASE ? new URL(fileName, SHRISH_MAIN_SCRIPT_BASE).href : `assets/js/${fileName}`;
 }
 
+function shrishAfterFirstPaint(callback, timeout = 1800) {
+  window.setTimeout(() => {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(callback, { timeout: 800 });
+      return;
+    }
+    callback();
+  }, timeout);
+}
+
 const GEET_RESPONSES = {
   sweet: {
     text: "For something sweet, I would start with Alphonso or Kesar mangoes when they are available. If you want sweets, our Putharekulu and mango jelly are the easiest crowd-pleasers.",
@@ -1385,7 +1395,7 @@ function injectGlobalUI() {
     navMobile.appendChild(orderLink);
   }
 
-  injectGeetAssistant();
+  shrishAfterFirstPaint(injectGeetAssistant, 2200);
 }
 
 // ââ DOM READY âââââââââââââââââââââââââââââââââââââââââââââââ
@@ -1438,7 +1448,7 @@ function setupCustomerAccountNav(navCartWrap, navMobile) {
 
   if (!window.SHRISH_FIREBASE_CONFIG?.apiKey) return;
 
-  import(shrishScriptAsset('firebase-app.js'))
+  const loadAuthState = () => import(shrishScriptAsset('firebase-app.js'))
     .then(({ auth, onAuthStateChanged, signOut }) => {
       const authApi = { auth, signOut };
       onAuthStateChanged(auth, (user) => {
@@ -1474,6 +1484,12 @@ function setupCustomerAccountNav(navCartWrap, navMobile) {
     .catch((error) => {
       console.warn('Customer account nav unavailable', error);
     });
+
+  if (window.location.pathname.endsWith('/account.html') || window.location.pathname.endsWith('account.html')) {
+    loadAuthState();
+  } else {
+    shrishAfterFirstPaint(loadAuthState, 2400);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

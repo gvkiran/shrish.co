@@ -1,4 +1,4 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js';
+import { initializeApp, getApp, getApps } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js';
 import {
   initializeAppCheck, ReCaptchaEnterpriseProvider
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app-check.js';
@@ -25,13 +25,14 @@ if (missing.length) {
   console.warn('Firebase config is incomplete. Update assets/js/firebase-config.js:', missing.join(', '));
 }
 
-const app = initializeApp(config);
+const app = getApps().length ? getApp() : initializeApp(config);
 const appCheckSiteKey = String(window.SHRISH_APP_CONFIG?.appCheckSiteKey || '').trim();
-if (appCheckSiteKey) {
+if (appCheckSiteKey && !window.__SHRISH_APP_CHECK_READY__) {
   initializeAppCheck(app, {
     provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
     isTokenAutoRefreshEnabled: true
   });
+  window.__SHRISH_APP_CHECK_READY__ = true;
 }
 const db = getFirestore(app);
 const auth = getAuth(app);

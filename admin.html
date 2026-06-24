@@ -729,7 +729,7 @@
 
 <script src="assets/js/data.js?v=moringa-powder-20260602"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/admin-firebase.js?v=specialty-orders-20260608b"></script>
+<script type="module" src="assets/js/admin-firebase.js?v=perf-20260624"></script>
 <link rel="stylesheet" href="assets/css/admin-boost.css?v=boost3-20260610">
 <script defer src="assets/js/admin-boost.js?v=boost3-20260610"></script>
 
@@ -738,10 +738,22 @@
 <script>
 // ── PARTICLE SYSTEM ──────────────────────────────────────────────
 (function() {
-  const canvas = document.getElementById('particle-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  let W, H, particles = [];
+  function afterFirstPaint(callback, timeout = 1800) {
+    window.setTimeout(function() {
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(callback, { timeout: 800 });
+        return;
+      }
+      callback();
+    }, timeout);
+  }
+
+  function startParticles() {
+    if (window.matchMedia('(max-width: 760px), (prefers-reduced-motion: reduce)').matches) return;
+    const canvas = document.getElementById('particle-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W, H, particles = [];
 
   function resize() {
     W = canvas.width  = window.innerWidth;
@@ -783,26 +795,39 @@
     requestAnimationFrame(animate);
   }
   animate();
+  }
+  afterFirstPaint(startParticles, 2400);
 })();
 
 // ── MAGNETIC BUTTONS ────────────────────────────────────────────
-document.addEventListener('mousemove', function(e) {
-  document.querySelectorAll('.admin-tab.active, .toolbar-btn, .admin-logout-btn, .print-btn').forEach(el => {
-    const rect = el.getBoundingClientRect();
-    const cx = rect.left + rect.width  / 2;
-    const cy = rect.top  + rect.height / 2;
-    const dx = e.clientX - cx;
-    const dy = e.clientY - cy;
-    const dist = Math.sqrt(dx*dx + dy*dy);
-    const maxDist = 80;
-    if (dist < maxDist) {
-      const force = (1 - dist / maxDist) * 6;
-      el.style.transform = `translate(${dx * force / dist}px, ${dy * force / dist}px)`;
-    } else {
-      el.style.transform = '';
-    }
-  });
-});
+(function() {
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  let lastMove = null;
+  let raf = 0;
+  document.addEventListener('mousemove', function(e) {
+    lastMove = e;
+    if (raf) return;
+    raf = requestAnimationFrame(function() {
+      raf = 0;
+      const move = lastMove;
+      document.querySelectorAll('.admin-tab.active, .toolbar-btn, .admin-logout-btn, .print-btn').forEach(el => {
+        const rect = el.getBoundingClientRect();
+        const cx = rect.left + rect.width  / 2;
+        const cy = rect.top  + rect.height / 2;
+        const dx = move.clientX - cx;
+        const dy = move.clientY - cy;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const maxDist = 80;
+        if (dist > 0 && dist < maxDist) {
+          const force = (1 - dist / maxDist) * 6;
+          el.style.transform = `translate(${dx * force / dist}px, ${dy * force / dist}px)`;
+        } else {
+          el.style.transform = '';
+        }
+      });
+    });
+  }, { passive: true });
+})();
 
 // ── SMOOTH TAB TRANSITIONS ──────────────────────────────────────
 const _origSwitchTab = window.switchTab;
