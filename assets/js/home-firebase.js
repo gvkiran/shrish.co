@@ -1,9 +1,19 @@
-import { db, collection, doc, getDoc, onSnapshot, setDoc, serverTimestamp, escapeHtml } from './firebase-app.js';
+import { db, collection, doc, getDoc, onSnapshot, setDoc, serverTimestamp, escapeHtml } from './firebase-catalog.js';
 
 let homeModalProductId = null;
 let homeModalQty = 1;
 let homeModalOpenedAt = 0;
 let homeModalOpenProps = null;
+
+function afterFirstPaint(callback, timeout = 1600) {
+  window.setTimeout(() => {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(callback, { timeout: 800 });
+      return;
+    }
+    callback();
+  }, timeout);
+}
 
 const HOME_PRODUCT_IMAGES = {
   alphonso: ['images/products/mangoes/img_alphonso.jpeg'],
@@ -445,13 +455,15 @@ function init() {
       }
     }
   } catch (e) {}
-  onSnapshot(collection(db, 'products'), (snapshot) => {
-    const docs = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
-    try { localStorage.setItem('shrishCatalogCache', JSON.stringify({ t: Date.now(), docs })); } catch (e) {}
-    window.SHRISH_DATA.products = mergeProducts(baseProducts, docs);
-    renderHomeProducts(window.SHRISH_DATA.products);
-  }, (error) => {
-    console.error('Homepage catalog sync failed', error);
+  afterFirstPaint(() => {
+    onSnapshot(collection(db, 'products'), (snapshot) => {
+      const docs = snapshot.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
+      try { localStorage.setItem('shrishCatalogCache', JSON.stringify({ t: Date.now(), docs })); } catch (e) {}
+      window.SHRISH_DATA.products = mergeProducts(baseProducts, docs);
+      renderHomeProducts(window.SHRISH_DATA.products);
+    }, (error) => {
+      console.error('Homepage catalog sync failed', error);
+    });
   });
 }
 

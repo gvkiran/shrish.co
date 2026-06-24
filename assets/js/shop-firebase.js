@@ -1,4 +1,4 @@
-import { db, collection, doc, getDoc, onSnapshot, setDoc, serverTimestamp, escapeHtml } from './firebase-app.js';
+import { db, collection, doc, getDoc, onSnapshot, setDoc, serverTimestamp, escapeHtml } from './firebase-catalog.js';
 
 'use strict';
 
@@ -20,6 +20,16 @@ let searchTrackTimer = null;
 let lastTrackedSearch = '';
 let catalogSyncReady = false;
 let catalogSyncFailed = false;
+
+function afterFirstPaint(callback, timeout = 1600) {
+  window.setTimeout(() => {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(callback, { timeout: 800 });
+      return;
+    }
+    callback();
+  }, timeout);
+}
 
 const SHOP_ALLERGEN_NOTICE = window.SHRISH_MAJOR_ALLERGEN_NOTICE || 'Allergen notice: Please review ingredients and contact us before ordering if you have allergies or dietary restrictions.';
 const SHOP_SPICE_NOTICE = window.SHRISH_SPICE_NOTICE || 'Spice caution: Many items may be spicy or very spicy.';
@@ -1676,7 +1686,7 @@ function init() {
   renderShop();
   updateCartUI();
   trackShopViewedOnce();
-  subscribeCatalog();
+  afterFirstPaint(subscribeCatalog);
 }
 
 window.openCart = openCart;
