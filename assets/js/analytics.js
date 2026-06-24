@@ -12,7 +12,7 @@
   const eventQueue = [];
   let analyticsBooted = false;
 
-  function afterFirstPaint(callback, timeout = 2600) {
+  function afterFirstPaint(callback, timeout = 7600) {
     window.setTimeout(() => {
       if ('requestIdleCallback' in window) {
         window.requestIdleCallback(callback, { timeout: 1000 });

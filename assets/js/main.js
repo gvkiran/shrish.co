@@ -1395,7 +1395,7 @@ function injectGlobalUI() {
     navMobile.appendChild(orderLink);
   }
 
-  shrishAfterFirstPaint(injectGeetAssistant, 2200);
+  shrishAfterFirstPaint(injectGeetAssistant, 3600);
 }
 
 // ââ DOM READY âââââââââââââââââââââââââââââââââââââââââââââââ
@@ -1488,7 +1488,7 @@ function setupCustomerAccountNav(navCartWrap, navMobile) {
   if (window.location.pathname.endsWith('/account.html') || window.location.pathname.endsWith('account.html')) {
     loadAuthState();
   } else {
-    shrishAfterFirstPaint(loadAuthState, 2400);
+    shrishAfterFirstPaint(loadAuthState, 6500);
   }
 }
 
