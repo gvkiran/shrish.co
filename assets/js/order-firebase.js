@@ -37,6 +37,8 @@ const LOCATION_LABELS = {
   chesterfield: 'Chesterfield, VA',
   mechanicsville: 'Mechanicsville, VA'
 };
+const VIRGINIA_SALES_TAX_RATE = Number(window.SHRISH_APP_CONFIG?.virginiaSalesTaxRate ?? 0.01);
+const VIRGINIA_SALES_TAX_LABEL = 'Virginia sales tax';
 
 function customerAccountsEnabled() {
   return window.SHRISH_APP_CONFIG?.customerAccountsEnabled === true;
@@ -323,6 +325,50 @@ function moneyValue(value) {
   return Number.isFinite(num) ? num : 0;
 }
 
+function roundMoney(value) {
+  return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+}
+
+function calculateSalesTax(subtotal) {
+  const rate = Number.isFinite(VIRGINIA_SALES_TAX_RATE) ? VIRGINIA_SALES_TAX_RATE : 0;
+  return roundMoney(Math.max(0, subtotal) * Math.max(0, rate));
+}
+
+function cartItemSubtotal(items = cart) {
+  return roundMoney(items.reduce((sum, item) => {
+    return sum + (moneyValue(item.price) * (item.qty || 1));
+  }, 0));
+}
+
+function cartProductForItem(item = {}) {
+  const productId = cartItemProductId(item);
+  return productId ? window.SHRISH_DATA?.products?.find((entry) => entry.id === productId) : null;
+}
+
+function isMangoCartItem(item = {}) {
+  return cartProductForItem(item)?.category === 'mangoes';
+}
+
+function cartPaymentPolicy(items = cart) {
+  const purchasableItems = items.filter((item) => Number(item.qty || 0) > 0);
+  const hasMango = purchasableItems.some(isMangoCartItem);
+  const hasNonMango = purchasableItems.some((item) => !isMangoCartItem(item));
+  const requiresStripe = hasNonMango && !hasMango;
+
+  return {
+    hasMango,
+    hasNonMango,
+    requiresStripe,
+    allowPickup: !requiresStripe,
+    allowStripe: requiresStripe,
+    note: requiresStripe
+      ? 'Pickles, podi, sweets, and snacks without mangoes must be paid online securely with Stripe.'
+      : hasMango && hasNonMango
+        ? 'Mixed mango orders stay pickup-only for now. You can pay for the full order at pickup.'
+        : 'Mango-only orders stay pickup payment only.'
+  };
+}
+
 function pickupLocationLabel(locationId) {
   return LOCATION_LABELS[locationId] || locationId || '';
 }
@@ -567,9 +613,9 @@ function renderCartReview() {
   }
 
   const totalQty = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
-  const totalPrice = cart.reduce((sum, item) => {
-    return sum + (moneyValue(item.price) * (item.qty || 1));
-  }, 0);
+  const itemSubtotal = cartItemSubtotal();
+  const salesTaxAmount = calculateSalesTax(itemSubtotal);
+  const orderTotal = roundMoney(itemSubtotal + salesTaxAmount);
 
   container.innerHTML =
     `<div class="review-table">
@@ -608,8 +654,18 @@ function renderCartReview() {
       <div class="rt-label">Total</div>
       <div class="rt-qty">${totalQty}</div>
       <div>
-        <div class="rt-price">${formatCurrency(totalPrice)}</div>
-        <div class="review-total-note">Estimated total</div>
+        <div class="rt-price">${formatCurrency(orderTotal)}</div>
+        <div class="review-total-note">Includes ${escapeHtml(VIRGINIA_SALES_TAX_LABEL)}</div>
+      </div>
+      <div></div>
+    </div>
+    <div class="review-total">
+      <div></div>
+      <div></div>
+      <div class="review-total-lines">
+        <div class="review-total-line"><span>Subtotal</span><span>${formatCurrency(itemSubtotal)}</span></div>
+        <div class="review-total-line"><span>${escapeHtml(VIRGINIA_SALES_TAX_LABEL)}</span><span>${formatCurrency(salesTaxAmount)}</span></div>
+        <div class="review-total-line total"><span>Total</span><span>${formatCurrency(orderTotal)}</span></div>
       </div>
       <div></div>
     </div>
@@ -642,6 +698,8 @@ function renderCartReview() {
       trackCheckoutEvent('checkout_cart_item_removed', cartAnalyticsSummary());
     });
   });
+
+  updatePaymentUi();
 }
 
 function rebuildErrorBanner() {
@@ -911,12 +969,31 @@ function applyCustomerDefaults(profile = {}) {
 }
 
 function updatePaymentUi() {
+  const paymentPolicy = cartPaymentPolicy();
+  if (paymentPolicy.requiresStripe) {
+    selectedPaymentMethod = 'stripe';
+  } else {
+    selectedPaymentMethod = 'pickup';
+    guestStripeConfirmed = false;
+  }
+
   document.querySelectorAll('.payment-option').forEach((option) => {
+    const paymentType = option.dataset.payment === 'stripe' ? 'stripe' : 'pickup';
+    option.hidden = paymentType === 'stripe' ? !paymentPolicy.allowStripe : !paymentPolicy.allowPickup;
+    option.setAttribute('aria-hidden', option.hidden ? 'true' : 'false');
     const isSelected = option.dataset.payment === selectedPaymentMethod;
     option.classList.toggle('selected', isSelected);
     const input = option.querySelector('input[type="radio"]');
-    if (input) input.checked = isSelected;
+    if (input) {
+      input.checked = isSelected;
+      input.disabled = option.hidden;
+    }
   });
+
+  const paymentRuleNote = document.getElementById('paymentRuleNote');
+  if (paymentRuleNote) {
+    paymentRuleNote.innerHTML = `<strong>Payment rule:</strong> ${escapeHtml(paymentPolicy.note)} ${VIRGINIA_SALES_TAX_RATE > 0 ? `${escapeHtml(VIRGINIA_SALES_TAX_LABEL)} is added at checkout.` : ''}`;
+  }
 
   const saveCardRow = document.getElementById('saveCardRow');
   const saveCardInput = document.getElementById('saveCardForFuture');
@@ -998,6 +1075,11 @@ function showCheckoutAccountChoice(details = {}) {
 function bindPaymentUi() {
   document.querySelectorAll('.payment-option').forEach((option) => {
     option.addEventListener('click', () => {
+      if (option.hidden) return;
+      const paymentPolicy = cartPaymentPolicy();
+      if (option.dataset.payment === 'stripe' && !paymentPolicy.allowStripe) return;
+      if (option.dataset.payment !== 'stripe' && !paymentPolicy.allowPickup) return;
+
       selectedPaymentMethod = option.dataset.payment === 'stripe' ? 'stripe' : 'pickup';
       if (selectedPaymentMethod !== 'stripe') guestStripeConfirmed = false;
       updatePaymentUi();
@@ -1157,7 +1239,9 @@ async function submitOrder() {
   const email = document.getElementById('email').value.trim().toLowerCase();
   const referral = document.getElementById('referral').value;
   const notes = document.getElementById('notes').value.trim();
-  const payOnline = selectedPaymentMethod === 'stripe';
+  updatePaymentUi();
+  let paymentPolicy = cartPaymentPolicy();
+  let payOnline = selectedPaymentMethod === 'stripe';
   const saveCard = Boolean(document.getElementById('saveCardForFuture')?.checked && currentCustomer);
   const phoneDigits = extractUsPhoneDigits(phone);
   const emailValid = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email);
@@ -1236,6 +1320,12 @@ async function submitOrder() {
 
     const cartIsCurrent = await verifyCartAgainstLiveProducts();
     if (!cartIsCurrent) return;
+    paymentPolicy = cartPaymentPolicy();
+    updatePaymentUi();
+    payOnline = selectedPaymentMethod === 'stripe';
+    if (paymentPolicy.requiresStripe && !payOnline) {
+      throw new Error('ONLINE_PAYMENT_REQUIRED');
+    }
 
     const lockRef = orderLockRef(phoneDigits);
     const lockSnap = await getDoc(lockRef);
@@ -1254,6 +1344,9 @@ async function submitOrder() {
 
     const locLabel = pickupLocationLabel(selectedLoc);
     const orderRef = doc(collection(db, 'orders'));
+    const itemSubtotal = cartItemSubtotal();
+    const salesTaxAmount = calculateSalesTax(itemSubtotal);
+    const orderTotal = roundMoney(itemSubtotal + salesTaxAmount);
     const order = {
       orderNumber: '',
       firstName,
@@ -1266,18 +1359,29 @@ async function submitOrder() {
       locationLabel: locLabel,
       referral: referral || 'Not specified',
       notes: notes || '',
-      items: cart.map((item) => ({
-        id: item.id,
-        name: item.name || 'Unknown',
-        price: item.price || 'TBD',
-        unit: item.unit || '',
-        qty: item.qty || 1,
-        lineTotal: moneyValue(item.price) * (item.qty || 1)
-      })),
+      items: cart.map((item) => {
+        const productId = cartItemProductId(item);
+        const variantId = cartItemVariantId(item);
+        const product = cartProductForItem(item);
+        return {
+          id: item.id,
+          productId,
+          variantId,
+          category: product?.category || '',
+          name: item.name || 'Unknown',
+          price: item.price || 'TBD',
+          unit: item.unit || '',
+          qty: item.qty || 1,
+          lineTotal: roundMoney(moneyValue(item.price) * (item.qty || 1))
+        };
+      }),
       totalBoxes: cart.reduce((sum, item) => sum + (item.qty || 1), 0),
-      totalPrice: cart.reduce((sum, item) => {
-        return sum + (moneyValue(item.price) * (item.qty || 1));
-      }, 0),
+      itemSubtotal,
+      salesTaxState: 'VA',
+      salesTaxLabel: VIRGINIA_SALES_TAX_LABEL,
+      salesTaxRate: VIRGINIA_SALES_TAX_RATE,
+      salesTaxAmount,
+      totalPrice: orderTotal,
       payment: payOnline ? 'online_pending' : 'pending',
       paymentMethod: payOnline ? 'stripe' : 'pay_at_pickup',
       paymentMethodLabel: payOnline ? 'Pay online' : 'Pay at pickup',
@@ -1381,11 +1485,13 @@ async function submitOrder() {
         </div>
         ${itemLines}
         <div class="ss-total">
-          <div>Total</div>
+          <div>Total with tax</div>
           <div class="ss-total-qty">${totalQty}</div>
           <div class="ss-total-price">${formatCurrency(order.totalPrice)}</div>
         </div>
       </div>
+      <div class="ss-row"><span>Subtotal</span><span>${formatCurrency(order.itemSubtotal || 0)}</span></div>
+      <div class="ss-row"><span>${escapeHtml(order.salesTaxLabel || VIRGINIA_SALES_TAX_LABEL)}</span><span>${formatCurrency(order.salesTaxAmount || 0)}</span></div>
       <div class="ss-row"><span>Pickup</span><span>${escapeHtml(locLabel)}</span></div>
       <div class="ss-row"><span>Name</span><span>${escapeHtml(`${firstName} ${lastName}`.trim())}</span></div>
       <div class="ss-row"><span>Phone</span><span>${escapeHtml(phone)}</span></div>
@@ -1466,10 +1572,13 @@ async function submitOrder() {
     } else if (error?.message === 'LIVE_PRODUCT_CHECK_FAILED') {
       setErrorBannerTitle('Please refresh before placing your order');
       list.innerHTML = '<li>We could not verify live product availability right now. Please refresh and try again before placing the order.</li>';
+    } else if (error?.message === 'ONLINE_PAYMENT_REQUIRED') {
+      setErrorBannerTitle('Online payment is required for this cart');
+      list.innerHTML = '<li>This cart does not include mangoes, so it must be paid online securely with Stripe.</li>';
     } else if (payOnline) {
       setErrorBannerTitle('Online payment could not start');
       const detail = error?.message || error?.code || '';
-      list.innerHTML = `<li>Your order was not charged. Please try again, switch to pay at pickup, or contact us on WhatsApp.</li>${detail ? `<li style="font-size:12px">Payment setup detail: ${escapeHtml(detail)}</li>` : ''}`;
+      list.innerHTML = `<li>Your order was not charged. Please try again or contact us on WhatsApp.</li>${detail ? `<li style="font-size:12px">Payment setup detail: ${escapeHtml(detail)}</li>` : ''}`;
     } else {
       setErrorBannerTitle('Please fix the following before placing your order:');
       list.innerHTML = '<li>We could not submit your order right now. Please try again in a minute.</li>';

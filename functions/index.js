@@ -30,7 +30,8 @@ const SHRISH_SITE_URL = "https://shrish.co";
 const ORDER_COUNTER_START = 671499;
 const MAX_REMINDER_EMAILS_PER_SEND = 50;
 const MAX_PRODUCT_NOTIFY_EMAILS_PER_SEND = 250;
-const STRIPE_PAYMENTS_ENABLED = false;
+const STRIPE_PAYMENTS_ENABLED = process.env.STRIPE_PAYMENTS_ENABLED === "true";
+const DEFAULT_VIRGINIA_SALES_TAX_RATE = 0.01;
 
 function isAdminRequest(request) {
   return String(request.auth?.token?.email || "").trim().toLowerCase() === SHRISH_ADMIN_EMAIL;
@@ -206,6 +207,69 @@ function getOrderTotals(order) {
     totalBoxes: totalBoxesFromOrder > 0 ? totalBoxesFromOrder : totalBoxesFromItems,
     estimatedTotal: totalPriceFromOrder > 0 ? totalPriceFromOrder : totalPriceFromItems,
   };
+}
+
+function roundCurrency(value) {
+  return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+}
+
+function configuredVirginiaSalesTaxRate() {
+  const configured = Number(process.env.SHRISH_VA_SALES_TAX_RATE);
+  return Number.isFinite(configured) && configured >= 0 ? configured : DEFAULT_VIRGINIA_SALES_TAX_RATE;
+}
+
+function normalizeProductCategory(value = "") {
+  return String(value || "").trim().toLowerCase();
+}
+
+async function classifyOrderPaymentItems(db, order = {}) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  const productIds = [...new Set(items.map(customerOrderProductId).filter(Boolean))];
+  const categoryByProductId = new Map();
+
+  await Promise.all(productIds.map(async (productId) => {
+    const snap = await db.collection("products").doc(productId).get().catch(() => null);
+    if (snap?.exists) {
+      categoryByProductId.set(productId, normalizeProductCategory(snap.data()?.category));
+    }
+  }));
+
+  let hasMango = false;
+  let hasNonMango = false;
+
+  items.forEach((item) => {
+    const productId = customerOrderProductId(item);
+    const category = normalizeProductCategory(
+      categoryByProductId.get(productId) ||
+      item.category ||
+      item.productCategory
+    );
+
+    if (category === "mangoes") {
+      hasMango = true;
+    } else {
+      hasNonMango = true;
+    }
+  });
+
+  return {
+    hasMango,
+    hasNonMango,
+    requiresStripe: hasNonMango && !hasMango,
+    allowStripe: hasNonMango && !hasMango,
+    allowPickup: !hasNonMango || hasMango,
+  };
+}
+
+function orderSalesTaxAmount(order = {}) {
+  const explicit = Number(order.salesTaxAmount ?? order.taxAmount ?? 0);
+  if (Number.isFinite(explicit) && explicit >= 0) return roundCurrency(explicit);
+
+  const subtotal = Number(order.itemSubtotal ?? 0) > 0
+    ? Number(order.itemSubtotal)
+    : (Array.isArray(order.items) ? order.items.reduce((sum, item) => sum + normalizeLineTotal(item), 0) : 0);
+
+  return roundCurrency(subtotal * configuredVirginiaSalesTaxRate());
 }
 
 async function assignSequentialOrderNumber(orderRef, existingOrderNumber) {
@@ -1040,6 +1104,10 @@ exports.createStripeCheckoutSession = onCall(
     if (!Array.isArray(order.items) || !order.items.length) {
       throw new HttpsError("failed-precondition", "This order has no items.");
     }
+    const paymentPolicy = await classifyOrderPaymentItems(db, order);
+    if (!paymentPolicy.requiresStripe) {
+      throw new HttpsError("failed-precondition", "This cart is eligible for pickup payment and is not set for online-only checkout.");
+    }
 
     let session;
     let stripeCustomerId = "";
@@ -1055,6 +1123,7 @@ exports.createStripeCheckoutSession = onCall(
         orderNumber,
         customerUid: order.customerUid || request.auth?.uid || "",
         source: "shrish_checkout",
+        salesTaxAmount: String(orderSalesTaxAmount(order)),
       };
 
       if (request.auth?.uid && saveCard) {
@@ -1095,6 +1164,19 @@ exports.createStripeCheckoutSession = onCall(
           },
         };
       });
+      const salesTaxAmount = orderSalesTaxAmount(order);
+      if (salesTaxAmount > 0) {
+        lineItems.push({
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            unit_amount: toStripeAmount(salesTaxAmount),
+            product_data: {
+              name: String(order.salesTaxLabel || "Virginia sales tax").slice(0, 180),
+            },
+          },
+        });
+      }
 
       const sessionConfig = {
         mode: "payment",

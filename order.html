@@ -42,6 +42,10 @@
 .review-total .rt-qty{text-align:center;font-size:15px;color:var(--dark)}
 .review-total .rt-price{text-align:right;color:var(--saffron);font-size:20px}
 .review-total-note{font-size:12px;color:var(--text-light);font-weight:500;text-align:right;margin-top:4px}
+.review-total-lines{grid-column:1 / 4;justify-self:end;min-width:240px;display:grid;gap:6px;font-size:13px;color:var(--text-light);font-weight:600}
+.review-total-line{display:flex;justify-content:space-between;gap:14px;white-space:nowrap}
+.review-total-line.total{font-size:16px;color:var(--dark);font-weight:800}
+.review-total-line.total span:last-child{color:var(--saffron);font-size:20px}
 .cart-empty-note{text-align:center;padding:32px;color:var(--text-light)}
 .cart-empty-note .en-icon{font-size:40px;margin-bottom:10px}
 
@@ -96,6 +100,7 @@
 .payment-option{border:2px solid #E0D0B8;border-radius:14px;padding:16px;cursor:pointer;transition:border-color .25s,background .25s;position:relative}
 .payment-option:hover{border-color:var(--saffron);background:rgba(200,121,26,.03)}
 .payment-option.selected{border-color:var(--saffron);background:rgba(200,121,26,.06)}
+.payment-option[hidden]{display:none!important}
 .payment-option input{position:absolute;opacity:0;pointer-events:none}
 .payment-title{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:800;color:var(--dark);margin-bottom:5px}
 .payment-pill{font-size:11px;font-weight:800;color:var(--saffron);background:var(--cream-d);border-radius:999px;padding:4px 8px}
@@ -105,6 +110,8 @@
 .save-card-row input{margin-top:3px}
 .save-card-row label{font-size:13px;line-height:1.55;color:var(--text-light);cursor:pointer}
 .save-card-row strong{color:var(--dark)}
+.payment-rule-note{background:#fff8ec;border:1px solid rgba(200,121,26,.22);border-radius:12px;color:var(--text-light);font-size:12.5px;line-height:1.55;padding:10px 12px;margin:-4px 0 14px}
+.payment-rule-note strong{color:var(--dark)}
 .checkout-account-modal{position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(26,18,8,.58);backdrop-filter:blur(4px)}
 .checkout-account-card{width:min(620px,100%);background:#fff;border-radius:22px;padding:28px;box-shadow:0 28px 80px rgba(26,18,8,.28);position:relative}
 .checkout-account-close{position:absolute;top:16px;right:16px;width:34px;height:34px;border:none;border-radius:50%;background:var(--cream-d);color:var(--dark);font-size:20px;line-height:1;cursor:pointer}
@@ -296,15 +303,8 @@
 .refund-submitted-msg { text-align: center; padding: 16px; color: #2E7D32; font-weight: 600; font-size: 14px; }
 
 
-/* ── STRIPE / PAY-ONLINE + REFUND REQUEST TEMPORARILY HIDDEN (reversible) ──
-   Pickup is the JS default; hiding the stripe option means it can never be
-   selected. The refund request form is hidden on the success screen.
-   To re-enable later, delete the relevant lines in this block. */
-.payment-option[data-payment="stripe"]{display:none !important;}
-.save-card-row{display:none !important;}
-.payment-options{grid-template-columns:1fr !important;}
+/* Refund request remains temporarily hidden. Stripe visibility is controlled by cart rules in order-firebase.js. */
 #refundSection{display:none !important;}
-/* ── END STRIPE / REFUND HIDE ── */
 
 </style>
 <script>
@@ -352,7 +352,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 
 <div class="page-hero">
   <h1>Cart <em>Checkout</em></h1>
-  <p>Review your order, choose your pickup location, and submit. Payment is collected at pickup.</p>
+  <p>Review your order, choose your pickup location, and complete the payment option shown for your cart.</p>
 </div>
 
 <div class="checkout-wrap" id="checkoutWrap">
@@ -457,15 +457,13 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
           <span class="payment-title">Pay at pickup <span class="payment-pill">Default</span></span>
           <span class="payment-copy">Pay with cash, Zelle, or card when you pick up.</span>
         </label>
-        <!-- STRIPE PAYMENT OPTION TEMPORARILY DISABLED — uncomment to re-enable
         <label class="payment-option" data-payment="stripe">
           <input type="radio" name="paymentMethod" value="stripe">
           <span class="payment-title">Pay online now <span class="payment-pill">Stripe</span></span>
           <span class="payment-copy">Use a card securely through Stripe before pickup.</span>
         </label>
-        -->
       </div>
-      <!-- SAVE CARD ROW TEMPORARILY DISABLED — uncomment to re-enable
+      <div class="payment-rule-note" id="paymentRuleNote"></div>
       <div class="save-card-row" id="saveCardRow">
         <input type="checkbox" id="saveCardForFuture">
         <label for="saveCardForFuture">
@@ -473,7 +471,6 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
           Available only when signed in. Stripe stores the card securely; Shrish never sees your full card number.
         </label>
       </div>
-      -->
 
       <div class="checkout-safety-note">
         <strong>Food allergy and spice notice:</strong> Products may contain or be prepared with peanut/groundnut oil and other major allergens (including milk, egg, fish, shellfish, tree nuts, wheat, soy, and sesame). Ingredients, spice level, labels, and packaging may vary by supplier batch. Product images are for illustration only. If you have allergies, sensitivities, or medical dietary restrictions, contact us before ordering.
@@ -505,7 +502,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
       <h4>How It Works</h4>
       <div class="ir"><span class="ir-icon">1</span><div><strong>Place your order</strong><span>Submit the form on this page</span></div></div>
       <div class="ir"><span class="ir-icon">2</span><div><strong>Follow whatsApp for pickup updates</strong><span><a href="tel:+17653255577" style="color:var(--saffron)">+1 (765) 325-5577</a></span></div></div>
-      <div class="ir"><span class="ir-icon">3</span><div><strong>Pay at pickup</strong><span>Cash, Zelle, or card accepted at pickup</span></div></div>
+      <div class="ir"><span class="ir-icon">3</span><div><strong>Complete payment</strong><span>Mango carts can pay at pickup. Non-mango carts pay securely online.</span></div></div>
     </div>
     <div class="info-card" style="background:var(--dark)">
       <h4 style="color:var(--gold-l)">Need Help?</h4>
@@ -564,7 +561,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="assets/js/analytics.js?v=perf2-20260624"></script>
 <script src="assets/js/main.js?v=perf2-20260624"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/order-firebase.js?v=order-confirmation-label-20260602"></script>
+<script type="module" src="assets/js/order-firebase.js?v=stripe-tax-20260630"></script>
 
 <script defer src="assets/js/checkout-luxe.js?v=pack6-20260612"></script>
 </body>
