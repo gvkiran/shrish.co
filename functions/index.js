@@ -120,6 +120,7 @@ function allowedCheckoutOrigin(value = "") {
     const isAllowed =
       hostname === "shrish.co" ||
       hostname === "www.shrish.co" ||
+      hostname === "dev.shrish.co" ||
       hostname.endsWith(".vercel.app") ||
       hostname === "localhost" ||
       hostname === "127.0.0.1";
