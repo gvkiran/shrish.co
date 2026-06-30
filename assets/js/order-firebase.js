@@ -20,6 +20,7 @@ import {
 
 let cart = JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
 let selectedLoc = '';
+let selectedFulfillmentType = 'pickup';
 let isSubmitting = false;
 let currentCustomer = null;
 let currentCustomerProfile = null;
@@ -39,6 +40,9 @@ const LOCATION_LABELS = {
 };
 const VIRGINIA_SALES_TAX_RATE = Number(window.SHRISH_APP_CONFIG?.virginiaSalesTaxRate ?? 0.01);
 const VIRGINIA_SALES_TAX_LABEL = 'Virginia sales tax';
+const SHIPPING_STANDARD_AMOUNT = Number(window.SHRISH_APP_CONFIG?.standardShippingAmount ?? 8.99);
+const SHIPPING_FREE_THRESHOLD = Number(window.SHRISH_APP_CONFIG?.freeShippingThreshold ?? 75);
+const SHIPPING_LABEL = 'Standard shipping';
 const MANGO_CATEGORY_HINTS = new Set([
   'mangoes',
   'mango',
@@ -295,6 +299,20 @@ async function renderStripeReturnMessage() {
         const orderSnap = await getDoc(doc(db, 'orders', orderId));
         if (orderSnap.exists()) {
           const od = orderSnap.data();
+          if (summary) {
+            const fulfillmentType = od.fulfillmentType || 'pickup';
+            const destination = fulfillmentType === 'shipping'
+              ? shippingAddressLabel(od.shippingAddress || {})
+              : (od.pickupLocationLabel || od.locationLabel || 'Selected pickup location');
+            summary.innerHTML = `
+              <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Paid online</span></div>
+              <div class="ss-row"><span>Subtotal</span><span>${formatCurrency(od.itemSubtotal || 0)}</span></div>
+              <div class="ss-row"><span>${escapeHtml(od.salesTaxLabel || VIRGINIA_SALES_TAX_LABEL)}</span><span>${formatCurrency(od.salesTaxAmount || 0)}</span></div>
+              <div class="ss-row"><span>Shipping</span><span>${Number(od.shippingAmount || 0) > 0 ? formatCurrency(od.shippingAmount) : (fulfillmentType === 'shipping' ? 'Free' : 'Not selected')}</span></div>
+              <div class="ss-row"><span>Total</span><span>${formatCurrency(od.totalPrice || 0)}</span></div>
+              <div class="ss-row"><span>${fulfillmentType === 'shipping' ? 'Ship to' : 'Pickup'}</span><span>${escapeHtml(destination)}</span></div>
+              <div class="ss-row"><span>Order Confirmation No</span><span>${orderNumber ? orderNumberHighlight(orderNumber) : escapeHtml('Your confirmation email will include it')}</span></div>`;
+          }
           injectRefundSection(
             orderId,
             orderNumber,
@@ -372,6 +390,13 @@ function calculateSalesTax(subtotal) {
   return roundMoney(Math.max(0, subtotal) * Math.max(0, rate));
 }
 
+function calculateShippingAmount(subtotal, fulfillmentType = selectedFulfillmentType) {
+  if (fulfillmentType !== 'shipping' || !cartPaymentPolicy().allowShipping) return 0;
+  const threshold = Number.isFinite(SHIPPING_FREE_THRESHOLD) ? SHIPPING_FREE_THRESHOLD : 75;
+  const standard = Number.isFinite(SHIPPING_STANDARD_AMOUNT) ? SHIPPING_STANDARD_AMOUNT : 8.99;
+  return roundMoney(Math.max(0, subtotal) >= threshold ? 0 : standard);
+}
+
 function cartItemSubtotal(items = cart) {
   return roundMoney(items.reduce((sum, item) => {
     return sum + (moneyValue(item.price) * (item.qty || 1));
@@ -411,6 +436,7 @@ function cartPaymentPolicy(items = cart) {
     requiresStripe,
     allowPickup: !requiresStripe,
     allowStripe: requiresStripe,
+    allowShipping: hasNonMango && !hasMango,
     note: requiresStripe
       ? 'Pickles, podi, sweets, and snacks without mangoes must be paid online securely with Stripe.'
       : hasMango && hasNonMango
@@ -548,6 +574,7 @@ function liveCartItemFromProduct(product, cartItem) {
     id: cartItemId(productId, selectedVariant.id),
     productId,
     variantId: selectedVariant.id,
+    category: product.category || cartItem.category || '',
     name: selectedVariant.id === 'default' ? (product.name || cartItem.name || 'Item') : `${product.name || cartItem.name || 'Item'} (${selectedVariant.label})`,
     price,
     unit: selectedVariant.unit || product.unit || '',
@@ -625,6 +652,7 @@ async function verifyCartAgainstLiveProducts() {
       liveItem.price !== item.price ||
       liveItem.unit !== item.unit ||
       liveItem.image !== item.image ||
+      liveItem.category !== item.category ||
       liveItem.qty !== item.qty
     ) {
       cartChanged = true;
@@ -663,9 +691,11 @@ function renderCartReview() {
   }
 
   const totalQty = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
+  if (!cartPaymentPolicy().allowShipping && selectedFulfillmentType === 'shipping') selectedFulfillmentType = 'pickup';
   const itemSubtotal = cartItemSubtotal();
   const salesTaxAmount = calculateSalesTax(itemSubtotal);
-  const orderTotal = roundMoney(itemSubtotal + salesTaxAmount);
+  const shippingAmount = calculateShippingAmount(itemSubtotal);
+  const orderTotal = roundMoney(itemSubtotal + salesTaxAmount + shippingAmount);
 
   container.innerHTML =
     `<div class="review-table">
@@ -715,6 +745,7 @@ function renderCartReview() {
       <div class="review-total-lines">
         <div class="review-total-line"><span>Subtotal</span><span>${formatCurrency(itemSubtotal)}</span></div>
         <div class="review-total-line"><span>${escapeHtml(VIRGINIA_SALES_TAX_LABEL)}</span><span>${formatCurrency(salesTaxAmount)}</span></div>
+        <div class="review-total-line"><span>${escapeHtml(SHIPPING_LABEL)}</span><span>${shippingAmount > 0 ? formatCurrency(shippingAmount) : (selectedFulfillmentType === 'shipping' ? 'Free' : 'Not selected')}</span></div>
         <div class="review-total-line total"><span>Total</span><span>${formatCurrency(orderTotal)}</span></div>
       </div>
       <div></div>
@@ -766,7 +797,18 @@ function rebuildErrorBanner() {
   if (document.getElementById('err-email')?.style.display === 'block') {
     errors.push(document.getElementById('err-email').textContent || 'Valid email required');
   }
-  if (!selectedLoc) errors.push('Please select a pickup location');
+  if (selectedFulfillmentType === 'pickup' && !selectedLoc) errors.push('Please select a pickup location');
+  if (selectedFulfillmentType === 'shipping') {
+    [
+      'err-shippingAddress1',
+      'err-shippingCity',
+      'err-shippingState',
+      'err-shippingZip'
+    ].forEach((id) => {
+      const err = document.getElementById(id);
+      if (err?.style.display === 'block') errors.push(err.textContent || 'Please complete your shipping address');
+    });
+  }
   if (!cart.length) errors.push('Your cart is empty - go back to shop and add items');
 
   if (!errors.length) {
@@ -981,6 +1023,86 @@ function selectPickupLocation(locationId, shouldTrack = false) {
   rebuildErrorBanner();
 }
 
+function shippingInputValue(id) {
+  return String(document.getElementById(id)?.value || '').trim();
+}
+
+function getShippingAddress() {
+  return {
+    addressLine1: shippingInputValue('shippingAddress1'),
+    addressLine2: shippingInputValue('shippingAddress2'),
+    city: shippingInputValue('shippingCity'),
+    state: shippingInputValue('shippingState').toUpperCase(),
+    zip: shippingInputValue('shippingZip')
+  };
+}
+
+function shippingAddressLabel(address = getShippingAddress()) {
+  const line1 = address.addressLine1 || '';
+  const line2 = address.addressLine2 ? `, ${address.addressLine2}` : '';
+  return `${line1}${line2}, ${address.city || ''}, ${address.state || ''} ${address.zip || ''}`.replace(/\s+/g, ' ').trim();
+}
+
+function validateShippingFields(showErrors = true) {
+  if (selectedFulfillmentType !== 'shipping') return true;
+
+  const address = getShippingAddress();
+  const checks = [
+    ['shippingAddress1', address.addressLine1.length >= 5],
+    ['shippingCity', address.city.length >= 2],
+    ['shippingState', /^[A-Z]{2}$/.test(address.state)],
+    ['shippingZip', /^\d{5}(-\d{4})?$/.test(address.zip)]
+  ];
+
+  checks.forEach(([id, valid]) => {
+    const err = document.getElementById(`err-${id}`);
+    if (err) err.style.display = showErrors && !valid ? 'block' : 'none';
+  });
+
+  return checks.every(([, valid]) => valid);
+}
+
+function updateFulfillmentUi() {
+  const paymentPolicy = cartPaymentPolicy();
+  const allowShipping = paymentPolicy.allowShipping;
+  if (!allowShipping && selectedFulfillmentType === 'shipping') selectedFulfillmentType = 'pickup';
+
+  document.querySelectorAll('.fulfillment-option').forEach((option) => {
+    const type = option.dataset.fulfillment === 'shipping' ? 'shipping' : 'pickup';
+    option.hidden = type === 'shipping' && !allowShipping;
+    option.classList.toggle('selected', type === selectedFulfillmentType);
+    const input = option.querySelector('input[type="radio"]');
+    if (input) {
+      input.checked = type === selectedFulfillmentType;
+      input.disabled = option.hidden;
+    }
+  });
+
+  const pickupSection = document.getElementById('pickupLocationSection');
+  if (pickupSection) pickupSection.style.display = selectedFulfillmentType === 'shipping' ? 'none' : '';
+  const shippingFields = document.getElementById('shippingFields');
+  if (shippingFields) shippingFields.classList.toggle('show', selectedFulfillmentType === 'shipping');
+  const locationError = document.getElementById('err-location');
+  if (selectedFulfillmentType === 'shipping' && locationError) locationError.style.display = 'none';
+
+  const subtotal = cartItemSubtotal();
+  const shippingAmount = calculateShippingAmount(subtotal);
+  const shippingRateLine = document.getElementById('shippingRateLine');
+  if (shippingRateLine) {
+    const remaining = roundMoney(SHIPPING_FREE_THRESHOLD - subtotal);
+    shippingRateLine.innerHTML = shippingAmount > 0
+      ? `<strong>${escapeHtml(SHIPPING_LABEL)}:</strong> ${formatCurrency(shippingAmount)}. Add ${formatCurrency(remaining)} more eligible items for free shipping.`
+      : `<strong>${escapeHtml(SHIPPING_LABEL)}:</strong> Free shipping applied for eligible orders ${formatCurrency(SHIPPING_FREE_THRESHOLD)}+.`;
+  }
+
+  const note = document.getElementById('fulfillmentRuleNote');
+  if (note) {
+    note.innerHTML = allowShipping
+      ? `<strong>Fulfillment:</strong> Pick up locally or ship eligible non-mango items. Shipping is ${formatCurrency(SHIPPING_STANDARD_AMOUNT)} under ${formatCurrency(SHIPPING_FREE_THRESHOLD)} and free at ${formatCurrency(SHIPPING_FREE_THRESHOLD)}+.`
+      : `<strong>Fulfillment:</strong> Mango or mixed mango carts are pickup-only so fruit quality and pickup timing stay controlled.`;
+  }
+}
+
 function setFieldValue(id, value) {
   const el = document.getElementById(id);
   if (!el || !value) return;
@@ -1019,6 +1141,7 @@ function applyCustomerDefaults(profile = {}) {
 }
 
 function updatePaymentUi() {
+  updateFulfillmentUi();
   const paymentPolicy = cartPaymentPolicy();
   if (paymentPolicy.requiresStripe) {
     selectedPaymentMethod = 'stripe';
@@ -1149,6 +1272,46 @@ function bindPaymentUi() {
   updatePaymentUi();
 }
 
+function bindFulfillmentUi() {
+  document.querySelectorAll('.fulfillment-option').forEach((option) => {
+    option.addEventListener('click', () => {
+      if (option.hidden) return;
+      const requested = option.dataset.fulfillment === 'shipping' ? 'shipping' : 'pickup';
+      const paymentPolicy = cartPaymentPolicy();
+      if (requested === 'shipping' && !paymentPolicy.allowShipping) return;
+
+      selectedFulfillmentType = requested;
+      if (selectedFulfillmentType === 'pickup') validateShippingFields(false);
+      renderCartReview();
+      updatePaymentUi();
+      trackCheckoutEvent('checkout_fulfillment_selected', {
+        fulfillment_type: selectedFulfillmentType,
+        shipping_amount: calculateShippingAmount(cartItemSubtotal())
+      });
+    });
+
+    option.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        option.click();
+      }
+    });
+  });
+
+  ['shippingAddress1', 'shippingAddress2', 'shippingCity', 'shippingState', 'shippingZip'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('input', () => {
+      if (id === 'shippingState') {
+        const el = document.getElementById(id);
+        el.value = el.value.toUpperCase().slice(0, 2);
+      }
+      validateShippingFields(false);
+      rebuildErrorBanner();
+    });
+  });
+
+  updatePaymentUi();
+}
+
 function bindCustomerProfile() {
   if (!customerAccountsEnabled()) return;
 
@@ -1183,13 +1346,13 @@ async function saveCheckoutDetailsToProfile(order) {
     fullName: order.fullName || '',
     phone: order.phone || '',
     phoneDigits: order.phoneDigits || '',
-    preferredPickupLocation: order.location || '',
-    preferredPickupLocationLabel: order.locationLabel || '',
-    addressLine1: currentCustomerProfile?.addressLine1 || '',
-    addressLine2: currentCustomerProfile?.addressLine2 || '',
-    city: currentCustomerProfile?.city || '',
-    state: currentCustomerProfile?.state || 'VA',
-    zip: currentCustomerProfile?.zip || '',
+    preferredPickupLocation: order.fulfillmentType === 'pickup' ? (order.pickupLocation || order.location || '') : (currentCustomerProfile?.preferredPickupLocation || ''),
+    preferredPickupLocationLabel: order.fulfillmentType === 'pickup' ? (order.pickupLocationLabel || order.locationLabel || '') : (currentCustomerProfile?.preferredPickupLocationLabel || ''),
+    addressLine1: order.shippingAddress?.addressLine1 || currentCustomerProfile?.addressLine1 || '',
+    addressLine2: order.shippingAddress?.addressLine2 || currentCustomerProfile?.addressLine2 || '',
+    city: order.shippingAddress?.city || currentCustomerProfile?.city || '',
+    state: order.shippingAddress?.state || currentCustomerProfile?.state || 'VA',
+    zip: order.shippingAddress?.zip || currentCustomerProfile?.zip || '',
     updatedAt: serverTimestamp()
   }, { merge: true });
 }
@@ -1298,6 +1461,7 @@ async function submitOrder() {
   trackCheckoutEvent('order_submit_attempted', {
     ...attemptCartAnalytics,
     pickup_location: selectedLoc || '',
+    fulfillment_type: selectedFulfillmentType,
     referral: referral || 'Not specified',
     payment_method: selectedPaymentMethod,
     save_card_requested: saveCard
@@ -1333,17 +1497,21 @@ async function submitOrder() {
     return;
   }
 
-  if (!selectedLoc) {
+  if (selectedFulfillmentType === 'pickup' && !selectedLoc) {
     document.getElementById('err-location').style.display = 'block';
     ok = false;
   } else {
     document.getElementById('err-location').style.display = 'none';
+  }
+  if (selectedFulfillmentType === 'shipping' && !validateShippingFields(true)) {
+    ok = false;
   }
 
   if (!ok) {
     trackCheckoutEvent('checkout_validation_failed', {
       reason: 'invalid_required_fields',
       has_pickup_location: Boolean(selectedLoc),
+      fulfillment_type: selectedFulfillmentType,
       ...cartAnalyticsSummary()
     });
     setErrorBannerTitle('Please fix the following before placing your order:');
@@ -1357,7 +1525,8 @@ async function submitOrder() {
     guestStripeConfirmed = true;
     trackCheckoutEvent('checkout_guest_payment_confirmed', {
       ...cartAnalyticsSummary(),
-      pickup_location: selectedLoc || ''
+      pickup_location: selectedLoc || '',
+      fulfillment_type: selectedFulfillmentType
     });
   }
 
@@ -1376,6 +1545,12 @@ async function submitOrder() {
     if (paymentPolicy.requiresStripe && !payOnline) {
       throw new Error('ONLINE_PAYMENT_REQUIRED');
     }
+    if (selectedFulfillmentType === 'pickup' && !selectedLoc) {
+      throw new Error('PICKUP_LOCATION_REQUIRED');
+    }
+    if (selectedFulfillmentType === 'shipping' && !validateShippingFields(true)) {
+      throw new Error('SHIPPING_ADDRESS_REQUIRED');
+    }
 
     const lockRef = orderLockRef(phoneDigits);
     const lockSnap = await getDoc(lockRef);
@@ -1392,11 +1567,15 @@ async function submitOrder() {
       await showNoShowNotice();
     }
 
-    const locLabel = pickupLocationLabel(selectedLoc);
+    const shippingAddress = selectedFulfillmentType === 'shipping' ? getShippingAddress() : null;
+    const locLabel = selectedFulfillmentType === 'shipping'
+      ? `Shipping to ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.zip}`
+      : pickupLocationLabel(selectedLoc);
     const orderRef = doc(collection(db, 'orders'));
     const itemSubtotal = cartItemSubtotal();
     const salesTaxAmount = calculateSalesTax(itemSubtotal);
-    const orderTotal = roundMoney(itemSubtotal + salesTaxAmount);
+    const shippingAmount = calculateShippingAmount(itemSubtotal);
+    const orderTotal = roundMoney(itemSubtotal + salesTaxAmount + shippingAmount);
     const order = {
       orderNumber: '',
       firstName,
@@ -1405,8 +1584,13 @@ async function submitOrder() {
       phone,
       phoneDigits,
       email,
-      location: selectedLoc,
+      fulfillmentType: selectedFulfillmentType,
+      fulfillmentLabel: selectedFulfillmentType === 'shipping' ? 'Shipping' : 'Pickup',
+      location: selectedFulfillmentType === 'shipping' ? 'shipping' : selectedLoc,
       locationLabel: locLabel,
+      pickupLocation: selectedFulfillmentType === 'pickup' ? selectedLoc : '',
+      pickupLocationLabel: selectedFulfillmentType === 'pickup' ? locLabel : '',
+      shippingAddress: shippingAddress || null,
       referral: referral || 'Not specified',
       notes: notes || '',
       items: cart.map((item) => {
@@ -1417,7 +1601,7 @@ async function submitOrder() {
           id: item.id,
           productId,
           variantId,
-          category: product?.category || '',
+          category: product?.category || item.category || '',
           name: item.name || 'Unknown',
           price: item.price || 'TBD',
           unit: item.unit || '',
@@ -1431,6 +1615,9 @@ async function submitOrder() {
       salesTaxLabel: VIRGINIA_SALES_TAX_LABEL,
       salesTaxRate: VIRGINIA_SALES_TAX_RATE,
       salesTaxAmount,
+      shippingLabel: SHIPPING_LABEL,
+      shippingAmount,
+      shippingFreeThreshold: SHIPPING_FREE_THRESHOLD,
       totalPrice: orderTotal,
       payment: payOnline ? 'online_pending' : 'pending',
       paymentMethod: payOnline ? 'stripe' : 'pay_at_pickup',
@@ -1478,6 +1665,7 @@ async function submitOrder() {
       trackCheckoutEvent('stripe_checkout_redirect_started', {
         ...cartAnalyticsSummary(),
         pickup_location: selectedLoc,
+        fulfillment_type: selectedFulfillmentType,
         save_card_requested: saveCard
       });
       const session = await createStripeCheckoutSession({
@@ -1495,6 +1683,7 @@ async function submitOrder() {
     const submittedOrderAnalytics = {
       ...cartAnalyticsSummary(),
       pickup_location: selectedLoc,
+      fulfillment_type: selectedFulfillmentType,
       referral: referral || 'Not specified',
       payment_method: selectedPaymentMethod
     };
@@ -1535,14 +1724,15 @@ async function submitOrder() {
         </div>
         ${itemLines}
         <div class="ss-total">
-          <div>Total with tax</div>
+          <div>Total</div>
           <div class="ss-total-qty">${totalQty}</div>
           <div class="ss-total-price">${formatCurrency(order.totalPrice)}</div>
         </div>
       </div>
       <div class="ss-row"><span>Subtotal</span><span>${formatCurrency(order.itemSubtotal || 0)}</span></div>
       <div class="ss-row"><span>${escapeHtml(order.salesTaxLabel || VIRGINIA_SALES_TAX_LABEL)}</span><span>${formatCurrency(order.salesTaxAmount || 0)}</span></div>
-      <div class="ss-row"><span>Pickup</span><span>${escapeHtml(locLabel)}</span></div>
+      <div class="ss-row"><span>Shipping</span><span>${order.shippingAmount > 0 ? formatCurrency(order.shippingAmount) : (order.fulfillmentType === 'shipping' ? 'Free' : 'Not selected')}</span></div>
+      <div class="ss-row"><span>${order.fulfillmentType === 'shipping' ? 'Ship to' : 'Pickup'}</span><span>${escapeHtml(order.fulfillmentType === 'shipping' ? shippingAddressLabel(order.shippingAddress || {}) : locLabel)}</span></div>
       <div class="ss-row"><span>Name</span><span>${escapeHtml(`${firstName} ${lastName}`.trim())}</span></div>
       <div class="ss-row"><span>Phone</span><span>${escapeHtml(phone)}</span></div>
       <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Pay at Pickup</span></div>
@@ -1577,6 +1767,7 @@ async function submitOrder() {
         quantity: Number(item.qty || 1),
         line_total: Number((moneyValue(item.price) * (item.qty || 1)).toFixed(2)),
         pickup_location: selectedLoc,
+        fulfillment_type: selectedFulfillmentType,
         payment_method: selectedPaymentMethod,
         ...submittedOrderAnalytics
       });
@@ -1625,6 +1816,12 @@ async function submitOrder() {
     } else if (error?.message === 'ONLINE_PAYMENT_REQUIRED') {
       setErrorBannerTitle('Online payment is required for this cart');
       list.innerHTML = '<li>This cart does not include mangoes, so it must be paid online securely with Stripe.</li>';
+    } else if (error?.message === 'PICKUP_LOCATION_REQUIRED') {
+      setErrorBannerTitle('Pickup location required');
+      list.innerHTML = '<li>Please select a pickup location before placing this order.</li>';
+    } else if (error?.message === 'SHIPPING_ADDRESS_REQUIRED') {
+      setErrorBannerTitle('Shipping address required');
+      list.innerHTML = '<li>Please complete the shipping address before placing this order.</li>';
     } else if (payOnline) {
       setErrorBannerTitle('Online payment could not start');
       const detail = error?.message || error?.code || '';
@@ -1649,6 +1846,7 @@ async function init() {
   renderCartReview();
   updateNavCart();
   bindFormUi();
+  bindFulfillmentUi();
   bindPaymentUi();
   bindCustomerProfile();
   trackCheckoutEvent('checkout_viewed', {

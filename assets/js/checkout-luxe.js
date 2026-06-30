@@ -77,7 +77,7 @@
         '<div class="pk-line"><span></span></div>' +
         '<div class="pk-step" data-step="details"><span class="pk-dot">✍️</span>Your Details</div>' +
         '<div class="pk-line"><span></span></div>' +
-        '<div class="pk-step" data-step="pickup"><span class="pk-dot">📍</span>Pickup Spot</div>' +
+        '<div class="pk-step" data-step="pickup"><span class="pk-dot">📍</span>Fulfillment</div>' +
         '<div class="pk-line"><span></span></div>' +
         '<div class="pk-step" data-step="seal"><span class="pk-dot">🥭</span>Seal It</div>';
       wrap.parentNode.insertBefore(journey, wrap);
@@ -205,7 +205,17 @@
       function phoneOk() { return (($('phone') || {}).value || '').replace(/\D/g, '').length >= 10; }
       function emailOk() { return /\S+@\S+\.\S+/.test((($('email') || {}).value || '')); }
       function nameOk() { return (($('firstName') || {}).value || '').trim().length >= 2; }
-      function locPicked() { return !!document.querySelector('.loc-card.selected'); }
+      function shippingSelected() { return !!document.querySelector('.fulfillment-option[data-fulfillment="shipping"].selected'); }
+      function shippingOk() {
+        if (!shippingSelected()) return false;
+        var state = (($('shippingState') || {}).value || '').trim();
+        var zip = (($('shippingZip') || {}).value || '').trim();
+        return (($('shippingAddress1') || {}).value || '').trim().length >= 5 &&
+          (($('shippingCity') || {}).value || '').trim().length >= 2 &&
+          /^[A-Za-z]{2}$/.test(state) &&
+          /^\d{5}(-\d{4})?$/.test(zip);
+      }
+      function locPicked() { return shippingSelected() ? shippingOk() : !!document.querySelector('.loc-card.selected'); }
 
       var LOC_LABELS = { shortpump: 'Short Pump, VA', chesterfield: 'Chesterfield, VA', mechanicsville: 'Mechanicsville, VA' };
 
@@ -214,7 +224,7 @@
         if (!nameOk()) return $('firstName');
         if (!phoneOk()) return $('phone');
         if (!emailOk()) return $('email');
-        if (!locPicked()) return $('locCards');
+        if (!locPicked()) return shippingSelected() ? $('shippingAddress1') : $('locCards');
         return null;
       }
       function sealAction() {
@@ -324,7 +334,7 @@
           if (!hasItems) missing.push('add an item');
           if (!nameOk()) missing.push('your name');
           if (!(phoneOk() && emailOk())) missing.push('phone & email');
-          if (!locPicked()) missing.push('pickup spot');
+          if (!locPicked()) missing.push(shippingSelected() ? 'shipping address' : 'pickup spot');
           $('pkHint').textContent = pct === 100 ? '🥭 Everything’s packed — seal it below!' : 'Still needed: ' + missing.join(' · ');
 
           var seal = $('pkSeal');

@@ -32,6 +32,8 @@ const MAX_REMINDER_EMAILS_PER_SEND = 50;
 const MAX_PRODUCT_NOTIFY_EMAILS_PER_SEND = 250;
 const STRIPE_PAYMENTS_ENABLED = process.env.STRIPE_PAYMENTS_ENABLED === "true";
 const DEFAULT_VIRGINIA_SALES_TAX_RATE = 0.01;
+const DEFAULT_STANDARD_SHIPPING_AMOUNT = 8.99;
+const DEFAULT_FREE_SHIPPING_THRESHOLD = 75;
 
 function isAdminRequest(request) {
   return String(request.auth?.token?.email || "").trim().toLowerCase() === SHRISH_ADMIN_EMAIL;
@@ -263,14 +265,33 @@ async function classifyOrderPaymentItems(db, order = {}) {
 }
 
 function orderSalesTaxAmount(order = {}) {
-  const explicit = Number(order.salesTaxAmount ?? order.taxAmount ?? 0);
-  if (Number.isFinite(explicit) && explicit >= 0) return roundCurrency(explicit);
-
-  const subtotal = Number(order.itemSubtotal ?? 0) > 0
-    ? Number(order.itemSubtotal)
-    : (Array.isArray(order.items) ? order.items.reduce((sum, item) => sum + normalizeLineTotal(item), 0) : 0);
+  const subtotalFromItems = Array.isArray(order.items)
+    ? order.items.reduce((sum, item) => sum + normalizeLineTotal(item), 0)
+    : 0;
+  const subtotal = subtotalFromItems > 0 ? subtotalFromItems : Number(order.itemSubtotal ?? 0);
 
   return roundCurrency(subtotal * configuredVirginiaSalesTaxRate());
+}
+
+function configuredStandardShippingAmount() {
+  const configured = Number(process.env.SHRISH_STANDARD_SHIPPING_AMOUNT);
+  return Number.isFinite(configured) && configured >= 0 ? configured : DEFAULT_STANDARD_SHIPPING_AMOUNT;
+}
+
+function configuredFreeShippingThreshold() {
+  const configured = Number(process.env.SHRISH_FREE_SHIPPING_THRESHOLD);
+  return Number.isFinite(configured) && configured >= 0 ? configured : DEFAULT_FREE_SHIPPING_THRESHOLD;
+}
+
+function orderShippingAmount(order = {}) {
+  if (String(order.fulfillmentType || "pickup") !== "shipping") return 0;
+
+  const subtotalFromItems = Array.isArray(order.items)
+    ? order.items.reduce((sum, item) => sum + normalizeLineTotal(item), 0)
+    : 0;
+  const subtotal = subtotalFromItems > 0 ? subtotalFromItems : Number(order.itemSubtotal ?? 0);
+
+  return roundCurrency(subtotal >= configuredFreeShippingThreshold() ? 0 : configuredStandardShippingAmount());
 }
 
 async function assignSequentialOrderNumber(orderRef, existingOrderNumber) {
@@ -318,9 +339,17 @@ function buildCustomerEmail(order) {
   const items = Array.isArray(order.items) ? order.items : [];
   const firstName = escapeHtml(order.firstName || "Customer");
   const orderNumber = escapeHtml(order.orderNumber || "");
-  const pickupLocation = escapeHtml(
-    order.locationLabel || order.pickupLocation || "Chesterfield, VA"
-  );
+  const isShipping = String(order.fulfillmentType || "pickup") === "shipping";
+  const shippingAddress = order.shippingAddress || {};
+  const fulfillmentDestination = escapeHtml(isShipping
+    ? `${shippingAddress.addressLine1 || ""}${shippingAddress.addressLine2 ? `, ${shippingAddress.addressLine2}` : ""}, ${shippingAddress.city || ""}, ${shippingAddress.state || ""} ${shippingAddress.zip || ""}`.replace(/\s+/g, " ").trim()
+    : (order.pickupLocationLabel || order.locationLabel || order.pickupLocation || "Chesterfield, VA"));
+  const fulfillmentIntro = isShipping
+    ? "Thank you for ordering from Shrish. Your request has been received. We will prepare your order for shipping and share updates by email or phone if needed."
+    : "Thank you for ordering from Shrish. Your request has been received. Please follow our WhatsApp group for pickup location, pickup day, and timing updates.";
+  const fulfillmentLine = isShipping
+    ? `We have your order <strong>${orderNumber}</strong> to ship to <strong>${fulfillmentDestination}</strong>.`
+    : `We have your order <strong>${orderNumber}</strong> for pickup in <strong>${fulfillmentDestination}</strong>.`;
   const isPaidOnline = order.paymentMethod === "stripe" || order.paymentStatus === "paid";
   const paymentMessage = isPaidOnline ? "Payment was completed online." : "Payment is collected at pickup.";
 
@@ -347,7 +376,7 @@ function buildCustomerEmail(order) {
               Your order is confirmed
             </div>
             <div style="margin-top:10px; font-size:14px; line-height:1.6; color:#fff3df; max-width:520px; margin-left:auto; margin-right:auto;">
-              Thank you for ordering from Shrish. Your request has been received. Please follow our WhatsApp group for pickup location, pickup day, and timing updates.
+              ${fulfillmentIntro}
             </div>
           </div>
 
@@ -355,8 +384,7 @@ function buildCustomerEmail(order) {
             <p style="margin:0 0 18px; font-size:15px; line-height:1.6;">Hi ${firstName},</p>
 
             <p style="margin:0 0 22px; font-size:15px; line-height:1.7;">
-              We have your order <strong>${orderNumber}</strong> for pickup in <strong>${pickupLocation}</strong>.
-              ${paymentMessage}
+              ${fulfillmentLine} ${paymentMessage}
             </p>
 
             <table style="width:100%; border-collapse:collapse; margin:0 0 24px;">
@@ -1109,6 +1137,17 @@ exports.createStripeCheckoutSession = onCall(
     if (!paymentPolicy.requiresStripe) {
       throw new HttpsError("failed-precondition", "This cart is eligible for pickup payment and is not set for online-only checkout.");
     }
+    if (String(order.fulfillmentType || "pickup") === "shipping") {
+      const shippingAddress = order.shippingAddress || {};
+      const hasShippingAddress =
+        String(shippingAddress.addressLine1 || "").trim().length >= 5 &&
+        String(shippingAddress.city || "").trim().length >= 2 &&
+        /^[A-Z]{2}$/i.test(String(shippingAddress.state || "").trim()) &&
+        /^\d{5}(-\d{4})?$/.test(String(shippingAddress.zip || "").trim());
+      if (!hasShippingAddress) {
+        throw new HttpsError("failed-precondition", "Shipping address is required before online payment.");
+      }
+    }
 
     let session;
     let stripeCustomerId = "";
@@ -1125,6 +1164,7 @@ exports.createStripeCheckoutSession = onCall(
         customerUid: order.customerUid || request.auth?.uid || "",
         source: "shrish_checkout",
         salesTaxAmount: String(orderSalesTaxAmount(order)),
+        shippingAmount: String(orderShippingAmount(order)),
       };
 
       if (request.auth?.uid && saveCard) {
@@ -1166,6 +1206,11 @@ exports.createStripeCheckoutSession = onCall(
         };
       });
       const salesTaxAmount = orderSalesTaxAmount(order);
+      const shippingAmount = orderShippingAmount(order);
+      const itemSubtotal = Array.isArray(order.items)
+        ? roundCurrency(order.items.reduce((sum, item) => sum + normalizeLineTotal(item), 0))
+        : 0;
+      const totalPrice = roundCurrency(itemSubtotal + salesTaxAmount + shippingAmount);
       if (salesTaxAmount > 0) {
         lineItems.push({
           quantity: 1,
@@ -1174,6 +1219,18 @@ exports.createStripeCheckoutSession = onCall(
             unit_amount: toStripeAmount(salesTaxAmount),
             product_data: {
               name: String(order.salesTaxLabel || "Virginia sales tax").slice(0, 180),
+            },
+          },
+        });
+      }
+      if (shippingAmount > 0) {
+        lineItems.push({
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            unit_amount: toStripeAmount(shippingAmount),
+            product_data: {
+              name: String(order.shippingLabel || "Standard shipping").slice(0, 180),
             },
           },
         });
@@ -1203,6 +1260,11 @@ exports.createStripeCheckoutSession = onCall(
         stripeCheckoutSessionId: session.id,
         stripeCustomerId: stripeCustomerId || "",
         saveCardRequested: saveCard,
+        itemSubtotal,
+        salesTaxAmount,
+        shippingAmount,
+        shippingFreeThreshold: configuredFreeShippingThreshold(),
+        totalPrice,
         paymentStatus: "checkout_started",
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       }, { merge: true });

@@ -14,7 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="icon" href="images/brand/logo-small.png" type="image/png">
 <link rel="stylesheet" href="assets/css/styles.css?v=trust-marquee-20260609">
-<link rel="stylesheet" href="assets/css/checkout-luxe.css?v=payment-policy-20260630">
+<link rel="stylesheet" href="assets/css/checkout-luxe.css?v=shipping-phase1-20260630">
 <style>
 /* Layout */
 .checkout-wrap{max-width:1520px;margin:0 auto;padding:60px 24px 80px;display:grid;grid-template-columns:1.2fr .95fr;gap:48px}
@@ -65,6 +65,20 @@
 .loc-icon{font-size:26px;margin-bottom:8px}
 .loc-name{font-size:15px;font-weight:700;color:var(--dark);margin-bottom:3px}
 .loc-sub{font-size:13px;color:var(--text-light);line-height:1.6}
+.fulfillment-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0 14px}
+.fulfillment-option{border:2px solid #E0D0B8;border-radius:14px;padding:15px 16px;cursor:pointer;transition:border-color .25s,background .25s;position:relative}
+.fulfillment-option:hover{border-color:var(--saffron);background:rgba(200,121,26,.03)}
+.fulfillment-option.selected{border-color:var(--saffron);background:rgba(200,121,26,.06)}
+.fulfillment-option[hidden]{display:none!important}
+.fulfillment-option input{position:absolute;opacity:0;pointer-events:none}
+.fulfillment-title{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:800;color:var(--dark);margin-bottom:5px}
+.fulfillment-copy{font-size:13px;line-height:1.55;color:var(--text-light)}
+.fulfillment-note{background:#fff8ec;border:1px solid rgba(200,121,26,.22);border-radius:12px;color:var(--text-light);font-size:12.5px;line-height:1.55;padding:10px 12px;margin:-4px 0 14px}
+.shipping-fields{display:none;background:#fffdf8;border:1px solid rgba(200,121,26,.22);border-radius:14px;padding:16px;margin:8px 0 14px}
+.shipping-fields.show{display:block}
+.shipping-fields .form-row{margin-bottom:0}
+.shipping-rate-line{font-size:12.5px;color:var(--text-light);line-height:1.55;margin:2px 0 12px}
+.shipping-rate-line strong{color:var(--dark)}
 
 /* Error banner */
 .error-banner{display:none;background:#FFF3CD;border:1.5px solid #F0A500;border-radius:14px;padding:16px 20px;margin-bottom:20px}
@@ -185,7 +199,7 @@
 .comm-note{font-size:12px;color:rgba(255,255,255,.4);margin-top:16px}
 
 @media(max-width:900px){.checkout-wrap{grid-template-columns:1fr;padding:40px 20px 60px}}
-@media(max-width:480px){.loc-cards,.payment-options{grid-template-columns:1fr}.community-btns{flex-direction:column;align-items:center}}
+@media(max-width:480px){.loc-cards,.payment-options,.fulfillment-options{grid-template-columns:1fr}.community-btns{flex-direction:column;align-items:center}}
 
 /* ── REFUND TAB STYLES ─────────────────────────────────────────────────── */
 .refund-card {
@@ -407,8 +421,23 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
       </div>
 
       <div class="form-divider"></div>
-      <div class="step-label">Step 2 - Pickup Location</div>
+      <div class="step-label">Step 2 - Fulfillment</div>
 
+      <div class="fulfillment-options" id="fulfillmentOptions">
+        <label class="fulfillment-option selected" data-fulfillment="pickup">
+          <input type="radio" name="fulfillmentType" value="pickup" checked>
+          <span class="fulfillment-title">Pickup <span class="payment-pill">Default</span></span>
+          <span class="fulfillment-copy">Pick up from Short Pump, Chesterfield, or Mechanicsville.</span>
+        </label>
+        <label class="fulfillment-option" data-fulfillment="shipping">
+          <input type="radio" name="fulfillmentType" value="shipping">
+          <span class="fulfillment-title">Ship to me <span class="payment-pill">Non-mango</span></span>
+          <span class="fulfillment-copy">Available for pickles, podi, sweets, and snacks. Free at $75+.</span>
+        </label>
+      </div>
+      <div class="fulfillment-note" id="fulfillmentRuleNote"></div>
+
+      <div id="pickupLocationSection">
       <div class="loc-cards" id="locCards">
         <div class="loc-card" id="loc-shortpump" data-loc="shortpump">
           <div class="loc-check" id="check-shortpump">&#10003;</div>
@@ -430,6 +459,37 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
         </div>
       </div>
       <div class="form-error" id="err-location" style="margin-bottom:16px">Please select a pickup location</div>
+      </div>
+
+      <div class="shipping-fields" id="shippingFields">
+        <div class="shipping-rate-line" id="shippingRateLine"></div>
+        <div class="form-group">
+          <label class="form-label">Street Address <span class="req">*</span></label>
+          <input type="text" class="form-control" id="shippingAddress1" autocomplete="shipping address-line1" placeholder="123 Main St">
+          <div class="form-error" id="err-shippingAddress1">Please enter your shipping street address</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Apartment / Suite <span style="color:var(--text-light);font-weight:500">(optional)</span></label>
+          <input type="text" class="form-control" id="shippingAddress2" autocomplete="shipping address-line2" placeholder="Apt, suite, unit">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">City <span class="req">*</span></label>
+            <input type="text" class="form-control" id="shippingCity" autocomplete="shipping address-level2" placeholder="Richmond">
+            <div class="form-error" id="err-shippingCity">Please enter the shipping city</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">State <span class="req">*</span></label>
+            <input type="text" class="form-control" id="shippingState" autocomplete="shipping address-level1" maxlength="2" value="VA" placeholder="VA">
+            <div class="form-error" id="err-shippingState">Please enter a 2-letter state</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ZIP Code <span class="req">*</span></label>
+          <input type="text" class="form-control" id="shippingZip" autocomplete="shipping postal-code" inputmode="numeric" maxlength="10" placeholder="23233">
+          <div class="form-error" id="err-shippingZip">Please enter a valid ZIP code</div>
+        </div>
+      </div>
 
       <div class="form-divider"></div>
       <div class="step-label">Step 3 - Optional</div>
@@ -462,7 +522,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
         <label class="payment-option" data-payment="stripe">
           <input type="radio" name="paymentMethod" value="stripe">
           <span class="payment-title">Pay online now <span class="payment-pill">Stripe</span></span>
-          <span class="payment-copy">Use a card securely through Stripe before pickup.</span>
+          <span class="payment-copy">Use a card securely through Stripe.</span>
         </label>
       </div>
       <div class="payment-rule-note" id="paymentRuleNote"></div>
@@ -476,7 +536,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 
       <div class="checkout-safety-note">
         <strong>Food allergy and spice notice:</strong> Products may contain or be prepared with peanut/groundnut oil and other major allergens (including milk, egg, fish, shellfish, tree nuts, wheat, soy, and sesame). Ingredients, spice level, labels, and packaging may vary by supplier batch. Product images are for illustration only. If you have allergies, sensitivities, or medical dietary restrictions, contact us before ordering.
-        <br><strong>Delivery note:</strong> Orders above $75 get free delivery on Sweets, Pickles, and Podi only; mangoes are excluded.
+        <br><strong>Shipping note:</strong> Orders above $75 get free shipping on Sweets, Pickles, and Podi only; mangoes are excluded.
       </div>
 
       <p class="order-consent" style="font-size:12px;color:var(--text-light);line-height:1.65;margin:12px 0 10px">
@@ -563,9 +623,9 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="assets/js/analytics.js?v=perf2-20260624"></script>
 <script src="assets/js/main.js?v=perf2-20260624"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/order-firebase.js?v=payment-policy-20260630"></script>
+<script type="module" src="assets/js/order-firebase.js?v=shipping-phase1-20260630"></script>
 
-<script defer src="assets/js/checkout-luxe.js?v=payment-policy-20260630"></script>
+<script defer src="assets/js/checkout-luxe.js?v=shipping-phase1-20260630"></script>
 </body>
 </html>
 
