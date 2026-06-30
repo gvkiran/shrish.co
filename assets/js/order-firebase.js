@@ -125,6 +125,10 @@ function friendlyOrderLabel(displayNumber) {
   return isShrishOrderNumber(displayNumber) ? displayNumber : 'your recent order';
 }
 
+function orderNumberHighlight(value) {
+  return `<span class="success-order-number">${escapeHtml(value)}</span>`;
+}
+
 function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
   const prompt = document.getElementById('successAccountPrompt');
   if (!prompt || !customerAccountsEnabled()) return;
@@ -139,7 +143,7 @@ function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
       <p>This order is saved to your Shrish account. You can <strong>view history</strong>, <strong>change pending quantities</strong>, or <strong>cancel before pickup is confirmed</strong>.</p>
       <div class="success-account-actions">
         <a href="account.html" class="btn-primary">View My Orders</a>
-        <span class="success-account-note"><strong>${escapeHtml(orderLabel)}</strong> is ready in your account.</span>
+        <span class="success-account-note">${orderNumberHighlight(orderLabel)} is ready in your account.</span>
       </div>`;
     return;
   }
@@ -151,7 +155,7 @@ function renderSuccessAccountPrompt(orderRef, order, displayNumber) {
     <div class="success-account-actions">
       <a href="${signupHref}" class="btn-primary">Create Account</a>
       <a href="${signinHref}" class="btn-outline">Sign In</a>
-      <span class="success-account-note">Use <strong>${escapeHtml(order.email || 'the same email')}</strong> to link <strong>${escapeHtml(orderLabel)}</strong>.</span>
+      <span class="success-account-note">Use <strong>${escapeHtml(order.email || 'the same email')}</strong> to link ${orderNumberHighlight(orderLabel)}.</span>
     </div>`;
 }
 
@@ -176,7 +180,7 @@ function renderStripeSuccessAccountPrompt(orderId, orderNumber, customer) {
       <p>Your paid order is linked to your Shrish account. You can view order history, pickup details, and eligible pending order changes from one place.</p>
       <div class="success-account-actions">
         <a href="account.html" class="btn-primary">View My Orders</a>
-        <span class="success-account-note">${escapeHtml(displayNumber)} is ready in your account.</span>
+        <span class="success-account-note">${orderNumberHighlight(displayNumber)} is ready in your account.</span>
       </div>`;
     return;
   }
@@ -186,7 +190,7 @@ function renderStripeSuccessAccountPrompt(orderId, orderNumber, customer) {
   prompt.classList.add('show');
   prompt.innerHTML = `
     <strong>Create an account to track this order</strong>
-    <p>Save ${escapeHtml(displayNumber)} to see your purchase history, keep pickup details handy, and modify eligible pending orders before pickup is confirmed.</p>
+    <p>Save ${orderNumberHighlight(displayNumber)} to see your purchase history, keep pickup details handy, and modify eligible pending orders before pickup is confirmed.</p>
     <div class="success-account-actions">
       <a href="${signupHref}" class="btn-primary">Create Account</a>
       <a href="${signinHref}" class="btn-outline">Sign In</a>
@@ -235,8 +239,8 @@ async function renderStripeReturnMessage() {
 
     document.getElementById('checkoutWrap').style.display = 'none';
     document.getElementById('successScreen').style.display = 'block';
-    document.getElementById('successOrderNum').textContent = orderNumber
-      ? `Payment received - Order Confirmation No: ${orderNumber}`
+    document.getElementById('successOrderNum').innerHTML = orderNumber
+      ? `Payment received - Order Confirmation No: ${orderNumberHighlight(orderNumber)}`
       : 'Payment received';
     document.querySelector('#successScreen > p')?.replaceChildren(document.createTextNode('Your online payment was received. Watch the WhatsApp group for pickup details.'));
     const paymentCopy = document.querySelectorAll('#successScreen > p')[1];
@@ -245,7 +249,7 @@ async function renderStripeReturnMessage() {
     if (summary) {
       summary.innerHTML = `
         <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Paid online</span></div>
-        <div class="ss-row"><span>Order Confirmation No</span><span>${escapeHtml(orderNumber || 'Your confirmation email will include it')}</span></div>`;
+        <div class="ss-row"><span>Order Confirmation No</span><span>${orderNumber ? orderNumberHighlight(orderNumber) : escapeHtml('Your confirmation email will include it')}</span></div>`;
     }
     renderStripeSuccessAccountPrompt(orderId, orderNumber, customer);
 
@@ -1460,8 +1464,8 @@ async function submitOrder() {
 
     const confirmationNumber = currentCustomer ? await waitForOrderConfirmationNumber(orderRef) : '';
     const displayNumber = confirmationNumber || '';
-    document.getElementById('successOrderNum').textContent = confirmationNumber
-      ? `Order Confirmation No: ${confirmationNumber}`
+    document.getElementById('successOrderNum').innerHTML = confirmationNumber
+      ? `Order Confirmation No: ${orderNumberHighlight(confirmationNumber)}`
       : 'Order received - your SHR confirmation number will be sent by email.';
 
     const itemLines = order.items
@@ -1496,7 +1500,7 @@ async function submitOrder() {
       <div class="ss-row"><span>Name</span><span>${escapeHtml(`${firstName} ${lastName}`.trim())}</span></div>
       <div class="ss-row"><span>Phone</span><span>${escapeHtml(phone)}</span></div>
       <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Pay at Pickup</span></div>
-      <div class="ss-row"><span>Order Confirmation No</span><span>${escapeHtml(confirmationNumber || 'Sending by email')}</span></div>`;
+      <div class="ss-row"><span>Order Confirmation No</span><span>${confirmationNumber ? orderNumberHighlight(confirmationNumber) : escapeHtml('Sending by email')}</span></div>`;
 
     rememberRecentOrderForAccount(orderRef, order, displayNumber);
     renderSuccessAccountPrompt(orderRef, order, displayNumber);

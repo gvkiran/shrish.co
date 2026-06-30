@@ -141,7 +141,10 @@ body.packing-room .success-screen .success-icon-big{display:none}
 body.packing-room .success-screen h2{font-family:var(--font-display,'Cormorant Garamond'),serif;font-size:clamp(2.2rem,5vw,3.4rem);color:#F4EADA;text-align:center;margin:18px 0 8px}
 body.packing-room .success-screen h2 em{color:#F0C84A}
 body.packing-room .success-screen > p{text-align:center;color:#B3A287;max-width:54ch;margin:8px auto}
-body.packing-room .order-badge{display:block;width:fit-content;margin:14px auto;background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;font-weight:800;letter-spacing:.06em;padding:12px 26px;border-radius:14px;box-shadow:0 8px 18px rgba(212,160,23,.35);position:relative}
+body.packing-room .order-badge{display:block;width:fit-content;margin:14px auto;background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;font-size:20px;font-weight:900;letter-spacing:.06em;padding:14px 28px;border-radius:14px;box-shadow:0 8px 18px rgba(212,160,23,.35);position:relative}
+body.packing-room .success-order-number{color:#F0C84A;font-size:1.22em;font-weight:900;letter-spacing:.055em;text-shadow:0 0 16px rgba(240,200,74,.32)}
+body.packing-room .order-badge .success-order-number{color:#140C03;font-size:1.08em;text-shadow:none}
+body.packing-room .success-account-prompt p .success-order-number,body.packing-room .success-account-note .success-order-number{font-size:18px;margin:0 3px}
 body.packing-room .order-badge::before,body.packing-room .order-badge::after{content:'';position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:#100A04;transform:translateY(-50%)}
 body.packing-room .order-badge::before{left:-7px}
 body.packing-room .order-badge::after{right:-7px}
