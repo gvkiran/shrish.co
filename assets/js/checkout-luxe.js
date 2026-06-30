@@ -30,9 +30,24 @@
     return products.find(function (p) { return p.id === productId; }) || null;
   }
 
-  function isMangoItem(item) {
+  var MANGO_CATEGORY_HINTS = ['mangoes', 'mango', 'fruits', 'fruits/mangoes'];
+  var MANGO_NAME_HINTS = ['alphonso', 'hapus', 'banganapalli', 'banginapalli', 'safeda', 'kesar', 'himayat', 'imam pasand', 'rasalu', 'dasheri', 'langra', 'mallika', 'mango box'];
+  var NON_MANGO_NAME_HINTS = ['pickle', 'podi', 'powder', 'putharekulu', 'jelly', 'thandra', 'sweet', 'snack', 'gongura', 'avakai', 'mango ginger'];
+
+  function itemCategory(item) {
     var product = productForItem(item);
-    return !!(product && product.category === 'mangoes');
+    var rawCategory = String((product && product.category) || item.category || item.productCategory || '').trim().toLowerCase();
+    if (MANGO_CATEGORY_HINTS.indexOf(rawCategory) >= 0) return 'mangoes';
+    if (rawCategory) return rawCategory;
+
+    var haystack = (productIdFromCartItem(item) + ' ' + (item.name || '')).toLowerCase();
+    if (NON_MANGO_NAME_HINTS.some(function (hint) { return haystack.indexOf(hint) >= 0; })) return 'non-mango';
+    if (MANGO_NAME_HINTS.some(function (hint) { return haystack.indexOf(hint) >= 0; })) return 'mangoes';
+    return 'non-mango';
+  }
+
+  function isMangoItem(item) {
+    return itemCategory(item) === 'mangoes';
   }
 
   function cartPaymentPolicy(items) {

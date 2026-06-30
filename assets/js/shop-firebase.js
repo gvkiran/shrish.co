@@ -653,6 +653,7 @@ function addToCart(productId, qty, variantId = null) {
     id: cartItemId,
     productId: p.id,
     variantId: selectedVariant.id,
+    category: p.category || '',
     name: selectedVariant.id === 'default' ? p.name : `${p.name} (${selectedVariant.label})`,
     price: selectedVariant.price || p.price,
     unit: selectedVariant.unit || p.unit,

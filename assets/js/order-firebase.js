@@ -39,6 +39,40 @@ const LOCATION_LABELS = {
 };
 const VIRGINIA_SALES_TAX_RATE = Number(window.SHRISH_APP_CONFIG?.virginiaSalesTaxRate ?? 0.01);
 const VIRGINIA_SALES_TAX_LABEL = 'Virginia sales tax';
+const MANGO_CATEGORY_HINTS = new Set([
+  'mangoes',
+  'mango',
+  'fruits',
+  'fruits/mangoes'
+]);
+const MANGO_NAME_HINTS = [
+  'alphonso',
+  'hapus',
+  'banganapalli',
+  'banginapalli',
+  'safeda',
+  'kesar',
+  'himayat',
+  'imam pasand',
+  'rasalu',
+  'dasheri',
+  'langra',
+  'mallika',
+  'mango box'
+];
+const NON_MANGO_NAME_HINTS = [
+  'pickle',
+  'podi',
+  'powder',
+  'putharekulu',
+  'jelly',
+  'thandra',
+  'sweet',
+  'snack',
+  'gongura',
+  'avakai',
+  'mango ginger'
+];
 
 function customerAccountsEnabled() {
   return window.SHRISH_APP_CONFIG?.customerAccountsEnabled === true;
@@ -349,8 +383,20 @@ function cartProductForItem(item = {}) {
   return productId ? window.SHRISH_DATA?.products?.find((entry) => entry.id === productId) : null;
 }
 
+function cartItemCategory(item = {}) {
+  const product = cartProductForItem(item);
+  const rawCategory = String(product?.category || item.category || item.productCategory || '').trim().toLowerCase();
+  if (MANGO_CATEGORY_HINTS.has(rawCategory)) return 'mangoes';
+  if (rawCategory) return rawCategory;
+
+  const haystack = `${cartItemProductId(item)} ${item.name || ''}`.toLowerCase();
+  if (NON_MANGO_NAME_HINTS.some((hint) => haystack.includes(hint))) return 'non-mango';
+  if (MANGO_NAME_HINTS.some((hint) => haystack.includes(hint))) return 'mangoes';
+  return 'non-mango';
+}
+
 function isMangoCartItem(item = {}) {
-  return cartProductForItem(item)?.category === 'mangoes';
+  return cartItemCategory(item) === 'mangoes';
 }
 
 function cartPaymentPolicy(items = cart) {
