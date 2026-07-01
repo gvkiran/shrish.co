@@ -14,7 +14,7 @@ window.SHRISH_APP_CONFIG = {
   supportPhone: "+1 (765) 325-5577",
   defaultOrderStatus: "pending",
   customerAccountsEnabled: true,
-  googleMapsApiKey: "",
+  googleMapsApiKey: "AIzaSyDhgzoH2iKj3m0yt0c4DQRbZ10nKXgSLC0",
   // Fill after registering shrish.co in Firebase App Check. Leave blank until tested.
   appCheckSiteKey: ""
 };
