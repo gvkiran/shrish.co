@@ -754,7 +754,45 @@ function renderCartReview() {
 
   const confirmRemoveCartItem = (item) => {
     const itemName = item?.name || 'this item';
-    return window.confirm(`Remove ${itemName} from your cart?`);
+
+    return new Promise((resolve) => {
+      document.getElementById('cartRemoveModal')?.remove();
+
+      const modal = document.createElement('div');
+      modal.id = 'cartRemoveModal';
+      modal.className = 'cart-remove-modal';
+      modal.setAttribute('role', 'dialog');
+      modal.setAttribute('aria-modal', 'true');
+      modal.innerHTML = `
+        <div class="cart-remove-card">
+          <div class="cart-remove-kicker">Confirm remove</div>
+          <h3>Remove this item?</h3>
+          <p>This will remove the item from your current cart and recalculate your total.</p>
+          <div class="cart-remove-item">${escapeHtml(itemName)}</div>
+          <div class="cart-remove-actions">
+            <button type="button" class="cart-remove-cancel">Keep item</button>
+            <button type="button" class="cart-remove-confirm">Remove</button>
+          </div>
+        </div>`;
+
+      const close = (value) => {
+        modal.remove();
+        document.removeEventListener('keydown', handleKeydown);
+        resolve(value);
+      };
+      const handleKeydown = (event) => {
+        if (event.key === 'Escape') close(false);
+      };
+
+      modal.querySelector('.cart-remove-cancel')?.addEventListener('click', () => close(false));
+      modal.querySelector('.cart-remove-confirm')?.addEventListener('click', () => close(true));
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal) close(false);
+      });
+      document.addEventListener('keydown', handleKeydown);
+      document.body.appendChild(modal);
+      modal.querySelector('.cart-remove-confirm')?.focus();
+    });
   };
 
   const removeCartItemById = (id) => {
@@ -766,14 +804,14 @@ function renderCartReview() {
   };
 
   container.querySelectorAll('.ri-qty-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const id = btn.dataset.id;
       const delta = parseInt(btn.dataset.delta, 10);
       const item = cart.find((entry) => entry.id === id);
       if (!item) return;
 
       if (delta < 0 && Number(item.qty || 0) <= 1) {
-        if (confirmRemoveCartItem(item)) removeCartItemById(id);
+        if (await confirmRemoveCartItem(item)) removeCartItemById(id);
         return;
       }
 
@@ -789,9 +827,9 @@ function renderCartReview() {
   });
 
   container.querySelectorAll('.ri-remove').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const item = cart.find((entry) => entry.id === btn.dataset.id);
-      if (!item || confirmRemoveCartItem(item)) removeCartItemById(btn.dataset.id);
+      if (!item || await confirmRemoveCartItem(item)) removeCartItemById(btn.dataset.id);
     });
   });
 
