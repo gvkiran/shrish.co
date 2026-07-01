@@ -135,18 +135,19 @@ body.packing-room .ri-remove:hover{
 }
 body.packing-room .shipping-address-assist{color:#A99065}
 body.packing-room .shipping-address-assist.valid{color:#7FE39B}
-body.packing-room .pac-container{
+body.packing-room .shipping-address-suggestions{
   background:#15100A;
   border-color:rgba(212,160,23,.35);
   box-shadow:0 20px 54px rgba(0,0,0,.45);
 }
-body.packing-room .pac-item{
-  border-top-color:rgba(212,160,23,.12);
+body.packing-room .shipping-address-suggestion{
   color:#B3A287;
+  border-top:1px solid rgba(212,160,23,.12);
 }
-body.packing-room .pac-item:hover{background:#21160A}
-body.packing-room .pac-item-query,
-body.packing-room .pac-matched{color:#F4EADA}
+body.packing-room .shipping-address-suggestion:first-child{border-top:0}
+body.packing-room .shipping-address-suggestion:hover,
+body.packing-room .shipping-address-suggestion:focus{background:#21160A}
+body.packing-room .shipping-address-suggestion strong{color:#F4EADA}
 body.packing-room .loc-card,
 body.packing-room .fulfillment-option,
 body.packing-room .payment-option{

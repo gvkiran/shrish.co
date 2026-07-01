@@ -77,14 +77,17 @@
 .shipping-fields{display:none;background:#fffdf8;border:1px solid rgba(200,121,26,.22);border-radius:14px;padding:16px;margin:8px 0 14px}
 .shipping-fields.show{display:block}
 .shipping-fields .form-row{margin-bottom:0}
+.shipping-address-group{position:relative}
 .shipping-rate-line{font-size:12.5px;color:var(--text-light);line-height:1.55;margin:2px 0 12px}
 .shipping-rate-line strong{color:var(--dark)}
 .shipping-address-assist{display:none;margin-top:7px;font-size:12px;line-height:1.45;color:var(--text-light)}
 .shipping-address-assist.show{display:block}
 .shipping-address-assist.valid{color:#2E7D32;font-weight:700}
-.pac-container{z-index:7000!important;border-radius:12px;border:1px solid rgba(200,121,26,.26);box-shadow:0 16px 44px rgba(26,18,8,.2);font-family:var(--font-body)}
-.pac-item{padding:9px 12px;font-size:13px;cursor:pointer}
-.pac-item:hover{background:#fff8ec}
+.shipping-address-suggestions{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:1200;background:#fffdf8;border:1px solid rgba(200,121,26,.28);border-radius:12px;box-shadow:0 16px 44px rgba(26,18,8,.2);overflow:hidden}
+.shipping-address-suggestions.show{display:block}
+.shipping-address-suggestion{width:100%;border:0;background:transparent;color:var(--dark);font-family:var(--font-body);font-size:13px;line-height:1.35;text-align:left;padding:10px 12px;cursor:pointer}
+.shipping-address-suggestion:hover,.shipping-address-suggestion:focus{background:#fff8ec;outline:0}
+.shipping-address-suggestion strong{display:block;color:var(--orange);font-size:12px;margin-bottom:2px}
 
 /* Error banner */
 .error-banner{display:none;background:#FFF3CD;border:1.5px solid #F0A500;border-radius:14px;padding:16px 20px;margin-bottom:20px}
@@ -481,10 +484,11 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 
       <div class="shipping-fields" id="shippingFields">
         <div class="shipping-rate-line" id="shippingRateLine"></div>
-        <div class="form-group">
+        <div class="form-group shipping-address-group">
           <label class="form-label">Street Address <span class="req">*</span></label>
           <input type="text" class="form-control" id="shippingAddress1" autocomplete="shipping address-line1" placeholder="123 Main St">
           <div class="shipping-address-assist" id="shippingAddressAssist" aria-live="polite"></div>
+          <div class="shipping-address-suggestions" id="shippingAddressSuggestions" role="listbox" aria-label="Suggested shipping addresses"></div>
           <div class="form-error" id="err-shippingAddress1">Please enter your shipping street address</div>
         </div>
         <div class="form-group">
@@ -642,7 +646,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="assets/js/analytics.js?v=perf2-20260624"></script>
 <script src="assets/js/main.js?v=perf2-20260624"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/order-firebase.js?v=shipping-address-20260701"></script>
+<script type="module" src="assets/js/order-firebase.js?v=places-new-20260701"></script>
 
 <script defer src="assets/js/checkout-luxe.js?v=cart-remove-modal-20260630"></script>
 </body>

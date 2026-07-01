@@ -1106,13 +1106,23 @@ function setAddressAssist(message = '', state = '') {
   assist.classList.toggle('valid', state === 'valid');
 }
 
-function addressComponent(place, type, format = 'long_name') {
-  const component = place?.address_components?.find((entry) => entry.types?.includes(type));
-  return component?.[format] || '';
+function placeAddressComponents(place) {
+  return place?.addressComponents || place?.address_components || [];
+}
+
+function addressComponent(place, type, format = 'long') {
+  const component = placeAddressComponents(place).find((entry) => entry.types?.includes(type));
+  if (!component) return '';
+
+  if (format === 'short') {
+    return component.shortText || component.short_name || component.shortName || component.longText || component.long_name || '';
+  }
+
+  return component.longText || component.long_name || component.longName || component.shortText || component.short_name || '';
 }
 
 function applyPlaceAddress(place) {
-  if (!place?.address_components?.length) return false;
+  if (!placeAddressComponents(place).length) return false;
 
   const streetNumber = addressComponent(place, 'street_number');
   const route = addressComponent(place, 'route');
@@ -1120,7 +1130,7 @@ function applyPlaceAddress(place) {
     || addressComponent(place, 'postal_town')
     || addressComponent(place, 'sublocality')
     || addressComponent(place, 'administrative_area_level_3');
-  const state = addressComponent(place, 'administrative_area_level_1', 'short_name');
+  const state = addressComponent(place, 'administrative_area_level_1', 'short');
   const zip = addressComponent(place, 'postal_code');
   const zipSuffix = addressComponent(place, 'postal_code_suffix');
   const unit = addressComponent(place, 'subpremise');
@@ -1150,7 +1160,7 @@ function applyPlaceAddress(place) {
 }
 
 function loadGoogleMapsPlaces() {
-  if (window.google?.maps?.places) return Promise.resolve(window.google);
+  if (window.google?.maps?.importLibrary) return Promise.resolve(window.google);
   if (window.__shrishPlacesPromise) return window.__shrishPlacesPromise;
 
   window.__shrishPlacesPromise = new Promise((resolve, reject) => {
@@ -1161,7 +1171,7 @@ function loadGoogleMapsPlaces() {
     };
 
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&libraries=places&callback=${callbackName}`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&loading=async&callback=${callbackName}`;
     script.async = true;
     script.defer = true;
     script.onerror = () => {
@@ -1172,6 +1182,54 @@ function loadGoogleMapsPlaces() {
   });
 
   return window.__shrishPlacesPromise;
+}
+
+function getAddressSuggestionsList() {
+  return document.getElementById('shippingAddressSuggestions');
+}
+
+function hideAddressSuggestions() {
+  const list = getAddressSuggestionsList();
+  if (!list) return;
+
+  list.classList.remove('show');
+  list.innerHTML = '';
+}
+
+function suggestionPrimaryText(placePrediction) {
+  return placePrediction?.mainText?.toString?.()
+    || placePrediction?.structuredFormat?.mainText?.text
+    || placePrediction?.text?.toString?.()
+    || 'Suggested address';
+}
+
+function suggestionSecondaryText(placePrediction) {
+  return placePrediction?.secondaryText?.toString?.()
+    || placePrediction?.structuredFormat?.secondaryText?.text
+    || '';
+}
+
+function renderAddressSuggestions(suggestions, onSelect) {
+  const list = getAddressSuggestionsList();
+  if (!list) return;
+
+  list.innerHTML = '';
+  suggestions.slice(0, 5).forEach((suggestion, index) => {
+    const prediction = suggestion.placePrediction;
+    if (!prediction) return;
+
+    const option = document.createElement('button');
+    option.type = 'button';
+    option.className = 'shipping-address-suggestion';
+    option.setAttribute('role', 'option');
+    option.dataset.index = String(index);
+    option.innerHTML = `<strong>${escapeHtml(suggestionPrimaryText(prediction))}</strong>${escapeHtml(suggestionSecondaryText(prediction))}`;
+    option.addEventListener('mousedown', (event) => event.preventDefault());
+    option.addEventListener('click', () => onSelect(suggestion));
+    list.appendChild(option);
+  });
+
+  list.classList.toggle('show', Boolean(list.children.length));
 }
 
 async function initShippingAddressAutocomplete() {
@@ -1187,21 +1245,79 @@ async function initShippingAddressAutocomplete() {
 
   try {
     const google = await loadGoogleMapsPlaces();
-    if (!google?.maps?.places?.Autocomplete) return;
+    const places = await google.maps.importLibrary('places');
+    const { AutocompleteSessionToken, AutocompleteSuggestion } = places || {};
+    if (!AutocompleteSuggestion) {
+      setAddressAssist('Enter your complete shipping address.');
+      return;
+    }
 
-    const autocomplete = new google.maps.places.Autocomplete(addressField, {
-      componentRestrictions: { country: 'us' },
-      fields: ['address_components', 'formatted_address', 'geometry'],
-      types: ['address']
+    let sessionToken = AutocompleteSessionToken ? new AutocompleteSessionToken() : undefined;
+    let debounceTimer = null;
+    let latestRequest = 0;
+
+    const chooseSuggestion = async (suggestion) => {
+      const prediction = suggestion?.placePrediction;
+      if (!prediction?.toPlace) return;
+
+      try {
+        const place = prediction.toPlace();
+        await place.fetchFields({ fields: ['addressComponents', 'formattedAddress'] });
+        if (!applyPlaceAddress(place)) {
+          setAddressAssist('Please choose a full street address from the suggestions or complete it manually.');
+        }
+        hideAddressSuggestions();
+        validateShippingFields(false);
+        rebuildErrorBanner();
+        sessionToken = AutocompleteSessionToken ? new AutocompleteSessionToken() : undefined;
+      } catch (error) {
+        console.warn('Shipping address selection failed', error);
+        setAddressAssist('Please complete the address manually.');
+      }
+    };
+
+    addressField.addEventListener('input', () => {
+      const input = addressField.value.trim();
+      window.clearTimeout(debounceTimer);
+
+      if (input.length < 4) {
+        hideAddressSuggestions();
+        return;
+      }
+
+      const requestNumber = ++latestRequest;
+      debounceTimer = window.setTimeout(async () => {
+        try {
+          const { suggestions = [] } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+            input,
+            sessionToken,
+            includedRegionCodes: ['us']
+          });
+
+          if (requestNumber !== latestRequest) return;
+          renderAddressSuggestions(suggestions.filter((entry) => entry.placePrediction), chooseSuggestion);
+        } catch (error) {
+          console.warn('Shipping address suggestions unavailable', error);
+          hideAddressSuggestions();
+          setAddressAssist('Address suggestions are temporarily unavailable. You can still enter the address manually.');
+        }
+      }, 250);
     });
 
-    autocomplete.addListener('place_changed', () => {
-      const place = autocomplete.getPlace();
-      if (!applyPlaceAddress(place)) {
-        setAddressAssist('Please choose a full street address from the suggestions or complete it manually.');
-      }
-      validateShippingFields(false);
-      rebuildErrorBanner();
+    addressField.addEventListener('blur', () => {
+      window.setTimeout(hideAddressSuggestions, 160);
+    });
+
+    addressField.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      hideAddressSuggestions();
+    });
+
+    document.addEventListener('click', (event) => {
+      const list = getAddressSuggestionsList();
+      if (!list?.classList.contains('show')) return;
+      if (event.target === addressField || list.contains(event.target)) return;
+      hideAddressSuggestions();
     });
   } catch (error) {
     console.warn('Shipping address suggestions unavailable', error);
