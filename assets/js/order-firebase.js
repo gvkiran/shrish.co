@@ -725,7 +725,7 @@ function renderCartReview() {
   </div>
   <div class="ri-price">${formatCurrency(lineTotal)}</div>
   <div class="ri-actions">
-    <button type="button" class="ri-remove" data-id="${escapeHtml(item.id)}" title="Remove">&times;</button>
+    <button type="button" class="ri-remove" data-id="${escapeHtml(item.id)}" title="Remove item">Remove</button>
   </div>
 </div>`;
       })
@@ -752,12 +752,30 @@ function renderCartReview() {
     </div>
   </div>`;
 
+  const confirmRemoveCartItem = (item) => {
+    const itemName = item?.name || 'this item';
+    return window.confirm(`Remove ${itemName} from your cart?`);
+  };
+
+  const removeCartItemById = (id) => {
+    cart = cart.filter((entry) => entry.id !== id);
+    saveCart();
+    renderCartReview();
+    updateNavCart();
+    trackCheckoutEvent('checkout_cart_item_removed', cartAnalyticsSummary());
+  };
+
   container.querySelectorAll('.ri-qty-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.id;
       const delta = parseInt(btn.dataset.delta, 10);
       const item = cart.find((entry) => entry.id === id);
       if (!item) return;
+
+      if (delta < 0 && Number(item.qty || 0) <= 1) {
+        if (confirmRemoveCartItem(item)) removeCartItemById(id);
+        return;
+      }
 
       item.qty = Math.max(1, item.qty + delta);
       saveCart();
@@ -772,11 +790,8 @@ function renderCartReview() {
 
   container.querySelectorAll('.ri-remove').forEach((btn) => {
     btn.addEventListener('click', () => {
-      cart = cart.filter((entry) => entry.id !== btn.dataset.id);
-      saveCart();
-      renderCartReview();
-      updateNavCart();
-      trackCheckoutEvent('checkout_cart_item_removed', cartAnalyticsSummary());
+      const item = cart.find((entry) => entry.id === btn.dataset.id);
+      if (!item || confirmRemoveCartItem(item)) removeCartItemById(btn.dataset.id);
     });
   });
 

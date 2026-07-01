@@ -32,8 +32,8 @@ body.packing-room .ri-qty-btn{width:28px;height:28px;border-radius:50%;border:no
 body.packing-room .ri-qty-btn:hover{background:rgba(200,121,26,.12)}
 body.packing-room .ri-qty-value{font-weight:800;min-width:26px;text-align:center;display:inline-block}
 body.packing-room .ri-price{font-weight:800;color:var(--saffron)}
-body.packing-room .ri-remove{opacity:.4;transition:opacity .2s,transform .2s}
-body.packing-room .ri-remove:hover{opacity:1;transform:scale(1.15)}
+body.packing-room .ri-remove{opacity:1;transition:background .2s,color .2s,transform .2s}
+body.packing-room .ri-remove:hover{transform:translateY(-1px)}
 body.packing-room .review-total{padding-top:16px}
 body.packing-room .rt-price{font-size:24px}
 
