@@ -123,6 +123,30 @@ body.packing-room .ri-qty-btn:hover,
 body.packing-room .cart-remove-cancel:hover{
   background:#2A1C0B;
 }
+body.packing-room .ri-remove{
+  border-color:rgba(229,57,53,.58);
+  color:#FFB4AA;
+  box-shadow:0 0 0 1px rgba(229,57,53,.14),0 8px 18px rgba(0,0,0,.22);
+}
+body.packing-room .ri-remove:hover{
+  background:#C62828;
+  border-color:#EF5350;
+  color:#fff;
+}
+body.packing-room .shipping-address-assist{color:#A99065}
+body.packing-room .shipping-address-assist.valid{color:#7FE39B}
+body.packing-room .pac-container{
+  background:#15100A;
+  border-color:rgba(212,160,23,.35);
+  box-shadow:0 20px 54px rgba(0,0,0,.45);
+}
+body.packing-room .pac-item{
+  border-top-color:rgba(212,160,23,.12);
+  color:#B3A287;
+}
+body.packing-room .pac-item:hover{background:#21160A}
+body.packing-room .pac-item-query,
+body.packing-room .pac-matched{color:#F4EADA}
 body.packing-room .loc-card,
 body.packing-room .fulfillment-option,
 body.packing-room .payment-option{
@@ -176,7 +200,7 @@ body.packing-room .ri-qty-btn{width:28px;height:28px;border-radius:50%;border:no
 body.packing-room .ri-qty-btn:hover{background:rgba(200,121,26,.12)}
 body.packing-room .ri-qty-value{font-weight:800;min-width:26px;text-align:center;display:inline-block}
 body.packing-room .ri-price{font-weight:800;color:var(--saffron)}
-body.packing-room .ri-remove{opacity:1;transition:background .2s,color .2s,transform .2s}
+body.packing-room .ri-remove{opacity:1;transition:background .2s,color .2s,transform .2s,border-color .2s}
 body.packing-room .ri-remove:hover{transform:translateY(-1px)}
 body.packing-room .review-total{padding-top:16px}
 body.packing-room .rt-price{font-size:24px}

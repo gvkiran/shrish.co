@@ -43,6 +43,7 @@ const VIRGINIA_SALES_TAX_LABEL = 'Virginia sales tax';
 const SHIPPING_STANDARD_AMOUNT = Number(window.SHRISH_APP_CONFIG?.standardShippingAmount ?? 8.99);
 const SHIPPING_FREE_THRESHOLD = Number(window.SHRISH_APP_CONFIG?.freeShippingThreshold ?? 75);
 const SHIPPING_LABEL = 'Standard shipping';
+const GOOGLE_MAPS_API_KEY = String(window.SHRISH_APP_CONFIG?.googleMapsApiKey || '').trim();
 const MANGO_CATEGORY_HINTS = new Set([
   'mangoes',
   'mango',
@@ -725,7 +726,7 @@ function renderCartReview() {
   </div>
   <div class="ri-price">${formatCurrency(lineTotal)}</div>
   <div class="ri-actions">
-    <button type="button" class="ri-remove" data-id="${escapeHtml(item.id)}" title="Remove item">Remove</button>
+    <button type="button" class="ri-remove" data-id="${escapeHtml(item.id)}" title="Remove item" aria-label="Remove ${escapeHtml(item.name)} from cart">&#128465;</button>
   </div>
 </div>`;
       })
@@ -1096,6 +1097,118 @@ function shippingAddressLabel(address = getShippingAddress()) {
   return `${line1}${line2}, ${address.city || ''}, ${address.state || ''} ${address.zip || ''}`.replace(/\s+/g, ' ').trim();
 }
 
+function setAddressAssist(message = '', state = '') {
+  const assist = document.getElementById('shippingAddressAssist');
+  if (!assist) return;
+
+  assist.textContent = message;
+  assist.classList.toggle('show', Boolean(message));
+  assist.classList.toggle('valid', state === 'valid');
+}
+
+function addressComponent(place, type, format = 'long_name') {
+  const component = place?.address_components?.find((entry) => entry.types?.includes(type));
+  return component?.[format] || '';
+}
+
+function applyPlaceAddress(place) {
+  if (!place?.address_components?.length) return false;
+
+  const streetNumber = addressComponent(place, 'street_number');
+  const route = addressComponent(place, 'route');
+  const city = addressComponent(place, 'locality')
+    || addressComponent(place, 'postal_town')
+    || addressComponent(place, 'sublocality')
+    || addressComponent(place, 'administrative_area_level_3');
+  const state = addressComponent(place, 'administrative_area_level_1', 'short_name');
+  const zip = addressComponent(place, 'postal_code');
+  const zipSuffix = addressComponent(place, 'postal_code_suffix');
+  const unit = addressComponent(place, 'subpremise');
+
+  const updates = {
+    shippingAddress1: [streetNumber, route].filter(Boolean).join(' '),
+    shippingCity: city,
+    shippingState: state,
+    shippingZip: zipSuffix ? `${zip}-${zipSuffix}` : zip
+  };
+
+  Object.entries(updates).forEach(([id, value]) => {
+    const field = document.getElementById(id);
+    if (!field || !value) return;
+    field.value = value;
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+
+  const unitField = document.getElementById('shippingAddress2');
+  if (unitField && unit && !unitField.value.trim()) {
+    unitField.value = unit;
+    unitField.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  setAddressAssist('Address selected. Please confirm apartment/suite if needed.', 'valid');
+  return true;
+}
+
+function loadGoogleMapsPlaces() {
+  if (window.google?.maps?.places) return Promise.resolve(window.google);
+  if (window.__shrishPlacesPromise) return window.__shrishPlacesPromise;
+
+  window.__shrishPlacesPromise = new Promise((resolve, reject) => {
+    const callbackName = `shrishPlacesReady_${Date.now()}`;
+    window[callbackName] = () => {
+      delete window[callbackName];
+      resolve(window.google);
+    };
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&libraries=places&callback=${callbackName}`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => {
+      delete window[callbackName];
+      reject(new Error('Google Places failed to load'));
+    };
+    document.head.appendChild(script);
+  });
+
+  return window.__shrishPlacesPromise;
+}
+
+async function initShippingAddressAutocomplete() {
+  const addressField = document.getElementById('shippingAddress1');
+  if (!addressField) return;
+
+  if (!GOOGLE_MAPS_API_KEY) {
+    setAddressAssist('Enter your complete shipping address.');
+    return;
+  }
+
+  setAddressAssist('Start typing your street address for suggestions.');
+
+  try {
+    const google = await loadGoogleMapsPlaces();
+    if (!google?.maps?.places?.Autocomplete) return;
+
+    const autocomplete = new google.maps.places.Autocomplete(addressField, {
+      componentRestrictions: { country: 'us' },
+      fields: ['address_components', 'formatted_address', 'geometry'],
+      types: ['address']
+    });
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (!applyPlaceAddress(place)) {
+        setAddressAssist('Please choose a full street address from the suggestions or complete it manually.');
+      }
+      validateShippingFields(false);
+      rebuildErrorBanner();
+    });
+  } catch (error) {
+    console.warn('Shipping address suggestions unavailable', error);
+    setAddressAssist('Address suggestions are temporarily unavailable. You can still enter the address manually.');
+  }
+}
+
 function validateShippingFields(showErrors = true) {
   if (selectedFulfillmentType !== 'shipping') return true;
 
@@ -1361,6 +1474,8 @@ function bindFulfillmentUi() {
       rebuildErrorBanner();
     });
   });
+
+  initShippingAddressAutocomplete();
 
   updatePaymentUi();
 }

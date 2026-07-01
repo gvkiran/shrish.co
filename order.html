@@ -24,7 +24,7 @@
 .review-card-title{font-family:var(--font-display);font-size:24px;color:var(--dark);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
 .review-card-title a{font-size:14px;color:var(--saffron);font-family:var(--font-body);font-weight:600}
 .review-table{width:100%}
-.review-head,.review-item,.review-total{display:grid;grid-template-columns:minmax(0,1fr) 72px 120px 110px;gap:14px;align-items:center}
+.review-head,.review-item,.review-total{display:grid;grid-template-columns:minmax(0,1fr) 72px 120px 64px;gap:14px;align-items:center}
 .review-head{background:var(--cream-d);padding:10px 14px;font-size:13px;font-weight:700;color:var(--text-light);border-radius:0}
 .review-item{padding:14px 6px;border-bottom:1px solid var(--cream-d)}
 .ri-info{min-width:0}
@@ -35,8 +35,8 @@
 .ri-qty-ctrl{display:flex;align-items:center;justify-content:center;gap:10px}
 .ri-qty-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid #E0D0B8;background:#fff;cursor:pointer;font-size:16px;color:var(--saffron);display:flex;align-items:center;justify-content:center;font-family:var(--font-body)}
 .ri-qty-btn:hover{background:var(--cream-d)}
-.ri-actions{display:flex;align-items:center;justify-content:center}.ri-remove{background:#fff;border:1.5px solid rgba(198,40,40,.28);border-radius:999px;color:#9b1c1c;cursor:pointer;font-size:12px;font-weight:800;padding:7px 11px;line-height:1;min-width:72px}
-.ri-remove:hover{background:#C62828;border-color:#C62828;color:#fff}
+.ri-actions{display:flex;align-items:center;justify-content:center}.ri-remove{width:38px;height:38px;background:#fff;border:1.5px solid rgba(198,40,40,.38);border-radius:12px;color:#9b1c1c;cursor:pointer;font-size:17px;font-weight:900;line-height:1;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(26,18,8,.08)}
+.ri-remove:hover{background:#C62828;border-color:#C62828;color:#fff;transform:translateY(-1px)}
 .review-total{padding:14px 6px 0;font-weight:700;font-size:16px;color:var(--dark)}
 .review-total .rt-label{font-size:16px}
 .review-total .rt-qty{text-align:center;font-size:15px;color:var(--dark)}
@@ -79,6 +79,12 @@
 .shipping-fields .form-row{margin-bottom:0}
 .shipping-rate-line{font-size:12.5px;color:var(--text-light);line-height:1.55;margin:2px 0 12px}
 .shipping-rate-line strong{color:var(--dark)}
+.shipping-address-assist{display:none;margin-top:7px;font-size:12px;line-height:1.45;color:var(--text-light)}
+.shipping-address-assist.show{display:block}
+.shipping-address-assist.valid{color:#2E7D32;font-weight:700}
+.pac-container{z-index:7000!important;border-radius:12px;border:1px solid rgba(200,121,26,.26);box-shadow:0 16px 44px rgba(26,18,8,.2);font-family:var(--font-body)}
+.pac-item{padding:9px 12px;font-size:13px;cursor:pointer}
+.pac-item:hover{background:#fff8ec}
 
 /* Error banner */
 .error-banner{display:none;background:#FFF3CD;border:1.5px solid #F0A500;border-radius:14px;padding:16px 20px;margin-bottom:20px}
@@ -478,6 +484,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
         <div class="form-group">
           <label class="form-label">Street Address <span class="req">*</span></label>
           <input type="text" class="form-control" id="shippingAddress1" autocomplete="shipping address-line1" placeholder="123 Main St">
+          <div class="shipping-address-assist" id="shippingAddressAssist" aria-live="polite"></div>
           <div class="form-error" id="err-shippingAddress1">Please enter your shipping street address</div>
         </div>
         <div class="form-group">
@@ -635,7 +642,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script src="assets/js/analytics.js?v=perf2-20260624"></script>
 <script src="assets/js/main.js?v=perf2-20260624"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/order-firebase.js?v=cart-remove-modal-20260630"></script>
+<script type="module" src="assets/js/order-firebase.js?v=shipping-address-20260701"></script>
 
 <script defer src="assets/js/checkout-luxe.js?v=cart-remove-modal-20260630"></script>
 </body>
