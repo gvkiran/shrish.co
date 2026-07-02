@@ -1,0 +1,19 @@
+# Normalize line endings so the working tree stops showing phantom CRLF-only diffs.
+# Text files are stored with LF in the repo; Git checks them out per-OS.
+* text=auto eol=lf
+
+# Treat binary assets as binary (never touch their bytes / line endings).
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.svg  text
+*.pdf  binary
+*.woff  binary
+*.woff2 binary
+*.ttf  binary
+*.eot  binary
+*.mp4  binary
+*.zip  binary

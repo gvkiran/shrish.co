@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Checkout – SHRISH LLC | Fresh Indian Mangoes Richmond, VA</title>
-<meta name="description" content="Order fresh Indian mangoes online. Pick up in Short Pump, Chesterfield, or Mechanicsville, VA. Pay at pickup.">
+<title>Checkout - SHRISH LLC | Mango Pickup & Online Payment</title>
+<meta name="description" content="Review your Shrish cart, choose pickup or eligible shipping, and complete the payment option shown for mangoes, sweets, pickles, and podi.">
 <link rel="canonical" href="https://www.shrish.co/order.html" />
 <meta name="robots" content="noindex, nofollow">
 <meta property="og:title" content="Checkout – SHRISH LLC">
-<meta property="og:description" content="Order fresh Indian mangoes online. Pick up in Short Pump, Chesterfield, or Mechanicsville, VA.">
+<meta property="og:description" content="Review your Shrish cart, choose pickup or eligible shipping, and complete the payment option shown for your order.">
 <meta property="og:image" content="https://shrish.co/images/products/mangoes/img_alphonso.jpeg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="icon" href="images/brand/logo-small.png" type="image/png">
 <link rel="stylesheet" href="assets/css/styles.css?v=trust-marquee-20260609">
-<link rel="stylesheet" href="assets/css/checkout-luxe.css?v=pack6-20260612">
+<link rel="stylesheet" href="assets/css/checkout-luxe.css?v=dark-checkout-labels-20260702">
 <style>
 /* Layout */
 .checkout-wrap{max-width:1520px;margin:0 auto;padding:60px 24px 80px;display:grid;grid-template-columns:1.2fr .95fr;gap:48px}
@@ -24,7 +24,7 @@
 .review-card-title{font-family:var(--font-display);font-size:24px;color:var(--dark);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
 .review-card-title a{font-size:14px;color:var(--saffron);font-family:var(--font-body);font-weight:600}
 .review-table{width:100%}
-.review-head,.review-item,.review-total{display:grid;grid-template-columns:minmax(0,1fr) 72px 120px 110px;gap:14px;align-items:center}
+.review-head,.review-item,.review-total{display:grid;grid-template-columns:minmax(0,1fr) 72px 120px 64px;gap:14px;align-items:center}
 .review-head{background:var(--cream-d);padding:10px 14px;font-size:13px;font-weight:700;color:var(--text-light);border-radius:0}
 .review-item{padding:14px 6px;border-bottom:1px solid var(--cream-d)}
 .ri-info{min-width:0}
@@ -35,13 +35,17 @@
 .ri-qty-ctrl{display:flex;align-items:center;justify-content:center;gap:10px}
 .ri-qty-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid #E0D0B8;background:#fff;cursor:pointer;font-size:16px;color:var(--saffron);display:flex;align-items:center;justify-content:center;font-family:var(--font-body)}
 .ri-qty-btn:hover{background:var(--cream-d)}
-.ri-actions{display:flex;align-items:center;justify-content:center}.ri-remove{background:none;border:none;color:#bbb;cursor:pointer;font-size:16px;padding:4px}
-.ri-remove:hover{color:#C62828}
+.ri-actions{display:flex;align-items:center;justify-content:center}.ri-remove{width:38px;height:38px;background:#fff;border:1.5px solid rgba(198,40,40,.38);border-radius:12px;color:#9b1c1c;cursor:pointer;font-size:17px;font-weight:900;line-height:1;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(26,18,8,.08)}
+.ri-remove:hover{background:#C62828;border-color:#C62828;color:#fff;transform:translateY(-1px)}
 .review-total{padding:14px 6px 0;font-weight:700;font-size:16px;color:var(--dark)}
 .review-total .rt-label{font-size:16px}
 .review-total .rt-qty{text-align:center;font-size:15px;color:var(--dark)}
 .review-total .rt-price{text-align:right;color:var(--saffron);font-size:20px}
 .review-total-note{font-size:12px;color:var(--text-light);font-weight:500;text-align:right;margin-top:4px}
+.review-total-lines{grid-column:1 / 4;justify-self:end;min-width:240px;display:grid;gap:6px;font-size:13px;color:var(--text-light);font-weight:600}
+.review-total-line{display:flex;justify-content:space-between;gap:14px;white-space:nowrap}
+.review-total-line.total{font-size:16px;color:var(--dark);font-weight:800}
+.review-total-line.total span:last-child{color:var(--saffron);font-size:20px}
 .cart-empty-note{text-align:center;padding:32px;color:var(--text-light)}
 .cart-empty-note .en-icon{font-size:40px;margin-bottom:10px}
 
@@ -61,6 +65,29 @@
 .loc-icon{font-size:26px;margin-bottom:8px}
 .loc-name{font-size:15px;font-weight:700;color:var(--dark);margin-bottom:3px}
 .loc-sub{font-size:13px;color:var(--text-light);line-height:1.6}
+.fulfillment-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0 14px}
+.fulfillment-option{border:2px solid #E0D0B8;border-radius:14px;padding:15px 16px;cursor:pointer;transition:border-color .25s,background .25s;position:relative}
+.fulfillment-option:hover{border-color:var(--saffron);background:rgba(200,121,26,.03)}
+.fulfillment-option.selected{border-color:var(--saffron);background:rgba(200,121,26,.06)}
+.fulfillment-option[hidden]{display:none!important}
+.fulfillment-option input{position:absolute;opacity:0;pointer-events:none}
+.fulfillment-title{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:800;color:var(--dark);margin-bottom:5px}
+.fulfillment-copy{font-size:13px;line-height:1.55;color:var(--text-light)}
+.fulfillment-note{background:#fff8ec;border:1px solid rgba(200,121,26,.22);border-radius:12px;color:var(--text-light);font-size:12.5px;line-height:1.55;padding:10px 12px;margin:-4px 0 14px}
+.shipping-fields{display:none;background:#fffdf8;border:1px solid rgba(200,121,26,.22);border-radius:14px;padding:16px;margin:8px 0 14px}
+.shipping-fields.show{display:block}
+.shipping-fields .form-row{margin-bottom:0}
+.shipping-address-group{position:relative}
+.shipping-rate-line{font-size:12.5px;color:var(--text-light);line-height:1.55;margin:2px 0 12px}
+.shipping-rate-line strong{color:var(--dark)}
+.shipping-address-assist{display:none;margin-top:7px;font-size:12px;line-height:1.45;color:var(--text-light)}
+.shipping-address-assist.show{display:block}
+.shipping-address-assist.valid{color:#2E7D32;font-weight:700}
+.shipping-address-suggestions{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:1200;background:#fffdf8;border:1px solid rgba(200,121,26,.28);border-radius:12px;box-shadow:0 16px 44px rgba(26,18,8,.2);overflow:hidden}
+.shipping-address-suggestions.show{display:block}
+.shipping-address-suggestion{width:100%;border:0;background:transparent;color:var(--dark);font-family:var(--font-body);font-size:13px;line-height:1.35;text-align:left;padding:10px 12px;cursor:pointer}
+.shipping-address-suggestion:hover,.shipping-address-suggestion:focus{background:#fff8ec;outline:0}
+.shipping-address-suggestion strong{display:block;color:var(--orange);font-size:12px;margin-bottom:2px}
 
 /* Error banner */
 .error-banner{display:none;background:#FFF3CD;border:1.5px solid #F0A500;border-radius:14px;padding:16px 20px;margin-bottom:20px}
@@ -96,6 +123,7 @@
 .payment-option{border:2px solid #E0D0B8;border-radius:14px;padding:16px;cursor:pointer;transition:border-color .25s,background .25s;position:relative}
 .payment-option:hover{border-color:var(--saffron);background:rgba(200,121,26,.03)}
 .payment-option.selected{border-color:var(--saffron);background:rgba(200,121,26,.06)}
+.payment-option[hidden]{display:none!important}
 .payment-option input{position:absolute;opacity:0;pointer-events:none}
 .payment-title{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:800;color:var(--dark);margin-bottom:5px}
 .payment-pill{font-size:11px;font-weight:800;color:var(--saffron);background:var(--cream-d);border-radius:999px;padding:4px 8px}
@@ -105,6 +133,8 @@
 .save-card-row input{margin-top:3px}
 .save-card-row label{font-size:13px;line-height:1.55;color:var(--text-light);cursor:pointer}
 .save-card-row strong{color:var(--dark)}
+.payment-rule-note{background:#fff8ec;border:1px solid rgba(200,121,26,.22);border-radius:12px;color:var(--text-light);font-size:12.5px;line-height:1.55;padding:10px 12px;margin:-4px 0 14px}
+.payment-rule-note strong{color:var(--dark)}
 .checkout-account-modal{position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(26,18,8,.58);backdrop-filter:blur(4px)}
 .checkout-account-card{width:min(620px,100%);background:#fff;border-radius:22px;padding:28px;box-shadow:0 28px 80px rgba(26,18,8,.28);position:relative}
 .checkout-account-close{position:absolute;top:16px;right:16px;width:34px;height:34px;border:none;border-radius:50%;background:var(--cream-d);color:var(--dark);font-size:20px;line-height:1;cursor:pointer}
@@ -117,6 +147,18 @@
 .checkout-account-actions .primary{background:var(--saffron);border:1.5px solid var(--saffron);color:#fff}
 .checkout-account-actions .secondary{background:#fff;border:1.5px solid rgba(200,121,26,.3);color:var(--saffron)}
 .checkout-account-actions .guest{background:var(--cream-d);border:1.5px solid var(--cream-d);color:var(--dark)}
+.cart-remove-modal{position:fixed;inset:0;z-index:5200;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(26,18,8,.62);backdrop-filter:blur(5px)}
+.cart-remove-card{width:min(460px,100%);background:#fffaf1;border:1.5px solid rgba(200,121,26,.28);border-radius:20px;padding:26px;box-shadow:0 26px 80px rgba(26,18,8,.32);text-align:left;position:relative}
+.cart-remove-kicker{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--saffron);margin-bottom:8px}
+.cart-remove-card h3{font-family:var(--font-display);font-size:30px;line-height:1.08;color:var(--dark);margin:0 0 10px}
+.cart-remove-card p{font-size:14px;line-height:1.65;color:var(--text-light);margin:0}
+.cart-remove-item{margin:16px 0 0;background:#fff;border:1px dashed rgba(200,121,26,.35);border-radius:14px;padding:12px 14px;color:var(--dark);font-weight:800}
+.cart-remove-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:22px}
+.cart-remove-actions button{border-radius:999px;padding:11px 18px;font-family:var(--font-body);font-size:14px;font-weight:800;cursor:pointer}
+.cart-remove-cancel{background:#fff;border:1.5px solid rgba(200,121,26,.28);color:var(--saffron)}
+.cart-remove-confirm{background:#C62828;border:1.5px solid #C62828;color:#fff}
+.cart-remove-cancel:hover{background:var(--cream-d)}
+.cart-remove-confirm:hover{background:#9b1c1c;border-color:#9b1c1c}
 .checkout-safety-note{background:#fff8ec;border:1px solid rgba(200,121,26,.22);border-left:4px solid var(--saffron);border-radius:10px;color:var(--text-light);font-size:12.5px;line-height:1.55;padding:12px 14px;margin:12px 0 16px}
 .checkout-safety-note strong{color:var(--dark)}
 
@@ -135,6 +177,8 @@
 .success-screen h2{font-family:var(--font-display);font-size:36px;color:var(--dark);margin-bottom:12px}
 .success-screen>p{color:var(--text-light);font-size:15px;line-height:1.7;margin-bottom:6px}
 .order-badge{display:inline-block;background:var(--cream-d);border-radius:50px;padding:10px 24px;font-size:18px;font-weight:700;color:var(--saffron);margin:16px 0 14px}
+.success-order-number{display:inline-block;color:var(--saffron);font-size:1.12em;font-weight:900;letter-spacing:.04em;line-height:1.2}
+.order-badge .success-order-number{color:var(--dark);font-size:1.06em}
 .success-summary{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(26,18,8,.08);margin-bottom:24px;text-align:left}
 .ss-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--cream-d);font-size:14px}
 .ss-row:last-child{border-bottom:none}
@@ -176,7 +220,7 @@
 .comm-note{font-size:12px;color:rgba(255,255,255,.4);margin-top:16px}
 
 @media(max-width:900px){.checkout-wrap{grid-template-columns:1fr;padding:40px 20px 60px}}
-@media(max-width:480px){.loc-cards,.payment-options{grid-template-columns:1fr}.community-btns{flex-direction:column;align-items:center}}
+@media(max-width:480px){.loc-cards,.payment-options,.fulfillment-options{grid-template-columns:1fr}.community-btns{flex-direction:column;align-items:center}}
 
 /* ── REFUND TAB STYLES ─────────────────────────────────────────────────── */
 .refund-card {
@@ -296,15 +340,8 @@
 .refund-submitted-msg { text-align: center; padding: 16px; color: #2E7D32; font-weight: 600; font-size: 14px; }
 
 
-/* ── STRIPE / PAY-ONLINE + REFUND REQUEST TEMPORARILY HIDDEN (reversible) ──
-   Pickup is the JS default; hiding the stripe option means it can never be
-   selected. The refund request form is hidden on the success screen.
-   To re-enable later, delete the relevant lines in this block. */
-.payment-option[data-payment="stripe"]{display:none !important;}
-.save-card-row{display:none !important;}
-.payment-options{grid-template-columns:1fr !important;}
+/* Refund request remains temporarily hidden. Stripe visibility is controlled by cart rules in order-firebase.js. */
 #refundSection{display:none !important;}
-/* ── END STRIPE / REFUND HIDE ── */
 
 </style>
 <script>
@@ -312,7 +349,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
-<body>
+<body class="packing-room">
 
 <div class="announcement-bar"><span>🥭 Fresh Indian Mangoes — Pickup in Short Pump, Chesterfield &amp; Mechanicsville, VA</span></div>
 
@@ -352,7 +389,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 
 <div class="page-hero">
   <h1>Cart <em>Checkout</em></h1>
-  <p>Review your order, choose your pickup location, and submit. Payment is collected at pickup.</p>
+  <p>Review your order, choose your pickup location, and complete the payment option shown for your cart.</p>
 </div>
 
 <div class="checkout-wrap" id="checkoutWrap">
@@ -405,8 +442,23 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
       </div>
 
       <div class="form-divider"></div>
-      <div class="step-label">Step 2 - Pickup Location</div>
+      <div class="step-label">Step 2 - Fulfillment</div>
 
+      <div class="fulfillment-options" id="fulfillmentOptions">
+        <label class="fulfillment-option selected" data-fulfillment="pickup">
+          <input type="radio" name="fulfillmentType" value="pickup" checked>
+          <span class="fulfillment-title">Pickup <span class="payment-pill">Default</span></span>
+          <span class="fulfillment-copy">Pick up from Short Pump, Chesterfield, or Mechanicsville.</span>
+        </label>
+        <label class="fulfillment-option" data-fulfillment="shipping">
+          <input type="radio" name="fulfillmentType" value="shipping">
+          <span class="fulfillment-title">Ship to me <span class="payment-pill">Non-mango</span></span>
+          <span class="fulfillment-copy">Available for pickles, podi, sweets, and snacks. Free at $75+.</span>
+        </label>
+      </div>
+      <div class="fulfillment-note" id="fulfillmentRuleNote"></div>
+
+      <div id="pickupLocationSection">
       <div class="loc-cards" id="locCards">
         <div class="loc-card" id="loc-shortpump" data-loc="shortpump">
           <div class="loc-check" id="check-shortpump">&#10003;</div>
@@ -428,6 +480,39 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
         </div>
       </div>
       <div class="form-error" id="err-location" style="margin-bottom:16px">Please select a pickup location</div>
+      </div>
+
+      <div class="shipping-fields" id="shippingFields">
+        <div class="shipping-rate-line" id="shippingRateLine"></div>
+        <div class="form-group shipping-address-group">
+          <label class="form-label">Street Address <span class="req">*</span></label>
+          <input type="text" class="form-control" id="shippingAddress1" autocomplete="shipping address-line1" placeholder="123 Main St">
+          <div class="shipping-address-assist" id="shippingAddressAssist" aria-live="polite"></div>
+          <div class="shipping-address-suggestions" id="shippingAddressSuggestions" role="listbox" aria-label="Suggested shipping addresses"></div>
+          <div class="form-error" id="err-shippingAddress1">Please enter your shipping street address</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Apartment / Suite <span style="color:var(--text-light);font-weight:500">(optional)</span></label>
+          <input type="text" class="form-control" id="shippingAddress2" autocomplete="shipping address-line2" placeholder="Apt, suite, unit">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">City <span class="req">*</span></label>
+            <input type="text" class="form-control" id="shippingCity" autocomplete="shipping address-level2" placeholder="Richmond">
+            <div class="form-error" id="err-shippingCity">Please enter the shipping city</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">State <span class="req">*</span></label>
+            <input type="text" class="form-control" id="shippingState" autocomplete="shipping address-level1" maxlength="2" value="VA" placeholder="VA">
+            <div class="form-error" id="err-shippingState">Please enter a 2-letter state</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ZIP Code <span class="req">*</span></label>
+          <input type="text" class="form-control" id="shippingZip" autocomplete="shipping postal-code" inputmode="numeric" maxlength="10" placeholder="23233">
+          <div class="form-error" id="err-shippingZip">Please enter a valid ZIP code</div>
+        </div>
+      </div>
 
       <div class="form-divider"></div>
       <div class="step-label">Step 3 - Optional</div>
@@ -457,15 +542,13 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
           <span class="payment-title">Pay at pickup <span class="payment-pill">Default</span></span>
           <span class="payment-copy">Pay with cash, Zelle, or card when you pick up.</span>
         </label>
-        <!-- STRIPE PAYMENT OPTION TEMPORARILY DISABLED — uncomment to re-enable
         <label class="payment-option" data-payment="stripe">
           <input type="radio" name="paymentMethod" value="stripe">
           <span class="payment-title">Pay online now <span class="payment-pill">Stripe</span></span>
-          <span class="payment-copy">Use a card securely through Stripe before pickup.</span>
+          <span class="payment-copy">Use a card securely through Stripe.</span>
         </label>
-        -->
       </div>
-      <!-- SAVE CARD ROW TEMPORARILY DISABLED — uncomment to re-enable
+      <div class="payment-rule-note" id="paymentRuleNote"></div>
       <div class="save-card-row" id="saveCardRow">
         <input type="checkbox" id="saveCardForFuture">
         <label for="saveCardForFuture">
@@ -473,11 +556,10 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
           Available only when signed in. Stripe stores the card securely; Shrish never sees your full card number.
         </label>
       </div>
-      -->
 
       <div class="checkout-safety-note">
         <strong>Food allergy and spice notice:</strong> Products may contain or be prepared with peanut/groundnut oil and other major allergens (including milk, egg, fish, shellfish, tree nuts, wheat, soy, and sesame). Ingredients, spice level, labels, and packaging may vary by supplier batch. Product images are for illustration only. If you have allergies, sensitivities, or medical dietary restrictions, contact us before ordering.
-        <br><strong>Delivery note:</strong> Orders above $75 get free delivery on Sweets, Pickles, and Podi only; mangoes are excluded.
+        <br><strong>Shipping note:</strong> Orders above $75 get free shipping on Sweets, Pickles, and Podi only; mangoes are excluded.
       </div>
 
       <p class="order-consent" style="font-size:12px;color:var(--text-light);line-height:1.65;margin:12px 0 10px">
@@ -505,7 +587,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
       <h4>How It Works</h4>
       <div class="ir"><span class="ir-icon">1</span><div><strong>Place your order</strong><span>Submit the form on this page</span></div></div>
       <div class="ir"><span class="ir-icon">2</span><div><strong>Follow whatsApp for pickup updates</strong><span><a href="tel:+17653255577" style="color:var(--saffron)">+1 (765) 325-5577</a></span></div></div>
-      <div class="ir"><span class="ir-icon">3</span><div><strong>Pay at pickup</strong><span>Cash, Zelle, or card accepted at pickup</span></div></div>
+      <div class="ir"><span class="ir-icon">3</span><div><strong>Complete payment</strong><span>Mango carts can pay at pickup. Non-mango carts pay securely online.</span></div></div>
     </div>
     <div class="info-card" style="background:var(--dark)">
       <h4 style="color:var(--gold-l)">Need Help?</h4>
@@ -522,7 +604,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
   <div class="order-badge" id="successOrderNum"></div>
   <div class="success-account-prompt" id="successAccountPrompt"></div>
   <p>Thank you! Please watch for updates on the WhatsApp group for pickup details. If you're not part of the group yet, please join using the link below.</p>
-  <p>Payment is collected at pickup.</p>
+  <p>Your confirmation shows whether payment is already complete online or due at pickup.</p>
   <div class="success-summary" id="successSummary"></div>
   <div class="success-actions">
     <a href="shop.html" class="btn-primary">Continue Shopping</a>
@@ -560,13 +642,13 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
   </div>
 </footer>
 
-<script src="assets/js/data.js?v=img-purge-20260611"></script>
+<script src="assets/js/data.js?v=premerge-20260702"></script>
 <script src="assets/js/analytics.js?v=perf2-20260624"></script>
-<script src="assets/js/main.js?v=perf2-20260624"></script>
-<script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/order-firebase.js?v=order-confirmation-label-20260602"></script>
+<script src="assets/js/main.js?v=premerge-20260702"></script>
+<script src="assets/js/firebase-config.js?v=runtime-config-20260701"></script>
+<script type="module" src="assets/js/order-firebase.js?v=runtime-config-fallback-20260702"></script>
 
-<script defer src="assets/js/checkout-luxe.js?v=pack6-20260612"></script>
+<script defer src="assets/js/checkout-luxe.js?v=cart-remove-modal-20260630"></script>
 </body>
 </html>
 

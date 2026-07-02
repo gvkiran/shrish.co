@@ -653,6 +653,7 @@ function addToCart(productId, qty, variantId = null) {
     id: cartItemId,
     productId: p.id,
     variantId: selectedVariant.id,
+    category: p.category || '',
     name: selectedVariant.id === 'default' ? p.name : `${p.name} (${selectedVariant.label})`,
     price: selectedVariant.price || p.price,
     unit: selectedVariant.unit || p.unit,
@@ -1496,8 +1497,8 @@ function renderShop() {
 
   const catMeta = {
     mangoes: { title: 'Fruits', em: 'Mangoes', sub: 'Click any product to view full details. Available varieties shown first.', banner: false },
-    putharekulu: { title: 'Sweets', em: 'Putharekulu', sub: 'Hand-crafted in Atreyapuram, Andhra Pradesh. Coming soon to Shrish LLC!', banner: true },
-    jellysnacks: { title: 'Sweets', em: 'Jelly', sub: 'Traditional Mamidi Thandra & Thati Thandra from Atreyapuram. Coming soon.', banner: false },
+    putharekulu: { title: 'Sweets', em: 'Putharekulu', sub: 'Hand-crafted in Atreyapuram, Andhra Pradesh. Check current batch availability and order online.', banner: true },
+    jellysnacks: { title: 'Sweets', em: 'Jelly', sub: 'Traditional Mamidi Thandra & Thati Thandra from Atreyapuram. Check current availability before checkout.', banner: false },
     snacks: {
       title: 'Snacks',
       em: '',

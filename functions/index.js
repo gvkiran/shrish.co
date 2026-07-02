@@ -30,7 +30,10 @@ const SHRISH_SITE_URL = "https://shrish.co";
 const ORDER_COUNTER_START = 671499;
 const MAX_REMINDER_EMAILS_PER_SEND = 50;
 const MAX_PRODUCT_NOTIFY_EMAILS_PER_SEND = 250;
-const STRIPE_PAYMENTS_ENABLED = false;
+const STRIPE_PAYMENTS_ENABLED = process.env.STRIPE_PAYMENTS_ENABLED === "true";
+const DEFAULT_VIRGINIA_SALES_TAX_RATE = 0.01;
+const DEFAULT_STANDARD_SHIPPING_AMOUNT = 8.99;
+const DEFAULT_FREE_SHIPPING_THRESHOLD = 75;
 
 function isAdminRequest(request) {
   return String(request.auth?.token?.email || "").trim().toLowerCase() === SHRISH_ADMIN_EMAIL;
@@ -119,6 +122,7 @@ function allowedCheckoutOrigin(value = "") {
     const isAllowed =
       hostname === "shrish.co" ||
       hostname === "www.shrish.co" ||
+      hostname === "dev.shrish.co" ||
       hostname.endsWith(".vercel.app") ||
       hostname === "localhost" ||
       hostname === "127.0.0.1";
@@ -208,6 +212,154 @@ function getOrderTotals(order) {
   };
 }
 
+function roundCurrency(value) {
+  return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+}
+
+function configuredVirginiaSalesTaxRate() {
+  const configured = Number(process.env.SHRISH_VA_SALES_TAX_RATE);
+  return Number.isFinite(configured) && configured >= 0 ? configured : DEFAULT_VIRGINIA_SALES_TAX_RATE;
+}
+
+function normalizeProductCategory(value = "") {
+  return String(value || "").trim().toLowerCase();
+}
+
+async function classifyOrderPaymentItems(db, order = {}) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  const productIds = [...new Set(items.map(customerOrderProductId).filter(Boolean))];
+  const categoryByProductId = new Map();
+
+  await Promise.all(productIds.map(async (productId) => {
+    const snap = await db.collection("products").doc(productId).get().catch(() => null);
+    if (snap?.exists) {
+      categoryByProductId.set(productId, normalizeProductCategory(snap.data()?.category));
+    }
+  }));
+
+  let hasMango = false;
+  let hasNonMango = false;
+
+  items.forEach((item) => {
+    const productId = customerOrderProductId(item);
+    const category = normalizeProductCategory(
+      categoryByProductId.get(productId) ||
+      item.category ||
+      item.productCategory
+    );
+
+    if (category === "mangoes") {
+      hasMango = true;
+    } else {
+      hasNonMango = true;
+    }
+  });
+
+  return {
+    hasMango,
+    hasNonMango,
+    requiresStripe: hasNonMango && !hasMango,
+    allowStripe: hasNonMango && !hasMango,
+    allowPickup: !hasNonMango || hasMango,
+  };
+}
+
+function orderSalesTaxAmount(order = {}, subtotalOverride) {
+  if (Number.isFinite(subtotalOverride)) {
+    return roundCurrency(Number(subtotalOverride) * configuredVirginiaSalesTaxRate());
+  }
+  const subtotalFromItems = Array.isArray(order.items)
+    ? order.items.reduce((sum, item) => sum + normalizeLineTotal(item), 0)
+    : 0;
+  const subtotal = subtotalFromItems > 0 ? subtotalFromItems : Number(order.itemSubtotal ?? 0);
+
+  return roundCurrency(subtotal * configuredVirginiaSalesTaxRate());
+}
+
+function configuredStandardShippingAmount() {
+  const configured = Number(process.env.SHRISH_STANDARD_SHIPPING_AMOUNT);
+  return Number.isFinite(configured) && configured >= 0 ? configured : DEFAULT_STANDARD_SHIPPING_AMOUNT;
+}
+
+function configuredFreeShippingThreshold() {
+  const configured = Number(process.env.SHRISH_FREE_SHIPPING_THRESHOLD);
+  return Number.isFinite(configured) && configured >= 0 ? configured : DEFAULT_FREE_SHIPPING_THRESHOLD;
+}
+
+function orderShippingAmount(order = {}, subtotalOverride) {
+  if (String(order.fulfillmentType || "pickup") !== "shipping") return 0;
+
+  const subtotalFromItems = Array.isArray(order.items)
+    ? order.items.reduce((sum, item) => sum + normalizeLineTotal(item), 0)
+    : 0;
+  const subtotal = Number.isFinite(subtotalOverride)
+    ? Number(subtotalOverride)
+    : (subtotalFromItems > 0 ? subtotalFromItems : Number(order.itemSubtotal ?? 0));
+
+  return roundCurrency(subtotal >= configuredFreeShippingThreshold() ? 0 : configuredStandardShippingAmount());
+}
+
+// Server-authoritative checkout pricing. Rebuilds Stripe line items and the
+// item subtotal from the products collection so a tampered client-side order
+// document cannot dictate what the customer is charged.
+async function buildServerPricedCheckout(db, order = {}) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  if (!items.length) {
+    throw new HttpsError("failed-precondition", "This order has no items.");
+  }
+
+  const productIds = [...new Set(items.map(customerOrderProductId).filter(Boolean))];
+  const productById = new Map();
+  await Promise.all(productIds.map(async (productId) => {
+    const snap = await db.collection("products").doc(productId).get().catch(() => null);
+    if (snap?.exists) productById.set(productId, snap.data() || {});
+  }));
+
+  const lineItems = [];
+  let itemSubtotal = 0;
+
+  items.forEach((item) => {
+    const productId = customerOrderProductId(item);
+    const variantId = customerOrderVariantId(item);
+    const qty = normalizeQty(item);
+
+    const product = productById.get(productId);
+    if (!product) {
+      throw new HttpsError("failed-precondition", "A product in your cart is no longer available.");
+    }
+    if (product.available === false || product.displayOnly || product.hidden) {
+      throw new HttpsError("failed-precondition", "A product in your cart is not available for purchase.");
+    }
+
+    const variants = customerProductVariants(product);
+    const variant = variants.find((v) => v.id === variantId)
+      || variants.find((v) => v.id === "default")
+      || variants[0];
+    if (!variant) {
+      throw new HttpsError("failed-precondition", "A product option in your cart is not available.");
+    }
+
+    const unitPrice = parseMoney(variant.price || product.price);
+    if (!(unitPrice > 0)) {
+      throw new HttpsError("failed-precondition", "A product in your cart does not have a valid price.");
+    }
+
+    itemSubtotal += unitPrice * qty;
+    lineItems.push({
+      quantity: qty,
+      price_data: {
+        currency: "usd",
+        unit_amount: toStripeAmount(unitPrice),
+        product_data: {
+          name: String(item.name || product.name || "Shrish item").slice(0, 180),
+        },
+      },
+    });
+  });
+
+  return { lineItems, itemSubtotal: roundCurrency(itemSubtotal) };
+}
+
 async function assignSequentialOrderNumber(orderRef, existingOrderNumber) {
   const alreadyValid =
     typeof existingOrderNumber === "string" &&
@@ -253,9 +405,17 @@ function buildCustomerEmail(order) {
   const items = Array.isArray(order.items) ? order.items : [];
   const firstName = escapeHtml(order.firstName || "Customer");
   const orderNumber = escapeHtml(order.orderNumber || "");
-  const pickupLocation = escapeHtml(
-    order.locationLabel || order.pickupLocation || "Chesterfield, VA"
-  );
+  const isShipping = String(order.fulfillmentType || "pickup") === "shipping";
+  const shippingAddress = order.shippingAddress || {};
+  const fulfillmentDestination = escapeHtml(isShipping
+    ? `${shippingAddress.addressLine1 || ""}${shippingAddress.addressLine2 ? `, ${shippingAddress.addressLine2}` : ""}, ${shippingAddress.city || ""}, ${shippingAddress.state || ""} ${shippingAddress.zip || ""}`.replace(/\s+/g, " ").trim()
+    : (order.pickupLocationLabel || order.locationLabel || order.pickupLocation || "Chesterfield, VA"));
+  const fulfillmentIntro = isShipping
+    ? "Thank you for ordering from Shrish. Your request has been received. We will prepare your order for shipping and share updates by email or phone if needed."
+    : "Thank you for ordering from Shrish. Your request has been received. Please follow our WhatsApp group for pickup location, pickup day, and timing updates.";
+  const fulfillmentLine = isShipping
+    ? `We have your order <strong>${orderNumber}</strong> to ship to <strong>${fulfillmentDestination}</strong>.`
+    : `We have your order <strong>${orderNumber}</strong> for pickup in <strong>${fulfillmentDestination}</strong>.`;
   const isPaidOnline = order.paymentMethod === "stripe" || order.paymentStatus === "paid";
   const paymentMessage = isPaidOnline ? "Payment was completed online." : "Payment is collected at pickup.";
 
@@ -282,7 +442,7 @@ function buildCustomerEmail(order) {
               Your order is confirmed
             </div>
             <div style="margin-top:10px; font-size:14px; line-height:1.6; color:#fff3df; max-width:520px; margin-left:auto; margin-right:auto;">
-              Thank you for ordering from Shrish. Your request has been received. Please follow our WhatsApp group for pickup location, pickup day, and timing updates.
+              ${fulfillmentIntro}
             </div>
           </div>
 
@@ -290,8 +450,7 @@ function buildCustomerEmail(order) {
             <p style="margin:0 0 18px; font-size:15px; line-height:1.6;">Hi ${firstName},</p>
 
             <p style="margin:0 0 22px; font-size:15px; line-height:1.7;">
-              We have your order <strong>${orderNumber}</strong> for pickup in <strong>${pickupLocation}</strong>.
-              ${paymentMessage}
+              ${fulfillmentLine} ${paymentMessage}
             </p>
 
             <table style="width:100%; border-collapse:collapse; margin:0 0 24px;">
@@ -1006,6 +1165,19 @@ exports.sendOrderReminderEmails = onCall(
   }
 );
 
+exports.getPublicConfig = onCall(
+  callableOptions(),
+  async () => {
+    return {
+      googleMapsApiKey: String(
+        process.env.SHRISH_GOOGLE_MAPS_API_KEY
+          || process.env.GOOGLE_MAPS_API_KEY
+          || ""
+      ).trim(),
+    };
+  }
+);
+
 exports.createStripeCheckoutSession = onCall(
   callableOptions({
     secrets: [STRIPE_SECRET_KEY],
@@ -1040,6 +1212,21 @@ exports.createStripeCheckoutSession = onCall(
     if (!Array.isArray(order.items) || !order.items.length) {
       throw new HttpsError("failed-precondition", "This order has no items.");
     }
+    const paymentPolicy = await classifyOrderPaymentItems(db, order);
+    if (!paymentPolicy.requiresStripe) {
+      throw new HttpsError("failed-precondition", "This cart is eligible for pickup payment and is not set for online-only checkout.");
+    }
+    if (String(order.fulfillmentType || "pickup") === "shipping") {
+      const shippingAddress = order.shippingAddress || {};
+      const hasShippingAddress =
+        String(shippingAddress.addressLine1 || "").trim().length >= 5 &&
+        String(shippingAddress.city || "").trim().length >= 2 &&
+        /^[A-Z]{2}$/i.test(String(shippingAddress.state || "").trim()) &&
+        /^\d{5}(-\d{4})?$/.test(String(shippingAddress.zip || "").trim());
+      if (!hasShippingAddress) {
+        throw new HttpsError("failed-precondition", "Shipping address is required before online payment.");
+      }
+    }
 
     let session;
     let stripeCustomerId = "";
@@ -1050,11 +1237,21 @@ exports.createStripeCheckoutSession = onCall(
       const origin = allowedCheckoutOrigin(request.data?.origin);
       const orderNumber = await assignSequentialOrderNumber(orderRef, order.orderNumber);
       order.orderNumber = orderNumber;
+
+      // Server-authoritative pricing (see buildServerPricedCheckout): never trust
+      // client-submitted item prices when charging the card.
+      const { lineItems, itemSubtotal } = await buildServerPricedCheckout(db, order);
+      const salesTaxAmount = orderSalesTaxAmount(order, itemSubtotal);
+      const shippingAmount = orderShippingAmount(order, itemSubtotal);
+      const totalPrice = roundCurrency(itemSubtotal + salesTaxAmount + shippingAmount);
+
       const metadata = {
         orderId,
         orderNumber,
         customerUid: order.customerUid || request.auth?.uid || "",
         source: "shrish_checkout",
+        salesTaxAmount: String(salesTaxAmount),
+        shippingAmount: String(shippingAmount),
       };
 
       if (request.auth?.uid && saveCard) {
@@ -1081,20 +1278,32 @@ exports.createStripeCheckoutSession = onCall(
         }
       }
 
-      const lineItems = order.items.map((item) => {
-        const qty = normalizeQty(item);
-        const unitAmount = Math.max(50, toStripeAmount(customerOrderUnitPrice(item)));
-        return {
-          quantity: qty,
+      // Line items, subtotal, tax and shipping are computed above from server
+      // prices; here we only append tax/shipping as their own Stripe line items.
+      if (salesTaxAmount > 0) {
+        lineItems.push({
+          quantity: 1,
           price_data: {
             currency: "usd",
-            unit_amount: unitAmount,
+            unit_amount: toStripeAmount(salesTaxAmount),
             product_data: {
-              name: String(item.name || "Shrish item").slice(0, 180),
+              name: String(order.salesTaxLabel || "Virginia sales tax").slice(0, 180),
             },
           },
-        };
-      });
+        });
+      }
+      if (shippingAmount > 0) {
+        lineItems.push({
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            unit_amount: toStripeAmount(shippingAmount),
+            product_data: {
+              name: String(order.shippingLabel || "Standard shipping").slice(0, 180),
+            },
+          },
+        });
+      }
 
       const sessionConfig = {
         mode: "payment",
@@ -1120,6 +1329,11 @@ exports.createStripeCheckoutSession = onCall(
         stripeCheckoutSessionId: session.id,
         stripeCustomerId: stripeCustomerId || "",
         saveCardRequested: saveCard,
+        itemSubtotal,
+        salesTaxAmount,
+        shippingAmount,
+        shippingFreeThreshold: configuredFreeShippingThreshold(),
+        totalPrice,
         paymentStatus: "checkout_started",
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       }, { merge: true });

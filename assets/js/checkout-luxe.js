@@ -20,6 +20,46 @@
     return '🥭';
   }
 
+  function productIdFromCartItem(item) {
+    return item && (item.productId || String(item.id || '').split('__')[0] || '');
+  }
+
+  function productForItem(item) {
+    var productId = productIdFromCartItem(item);
+    var products = (window.SHRISH_DATA && window.SHRISH_DATA.products) || [];
+    return products.find(function (p) { return p.id === productId; }) || null;
+  }
+
+  var MANGO_CATEGORY_HINTS = ['mangoes', 'mango', 'fruits', 'fruits/mangoes'];
+  var MANGO_NAME_HINTS = ['alphonso', 'hapus', 'banganapalli', 'banginapalli', 'safeda', 'kesar', 'himayat', 'imam pasand', 'rasalu', 'dasheri', 'langra', 'mallika', 'mango box'];
+  var NON_MANGO_NAME_HINTS = ['pickle', 'podi', 'powder', 'putharekulu', 'jelly', 'thandra', 'sweet', 'snack', 'gongura', 'avakai', 'mango ginger'];
+
+  function itemCategory(item) {
+    var product = productForItem(item);
+    var rawCategory = String((product && product.category) || item.category || item.productCategory || '').trim().toLowerCase();
+    if (MANGO_CATEGORY_HINTS.indexOf(rawCategory) >= 0) return 'mangoes';
+    if (rawCategory) return rawCategory;
+
+    var haystack = (productIdFromCartItem(item) + ' ' + (item.name || '')).toLowerCase();
+    if (NON_MANGO_NAME_HINTS.some(function (hint) { return haystack.indexOf(hint) >= 0; })) return 'non-mango';
+    if (MANGO_NAME_HINTS.some(function (hint) { return haystack.indexOf(hint) >= 0; })) return 'mangoes';
+    return 'non-mango';
+  }
+
+  function isMangoItem(item) {
+    return itemCategory(item) === 'mangoes';
+  }
+
+  function cartPaymentPolicy(items) {
+    var list = (items || []).filter(function (item) { return Number(item.qty || 0) > 0; });
+    var hasMango = list.some(isMangoItem);
+    var hasNonMango = list.some(function (item) { return !isMangoItem(item); });
+    return {
+      requiresStripe: hasNonMango && !hasMango,
+      isMixed: hasMango && hasNonMango
+    };
+  }
+
   function init() {
     try {
       var wrap = $('checkoutWrap');
@@ -37,7 +77,7 @@
         '<div class="pk-line"><span></span></div>' +
         '<div class="pk-step" data-step="details"><span class="pk-dot">✍️</span>Your Details</div>' +
         '<div class="pk-line"><span></span></div>' +
-        '<div class="pk-step" data-step="pickup"><span class="pk-dot">📍</span>Pickup Spot</div>' +
+        '<div class="pk-step" data-step="pickup"><span class="pk-dot">📍</span>Fulfillment</div>' +
         '<div class="pk-line"><span></span></div>' +
         '<div class="pk-step" data-step="seal"><span class="pk-dot">🥭</span>Seal It</div>';
       wrap.parentNode.insertBefore(journey, wrap);
@@ -49,8 +89,8 @@
         '<div class="pk-box-kicker">The Packing Room</div>' +
         '<div class="pk-box-name" id="pkName">Packing <em>your</em> box…</div>' +
         '<div class="pk-crate"><div class="pk-stamp" id="pkStamp"></div><div class="pk-items" id="pkItems"></div></div>' +
-        '<div class="pk-total"><span class="lbl">Total at pickup</span><span class="amt" id="pkTotal">—</span></div>' +
-        '<div class="pk-due-line">Due today <b>$0.00</b> · cash, card or Zelle at pickup</div>' +
+        '<div class="pk-total"><span class="lbl" id="pkTotalLabel">Total at pickup</span><span class="amt" id="pkTotal">—</span></div>' +
+        '<div class="pk-due-line" id="pkDueLine">Due today <b>$0.00</b> · cash, card or Zelle at pickup</div>' +
         '<button type="button" class="pk-seal" id="pkSeal">Packing in progress…</button>';
       sidebar.insertBefore(box, sidebar.firstChild);
 
@@ -66,6 +106,7 @@
       submit.parentNode.insertBefore(hint, submit);
       var trust = document.createElement('div');
       trust.className = 'pk-trust';
+      trust.id = 'pkTrust';
       trust.innerHTML = '<span><b>✓</b> $0 due today</span><span><b>✓</b> Cancel anytime before pickup</span><span><b>✓</b> Address shared on WhatsApp</span>';
       submit.insertAdjacentElement('afterend', trust);
 
@@ -123,7 +164,7 @@
       /* ---------- mobile sticky pay bar ---------- */
       var paybar = document.createElement('div');
       paybar.className = 'pk-paybar';
-      paybar.innerHTML = '<div><div class="pp-total" id="ppTotal">—</div><div class="pp-sub">$0 due today</div></div><button type="button" id="ppGo">Place Order</button>';
+      paybar.innerHTML = '<div><div class="pp-total" id="ppTotal">—</div><div class="pp-sub" id="ppSub">$0 due today</div></div><button type="button" id="ppGo">Place Order</button>';
       document.body.appendChild(paybar);
       $('ppGo').addEventListener('click', function () { sealAction(); });
 
@@ -164,7 +205,17 @@
       function phoneOk() { return (($('phone') || {}).value || '').replace(/\D/g, '').length >= 10; }
       function emailOk() { return /\S+@\S+\.\S+/.test((($('email') || {}).value || '')); }
       function nameOk() { return (($('firstName') || {}).value || '').trim().length >= 2; }
-      function locPicked() { return !!document.querySelector('.loc-card.selected'); }
+      function shippingSelected() { return !!document.querySelector('.fulfillment-option[data-fulfillment="shipping"].selected'); }
+      function shippingOk() {
+        if (!shippingSelected()) return false;
+        var state = (($('shippingState') || {}).value || '').trim();
+        var zip = (($('shippingZip') || {}).value || '').trim();
+        return (($('shippingAddress1') || {}).value || '').trim().length >= 5 &&
+          (($('shippingCity') || {}).value || '').trim().length >= 2 &&
+          /^[A-Za-z]{2}$/.test(state) &&
+          /^\d{5}(-\d{4})?$/.test(zip);
+      }
+      function locPicked() { return shippingSelected() ? shippingOk() : !!document.querySelector('.loc-card.selected'); }
 
       var LOC_LABELS = { shortpump: 'Short Pump, VA', chesterfield: 'Chesterfield, VA', mechanicsville: 'Mechanicsville, VA' };
 
@@ -173,7 +224,7 @@
         if (!nameOk()) return $('firstName');
         if (!phoneOk()) return $('phone');
         if (!emailOk()) return $('email');
-        if (!locPicked()) return $('locCards');
+        if (!locPicked()) return shippingSelected() ? $('shippingAddress1') : $('locCards');
         return null;
       }
       function sealAction() {
@@ -231,6 +282,24 @@
 
           $('pkTotal').textContent = cart.total || '—';
           $('ppTotal').textContent = cart.total || '—';
+          var paymentPolicy = cartPaymentPolicy(sessionCart());
+          var onlineOnly = paymentPolicy.requiresStripe;
+          var totalLabel = $('pkTotalLabel');
+          var dueLine = $('pkDueLine');
+          var trustLine = $('pkTrust');
+          var ppSub = $('ppSub');
+          if (totalLabel) totalLabel.textContent = onlineOnly ? 'Total online' : 'Total at pickup';
+          if (dueLine) {
+            dueLine.innerHTML = onlineOnly
+              ? 'Due today <b>' + esc(cart.total || '—') + '</b> · secure card payment with Stripe'
+              : 'Due today <b>$0.00</b> · cash, card or Zelle at pickup';
+          }
+          if (trustLine) {
+            trustLine.innerHTML = onlineOnly
+              ? '<span><b>✓</b> Secure Stripe checkout</span><span><b>✓</b> Shrish never sees your card number</span><span><b>✓</b> Pickup updates on WhatsApp</span>'
+              : '<span><b>✓</b> $0 due today</span><span><b>✓</b> Cancel anytime before pickup</span><span><b>✓</b> Address shared on WhatsApp</span>';
+          }
+          if (ppSub) ppSub.textContent = onlineOnly ? 'Pay securely online' : '$0 due today';
 
           /* validity ticks */
           [['firstName', nameOk()], ['phone', phoneOk()], ['email', emailOk()]].forEach(function (p) {
@@ -265,14 +334,16 @@
           if (!hasItems) missing.push('add an item');
           if (!nameOk()) missing.push('your name');
           if (!(phoneOk() && emailOk())) missing.push('phone & email');
-          if (!locPicked()) missing.push('pickup spot');
+          if (!locPicked()) missing.push(shippingSelected() ? 'shipping address' : 'pickup spot');
           $('pkHint').textContent = pct === 100 ? '🥭 Everything’s packed — seal it below!' : 'Still needed: ' + missing.join(' · ');
 
           var seal = $('pkSeal');
-          seal.textContent = pct === 100 ? '🥭 Seal the box — Place Order' : 'Packing… ' + pct + '% — tap to continue';
+          seal.textContent = pct === 100
+            ? (onlineOnly ? 'Continue to Secure Payment' : '🥭 Seal the box — Place Order')
+            : 'Packing… ' + pct + '% — tap to continue';
           seal.classList.toggle('ready', pct === 100);
           var ppGo = $('ppGo');
-          ppGo.textContent = pct === 100 ? '🥭 Place Order' : 'Continue (' + pct + '%)';
+          ppGo.textContent = pct === 100 ? (onlineOnly ? 'Pay Online' : '🥭 Place Order') : 'Continue (' + pct + '%)';
 
           /* journey */
           var states = { cart: hasItems, details: nameOk() && phoneOk() && emailOk(), pickup: locPicked(), seal: pct === 100 };

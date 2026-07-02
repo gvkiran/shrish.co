@@ -1,10 +1,181 @@
 /* ============================================================
    SHRISH — THE PACKING ROOM v2 (full checkout design pass)
-   Dark packing-table shell; cream packing-slip cards; every
+   Dark packing-table shell; obsidian packing-slip cards; every
    element restyled. Pure visual layer over existing logic.
    ============================================================ */
 body.packing-room{background:#100A04}
 body.packing-room .checkout-hero{background:transparent;padding-bottom:8px}
+
+/* ---------- dark checkout shell ---------- */
+body.packing-room .nav{
+  background:rgba(10,7,2,.94);
+  border-bottom:1px solid rgba(212,160,23,.18);
+  box-shadow:0 14px 40px rgba(0,0,0,.32);
+}
+body.packing-room .nav-link{color:#D8C6A2}
+body.packing-room .nav-link:hover,body.packing-room .nav-link.active{color:#F0C84A}
+body.packing-room .nav-logo img{filter:drop-shadow(0 0 14px rgba(212,160,23,.32))}
+body.packing-room .nav-cart-btn{
+  background:linear-gradient(135deg,#2B1A06,#0E0903);
+  border:1px solid rgba(212,160,23,.35);
+  color:#F4EADA;
+  box-shadow:0 8px 24px rgba(0,0,0,.34);
+}
+body.packing-room .nav-cart-badge{background:#C8791A;color:#fff}
+body.packing-room .nav-hamburger span{background:#F0C84A}
+body.packing-room .nav-mobile{
+  background:#100A04;
+  border-top:1px solid rgba(212,160,23,.18);
+}
+body.packing-room .nav-mobile a,body.packing-room .nav-mobile button{
+  color:#E4D2AC;
+  border-color:rgba(212,160,23,.14);
+}
+body.packing-room .review-card,
+body.packing-room .form-card,
+body.packing-room .info-card,
+body.packing-room .success-summary,
+body.packing-room .duplicate-order-card,
+body.packing-room .checkout-account-card,
+body.packing-room .cart-remove-card{
+  background:#171008;
+  border:1px solid rgba(212,160,23,.24);
+  color:#EDE1C8;
+  box-shadow:0 18px 50px rgba(0,0,0,.32);
+}
+body.packing-room .review-card-title,
+body.packing-room .form-card-title,
+body.packing-room .info-card h4,
+body.packing-room .success-screen h2,
+body.packing-room .duplicate-order-card h3,
+body.packing-room .checkout-account-card h3,
+body.packing-room .cart-remove-card h3,
+body.packing-room .ri-name,
+body.packing-room .ri-qty-value,
+body.packing-room .ri-qty,
+body.packing-room .review-total,
+body.packing-room .review-total .rt-qty,
+body.packing-room .review-total-line.total,
+body.packing-room .loc-name,
+body.packing-room .fulfillment-title,
+body.packing-room .payment-title,
+body.packing-room .shipping-rate-line strong,
+body.packing-room .payment-rule-note strong,
+body.packing-room .checkout-safety-note strong,
+body.packing-room .save-card-row strong,
+body.packing-room .ss-item,
+body.packing-room .ss-row span:last-child{
+  color:#F4EADA;
+}
+body.packing-room .ri-unit,
+body.packing-room .cart-empty-note,
+body.packing-room .review-total-note,
+body.packing-room .review-total-lines,
+body.packing-room .loc-sub,
+body.packing-room .fulfillment-copy,
+body.packing-room .payment-copy,
+body.packing-room .pay-note-small,
+body.packing-room .save-card-row label,
+body.packing-room .info-card .ir span,
+body.packing-room .duplicate-order-card p,
+body.packing-room .checkout-account-card p,
+body.packing-room .cart-remove-card p,
+body.packing-room .ss-row span:first-child,
+body.packing-room .ss-head{
+  color:#B3A287;
+}
+body.packing-room .review-head,
+body.packing-room .fulfillment-note,
+body.packing-room .shipping-fields,
+body.packing-room .payment-rule-note,
+body.packing-room .checkout-safety-note,
+body.packing-room .save-card-row,
+body.packing-room .checkout-account-benefits span,
+body.packing-room .cart-remove-item{
+  background:#21160A;
+  border-color:rgba(212,160,23,.24);
+  color:#B3A287;
+}
+body.packing-room .review-item,
+body.packing-room .ss-row,
+body.packing-room .ss-table,
+body.packing-room .ss-head,
+body.packing-room .ss-item{
+  border-color:rgba(212,160,23,.18);
+}
+body.packing-room .ri-qty-ctrl,
+body.packing-room .form-control{
+  background:#100A04;
+  border-color:rgba(212,160,23,.3);
+  color:#F4EADA;
+}
+body.packing-room .form-control::placeholder{color:#7F6B4B}
+/* Legible field labels on the dark Packing Room background (matches account page) */
+body.packing-room .form-label{color:#C9A86A}
+body.packing-room .ri-qty-btn,
+body.packing-room .ri-remove,
+body.packing-room .duplicate-order-actions .secondary,
+body.packing-room .checkout-account-actions .secondary,
+body.packing-room .cart-remove-cancel{
+  background:#100A04;
+  border-color:rgba(212,160,23,.36);
+  color:#F0C84A;
+}
+body.packing-room .ri-qty-btn:hover,
+body.packing-room .cart-remove-cancel:hover{
+  background:#2A1C0B;
+}
+body.packing-room .ri-remove{
+  border-color:rgba(229,57,53,.58);
+  color:#FFB4AA;
+  box-shadow:0 0 0 1px rgba(229,57,53,.14),0 8px 18px rgba(0,0,0,.22);
+}
+body.packing-room .ri-remove:hover{
+  background:#C62828;
+  border-color:#EF5350;
+  color:#fff;
+}
+body.packing-room .shipping-address-assist{color:#A99065}
+body.packing-room .shipping-address-assist.valid{color:#7FE39B}
+body.packing-room .shipping-address-suggestions{
+  background:#15100A;
+  border-color:rgba(212,160,23,.35);
+  box-shadow:0 20px 54px rgba(0,0,0,.45);
+}
+body.packing-room .shipping-address-suggestion{
+  color:#B3A287;
+  border-top:1px solid rgba(212,160,23,.12);
+}
+body.packing-room .shipping-address-suggestion:first-child{border-top:0}
+body.packing-room .shipping-address-suggestion:hover,
+body.packing-room .shipping-address-suggestion:focus{background:#21160A}
+body.packing-room .shipping-address-suggestion strong{color:#F4EADA}
+body.packing-room .loc-card,
+body.packing-room .fulfillment-option,
+body.packing-room .payment-option{
+  background:#120C05;
+  border-color:rgba(212,160,23,.3);
+  color:#EDE1C8;
+}
+body.packing-room .loc-card:hover,
+body.packing-room .fulfillment-option:hover,
+body.packing-room .payment-option:hover{
+  background:#1C1207;
+  box-shadow:0 10px 24px rgba(0,0,0,.28);
+}
+body.packing-room .loc-card.selected,
+body.packing-room .fulfillment-option.selected,
+body.packing-room .payment-option.selected,
+body.packing-room .pk-loc-pick .ir.pk-active{
+  background:linear-gradient(160deg,#2A1B08,#1A1004);
+  box-shadow:inset 3px 0 0 #C8791A,0 10px 26px rgba(0,0,0,.28);
+}
+body.packing-room .payment-pill,
+body.packing-room .pk-paychips span{
+  background:#2A1C0B;
+  border-color:rgba(212,160,23,.3);
+  color:#F0C84A;
+}
 
 /* ---------- journey strip ---------- */
 .pk-journey{max-width:1200px;margin:18px auto 8px;padding:0 24px;display:flex;align-items:center;font-family:'Jost',sans-serif}
@@ -32,8 +203,8 @@ body.packing-room .ri-qty-btn{width:28px;height:28px;border-radius:50%;border:no
 body.packing-room .ri-qty-btn:hover{background:rgba(200,121,26,.12)}
 body.packing-room .ri-qty-value{font-weight:800;min-width:26px;text-align:center;display:inline-block}
 body.packing-room .ri-price{font-weight:800;color:var(--saffron)}
-body.packing-room .ri-remove{opacity:.4;transition:opacity .2s,transform .2s}
-body.packing-room .ri-remove:hover{opacity:1;transform:scale(1.15)}
+body.packing-room .ri-remove{opacity:1;transition:background .2s,color .2s,transform .2s,border-color .2s}
+body.packing-room .ri-remove:hover{transform:translateY(-1px)}
 body.packing-room .review-total{padding-top:16px}
 body.packing-room .rt-price{font-size:24px}
 
@@ -141,7 +312,10 @@ body.packing-room .success-screen .success-icon-big{display:none}
 body.packing-room .success-screen h2{font-family:var(--font-display,'Cormorant Garamond'),serif;font-size:clamp(2.2rem,5vw,3.4rem);color:#F4EADA;text-align:center;margin:18px 0 8px}
 body.packing-room .success-screen h2 em{color:#F0C84A}
 body.packing-room .success-screen > p{text-align:center;color:#B3A287;max-width:54ch;margin:8px auto}
-body.packing-room .order-badge{display:block;width:fit-content;margin:14px auto;background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;font-weight:800;letter-spacing:.06em;padding:12px 26px;border-radius:14px;box-shadow:0 8px 18px rgba(212,160,23,.35);position:relative}
+body.packing-room .order-badge{display:block;width:fit-content;margin:14px auto;background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;font-size:20px;font-weight:900;letter-spacing:.06em;padding:14px 28px;border-radius:14px;box-shadow:0 8px 18px rgba(212,160,23,.35);position:relative}
+body.packing-room .success-order-number{color:#F0C84A;font-size:1.22em;font-weight:900;letter-spacing:.055em;text-shadow:0 0 16px rgba(240,200,74,.32)}
+body.packing-room .order-badge .success-order-number{color:#140C03;font-size:1.08em;text-shadow:none}
+body.packing-room .success-account-prompt p .success-order-number,body.packing-room .success-account-note .success-order-number{font-size:18px;margin:0 3px}
 body.packing-room .order-badge::before,body.packing-room .order-badge::after{content:'';position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:#100A04;transform:translateY(-50%)}
 body.packing-room .order-badge::before{left:-7px}
 body.packing-room .order-badge::after{right:-7px}
@@ -160,3 +334,40 @@ body.packing-room .community-section p{color:#B3A287}
 .pk-sealed .pk-stamp{transform:rotate(8deg) scale(1)}
 .pk-confetti{position:absolute;top:-10px;font-size:16px;animation:pkFall 2.6s linear forwards;pointer-events:none;z-index:5}
 @keyframes pkFall{to{transform:translateY(70vh) rotate(480deg);opacity:0}}
+
+/* Final dark-theme guard: keep checkout from falling back to cream cards. */
+body.packing-room .review-card,
+body.packing-room .form-card,
+body.packing-room .info-card,
+body.packing-room .success-summary,
+body.packing-room .duplicate-order-card,
+body.packing-room .checkout-account-card,
+body.packing-room .cart-remove-card{
+  background:#171008 !important;
+  border-color:rgba(212,160,23,.24) !important;
+  color:#EDE1C8 !important;
+}
+body.packing-room .review-head,
+body.packing-room .fulfillment-note,
+body.packing-room .shipping-fields,
+body.packing-room .payment-rule-note,
+body.packing-room .checkout-safety-note,
+body.packing-room .save-card-row,
+body.packing-room .checkout-account-benefits span,
+body.packing-room .cart-remove-item{
+  background:#21160A !important;
+  border-color:rgba(212,160,23,.24) !important;
+}
+body.packing-room .loc-card.selected,
+body.packing-room .fulfillment-option.selected,
+body.packing-room .payment-option.selected,
+body.packing-room .pk-loc-pick .ir.pk-active{
+  background:linear-gradient(160deg,#2A1B08,#1A1004) !important;
+  box-shadow:inset 3px 0 0 #C8791A,0 10px 26px rgba(0,0,0,.28) !important;
+}
+body.packing-room .ri-qty-ctrl,
+body.packing-room .form-control{
+  background:#100A04 !important;
+  border-color:rgba(212,160,23,.3) !important;
+  color:#F4EADA !important;
+}
