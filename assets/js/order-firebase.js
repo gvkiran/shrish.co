@@ -1110,23 +1110,34 @@ async function getGoogleMapsApiKey() {
     return googleMapsApiKey;
   };
 
-  // Prefer the Firebase callable so this works regardless of where the static
-  // site is hosted (Hostinger/Vercel/Firebase); fall back to /api/public-config.
-  googleMapsApiKeyPromise = getPublicConfigCallable()
-    .then((result) => applyKey(result?.data?.googleMapsApiKey))
-    .catch(() => fetch('/api/public-config', {
+  const fromVercel = async () => {
+    const response = await fetch('/api/public-config', {
       cache: 'no-store',
       headers: { Accept: 'application/json' }
-    })
-      .then((response) => {
-        if (!response.ok) throw new Error('Runtime config unavailable');
-        return response.json();
-      })
-      .then((config) => applyKey(config?.googleMapsApiKey)))
-    .catch((error) => {
-      console.warn('Google Maps runtime config unavailable', error);
-      return '';
     });
+    if (!response.ok) throw new Error('Runtime config unavailable');
+    const config = await response.json();
+    return String(config?.googleMapsApiKey || '').trim();
+  };
+  const fromFirebase = async () => {
+    const result = await getPublicConfigCallable();
+    return String(result?.data?.googleMapsApiKey || '').trim();
+  };
+
+  // Try the Vercel endpoint first (current host), then the Firebase callable.
+  // Treat an EMPTY key as "try the next source" so a deployed-but-unconfigured
+  // source can't silently block one that is configured. Degrades to manual entry.
+  googleMapsApiKeyPromise = (async () => {
+    for (const source of [fromVercel, fromFirebase]) {
+      try {
+        const key = await source();
+        if (key) return applyKey(key);
+      } catch (error) {
+        console.warn('Google Maps key source unavailable', error);
+      }
+    }
+    return applyKey('');
+  })();
 
   return googleMapsApiKeyPromise;
 }

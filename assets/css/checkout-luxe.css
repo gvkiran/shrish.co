@@ -110,6 +110,8 @@ body.packing-room .form-control{
   color:#F4EADA;
 }
 body.packing-room .form-control::placeholder{color:#7F6B4B}
+/* Legible field labels on the dark Packing Room background (matches account page) */
+body.packing-room .form-label{color:#C9A86A}
 body.packing-room .ri-qty-btn,
 body.packing-room .ri-remove,
 body.packing-room .duplicate-order-actions .secondary,
