@@ -264,7 +264,10 @@ async function classifyOrderPaymentItems(db, order = {}) {
   };
 }
 
-function orderSalesTaxAmount(order = {}) {
+function orderSalesTaxAmount(order = {}, subtotalOverride) {
+  if (Number.isFinite(subtotalOverride)) {
+    return roundCurrency(Number(subtotalOverride) * configuredVirginiaSalesTaxRate());
+  }
   const subtotalFromItems = Array.isArray(order.items)
     ? order.items.reduce((sum, item) => sum + normalizeLineTotal(item), 0)
     : 0;
@@ -283,15 +286,78 @@ function configuredFreeShippingThreshold() {
   return Number.isFinite(configured) && configured >= 0 ? configured : DEFAULT_FREE_SHIPPING_THRESHOLD;
 }
 
-function orderShippingAmount(order = {}) {
+function orderShippingAmount(order = {}, subtotalOverride) {
   if (String(order.fulfillmentType || "pickup") !== "shipping") return 0;
 
   const subtotalFromItems = Array.isArray(order.items)
     ? order.items.reduce((sum, item) => sum + normalizeLineTotal(item), 0)
     : 0;
-  const subtotal = subtotalFromItems > 0 ? subtotalFromItems : Number(order.itemSubtotal ?? 0);
+  const subtotal = Number.isFinite(subtotalOverride)
+    ? Number(subtotalOverride)
+    : (subtotalFromItems > 0 ? subtotalFromItems : Number(order.itemSubtotal ?? 0));
 
   return roundCurrency(subtotal >= configuredFreeShippingThreshold() ? 0 : configuredStandardShippingAmount());
+}
+
+// Server-authoritative checkout pricing. Rebuilds Stripe line items and the
+// item subtotal from the products collection so a tampered client-side order
+// document cannot dictate what the customer is charged.
+async function buildServerPricedCheckout(db, order = {}) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  if (!items.length) {
+    throw new HttpsError("failed-precondition", "This order has no items.");
+  }
+
+  const productIds = [...new Set(items.map(customerOrderProductId).filter(Boolean))];
+  const productById = new Map();
+  await Promise.all(productIds.map(async (productId) => {
+    const snap = await db.collection("products").doc(productId).get().catch(() => null);
+    if (snap?.exists) productById.set(productId, snap.data() || {});
+  }));
+
+  const lineItems = [];
+  let itemSubtotal = 0;
+
+  items.forEach((item) => {
+    const productId = customerOrderProductId(item);
+    const variantId = customerOrderVariantId(item);
+    const qty = normalizeQty(item);
+
+    const product = productById.get(productId);
+    if (!product) {
+      throw new HttpsError("failed-precondition", "A product in your cart is no longer available.");
+    }
+    if (product.available === false || product.displayOnly || product.hidden) {
+      throw new HttpsError("failed-precondition", "A product in your cart is not available for purchase.");
+    }
+
+    const variants = customerProductVariants(product);
+    const variant = variants.find((v) => v.id === variantId)
+      || variants.find((v) => v.id === "default")
+      || variants[0];
+    if (!variant) {
+      throw new HttpsError("failed-precondition", "A product option in your cart is not available.");
+    }
+
+    const unitPrice = parseMoney(variant.price || product.price);
+    if (!(unitPrice > 0)) {
+      throw new HttpsError("failed-precondition", "A product in your cart does not have a valid price.");
+    }
+
+    itemSubtotal += unitPrice * qty;
+    lineItems.push({
+      quantity: qty,
+      price_data: {
+        currency: "usd",
+        unit_amount: toStripeAmount(unitPrice),
+        product_data: {
+          name: String(item.name || product.name || "Shrish item").slice(0, 180),
+        },
+      },
+    });
+  });
+
+  return { lineItems, itemSubtotal: roundCurrency(itemSubtotal) };
 }
 
 async function assignSequentialOrderNumber(orderRef, existingOrderNumber) {
@@ -1099,6 +1165,19 @@ exports.sendOrderReminderEmails = onCall(
   }
 );
 
+exports.getPublicConfig = onCall(
+  callableOptions(),
+  async () => {
+    return {
+      googleMapsApiKey: String(
+        process.env.SHRISH_GOOGLE_MAPS_API_KEY
+          || process.env.GOOGLE_MAPS_API_KEY
+          || ""
+      ).trim(),
+    };
+  }
+);
+
 exports.createStripeCheckoutSession = onCall(
   callableOptions({
     secrets: [STRIPE_SECRET_KEY],
@@ -1158,13 +1237,21 @@ exports.createStripeCheckoutSession = onCall(
       const origin = allowedCheckoutOrigin(request.data?.origin);
       const orderNumber = await assignSequentialOrderNumber(orderRef, order.orderNumber);
       order.orderNumber = orderNumber;
+
+      // Server-authoritative pricing (see buildServerPricedCheckout): never trust
+      // client-submitted item prices when charging the card.
+      const { lineItems, itemSubtotal } = await buildServerPricedCheckout(db, order);
+      const salesTaxAmount = orderSalesTaxAmount(order, itemSubtotal);
+      const shippingAmount = orderShippingAmount(order, itemSubtotal);
+      const totalPrice = roundCurrency(itemSubtotal + salesTaxAmount + shippingAmount);
+
       const metadata = {
         orderId,
         orderNumber,
         customerUid: order.customerUid || request.auth?.uid || "",
         source: "shrish_checkout",
-        salesTaxAmount: String(orderSalesTaxAmount(order)),
-        shippingAmount: String(orderShippingAmount(order)),
+        salesTaxAmount: String(salesTaxAmount),
+        shippingAmount: String(shippingAmount),
       };
 
       if (request.auth?.uid && saveCard) {
@@ -1191,26 +1278,8 @@ exports.createStripeCheckoutSession = onCall(
         }
       }
 
-      const lineItems = order.items.map((item) => {
-        const qty = normalizeQty(item);
-        const unitAmount = Math.max(50, toStripeAmount(customerOrderUnitPrice(item)));
-        return {
-          quantity: qty,
-          price_data: {
-            currency: "usd",
-            unit_amount: unitAmount,
-            product_data: {
-              name: String(item.name || "Shrish item").slice(0, 180),
-            },
-          },
-        };
-      });
-      const salesTaxAmount = orderSalesTaxAmount(order);
-      const shippingAmount = orderShippingAmount(order);
-      const itemSubtotal = Array.isArray(order.items)
-        ? roundCurrency(order.items.reduce((sum, item) => sum + normalizeLineTotal(item), 0))
-        : 0;
-      const totalPrice = roundCurrency(itemSubtotal + salesTaxAmount + shippingAmount);
+      // Line items, subtotal, tax and shipping are computed above from server
+      // prices; here we only append tax/shipping as their own Stripe line items.
       if (salesTaxAmount > 0) {
         lineItems.push({
           quantity: 1,
