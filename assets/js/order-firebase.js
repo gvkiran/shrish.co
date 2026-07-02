@@ -43,7 +43,8 @@ const VIRGINIA_SALES_TAX_LABEL = 'Virginia sales tax';
 const SHIPPING_STANDARD_AMOUNT = Number(window.SHRISH_APP_CONFIG?.standardShippingAmount ?? 8.99);
 const SHIPPING_FREE_THRESHOLD = Number(window.SHRISH_APP_CONFIG?.freeShippingThreshold ?? 75);
 const SHIPPING_LABEL = 'Standard shipping';
-const GOOGLE_MAPS_API_KEY = String(window.SHRISH_APP_CONFIG?.googleMapsApiKey || '').trim();
+let googleMapsApiKey = String(window.SHRISH_APP_CONFIG?.googleMapsApiKey || '').trim();
+let googleMapsApiKeyPromise = null;
 const MANGO_CATEGORY_HINTS = new Set([
   'mangoes',
   'mango',
@@ -1097,6 +1098,32 @@ function shippingAddressLabel(address = getShippingAddress()) {
   return `${line1}${line2}, ${address.city || ''}, ${address.state || ''} ${address.zip || ''}`.replace(/\s+/g, ' ').trim();
 }
 
+async function getGoogleMapsApiKey() {
+  if (googleMapsApiKey) return googleMapsApiKey;
+  if (googleMapsApiKeyPromise) return googleMapsApiKeyPromise;
+
+  googleMapsApiKeyPromise = fetch('/api/public-config', {
+    cache: 'no-store',
+    headers: { Accept: 'application/json' }
+  })
+    .then(async (response) => {
+      if (!response.ok) throw new Error('Runtime config unavailable');
+      return response.json();
+    })
+    .then((config) => {
+      googleMapsApiKey = String(config?.googleMapsApiKey || '').trim();
+      window.SHRISH_APP_CONFIG = window.SHRISH_APP_CONFIG || {};
+      window.SHRISH_APP_CONFIG.googleMapsApiKey = googleMapsApiKey;
+      return googleMapsApiKey;
+    })
+    .catch((error) => {
+      console.warn('Google Maps runtime config unavailable', error);
+      return '';
+    });
+
+  return googleMapsApiKeyPromise;
+}
+
 function setAddressAssist(message = '', state = '') {
   const assist = document.getElementById('shippingAddressAssist');
   if (!assist) return;
@@ -1159,9 +1186,11 @@ function applyPlaceAddress(place) {
   return true;
 }
 
-function loadGoogleMapsPlaces() {
+async function loadGoogleMapsPlaces() {
   if (window.google?.maps?.importLibrary) return Promise.resolve(window.google);
   if (window.__shrishPlacesPromise) return window.__shrishPlacesPromise;
+  const apiKey = await getGoogleMapsApiKey();
+  if (!apiKey) throw new Error('Google Maps API key missing');
 
   window.__shrishPlacesPromise = new Promise((resolve, reject) => {
     const callbackName = `shrishPlacesReady_${Date.now()}`;
@@ -1171,7 +1200,7 @@ function loadGoogleMapsPlaces() {
     };
 
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&loading=async&callback=${callbackName}`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&loading=async&callback=${callbackName}`;
     script.async = true;
     script.defer = true;
     script.onerror = () => {
@@ -1236,7 +1265,7 @@ async function initShippingAddressAutocomplete() {
   const addressField = document.getElementById('shippingAddress1');
   if (!addressField) return;
 
-  if (!GOOGLE_MAPS_API_KEY) {
+  if (!(await getGoogleMapsApiKey())) {
     setAddressAssist('Enter your complete shipping address.');
     return;
   }
