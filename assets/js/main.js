@@ -76,7 +76,7 @@ const GEET_RESPONSES = {
     ]
   },
   ordering: {
-    text: "Ordering is simple: choose items in the shop, add them to cart, then checkout with the option shown for your cart. Mango carts may pay at pickup; non-mango carts usually pay securely online. Pickup is available in Short Pump, Chesterfield, and Mechanicsville, and eligible non-mango items may show shipping.",
+    text: "Ordering is simple: choose items in the shop, add them to cart, select pickup, and pay at pickup. Pickup is available in Short Pump, Chesterfield, and Mechanicsville.",
     chips: [
       { label: "Start order", href: "shop.html" },
       { label: "Contact us", href: "contact.html" }

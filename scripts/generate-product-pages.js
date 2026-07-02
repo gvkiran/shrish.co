@@ -3,7 +3,7 @@ const path = require('path');
 const vm = require('vm');
 
 const ROOT = path.resolve(__dirname, '..');
-const SITE_URL = 'https://www.shrish.co';
+const SITE_URL = 'https://shrish.co';
 const ROOT_PREFIX = '../../../../';
 
 const CATEGORY_LABELS = {
@@ -63,10 +63,7 @@ function shopProductUrl(product) {
 }
 
 function productImage(product) {
-  const gallery = Array.isArray(product.gallery) ? product.gallery : [];
-  const image = [product.image, ...gallery]
-    .map((entry) => String(entry || '').replace(/\\/g, '/').trim())
-    .find((entry) => entry && fs.existsSync(path.join(ROOT, entry)));
+  const image = String(product.image || '').replace(/\\/g, '/');
   if (image && fs.existsSync(path.join(ROOT, image))) {
     return {
       local: `${ROOT_PREFIX}${image}`,
@@ -191,30 +188,12 @@ function cleanGeneratedHtml(html) {
   return html.split('\n').map((line) => line.replace(/\s+$/g, '')).join('\n');
 }
 
-function truncateText(value, maxLength) {
-  const text = stripHtml(value);
-  if (text.length <= maxLength) return text;
-  const sliced = text.slice(0, maxLength - 1);
-  const clean = sliced.replace(/\s+\S*$/, '').replace(/[,\-–—:;]+$/, '').trim();
-  return clean || sliced.trim();
-}
-
-function productTitle(product, categoryLabel) {
-  const withCategory = `${product.name} - ${categoryLabel} | Shrish`;
-  if (withCategory.length <= 68) return withCategory;
-  const plain = `${product.name} | Shrish`;
-  if (plain.length <= 68) return plain;
-  return `${truncateText(product.name, 56)} | Shrish`;
-}
-
 function renderProductPage(product) {
   const category = normalizeCategory(product.category);
   const categoryLabel = CATEGORY_LABELS[category] || category;
   const image = productImage(product);
   const description = stripHtml(product.description);
-  const title = productTitle(product, categoryLabel);
-  const metaDescription = truncateText(description, 145);
-  const ogDescription = truncateText(description, 165);
+  const title = `${product.name} | Shrish`;
   const canonical = productPageUrl(product);
   const tags = productTags(product);
   const rows = detailRows(product);
@@ -225,10 +204,10 @@ function renderProductPage(product) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(title)}</title>
-  <meta name="description" content="${escapeHtml(metaDescription)}">
+  <meta name="description" content="${escapeHtml(description.slice(0, 155))}">
   <link rel="canonical" href="${canonical}">
   <meta property="og:title" content="${escapeHtml(product.name)}">
-  <meta property="og:description" content="${escapeHtml(ogDescription)}">
+  <meta property="og:description" content="${escapeHtml(description.slice(0, 180))}">
   <meta property="og:image" content="${image.absolute}">
   <meta property="og:url" content="${canonical}">
   <meta property="og:type" content="product">
@@ -367,7 +346,7 @@ function renderProductsIndex(products) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shrish Product Pages</title>
-  <meta name="description" content="Browse Shrish mangoes, putharekulu, jelly sweets, pickles, podi, and snacks by category with product details and live shop links.">
+  <meta name="description" content="Browse Shrish product pages by category.">
   <link rel="canonical" href="${SITE_URL}/shop/products/">
   <script>
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -424,7 +403,7 @@ function writeProductPages() {
   fs.writeFileSync(path.join(productsRoot, 'index.html'), renderProductsIndex(products));
 
   const today = new Date().toISOString().slice(0, 10);
-  const staticUrls = ['', 'shop.html', 'about.html', 'recipes.html', 'contact.html', 'privacy.html', 'refund.html', 'terms.html'];
+  const staticUrls = ['', 'shop.html', 'about.html', 'recipes.html', 'contact.html'];
   const productUrls = products.map(productPagePath);
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

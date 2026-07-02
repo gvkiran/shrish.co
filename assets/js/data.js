@@ -952,7 +952,7 @@ const SHRISH_DATA = {
 
   orderForm: {
     duplicateCheckField: "phone",
-    confirmationMessage: "🥭 Thank you! Your order has been placed. Please watch for my updates on the WhatsApp group for pickup details. If you’re not part of the group yet, please join using the link below. Your confirmation shows whether payment is complete online or due at pickup."
+    confirmationMessage: "🥭 Thank you! Your order has been placed. Please watch for my updates on the WhatsApp group for pickup details. If you’re not part of the group yet, please join using the link below. Payment collected at pickup"
   }
 };
 
