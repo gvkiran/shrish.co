@@ -301,7 +301,7 @@ body.packing-room [style*="background:var(--dark)"],body.packing-room [style*="b
   .pk-paybar{display:flex}
   body.packing-room{padding-bottom:84px}
   body.packing-room .geet-launcher{bottom:calc(150px + env(safe-area-inset-bottom,0px))}
-  body.packing-room .global-cart-fab,body.packing-room .cart-fab{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+  body.packing-room .global-cart-fab,body.packing-room .cart-fab{display:none}
 }
 
 /* ============================================================
