@@ -2246,6 +2246,13 @@ function renderOrders() {
     const statusLabel = orderStatusLabel(status);
     const paymentMethod = order.paymentMethod || '';
     const paymentCollected = Boolean(order.paymentCollected);
+    const isPaidOnline = order.paymentStatus === 'paid' || order.payment === 'paid';
+    const isStripeOrder = String(order.paymentMethod || '') === 'stripe';
+    const payBadgeHtml = isPaidOnline
+      ? '<div style="margin-top:4px;display:inline-block;font-size:11px;font-weight:700;color:#1E7B34;background:#E7F5EC;border:1px solid #9FD8B0;border-radius:10px;padding:1px 8px;">💳 Paid online</div>'
+      : isStripeOrder
+      ? '<div style="margin-top:4px;display:inline-block;font-size:11px;font-weight:700;color:#B54708;background:#FFF3E0;border:1px solid #F0C68A;border-radius:10px;padding:1px 8px;">Online — awaiting payment</div>'
+      : '<div style="margin-top:4px;display:inline-block;font-size:11px;font-weight:600;color:#8a6d3b;background:#fbf3e2;border:1px solid #e6d3a8;border-radius:10px;padding:1px 8px;">Pay at pickup</div>';
     const fallbackBatch = batchNameFromDate(todayDateInputValue());
     const canSelect = isActiveSheet && status === 'pending';
     const checked = state.selectedReminderOrderIds.has(order.id) ? 'checked' : '';
@@ -2278,7 +2285,7 @@ function renderOrders() {
 
     return `<tr id="row-${escapeHtml(order.id)}">
       <td class="order-select-col">${canSelect ? `<input type="checkbox" class="order-select-checkbox" ${checked} onchange="toggleReminderOrderSelection('${escapeHtml(order.id)}', this.checked)">` : ''}</td>
-      <td><div class="order-id">${escapeHtml(order.orderNumber || order.id)}</div></td>
+      <td><div class="order-id">${escapeHtml(order.orderNumber || order.id)}</div>${payBadgeHtml}</td>
       <td style="font-size:12px;color:var(--text-light)">${formatDate(order.createdAt)}</td>
       <td><div class="customer-name">${escapeHtml(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim())}</div><div class="customer-phone">${escapeHtml(order.phone)}</div><div class="customer-email">${escapeHtml(order.email)}</div></td>
       <td>${itemsHtml}</td>

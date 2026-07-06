@@ -401,6 +401,24 @@ async function assignSequentialOrderNumber(orderRef, existingOrderNumber) {
 }
 
 
+function orderSummaryBreakdown(order = {}) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  const subtotal = Number(order.itemSubtotal ?? 0) > 0
+    ? Number(order.itemSubtotal)
+    : items.reduce((sum, item) => sum + normalizeLineTotal(item), 0);
+  const tax = Number(order.salesTaxAmount ?? 0);
+  const shipping = Number(order.shippingAmount ?? 0);
+  const isShipping = String(order.fulfillmentType || "pickup") === "shipping";
+  // Only add a breakdown when there is tax and/or shipping to explain the total.
+  if (!(tax > 0) && !isShipping && !(shipping > 0)) return "";
+  const c = 'style="padding-top:6px; text-align:right; font-size:13px; color:#5c4a30;"';
+  const row = (label, val) => `<tr><td colspan="2" ${c}>${label}</td><td ${c}>${val}</td></tr>`;
+  let rows = row("Subtotal", currency(subtotal));
+  if (tax > 0) rows += row(escapeHtml(order.salesTaxLabel || "Virginia sales tax"), currency(tax));
+  if (isShipping || shipping > 0) rows += row("Shipping", shipping > 0 ? currency(shipping) : "Free");
+  return rows;
+}
+
 function buildCustomerEmail(order) {
   const items = Array.isArray(order.items) ? order.items : [];
   const firstName = escapeHtml(order.firstName || "Customer");
@@ -465,6 +483,7 @@ function buildCustomerEmail(order) {
                 ${itemRows}
               </tbody>
               <tfoot>
+                ${orderSummaryBreakdown(order)}
                 <tr>
                   <td style="padding-top:16px; font-size:14px; font-weight:700; color:#2b2218;">
                     Total
@@ -592,6 +611,7 @@ function buildAdminEmail(order) {
                 ${itemRows}
               </tbody>
               <tfoot>
+                ${orderSummaryBreakdown(order)}
                 <tr>
                   <td style="padding-top:16px; font-size:14px; font-weight:700; color:#2b2218;">
                     Total
@@ -1003,6 +1023,7 @@ function buildReminderEmail(order, messageText) {
                 ${itemRows}
               </tbody>
               <tfoot>
+                ${orderSummaryBreakdown(order)}
                 <tr>
                   <td style="padding-top:16px; font-size:14px; font-weight:700; color:#2b2218;">
                     Total
