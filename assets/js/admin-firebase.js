@@ -4871,9 +4871,9 @@ async function createPromoCode() {
   if (!/^[A-Z0-9]{3,20}$/.test(code)) return setMsg('Code must be 3–20 letters/numbers, no spaces.', false);
   if (type !== 'free_shipping' && !(value > 0)) return setMsg('Enter a discount value greater than 0.', false);
   if (type === 'percent' && value > 100) return setMsg('Percent cannot exceed 100.', false);
+  if (promoCodes.some(p => String(p.id || p.code || '').toUpperCase() === code)) return setMsg('That code already exists.', false);
   try {
     const ref = doc(db, 'promo_codes', code);
-    if ((await getDoc(ref)).exists()) return setMsg('That code already exists.', false);
     await setDoc(ref, {
       code, type,
       value: type === 'free_shipping' ? 0 : value,
