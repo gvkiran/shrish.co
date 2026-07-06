@@ -22,22 +22,6 @@ service cloud.firestore {
         );
     }
 
-    function existingLockIsNotActivePending() {
-      return resource.data.status in ['no_show', 'cancelled']
-        || (
-          resource.data.status == 'pending'
-          && !(resource.data.orderId is string)
-        )
-        || (
-          resource.data.status == 'pending'
-          && resource.data.orderId is string
-          && (
-            !exists(/databases/$(database)/documents/orders/$(resource.data.orderId))
-            || get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.status != 'pending'
-          )
-        );
-    }
-
     match /products/{productId} {
       allow read: if true;
       allow write: if isAdmin();

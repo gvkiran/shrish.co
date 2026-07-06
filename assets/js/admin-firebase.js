@@ -4911,7 +4911,7 @@ async function issueRefund(refundId) {
         });
       } catch (stripeErr) {
         console.warn('Stripe refund function error (may not be deployed):', stripeErr);
-        // Continue to mark as approved even if function not deployed yet
+        throw new Error('Stripe refund did not complete. Do not mark this request refunded until Stripe confirms it.');
       }
     }
 

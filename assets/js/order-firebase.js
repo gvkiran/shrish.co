@@ -1124,11 +1124,12 @@ async function getGoogleMapsApiKey() {
     return String(result?.data?.googleMapsApiKey || '').trim();
   };
 
-  // Try the Vercel endpoint first (current host), then the Firebase callable.
+  // Prefer Firebase Functions config so deploy-time Vercel env staleness cannot
+  // block address autocomplete. Fall back to the current host endpoint.
   // Treat an EMPTY key as "try the next source" so a deployed-but-unconfigured
   // source can't silently block one that is configured. Degrades to manual entry.
   googleMapsApiKeyPromise = (async () => {
-    for (const source of [fromVercel, fromFirebase]) {
+    for (const source of [fromFirebase, fromVercel]) {
       try {
         const key = await source();
         if (key) return applyKey(key);
