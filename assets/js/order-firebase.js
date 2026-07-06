@@ -1886,14 +1886,7 @@ async function submitOrder() {
     const lockRef = orderLockRef(phoneDigits);
     const lockSnap = await getDoc(lockRef);
     const lockStatus = lockSnap.exists() ? (lockSnap.data()?.status || 'pending') : '';
-    if (!currentCustomer && await isActivePendingLock(lockSnap)) {
-      trackCheckoutEvent('order_duplicate_blocked', {
-        ...cartAnalyticsSummary(),
-        pickup_location: selectedLoc
-      });
-      showDuplicateOrderMessage(phone, lockSnap.data()?.orderId || '');
-      return;
-    }
+    // Duplicate-order block removed — customers may place multiple orders.
     if (lockStatus === 'no_show') {
       await showNoShowNotice();
     }
@@ -1968,15 +1961,7 @@ async function submitOrder() {
     }
 
     await runTransaction(db, async (transaction) => {
-      const pendingLock = await transaction.get(lockRef);
-      const pendingLockStatus = pendingLock.exists() ? (pendingLock.data()?.status || 'pending') : '';
-      if (!currentCustomer && pendingLockStatus === 'pending') {
-        const pendingLockData = pendingLock.data() || {};
-        if (pendingLockData.orderId) {
-          throw new Error('DUPLICATE_PENDING_ORDER');
-        }
-      }
-
+      // Duplicate-order block removed — always create the order.
       transaction.set(orderRef, order);
       if (!payOnline) {
         transaction.set(lockRef, {
