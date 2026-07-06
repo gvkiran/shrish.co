@@ -154,6 +154,58 @@ function rememberCheckoutAccountPrefill(details = {}) {
   }));
 }
 
+const CHECKOUT_FORM_STATE_KEY = 'shrish_checkout_form_state';
+
+function saveCheckoutFormState() {
+  try {
+    const get = (id) => document.getElementById(id)?.value || '';
+    sessionStorage.setItem(CHECKOUT_FORM_STATE_KEY, JSON.stringify({
+      firstName: get('firstName'),
+      lastName: get('lastName'),
+      phone: get('phone'),
+      email: get('email'),
+      referral: get('referral'),
+      shippingAddress1: get('shippingAddress1'),
+      shippingAddress2: get('shippingAddress2'),
+      shippingCity: get('shippingCity'),
+      shippingState: get('shippingState'),
+      shippingZip: get('shippingZip'),
+      fulfillmentType: selectedFulfillmentType,
+      location: selectedLoc,
+      savedAt: Date.now()
+    }));
+  } catch (e) { /* non-fatal */ }
+}
+
+function restoreCheckoutFormState() {
+  let saved = null;
+  try { saved = JSON.parse(sessionStorage.getItem(CHECKOUT_FORM_STATE_KEY) || 'null'); } catch (e) { saved = null; }
+  if (!saved) return;
+  const setVal = (id, v, fire = true) => {
+    const el = document.getElementById(id);
+    if (el && v) { el.value = v; if (fire) el.dispatchEvent(new Event('input', { bubbles: true })); }
+  };
+  setVal('firstName', saved.firstName);
+  setVal('lastName', saved.lastName);
+  setVal('phone', saved.phone);
+  setVal('email', saved.email);
+  setVal('referral', saved.referral);
+  setVal('shippingAddress1', saved.shippingAddress1, false);
+  setVal('shippingAddress2', saved.shippingAddress2, false);
+  setVal('shippingCity', saved.shippingCity, false);
+  setVal('shippingState', saved.shippingState, false);
+  setVal('shippingZip', saved.shippingZip, false);
+  if (saved.fulfillmentType === 'shipping' && cartPaymentPolicy().allowShipping) {
+    selectedFulfillmentType = 'shipping';
+  } else {
+    selectedFulfillmentType = 'pickup';
+    if (saved.location) selectPickupLocation(saved.location, false);
+  }
+  updateFulfillmentUi();
+  renderCartReview();
+  updatePaymentUi();
+}
+
 function accountCheckoutHref(mode) {
   return `account.html?mode=${encodeURIComponent(mode)}&return=checkout`;
 }
@@ -1993,6 +2045,7 @@ async function submitOrder() {
       const checkoutUrl = session?.data?.url;
       if (!checkoutUrl) throw new Error('STRIPE_CHECKOUT_URL_MISSING');
       rememberRecentOrderForAccount(orderRef, order, session?.data?.orderNumber || orderRef.id);
+      saveCheckoutFormState();
       window.location.href = checkoutUrl;
       return;
     }
@@ -2166,6 +2219,7 @@ async function init() {
   bindFulfillmentUi();
   bindPaymentUi();
   bindCustomerProfile();
+  if (new URLSearchParams(window.location.search).get('payment') === 'cancelled') restoreCheckoutFormState();
   trackCheckoutEvent('checkout_viewed', {
     has_cart: Boolean(cart.length),
     ...cartAnalyticsSummary()
