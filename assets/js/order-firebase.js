@@ -440,6 +440,62 @@ function roundMoney(value) {
   return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
 }
 
+let appliedPromo = null; // { code, type, value, minSubtotal }
+
+function promoDiscountFor(itemSubtotal) {
+  if (!appliedPromo) return { discount: 0, freeShipping: false };
+  const p = appliedPromo;
+  if (Number(itemSubtotal) < Number(p.minSubtotal || 0)) return { discount: 0, freeShipping: false };
+  if (p.type === 'percent') return { discount: roundMoney(itemSubtotal * (Number(p.value) || 0) / 100), freeShipping: false };
+  if (p.type === 'fixed') return { discount: roundMoney(Math.min(Number(p.value) || 0, itemSubtotal)), freeShipping: false };
+  if (p.type === 'free_shipping') return { discount: 0, freeShipping: true };
+  return { discount: 0, freeShipping: false };
+}
+
+// Single source of truth for checkout totals (discount applied, tax on post-discount subtotal).
+function computeCheckoutTotals(itemSubtotal, fulfillmentType = selectedFulfillmentType) {
+  const { discount, freeShipping } = promoDiscountFor(itemSubtotal);
+  const discountedSubtotal = roundMoney(Math.max(0, itemSubtotal - discount));
+  const salesTaxAmount = calculateSalesTax(discountedSubtotal);
+  let shippingAmount = calculateShippingAmount(itemSubtotal, fulfillmentType);
+  if (freeShipping && fulfillmentType === 'shipping') shippingAmount = 0;
+  const orderTotal = roundMoney(discountedSubtotal + salesTaxAmount + shippingAmount);
+  return { itemSubtotal: roundMoney(itemSubtotal), discount, discountedSubtotal, salesTaxAmount, shippingAmount, orderTotal, freeShipping };
+}
+
+async function applyPromoCode() {
+  const input = document.getElementById('promoInput');
+  const msgEl = document.getElementById('promoMsg');
+  const setMsg = (t, ok) => { if (msgEl) { msgEl.textContent = t; msgEl.style.color = ok ? '#1E7B34' : '#B02A37'; } };
+  const code = (input?.value || '').trim().toUpperCase();
+  if (!code) return setMsg('Enter a promo code.', false);
+  try {
+    const snap = await getDoc(doc(db, 'promo_codes', code));
+    if (!snap.exists()) return setMsg('Invalid promo code.', false);
+    const p = snap.data() || {};
+    if (!p.active) return setMsg('This code is no longer active.', false);
+    if (p.expiresAt) { const exp = new Date(p.expiresAt.seconds ? p.expiresAt.seconds * 1000 : p.expiresAt); if (!isNaN(exp) && exp < new Date()) return setMsg('This code has expired.', false); }
+    if (p.maxUses && Number(p.usedCount || 0) >= Number(p.maxUses)) return setMsg('This code has reached its usage limit.', false);
+    const subtotal = cartItemSubtotal();
+    if (p.minSubtotal && subtotal < Number(p.minSubtotal)) return setMsg(`Spend ${formatCurrency(p.minSubtotal)}+ to use this code.`, false);
+    appliedPromo = { code, type: p.type, value: Number(p.value) || 0, minSubtotal: Number(p.minSubtotal) || 0 };
+    try { trackCheckoutEvent('promo_applied', { code, type: p.type }); } catch (e) {}
+    renderCartReview();
+    updatePaymentUi();
+  } catch (e) {
+    setMsg('Could not apply this code. Please try again.', false);
+  }
+}
+
+function removePromoCode() {
+  appliedPromo = null;
+  renderCartReview();
+  updatePaymentUi();
+}
+
+window.applyPromoCode = applyPromoCode;
+window.removePromoCode = removePromoCode;
+
 function calculateSalesTax(subtotal) {
   const rate = Number.isFinite(VIRGINIA_SALES_TAX_RATE) ? VIRGINIA_SALES_TAX_RATE : 0;
   return roundMoney(Math.max(0, subtotal) * Math.max(0, rate));
@@ -748,9 +804,11 @@ function renderCartReview() {
   const totalQty = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
   if (!cartPaymentPolicy().allowShipping && selectedFulfillmentType === 'shipping') selectedFulfillmentType = 'pickup';
   const itemSubtotal = cartItemSubtotal();
-  const salesTaxAmount = calculateSalesTax(itemSubtotal);
-  const shippingAmount = calculateShippingAmount(itemSubtotal);
-  const orderTotal = roundMoney(itemSubtotal + salesTaxAmount + shippingAmount);
+  const _t = computeCheckoutTotals(itemSubtotal);
+  const salesTaxAmount = _t.salesTaxAmount;
+  const shippingAmount = _t.shippingAmount;
+  const orderTotal = _t.orderTotal;
+  const promoDiscount = _t.discount;
 
   container.innerHTML =
     `<div class="review-table">
@@ -799,9 +857,15 @@ function renderCartReview() {
       <div></div>
       <div class="review-total-lines">
         <div class="review-total-line"><span>Subtotal</span><span>${formatCurrency(itemSubtotal)}</span></div>
+        ${promoDiscount > 0 ? `<div class="review-total-line" style="color:#1E7B34"><span>Promo ${escapeHtml(appliedPromo?.code || '')}</span><span>-${formatCurrency(promoDiscount)}</span></div>` : ''}
+        ${(appliedPromo?.type === 'free_shipping' && selectedFulfillmentType === 'shipping') ? `<div class="review-total-line" style="color:#1E7B34"><span>Promo ${escapeHtml(appliedPromo.code)}</span><span>Free shipping</span></div>` : ''}
         <div class="review-total-line"><span>${escapeHtml(VIRGINIA_SALES_TAX_LABEL)}</span><span>${formatCurrency(salesTaxAmount)}</span></div>
         <div class="review-total-line"><span>${escapeHtml(SHIPPING_LABEL)}</span><span>${shippingAmount > 0 ? formatCurrency(shippingAmount) : (selectedFulfillmentType === 'shipping' ? 'Free' : 'Not selected')}</span></div>
         <div class="review-total-line total"><span>Total</span><span>${formatCurrency(orderTotal)}</span></div>
+        <div class="review-total-line" style="margin-top:8px;gap:8px">${appliedPromo
+          ? `<span style="color:#1E7B34;font-weight:700">&#10003; ${escapeHtml(appliedPromo.code)} applied</span><button type="button" onclick="removePromoCode()" style="background:none;border:none;color:var(--saffron);cursor:pointer;font-weight:700;font-size:13px">Remove</button>`
+          : `<input id="promoInput" placeholder="Promo code" maxlength="20" style="flex:1;min-width:100px;padding:7px 10px;border:1px solid #d9c9a8;border-radius:8px;text-transform:uppercase;background:#fff;color:var(--dark)"><button type="button" onclick="applyPromoCode()" style="padding:7px 14px;background:var(--saffron);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700">Apply</button>`}</div>
+        <div class="review-total-line" id="promoMsg" style="font-size:12px;color:#B02A37"></div>
       </div>
       <div></div>
     </div>
@@ -1950,9 +2014,11 @@ async function submitOrder() {
       : pickupLocationLabel(selectedLoc);
     const orderRef = doc(collection(db, 'orders'));
     const itemSubtotal = cartItemSubtotal();
-    const salesTaxAmount = calculateSalesTax(itemSubtotal);
-    const shippingAmount = calculateShippingAmount(itemSubtotal);
-    const orderTotal = roundMoney(itemSubtotal + salesTaxAmount + shippingAmount);
+    const _pt = computeCheckoutTotals(itemSubtotal);
+    const salesTaxAmount = _pt.salesTaxAmount;
+    const shippingAmount = _pt.shippingAmount;
+    const orderTotal = _pt.orderTotal;
+    const promoDiscount = _pt.discount;
     const order = {
       orderNumber: '',
       firstName,
@@ -1996,6 +2062,10 @@ async function submitOrder() {
       shippingAmount,
       shippingFreeThreshold: SHIPPING_FREE_THRESHOLD,
       totalPrice: orderTotal,
+      promoCode: appliedPromo?.code || '',
+      promoType: appliedPromo?.type || '',
+      promoDiscount,
+      promoFreeShipping: _pt.freeShipping || false,
       payment: payOnline ? 'online_pending' : 'pending',
       paymentMethod: payOnline ? 'stripe' : 'pay_at_pickup',
       paymentMethodLabel: payOnline ? 'Pay online' : 'Pay at pickup',
