@@ -60,6 +60,7 @@
           <button class="admin-tab" onclick="switchTab('growth',this)">Growth Dashboard</button>
           <button class="admin-tab" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
           <button class="admin-tab" onclick="switchTab('refunds',this);loadRefundTab()">💸 Refunds</button>
+          <button class="admin-tab" onclick="switchTab('promos',this)">🎟️ Promo Codes</button>
             <button class="admin-tab" onclick="switchTab('accounting',this)">📒 Accounting</button>
           <button class="admin-tab" onclick="switchTab('pickup-tally',this)">🧾 Pickup Tally</button>
         </div>
@@ -699,6 +700,43 @@
       </div>
 
 
+        <!-- ── PROMO CODES PANEL ──────────────────────────────────── -->
+        <div id="tab-promos" class="tab-panel" style="display:none">
+          <h2>Promo Codes</h2>
+          <p style="color:var(--text-light);font-size:13px;margin-bottom:16px">
+            Create discount codes customers enter at checkout. Discounts are re-validated on the server, so they can't be faked.
+          </p>
+          <div style="background:rgba(212,160,23,.06);border:1px solid rgba(212,160,23,.25);border-radius:14px;padding:16px;margin-bottom:20px;max-width:860px">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+              <div><label class="form-label">Code</label><input id="promoCode" class="form-control" placeholder="WELCOME10" maxlength="20" style="text-transform:uppercase"></div>
+              <div><label class="form-label">Type</label>
+                <select id="promoType" class="form-control" onchange="document.getElementById('promoValueWrap').style.display=this.value==='free_shipping'?'none':''">
+                  <option value="percent">Percent off (%)</option>
+                  <option value="fixed">Fixed amount off ($)</option>
+                  <option value="free_shipping">Free shipping</option>
+                </select>
+              </div>
+              <div id="promoValueWrap"><label class="form-label">Value</label><input id="promoValue" class="form-control" type="number" min="0" step="0.01" placeholder="10"></div>
+              <div><label class="form-label">Min order ($)</label><input id="promoMin" class="form-control" type="number" min="0" step="0.01" placeholder="0"></div>
+              <div><label class="form-label">Total uses cap</label><input id="promoMaxUses" class="form-control" type="number" min="0" step="1" placeholder="unlimited"></div>
+              <div><label class="form-label">Expiry</label><input id="promoExpiry" class="form-control" type="date"></div>
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px">
+              <input type="checkbox" id="promoPerCustomer"> One use per customer (by phone)
+            </label>
+            <div style="margin-top:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+              <button class="action-btn btn-fulfill" onclick="createPromoCode()">＋ Create code</button>
+              <span id="promoFormMsg" style="font-size:13px"></span>
+            </div>
+          </div>
+          <table class="orders-table" style="width:100%">
+            <thead><tr>
+              <th>Code</th><th>Discount</th><th>Min</th><th>Expires</th><th>Uses</th><th>Per customer</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="promoList"><tr><td colspan="8" style="text-align:center;color:var(--text-light);padding:16px">Loading…</td></tr></tbody>
+          </table>
+        </div>
+
         <!-- ── REFUNDS PANEL ──────────────────────────────────────── -->
         <section id="tab-refunds" class="tab-panel" style="display:none">
           <h2>Refund Requests</h2>
@@ -731,7 +769,7 @@
 
 <script src="assets/js/data.js?v=premerge-20260702"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/admin-firebase.js?v=refund-safety-20260706"></script>
+<script type="module" src="assets/js/admin-firebase.js?v=promo-tab-20260706"></script>
 <link rel="stylesheet" href="assets/css/admin-boost.css?v=boost3-20260610">
   <link rel="stylesheet" href="assets/css/admin-growth-v2.css?v=v2-20260615">
 <script defer src="assets/js/admin-boost.js?v=boost3-20260610"></script>

@@ -4528,6 +4528,8 @@ function switchTab(tab, btn) {
   document.getElementById('tab-pickup-tally').style.display = tab === 'pickup-tally' ? 'block' : 'none';
   const refundsPanel = document.getElementById('tab-refunds');
   if (refundsPanel) refundsPanel.style.display = tab === 'refunds' ? 'block' : 'none';
+  const promosPanel = document.getElementById('tab-promos');
+  if (promosPanel) promosPanel.style.display = tab === 'promos' ? 'block' : 'none';
   if (tab === 'products') renderProducts();
   if (tab === 'orders') renderOrders();
   if (tab === 'customers') renderCustomers();
@@ -4540,6 +4542,7 @@ function switchTab(tab, btn) {
   if (tab === 'accounting') renderAccounting();
   if (tab === 'pickup-tally') renderExcelCalculations();
   if (tab === 'refunds') loadRefundTab();
+  if (tab === 'promos') loadPromoTab();
   updateOrdersSheetUi();
 }
 
@@ -4796,6 +4799,110 @@ initAuthWatch();
 let refundRequests = [];
 let refundFilter = 'pending';
 let unsubRefunds = null;
+
+// ═══════════════════════════════════════════════════════════════
+// PROMO CODES
+// ═══════════════════════════════════════════════════════════════
+let promoCodes = [];
+let unsubPromos = null;
+
+function promoDiscountLabel(p) {
+  if (p.type === 'percent') return `${p.value}% off`;
+  if (p.type === 'fixed') return `$${Number(p.value || 0).toFixed(2)} off`;
+  return 'Free shipping';
+}
+
+function loadPromoTab() {
+  if (unsubPromos) { renderPromoCodes(); return; }
+  unsubPromos = onSnapshot(collection(db, 'promo_codes'),
+    (snap) => {
+      promoCodes = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => String(a.code || a.id).localeCompare(String(b.code || b.id)));
+      renderPromoCodes();
+    },
+    (err) => console.error('Promo listener error:', err));
+}
+
+function renderPromoCodes() {
+  const tbody = document.getElementById('promoList');
+  if (!tbody) return;
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  if (!promoCodes.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-light);padding:16px">No promo codes yet. Create one above.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = promoCodes.map(p => {
+    const uses = `${p.usedCount || 0}${p.maxUses ? ' / ' + p.maxUses : ''}`;
+    const expDate = p.expiresAt ? new Date(p.expiresAt.seconds ? p.expiresAt.seconds * 1000 : p.expiresAt) : null;
+    const exp = (expDate && !isNaN(expDate)) ? expDate.toLocaleDateString() : '—';
+    const min = p.minSubtotal ? '$' + Number(p.minSubtotal).toFixed(2) : '—';
+    const expired = expDate && !isNaN(expDate) && expDate < new Date();
+    const status = !p.active
+      ? '<span style="color:#B02A37;font-weight:700">Off</span>'
+      : expired
+      ? '<span style="color:#B54708;font-weight:700">Expired</span>'
+      : '<span style="color:#1E7B34;font-weight:700">Active</span>';
+    return `<tr>
+      <td><strong>${esc(p.code || p.id)}</strong></td>
+      <td>${esc(promoDiscountLabel(p))}</td>
+      <td>${min}</td>
+      <td>${exp}</td>
+      <td>${uses}</td>
+      <td>${p.perCustomerLimit ? 'Once each' : 'Unlimited'}</td>
+      <td>${status}</td>
+      <td><div class="action-btns">
+        <button class="action-btn" onclick="togglePromoActive('${esc(p.id)}', ${p.active ? 'false' : 'true'})">${p.active ? 'Deactivate' : 'Activate'}</button>
+        <button class="action-btn btn-cancel" onclick="deletePromoCode('${esc(p.id)}')">Delete</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+async function createPromoCode() {
+  const msg = document.getElementById('promoFormMsg');
+  const setMsg = (t, ok) => { if (msg) { msg.textContent = t; msg.style.color = ok ? '#1E7B34' : '#B02A37'; } };
+  const code = (document.getElementById('promoCode')?.value || '').trim().toUpperCase();
+  const type = document.getElementById('promoType')?.value || 'percent';
+  const value = parseFloat(document.getElementById('promoValue')?.value || '0');
+  const minSubtotal = parseFloat(document.getElementById('promoMin')?.value || '0') || 0;
+  const maxUses = parseInt(document.getElementById('promoMaxUses')?.value || '0', 10) || null;
+  const perCustomerLimit = document.getElementById('promoPerCustomer')?.checked ? 1 : null;
+  const expiryStr = document.getElementById('promoExpiry')?.value || '';
+  if (!/^[A-Z0-9]{3,20}$/.test(code)) return setMsg('Code must be 3–20 letters/numbers, no spaces.', false);
+  if (type !== 'free_shipping' && !(value > 0)) return setMsg('Enter a discount value greater than 0.', false);
+  if (type === 'percent' && value > 100) return setMsg('Percent cannot exceed 100.', false);
+  try {
+    const ref = doc(db, 'promo_codes', code);
+    if ((await getDoc(ref)).exists()) return setMsg('That code already exists.', false);
+    await setDoc(ref, {
+      code, type,
+      value: type === 'free_shipping' ? 0 : value,
+      minSubtotal, maxUses, perCustomerLimit,
+      expiresAt: expiryStr ? new Date(expiryStr + 'T23:59:59') : null,
+      active: true, usedCount: 0,
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    });
+    setMsg('Promo code created ✓', true);
+    ['promoCode', 'promoValue', 'promoMin', 'promoMaxUses', 'promoExpiry'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+    const pc = document.getElementById('promoPerCustomer'); if (pc) pc.checked = false;
+  } catch (e) { setMsg('Could not create: ' + (e.message || e), false); }
+}
+
+async function togglePromoActive(code, active) {
+  try { await updateDoc(doc(db, 'promo_codes', code), { active: active === true || active === 'true', updatedAt: serverTimestamp() }); }
+  catch (e) { alert('Update failed: ' + (e.message || e)); }
+}
+
+async function deletePromoCode(code) {
+  if (!confirm('Delete promo code ' + code + '? This cannot be undone.')) return;
+  try { await deleteDoc(doc(db, 'promo_codes', code)); }
+  catch (e) { alert('Delete failed: ' + (e.message || e)); }
+}
+
+window.loadPromoTab = loadPromoTab;
+window.createPromoCode = createPromoCode;
+window.togglePromoActive = togglePromoActive;
+window.deletePromoCode = deletePromoCode;
 
 function loadRefundTab() {
   if (unsubRefunds) return; // already subscribed

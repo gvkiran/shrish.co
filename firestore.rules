@@ -60,6 +60,18 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    match /promo_codes/{code} {
+      allow get: if true;                             // customers validate a code at checkout
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();     // usedCount is bumped by Cloud Functions (admin SDK)
+    }
+
+    match /promo_redemptions/{id} {
+      allow get: if true;                             // client can check "already used" for its own code+phone
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();     // written by Cloud Functions only
+    }
+
     match /order_locks/{phoneDigits} {
       allow get: if true;
       allow list: if false;
