@@ -414,6 +414,8 @@ function orderSummaryBreakdown(order = {}) {
   const c = 'style="padding-top:6px; text-align:right; font-size:13px; color:#5c4a30;"';
   const row = (label, val) => `<tr><td colspan="2" ${c}>${label}</td><td ${c}>${val}</td></tr>`;
   let rows = row("Subtotal", currency(subtotal));
+  const promoDiscount = Number(order.promoDiscount ?? 0);
+  if (promoDiscount > 0) rows += row("Promo " + escapeHtml(order.promoCode || ""), "-" + currency(promoDiscount));
   if (tax > 0) rows += row(escapeHtml(order.salesTaxLabel || "Virginia sales tax"), currency(tax));
   if (isShipping || shipping > 0) rows += row("Shipping", shipping > 0 ? currency(shipping) : "Free");
   return rows;
@@ -1199,6 +1201,59 @@ exports.getPublicConfig = onCall(
   }
 );
 
+// Server-authoritative promo validation. Throws HttpsError if invalid;
+// returns { code, type, discount, freeShipping } or null when no code.
+async function validateAndApplyPromo(db, order, itemSubtotal) {
+  const code = String(order.promoCode || "").trim().toUpperCase();
+  if (!code) return null;
+  const snap = await db.collection("promo_codes").doc(code).get().catch(() => null);
+  if (!snap || !snap.exists) throw new HttpsError("failed-precondition", "That promo code is not valid.");
+  const p = snap.data() || {};
+  if (!p.active) throw new HttpsError("failed-precondition", "That promo code is no longer active.");
+  if (p.expiresAt) {
+    const exp = p.expiresAt.toDate ? p.expiresAt.toDate() : new Date(p.expiresAt);
+    if (exp instanceof Date && !isNaN(exp) && exp < new Date()) throw new HttpsError("failed-precondition", "That promo code has expired.");
+  }
+  if (p.maxUses && Number(p.usedCount || 0) >= Number(p.maxUses)) throw new HttpsError("failed-precondition", "That promo code has reached its usage limit.");
+  if (p.minSubtotal && itemSubtotal < Number(p.minSubtotal)) throw new HttpsError("failed-precondition", "Your order does not meet the minimum for that promo code.");
+  if (p.perCustomerLimit) {
+    const phone = String(order.phoneDigits || "").replace(/\D/g, "");
+    if (phone) {
+      const redSnap = await db.collection("promo_redemptions").doc(`${code}__${phone}`).get().catch(() => null);
+      if (redSnap && redSnap.exists) throw new HttpsError("failed-precondition", "You have already used that promo code.");
+    }
+  }
+  let discount = 0, freeShipping = false;
+  if (p.type === "percent") discount = roundCurrency(itemSubtotal * (Number(p.value) || 0) / 100);
+  else if (p.type === "fixed") discount = roundCurrency(Math.min(Number(p.value) || 0, itemSubtotal));
+  else if (p.type === "free_shipping") freeShipping = true;
+  return { code, type: p.type, discount: roundCurrency(discount), freeShipping };
+}
+
+// Atomically record one redemption per order (bump usedCount + per-customer marker).
+async function recordPromoRedemption(db, order, orderId) {
+  const code = String(order.promoCode || "").trim().toUpperCase();
+  if (!code || !orderId) return;
+  const phone = String(order.phoneDigits || "").replace(/\D/g, "");
+  const codeRef = db.collection("promo_codes").doc(code);
+  const orderRef = db.collection("orders").doc(orderId);
+  await db.runTransaction(async (tx) => {
+    const oSnap = await tx.get(orderRef);
+    if (!oSnap.exists || oSnap.data()?.promoRedeemed) return; // idempotent per order
+    tx.update(codeRef, {
+      usedCount: admin.firestore.FieldValue.increment(1),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    tx.update(orderRef, { promoRedeemed: true });
+    if (phone) {
+      tx.set(db.collection("promo_redemptions").doc(`${code}__${phone}`), {
+        code, phoneDigits: phone, orderId,
+        redeemedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    }
+  }).catch((e) => console.error("recordPromoRedemption failed", { code, error: e?.message }));
+}
+
 exports.createStripeCheckoutSession = onCall(
   callableOptions({
     secrets: [STRIPE_SECRET_KEY],
@@ -1262,9 +1317,13 @@ exports.createStripeCheckoutSession = onCall(
       // Server-authoritative pricing (see buildServerPricedCheckout): never trust
       // client-submitted item prices when charging the card.
       const { lineItems, itemSubtotal } = await buildServerPricedCheckout(db, order);
-      const salesTaxAmount = orderSalesTaxAmount(order, itemSubtotal);
-      const shippingAmount = orderShippingAmount(order, itemSubtotal);
-      const totalPrice = roundCurrency(itemSubtotal + salesTaxAmount + shippingAmount);
+      const promo = await validateAndApplyPromo(db, order, itemSubtotal);
+      const promoDiscount = promo?.discount || 0;
+      const discountedSubtotal = roundCurrency(Math.max(0, itemSubtotal - promoDiscount));
+      const salesTaxAmount = orderSalesTaxAmount(order, discountedSubtotal);
+      let shippingAmount = orderShippingAmount(order, itemSubtotal);
+      if (promo?.freeShipping && String(order.fulfillmentType || "pickup") === "shipping") shippingAmount = 0;
+      const totalPrice = roundCurrency(discountedSubtotal + salesTaxAmount + shippingAmount);
 
       const metadata = {
         orderId,
@@ -1273,6 +1332,8 @@ exports.createStripeCheckoutSession = onCall(
         source: "shrish_checkout",
         salesTaxAmount: String(salesTaxAmount),
         shippingAmount: String(shippingAmount),
+        promoCode: promo?.code || "",
+        promoDiscount: String(promoDiscount),
       };
 
       if (request.auth?.uid && saveCard) {
@@ -1345,6 +1406,15 @@ exports.createStripeCheckoutSession = onCall(
         sessionConfig.customer_email = customerEmail;
       }
 
+      if (promoDiscount > 0) {
+        const coupon = await stripe.coupons.create({
+          amount_off: toStripeAmount(promoDiscount),
+          currency: "usd",
+          duration: "once",
+          name: `Promo ${promo.code}`.slice(0, 40),
+        });
+        sessionConfig.discounts = [{ coupon: coupon.id }];
+      }
       session = await stripe.checkout.sessions.create(sessionConfig);
       await orderRef.set({
         stripeCheckoutSessionId: session.id,
@@ -1354,6 +1424,8 @@ exports.createStripeCheckoutSession = onCall(
         salesTaxAmount,
         shippingAmount,
         shippingFreeThreshold: configuredFreeShippingThreshold(),
+        promoCode: promo?.code || "",
+        promoDiscount,
         totalPrice,
         paymentStatus: "checkout_started",
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -2126,6 +2198,10 @@ exports.stripeWebhook = onRequest(
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         }, { merge: true });
 
+        if (order.promoCode) {
+          await recordPromoRedemption(db, order, orderId);
+        }
+
         if (order.phoneDigits) {
           await db.collection("order_locks").doc(order.phoneDigits).set({
             phoneDigits: order.phoneDigits,
@@ -2182,6 +2258,11 @@ exports.sendOrderEmails = onDocumentCreated(
     const order = snapshot.data();
     if (order?.source === "admin_manual" || order?.skipCustomerEmail) return;
     if (!order || !order.email) return;
+
+    // Pickup orders redeem the promo at order time; online orders redeem on payment (webhook).
+    if (order.promoCode && order.paymentMethod !== "stripe") {
+      await recordPromoRedemption(admin.firestore(), order, event.params?.orderId);
+    }
 
     await sendOrderConfirmationEmails(orderRef, order, "order_created");
   }
