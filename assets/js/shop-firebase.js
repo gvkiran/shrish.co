@@ -38,7 +38,7 @@ const CARD_SAFETY_NOTE = 'Allergy/spice caution: may contain peanut oil and othe
 
 function productFilterId(product) {
   if (!product) return 'all';
-  if (product.category === 'putharekulu' || product.category === 'jellysnacks') return 'sweets';
+  if (product.category === 'putharekulu' || product.category === 'jellysnacks' || product.category === 'sweets') return 'sweets';
   return SHOP_CATEGORY_IDS.has(product.category) ? product.category : 'all';
 }
 
@@ -201,11 +201,11 @@ function normalizeCatalogProduct(product = {}) {
   return next;
 }
 
-const SHOP_CATEGORY_IDS = new Set(['mangoes', 'putharekulu', 'jellysnacks', 'snacks', 'picklespodi']);
+const SHOP_CATEGORY_IDS = new Set(['mangoes', 'putharekulu', 'jellysnacks', 'sweets', 'snacks', 'picklespodi']);
 const SHOP_FILTERS = [
-  { id: 'all', label: 'All Products', categories: ['mangoes', 'putharekulu', 'jellysnacks', 'snacks', 'picklespodi'] },
+  { id: 'all', label: 'All Products', categories: ['mangoes', 'putharekulu', 'jellysnacks', 'sweets', 'snacks', 'picklespodi'] },
   { id: 'mangoes', label: 'Fruits/Mangoes', categories: ['mangoes'] },
-  { id: 'sweets', label: 'Sweets', categories: ['putharekulu', 'jellysnacks'] },
+  { id: 'sweets', label: 'Sweets', categories: ['putharekulu', 'jellysnacks', 'sweets'] },
   { id: 'snacks', label: 'Snacks', categories: ['snacks'] },
   { id: 'picklespodi', label: 'Pickles & Podi', categories: ['picklespodi'] }
 ];
@@ -492,7 +492,7 @@ function usesVariantUI(product) {
 }
 
 function usesDirectVariantButtons(product) {
-  return ['picklespodi', 'putharekulu', 'jellysnacks'].includes(normalizeProductCategory(product?.category))
+  return ['picklespodi', 'putharekulu', 'jellysnacks', 'sweets'].includes(normalizeProductCategory(product?.category))
     && usesVariantUI(product);
 }
 
@@ -1499,6 +1499,7 @@ function renderShop() {
     mangoes: { title: 'Fruits', em: 'Mangoes', sub: 'Click any product to view full details. Available varieties shown first.', banner: false },
     putharekulu: { title: 'Sweets', em: 'Putharekulu', sub: 'Hand-crafted in Atreyapuram, Andhra Pradesh. Check current batch availability and order online.', banner: true },
     jellysnacks: { title: 'Sweets', em: 'Jelly', sub: 'Traditional Mamidi Thandra & Thati Thandra from Atreyapuram. Check current availability before checkout.', banner: false },
+    sweets: { title: 'Sweets', em: '& Laddus', sub: 'Traditional Godavari-style sweets, kaja, and laddus. Freshly sourced batches. Check current availability before checkout.', banner: false },
     snacks: {
       title: 'Snacks',
       em: '',
