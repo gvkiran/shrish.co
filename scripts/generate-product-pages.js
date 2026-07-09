@@ -220,7 +220,7 @@ function relatedHtml(product, products) {
         <nav class="product-related" aria-label="More ${escapeHtml(label)}">
           <h2>More ${escapeHtml(label)}</h2>
           <div class="related-grid">
-            ${siblings.map((p) => `<a href="../${p.id}/">${escapeHtml(p.name)}</a>`).join('\n            ')}
+            ${siblings.map((p) => `<a href="${ROOT_PREFIX}shop/products/${category}/${p.id}/">${escapeHtml(p.name)}</a>`).join('\n            ')}
           </div>
           <a class="related-all" href="${ROOT_PREFIX}shop/products/">Browse all Shrish products</a>
         </nav>`;
