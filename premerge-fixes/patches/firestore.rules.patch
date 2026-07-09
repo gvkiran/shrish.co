@@ -1,0 +1,17 @@
+diff --git a/firestore.rules b/firestore.rules
+index 5213d4e..bafab1e 100755
+--- a/firestore.rules
++++ b/firestore.rules
+@@ -70,6 +70,12 @@ service cloud.firestore {
+       allow create, update, delete: if false;
+     }
+ 
++    match /refund_requests/{docId} {
++      allow get, list: if isAdmin();
++      allow create: if true;
++      allow update, delete: if isAdmin();
++    }
++
+     match /order_locks/{phoneDigits} {
+       allow get: if true;
+       allow list: if false;

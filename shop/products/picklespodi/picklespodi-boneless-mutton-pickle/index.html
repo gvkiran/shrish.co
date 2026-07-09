@@ -59,6 +59,12 @@
     .product-detail-row span { color: var(--text-light); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
     .product-detail-row strong { color: var(--text); font-weight: 500; }
     .product-footer { max-width: 1240px; margin: 0 auto; padding: 24px; border-top: 1px solid rgba(200,121,26,.12); color: var(--text-light); font-size: 13px; }
+    .product-related { margin-top: 30px; }
+    .product-related h2 { font-family: var(--font-display); color: var(--dark); font-size: 24px; margin-bottom: 12px; }
+    .related-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+    .related-grid a { background: var(--white); border: 1px solid rgba(200,121,26,.14); border-radius: 10px; padding: 11px 13px; color: var(--text); font-weight: 700; font-size: 14px; }
+    .related-grid a:hover { color: var(--saffron); }
+    .related-all { display: inline-block; margin-top: 12px; color: var(--saffron); font-weight: 700; font-size: 14px; }
     @media (max-width: 820px) {
       .product-nav-inner { align-items: flex-start; }
       .product-nav-links { gap: 14px; flex-wrap: wrap; justify-content: flex-end; font-size: 14px; }
@@ -92,6 +98,30 @@
       "price": "32.99",
       "availability": "https://schema.org/InStock",
       "url": "https://www.shrish.co/shop/products/picklespodi/picklespodi-boneless-mutton-pickle/"
+    }
+  ]
+}</script>
+  <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Shop",
+      "item": "https://www.shrish.co/shop.html"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Pickles & Podi",
+      "item": "https://www.shrish.co/shop/products/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Mutton Boneless",
+      "item": "https://www.shrish.co/shop/products/picklespodi/picklespodi-boneless-mutton-pickle/"
     }
   ]
 }</script>
@@ -145,6 +175,17 @@
           <a class="btn-secondary" href="../../../../shop.html" data-product-action="back_to_shop">Back to shop</a>
         </div>
         <div class="product-detail-list"><div class="product-detail-row"><span>Origin</span><strong>Non-Veg Pickle</strong></div><div class="product-detail-row"><span>Local name</span><strong>250g or 500g</strong></div><div class="product-detail-row"><span>Season</span><strong>Preorder Only</strong></div><div class="product-detail-row"><span>Taste</span><strong>Spice: Hot</strong></div><div class="product-detail-row"><span>Best for</span><strong>Hot rice - chapati - dosa - curd rice</strong></div><div class="product-detail-row"><span>Ingredients</span><strong>Boneless mutton, red chilli powder, ginger garlic, garam masala, salt, peanut/groundnut oil, lemon, spices</strong></div><div class="product-detail-row"><span>Shelf life</span><strong>Best taste: 30-45 days. Refrigerate after opening, use a clean dry spoon, keep airtight, and follow the package Best Before date as final.</strong></div><div class="product-detail-row"><span>Storage</span><strong>Refrigerate after opening. Use a clean, dry spoon, keep the container tightly closed, and consume within 30-45 days for best taste. Follow the package Best Before date and storage instructions as final.</strong></div><div class="product-detail-row"><span>Shipping</span><strong>Pickup only</strong></div><div class="product-detail-row"><span>Best Before</span><strong>Ingredients, spice level, oil coverage, and shelf life may vary by supplier batch. Contact us before ordering if you have allergies or ingredient concerns.</strong></div></div>
+
+        <nav class="product-related" aria-label="More Pickles &amp; Podi">
+          <h2>More Pickles &amp; Podi</h2>
+          <div class="related-grid">
+            <a href="../picklespodi-brinjal-amla-pickle/">Brinjal Amla Pickle</a>
+            <a href="../picklespodi-carrot-pickle/">Carrot Pickle</a>
+            <a href="../picklespodi-cauliflower-pickle/">Cauliflower Pickle</a>
+            <a href="../picklespodi-chintakaya-pachadi-tamarind-pickle/">Chintakaya Pachadi / Tamarind Pickle</a>
+          </div>
+          <a class="related-all" href="../../../../shop/products/">Browse all Shrish products</a>
+        </nav>
       </article>
     </section>
   </main>

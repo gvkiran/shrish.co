@@ -1,0 +1,52 @@
+diff --git a/assets/js/order-firebase.js b/assets/js/order-firebase.js
+index 843abda..12e4173 100755
+--- a/assets/js/order-firebase.js
++++ b/assets/js/order-firebase.js
+@@ -33,6 +33,7 @@ const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
+ const CHECKOUT_ACCOUNT_PREFILL_KEY = 'shrish_checkout_account_prefill';
+ const CONFIRMATION_WAIT_MS = 30000;
+ const createStripeCheckoutSession = httpsCallable(cloudFunctions, 'createStripeCheckoutSession');
++const getPublicConfigCallable = httpsCallable(cloudFunctions, 'getPublicConfig');
+ const LOCATION_LABELS = {
+   shortpump: 'Short Pump, VA',
+   chesterfield: 'Chesterfield, VA',
+@@ -1102,20 +1103,26 @@ async function getGoogleMapsApiKey() {
+   if (googleMapsApiKey) return googleMapsApiKey;
+   if (googleMapsApiKeyPromise) return googleMapsApiKeyPromise;
+ 
+-  googleMapsApiKeyPromise = fetch('/api/public-config', {
+-    cache: 'no-store',
+-    headers: { Accept: 'application/json' }
+-  })
+-    .then(async (response) => {
+-      if (!response.ok) throw new Error('Runtime config unavailable');
+-      return response.json();
+-    })
+-    .then((config) => {
+-      googleMapsApiKey = String(config?.googleMapsApiKey || '').trim();
+-      window.SHRISH_APP_CONFIG = window.SHRISH_APP_CONFIG || {};
+-      window.SHRISH_APP_CONFIG.googleMapsApiKey = googleMapsApiKey;
+-      return googleMapsApiKey;
++  const applyKey = (rawKey) => {
++    googleMapsApiKey = String(rawKey || '').trim();
++    window.SHRISH_APP_CONFIG = window.SHRISH_APP_CONFIG || {};
++    window.SHRISH_APP_CONFIG.googleMapsApiKey = googleMapsApiKey;
++    return googleMapsApiKey;
++  };
++
++  // Prefer the Firebase callable so this works regardless of where the static
++  // site is hosted (Hostinger/Vercel/Firebase); fall back to /api/public-config.
++  googleMapsApiKeyPromise = getPublicConfigCallable()
++    .then((result) => applyKey(result?.data?.googleMapsApiKey))
++    .catch(() => fetch('/api/public-config', {
++      cache: 'no-store',
++      headers: { Accept: 'application/json' }
+     })
++      .then((response) => {
++        if (!response.ok) throw new Error('Runtime config unavailable');
++        return response.json();
++      })
++      .then((config) => applyKey(config?.googleMapsApiKey)))
+     .catch((error) => {
+       console.warn('Google Maps runtime config unavailable', error);
+       return '';
