@@ -203,6 +203,50 @@ async function seedProductsIfNeeded() {
   showToast(`${missingProducts.length} missing products added to Firestore`);
 }
 
+// Push prices, sizes (variants), availability and hidden/coming-soon status from the
+// website catalog (data.js -> BASE_PRODUCTS) into the live Firestore products collection.
+// This is what customers are charged at checkout. Photos, gallery and sort order are
+// preserved (merge:true and those fields are intentionally not written).
+async function syncCatalogPrices() {
+  const confirmed = window.confirm(
+    'Update the LIVE store to match the website catalog?\n\n' +
+    'This syncs prices, pack sizes, availability and hidden items — it is what customers ' +
+    'are charged at checkout. Product photos and sort order are kept.\n\nContinue?'
+  );
+  if (!confirmed) return;
+  showToast('Syncing catalog to live store...');
+  const iso = new Date().toISOString();
+  const CARRY = ['ingredientsText', 'storageNote', 'shelfLifeDisplay', 'foodSafetyNote',
+    'shippingNote', 'details', 'season', 'taste', 'bestFor', 'filterGroup', 'preorderOnly', 'origin'];
+  const buildPayload = (p) => {
+    const out = {
+      name: p.name,
+      category: p.category,
+      localName: p.localName != null ? p.localName : '',
+      price: p.price != null ? p.price : '',
+      unit: p.unit != null ? p.unit : '',
+      available: p.available !== false,
+      displayOnly: Boolean(p.displayOnly),
+      hidden: Boolean(p.hidden),
+      description: p.description != null ? p.description : '',
+      tag: p.tag != null ? p.tag : '',
+      catalogSyncedAt: iso,
+      updatedAt: iso
+    };
+    if (Array.isArray(p.variants)) out.variants = p.variants.map((v) => ({ ...v }));
+    if (Array.isArray(p.badges)) out.badges = p.badges.slice();
+    CARRY.forEach((k) => { if (p[k] !== undefined) out[k] = p[k]; });
+    return out;
+  };
+  const results = await Promise.allSettled(
+    BASE_PRODUCTS.map((p) => setDoc(doc(db, 'products', p.id), buildPayload(p), { merge: true }))
+  );
+  const ok = results.filter((r) => r.status === 'fulfilled').length;
+  const fail = results.length - ok;
+  if (fail) console.warn('Catalog sync failures', results.filter((r) => r.status === 'rejected'));
+  showToast(`Synced ${ok} products to live store${fail ? `, ${fail} failed (see console)` : ''}. Checkout prices are now live.`);
+}
+
 function renderStats() {
   const orders = state.orders;
   const statsOrders = orders.filter((order) => {
@@ -4726,6 +4770,7 @@ window.doLogin = doLogin;
 window.doLogout = doLogout;
 window.switchTab = switchTab;
 window.saveProductPrice = saveProductPrice;
+window.syncCatalogPrices = syncCatalogPrices;
 window.toggleAvailable = toggleAvailable;
 window.toggleProductHidden = toggleProductHidden;
 window.setStatus = setStatus;

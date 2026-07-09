@@ -262,6 +262,7 @@
               <p>Add new catalog items here. New products will use the same live and coming soon behavior as your existing shop cards.</p>
             </div>
             <button class="add-product-btn" onclick="openAddProductForm()">+ Add New Product</button>
+            <button class="add-product-btn" onclick="syncCatalogPrices()" style="margin-left:8px;background:#1F4E2E" title="Push catalog prices, sizes and availability to the live store (what customers are charged at checkout)">🔄 Sync Prices to Live Store</button>
           </div>
           <div class="product-form-card" id="productFormCard">
             <div class="product-form-head">
@@ -284,6 +285,7 @@
                     <option value="mangoes">Fruits/Mangoes</option>
                     <option value="putharekulu">Putharekulu</option>
                     <option value="jellysnacks">Jelly</option>
+                    <option value="sweets">Sweets (Kaja &amp; Laddus)</option>
                     <option value="snacks">Snacks</option>
                     <option value="picklespodi">Pickles & Podi</option>
                   </select>
@@ -769,7 +771,7 @@
 
 <script src="assets/js/data.js?v=pricing-20260709"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/admin-firebase.js?v=promo-tab2-20260706"></script>
+<script type="module" src="assets/js/admin-firebase.js?v=sync-prices-20260709"></script>
 <link rel="stylesheet" href="assets/css/admin-boost.css?v=boost3-20260610">
   <link rel="stylesheet" href="assets/css/admin-growth-v2.css?v=v2-20260615">
 <script defer src="assets/js/admin-boost.js?v=boost3-20260610"></script>
