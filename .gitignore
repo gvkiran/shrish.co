@@ -1,3 +1,5 @@
 node_modules/
 .env
 .codex-http-server.pid
+premerge-fixes/
+pwa-delivery/
