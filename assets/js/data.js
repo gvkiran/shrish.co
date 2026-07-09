@@ -181,7 +181,7 @@ const SHRISH_DATA = {
       name: "Putharekulu - Sugar - Kaju Badam", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",
       price: "$8.49", unit: "5 count or 10 count",
-      available: true, displayOnly: false, tag: "Best Seller",
+      available: true, displayOnly: false, hidden: true, tag: "Best Seller",
       image: "images/products/putharekulu/img_puth_sugar_kaju.jpg",
       description: "A richer sugar-based Putharekulu made with roasted cashews and almonds layered inside paper-thin rice sheets. This is one of the easiest dry-fruit variants to gift and share, with a balanced sweetness and a fuller nutty bite.",
       details: "Ingredients: Rice starch sheets, sugar, cashews, almonds and ghee. Store in a cool dry place and serve fresh.",
@@ -195,15 +195,15 @@ const SHRISH_DATA = {
       id: "puth_sugar_kaju_pista", category: "putharekulu",
       name: "Putharekulu - Sugar - Kaju Badam Pista", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",
-      price: "$8.99", unit: "5 count or 10 count",
+      price: "$9.99", unit: "5 count or 10 count",
       available: true, displayOnly: false, tag: "Premium",
       image: "images/products/putharekulu/img_puth_sugar_kaju_pista.jpg",
       description: "Traditional Atreyapuram Putharekulu finished with sugar and a premium trio of cashews, almonds, and pistachios. It delivers the delicate paper-like layers customers expect, with an extra festive dry-fruit richness in every piece.",
       details: "Ingredients: Rice starch sheets, sugar, cashews, almonds, pistachios and ghee. A premium gifting-friendly variant.",
       badges: ["Premium Dry Fruit", "Gifting Special"],
       variants: [
-        { id: "opt1", label: "5 count", price: "$8.99", sku: "PSKBP5" },
-        { id: "opt2", label: "10 count", price: "$16.99", sku: "PSKBP10" }
+        { id: "opt1", label: "5 count", price: "$9.99", sku: "PSKBP5" },
+        { id: "opt2", label: "10 count", price: "$18.99", sku: "PSKBP10" }
       ]
     },
     {
@@ -211,7 +211,7 @@ const SHRISH_DATA = {
       name: "Putharekulu - Jaggery - Kaju", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",
       price: "$8.49", unit: "5 count or 10 count",
-      available: true, displayOnly: false, tag: "Rustic Sweetness",
+      available: true, displayOnly: false, hidden: true, tag: "Rustic Sweetness",
       image: "images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg",
       description: "A jaggery-sweetened version of classic dry-fruit Putharekulu with roasted cashews folded into delicate rice starch sheets. It has a deeper, warmer sweetness than the sugar version and a more traditional village-style finish.",
       details: "Ingredients: Rice starch sheets, jaggery, cashews and ghee. Richer jaggery flavour with a softer rustic sweetness.",
@@ -226,7 +226,7 @@ const SHRISH_DATA = {
       name: "Putharekulu - Jaggery - Kaju Badam", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",
       price: "$8.99", unit: "5 count or 10 count",
-      available: true, displayOnly: false, tag: "Most Requested",
+      available: true, displayOnly: false, hidden: true, tag: "Most Requested",
       image: "images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg",
       description: "This dry-fruit Putharekulu combines the deeper sweetness of jaggery with roasted cashews and almonds for a fuller bite. It is a dependable crowd-pleaser for customers who want a traditional sweet profile without refined sugar notes.",
       details: "Ingredients: Rice starch sheets, jaggery, cashews, almonds and ghee. Balanced dry-fruit richness with a traditional jaggery finish.",
@@ -240,15 +240,15 @@ const SHRISH_DATA = {
       id: "puth_jaggery_kaju_pista", category: "putharekulu",
       name: "Putharekulu - Jaggery - Kaju Badam Pista", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",
-      price: "$9.49", unit: "5 count or 10 count",
+      price: "$9.99", unit: "5 count or 10 count",
       available: true, displayOnly: false, tag: "Most Requested",
       image: "images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg",
       description: "A premium jaggery Putharekulu layered with cashews, almonds, and pistachios inside delicate rice flour sheets. It offers a richer, more indulgent dry-fruit profile with the darker sweetness and aroma customers expect from traditional jaggery sweets.",
       details: "Ingredients: Rice starch sheets, jaggery, cashews, almonds, pistachios and ghee. One of the most premium dry-fruit jaggery options in the range.",
       badges: ["Most Requested", "Premium Dry Fruit", "Jaggery Sweetened"],
       variants: [
-        { id: "opt1", label: "5 count", price: "$9.49", sku: "PJKBP5" },
-        { id: "opt2", label: "10 count", price: "$17.99", sku: "PJKBP10" }
+        { id: "opt1", label: "5 count", price: "$9.99", sku: "PJKBP5" },
+        { id: "opt2", label: "10 count", price: "$18.99", sku: "PJKBP10" }
       ]
     },
     {
@@ -300,30 +300,30 @@ const SHRISH_DATA = {
       id: "puth_samosa_sugar_dryfruit", category: "putharekulu",
       name: "Samosa Putharekulu - Sugar (Dry Fruit)", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",
-      price: "$8.99", unit: "5 count or 10 count",
+      price: "$9.49", unit: "5 count or 10 count",
       available: true, displayOnly: false, tag: "New Shape",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "A modern twist on the classic Atreyapuram Putharekulu, folded into a crisp samosa shape and layered with sugar and a rich mix of cashews, almonds, and pistachios. The signature paper-thin rice sheets stay delicate while the folded shape makes it easier to hold, gift, and share.",
       details: "Ingredients: Rice starch sheets, sugar, cashews, almonds, pistachios and ghee. Store in a cool dry place and serve fresh.",
       badges: ["New Shape", "Dry Fruit Loaded", "Gifting Special"],
       variants: [
-        { id: "opt1", label: "5 count", price: "$8.99", sku: "PSAMS5" },
-        { id: "opt2", label: "10 count", price: "$16.99", sku: "PSAMS10" }
+        { id: "opt1", label: "5 count", price: "$9.49", sku: "PSAMS5" },
+        { id: "opt2", label: "10 count", price: "$18.99", sku: "PSAMS10" }
       ]
     },
     {
       id: "puth_samosa_jaggery_dryfruit", category: "putharekulu",
       name: "Samosa Putharekulu - Jaggery (Dry Fruit)", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",
-      price: "$9.49", unit: "5 count or 10 count",
+      price: "$9.99", unit: "5 count or 10 count",
       available: true, displayOnly: false, tag: "New Shape",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "The samosa-folded Putharekulu made with jaggery instead of sugar for a deeper, warmer sweetness. Delicate rice sheets are folded around roasted cashews, almonds, and pistachios, giving a traditional village-style finish in a fun, easy-to-share shape.",
       details: "Ingredients: Rice starch sheets, jaggery, cashews, almonds, pistachios and ghee. Richer jaggery flavour with a rustic sweetness.",
       badges: ["New Shape", "Jaggery Sweetened", "Premium Dry Fruit"],
       variants: [
-        { id: "opt1", label: "5 count", price: "$9.49", sku: "PSAMJ5" },
-        { id: "opt2", label: "10 count", price: "$17.99", sku: "PSAMJ10" }
+        { id: "opt1", label: "5 count", price: "$9.99", sku: "PSAMJ5" },
+        { id: "opt2", label: "10 count", price: "$19.99", sku: "PSAMJ10" }
       ]
     },
 
@@ -380,135 +380,135 @@ const SHRISH_DATA = {
       id: "sweets-madatha-kaja", category: "sweets",
       name: "Madatha Kaja", localName: "",
       origin: "Tapeswaram, Godavari - Andhra Pradesh",
-      price: "$8.49", unit: "250g or 500g",
+      price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Godavari Special",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "The famous Tapeswaram Madatha Kaja from the Godavari region - deep-fried pastry folded into many delicate layers and soaked in sugar syrup. Crisp on the outside, soft and juicy inside, with a light cardamom aroma. A classic gifting and festival sweet.",
       details: "Ingredients: Maida (refined wheat flour), sugar, ghee, cardamom and a pinch of baking soda. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Godavari Special", "Tapeswaram Classic", "Festive Sweet"],
       variants: [
-        { id: "opt1", label: "250g", price: "$8.49", sku: "SW-MADKAJA-250" },
-        { id: "opt2", label: "500g", price: "$15.99", sku: "SW-MADKAJA-500" }
+        { id: "opt1", label: "250g", price: "$10.99", sku: "SW-MADKAJA-250" },
+        { id: "opt2", label: "500g", price: "$19.99", sku: "SW-MADKAJA-500" }
       ]
     },
     {
       id: "sweets-gottam-kaja", category: "sweets",
       name: "Gottam Kaja", localName: "",
       origin: "Kakinada, Godavari - Andhra Pradesh",
-      price: "$8.49", unit: "250g or 500g",
+      price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Godavari Special",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "Kakinada's signature tube-shaped Kaja, a Godavari delicacy loved for its juicy syrup-soaked centre and crisp outer bite. A wonderful balance of sweet, fluffy, and crunchy in every hollow piece.",
       details: "Ingredients: Maida (refined wheat flour), sugar, ghee and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Godavari Special", "Kakinada Classic", "Festive Sweet"],
       variants: [
-        { id: "opt1", label: "250g", price: "$8.49", sku: "SW-GOTKAJA-250" },
-        { id: "opt2", label: "500g", price: "$15.99", sku: "SW-GOTKAJA-500" }
+        { id: "opt1", label: "250g", price: "$10.99", sku: "SW-GOTKAJA-250" },
+        { id: "opt2", label: "500g", price: "$19.99", sku: "SW-GOTKAJA-500" }
       ]
     },
     {
       id: "sweets-bellam-gavvalu", category: "sweets",
       name: "Bellam Gavvalu", localName: "",
       origin: "Andhra Pradesh",
-      price: "$7.99", unit: "250g or 500g",
+      price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Traditional",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "Crisp little shell-shaped fritters coated in a glossy jaggery syrup. A traditional Andhra festival sweet with a satisfying crunch and warm, rustic jaggery sweetness - a Sankranthi and Diwali favourite.",
       details: "Ingredients: Maida (refined wheat flour), jaggery, ghee and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Traditional", "Jaggery Sweetened", "Festive Sweet"],
       variants: [
-        { id: "opt1", label: "250g", price: "$7.99", sku: "SW-BGAVVALU-250" },
-        { id: "opt2", label: "500g", price: "$14.99", sku: "SW-BGAVVALU-500" }
+        { id: "opt1", label: "250g", price: "$9.99", sku: "SW-BGAVVALU-250" },
+        { id: "opt2", label: "500g", price: "$17.99", sku: "SW-BGAVVALU-500" }
       ]
     },
     {
       id: "sweets-rava-laddu", category: "sweets",
       name: "Rava Laddu", localName: "",
       origin: "Andhra Pradesh",
-      price: "$8.49", unit: "250g or 500g",
+      price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Everyday Favourite",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "Classic semolina laddus roasted in ghee and bound with sugar syrup, studded with cashews and a hint of cardamom. Soft, melt-in-mouth, and always a crowd-pleaser for festivals and everyday treats.",
       details: "Ingredients: Rava (semolina), sugar, ghee, cashews and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Everyday Favourite", "Ghee Roasted", "Festive Sweet"],
       variants: [
-        { id: "opt1", label: "250g", price: "$8.49", sku: "SW-RAVALAD-250" },
-        { id: "opt2", label: "500g", price: "$15.99", sku: "SW-RAVALAD-500" }
+        { id: "opt1", label: "250g", price: "$10.99", sku: "SW-RAVALAD-250" },
+        { id: "opt2", label: "500g", price: "$19.99", sku: "SW-RAVALAD-500" }
       ]
     },
     {
       id: "sweets-sunnundalu", category: "sweets",
       name: "Sunnundalu (Urad Dal Laddu)", localName: "",
       origin: "Andhra Pradesh",
-      price: "$9.49", unit: "250g or 500g",
+      price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Protein Rich",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "A wholesome traditional Andhra laddu made from roasted urad dal ground fine and bound with ghee and jaggery or sugar. Nutty, protein-rich, and deeply comforting - a homestyle sweet often made for new mothers and festivals.",
       details: "Ingredients: Roasted urad dal (minapa pappu), jaggery or sugar, ghee and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Protein Rich", "Traditional", "Ghee Roasted"],
       variants: [
-        { id: "opt1", label: "250g", price: "$9.49", sku: "SW-SUNNUND-250" },
-        { id: "opt2", label: "500g", price: "$17.99", sku: "SW-SUNNUND-500" }
+        { id: "opt1", label: "250g", price: "$9.99", sku: "SW-SUNNUND-250" },
+        { id: "opt2", label: "500g", price: "$18.99", sku: "SW-SUNNUND-500" }
       ]
     },
     {
       id: "sweets-tokkudu-laddu", category: "sweets",
       name: "Tokkudu Laddu (Bandar Laddu)", localName: "",
       origin: "Machilipatnam (Bandar), Andhra Pradesh",
-      price: "$9.49", unit: "250g or 500g",
+      price: "$12.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Regional Special",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "The famous Bandar Laddu from Machilipatnam - crisp besan boondi that is ground and pounded (tokkudu) with sugar syrup and ghee into a stunningly smooth, melt-in-mouth laddu. A prized Andhra sweet with a rich, creamy texture.",
       details: "Ingredients: Besan (gram flour), sugar, ghee, cashews and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Regional Special", "Melt In Mouth", "Festive Sweet"],
       variants: [
-        { id: "opt1", label: "250g", price: "$9.49", sku: "SW-TOKKUDU-250" },
-        { id: "opt2", label: "500g", price: "$17.99", sku: "SW-TOKKUDU-500" }
+        { id: "opt1", label: "250g", price: "$12.99", sku: "SW-TOKKUDU-250" },
+        { id: "opt2", label: "500g", price: "$23.99", sku: "SW-TOKKUDU-500" }
       ]
     },
     {
       id: "sweets-flaxseed-laddu", category: "sweets",
       name: "Flaxseed Laddu (Avise Laddu)", localName: "",
       origin: "Andhra Pradesh",
-      price: "$8.99", unit: "250g or 500g",
+      price: "$11.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Healthy Choice",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "A nourishing laddu made from roasted flaxseeds bound with jaggery and a touch of ghee. Earthy, lightly sweet, and rich in fibre and omega-3 - a guilt-free treat for health-conscious customers.",
       details: "Ingredients: Roasted flaxseeds (avise ginjalu), jaggery, ghee and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Healthy Choice", "Fibre Rich", "Jaggery Sweetened"],
       variants: [
-        { id: "opt1", label: "250g", price: "$8.99", sku: "SW-FLAXLAD-250" },
-        { id: "opt2", label: "500g", price: "$16.99", sku: "SW-FLAXLAD-500" }
+        { id: "opt1", label: "250g", price: "$11.99", sku: "SW-FLAXLAD-250" },
+        { id: "opt2", label: "500g", price: "$21.99", sku: "SW-FLAXLAD-500" }
       ]
     },
     {
       id: "sweets-ragi-laddu", category: "sweets",
       name: "Ragi Laddu (Finger Millet Laddu)", localName: "",
       origin: "Andhra Pradesh",
-      price: "$8.99", unit: "250g or 500g",
+      price: "$11.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Healthy Choice",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "A wholesome millet laddu made with roasted ragi flour, jaggery, ghee, and nuts. Naturally rich in iron and calcium with a warm, malty sweetness - a nutritious sweet the whole family can enjoy.",
       details: "Ingredients: Ragi (finger millet) flour, jaggery, ghee, cashews and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Healthy Choice", "Millet Based", "Jaggery Sweetened"],
       variants: [
-        { id: "opt1", label: "250g", price: "$8.99", sku: "SW-RAGILAD-250" },
-        { id: "opt2", label: "500g", price: "$16.99", sku: "SW-RAGILAD-500" }
+        { id: "opt1", label: "250g", price: "$11.99", sku: "SW-RAGILAD-250" },
+        { id: "opt2", label: "500g", price: "$21.99", sku: "SW-RAGILAD-500" }
       ]
     },
     {
       id: "sweets-kajji-kayalu", category: "sweets",
       name: "Kajji Kayalu (Kobbari)", localName: "",
       origin: "Andhra Pradesh",
-      price: "$8.49", unit: "250g or 500g",
+      price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Traditional",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "Crisp half-moon pastries stuffed with a sweet coconut, sugar, and cardamom filling, then deep-fried to a golden crunch. A beloved Andhra festival sweet with a delicate flaky shell and fragrant coconut centre.",
       details: "Ingredients: Maida (refined wheat flour), dry coconut, sugar, roasted gram, ghee and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Traditional", "Coconut Filled", "Festive Sweet"],
       variants: [
-        { id: "opt1", label: "250g", price: "$8.49", sku: "SW-KAJJIK-250" },
-        { id: "opt2", label: "500g", price: "$15.99", sku: "SW-KAJJIK-500" }
+        { id: "opt1", label: "250g", price: "$10.99", sku: "SW-KAJJIK-250" },
+        { id: "opt2", label: "500g", price: "$19.99", sku: "SW-KAJJIK-500" }
       ]
     },
 
@@ -518,60 +518,60 @@ const SHRISH_DATA = {
       id: "snacks-ragi-murukulu", category: "snacks",
       name: "Ragi Murukulu", localName: "",
       origin: "Andhra Pradesh",
-      price: "$6.99", unit: "250g or 500g",
+      price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Crunchy Snack",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "Crispy spiral murukulu made with nutritious ragi (finger millet) and rice flour, seasoned with cumin and a gentle spice. A wholesome, crunchy tea-time snack with an earthy millet flavour.",
       details: "Ingredients: Ragi (finger millet) flour, rice flour, chana dal, cumin, sesame, salt and oil. Store airtight in a cool dry place to keep crisp.",
       badges: ["Crunchy Snack", "Millet Based", "Tea Time"],
       variants: [
-        { id: "opt1", label: "250g", price: "$6.99", sku: "SN-RAGIMUR-250" },
-        { id: "opt2", label: "500g", price: "$12.99", sku: "SN-RAGIMUR-500" }
+        { id: "opt1", label: "250g", price: "$9.99", sku: "SN-RAGIMUR-250" },
+        { id: "opt2", label: "500g", price: "$17.99", sku: "SN-RAGIMUR-500" }
       ]
     },
     {
       id: "snacks-ribbon-pakodi", category: "snacks",
       name: "Ribbon Pakodi", localName: "",
       origin: "Andhra Pradesh",
-      price: "$6.99", unit: "250g or 500g",
+      price: "$8.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Crunchy Snack",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "Flat, ribbon-shaped deep-fried snack made from gram flour and rice flour with a mild spice and garlic note. Light, crisp, and moreish - a classic South Indian festival and tea-time savoury.",
       details: "Ingredients: Besan (gram flour), rice flour, chilli powder, garlic, salt, sesame and oil. Store airtight in a cool dry place to keep crisp.",
       badges: ["Crunchy Snack", "Festive Savoury", "Tea Time"],
       variants: [
-        { id: "opt1", label: "250g", price: "$6.99", sku: "SN-RIBBON-250" },
-        { id: "opt2", label: "500g", price: "$12.99", sku: "SN-RIBBON-500" }
+        { id: "opt1", label: "250g", price: "$8.99", sku: "SN-RIBBON-250" },
+        { id: "opt2", label: "500g", price: "$15.99", sku: "SN-RIBBON-500" }
       ]
     },
     {
       id: "snacks-chekkalu", category: "snacks",
       name: "Chekkalu (Rice Crackers)", localName: "",
       origin: "Andhra Pradesh",
-      price: "$6.99", unit: "250g or 500g",
+      price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Crunchy Snack",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "Crisp, disc-shaped Andhra rice crackers studded with chana dal, curry leaves, and cumin for a spicy, savoury crunch. A traditional Sankranthi snack that pairs perfectly with hot tea or coffee.",
       details: "Ingredients: Rice flour, chana dal, red chilli, curry leaves, cumin, sesame, salt and oil. Store airtight in a cool dry place to keep crisp.",
       badges: ["Crunchy Snack", "Andhra Style", "Tea Time"],
       variants: [
-        { id: "opt1", label: "250g", price: "$6.99", sku: "SN-CHEKKALU-250" },
-        { id: "opt2", label: "500g", price: "$12.99", sku: "SN-CHEKKALU-500" }
+        { id: "opt1", label: "250g", price: "$9.99", sku: "SN-CHEKKALU-250" },
+        { id: "opt2", label: "500g", price: "$17.99", sku: "SN-CHEKKALU-500" }
       ]
     },
     {
       id: "snacks-kara-pusa", category: "snacks",
       name: "Kara Pusa (Kara Sev)", localName: "",
       origin: "Andhra Pradesh",
-      price: "$6.99", unit: "250g or 500g",
+      price: "$7.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Crunchy Snack",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "Crunchy, spicy sev made from gram flour and rice flour seasoned with chilli, cumin, and a hint of hing. A crisp, savoury nibble on its own or a perfect topping for chaat and mixtures.",
       details: "Ingredients: Besan (gram flour), rice flour, chilli powder, cumin, hing, salt and oil. Store airtight in a cool dry place to keep crisp.",
       badges: ["Crunchy Snack", "Spicy", "Tea Time"],
       variants: [
-        { id: "opt1", label: "250g", price: "$6.99", sku: "SN-KARAPUSA-250" },
-        { id: "opt2", label: "500g", price: "$12.99", sku: "SN-KARAPUSA-500" }
+        { id: "opt1", label: "250g", price: "$7.99", sku: "SN-KARAPUSA-250" },
+        { id: "opt2", label: "500g", price: "$13.99", sku: "SN-KARAPUSA-500" }
       ]
     },
 
@@ -594,8 +594,8 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Hot rice - curd rice - chapati - dosa",
       variants: [
-        { id: "pickle-brinjal-amla-250g", label: "250g", price: "$9.99", sku: "pickle-brinjal-amla-250g" },
-        { id: "pickle-brinjal-amla-500g", label: "500g", price: "$18.99", sku: "pickle-brinjal-amla-500g" }
+        { id: "pickle-brinjal-amla-250g", label: "250g", price: "$10.99", sku: "pickle-brinjal-amla-250g" },
+        { id: "pickle-brinjal-amla-500g", label: "500g", price: "$19.99", sku: "pickle-brinjal-amla-500g" }
       ]
     },
     {
@@ -615,8 +615,8 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Curd rice - chapati - dosa - idli - upma - lemon rice",
       variants: [
-        { id: "pickle-carrot-250g", label: "250g", price: "$9.99", sku: "pickle-carrot-250g" },
-        { id: "pickle-carrot-500g", label: "500g", price: "$18.99", sku: "pickle-carrot-500g" }
+        { id: "pickle-carrot-250g", label: "250g", price: "$10.99", sku: "pickle-carrot-250g" },
+        { id: "pickle-carrot-500g", label: "500g", price: "$19.99", sku: "pickle-carrot-500g" }
       ]
     },
     {
@@ -657,7 +657,7 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Hot",
       bestFor: "Hot rice - curd rice - dal - pesarattu - dosa",
       variants: [
-        { id: "pickle-chintakaya-250g", label: "250g", price: "$9.99", sku: "pickle-chintakaya-250g" },
+        { id: "pickle-chintakaya-250g", label: "250g", price: "$10.99", sku: "pickle-chintakaya-250g" },
         { id: "pickle-chintakaya-500g", label: "500g", price: "$18.99", sku: "pickle-chintakaya-500g" }
       ]
     },
@@ -702,7 +702,7 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Dal rice - curd rice - chapati - dosa - idli",
       variants: [
-        { id: "pickle-garlic-250g", label: "250g", price: "$9.99", sku: "pickle-garlic-250g" },
+        { id: "pickle-garlic-250g", label: "250g", price: "$10.99", sku: "pickle-garlic-250g" },
         { id: "pickle-garlic-500g", label: "500g", price: "$18.99", sku: "pickle-garlic-500g" }
       ]
     },
@@ -747,7 +747,7 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Hot rice - idli - dosa - curd rice",
       variants: [
-        { id: "pickle-karivepaku-pachadi-250g", label: "250g", price: "$9.99", sku: "pickle-karivepaku-pachadi-250g" },
+        { id: "pickle-karivepaku-pachadi-250g", label: "250g", price: "$10.99", sku: "pickle-karivepaku-pachadi-250g" },
         { id: "pickle-karivepaku-pachadi-500g", label: "500g", price: "$18.99", sku: "pickle-karivepaku-pachadi-500g" }
       ]
     },
@@ -770,7 +770,7 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Idli - dosa - curd rice - chapati - upma",
       variants: [
-        { id: "pickle-kothimeera-250g", label: "250g", price: "$9.99", sku: "pickle-kothimeera-250g" },
+        { id: "pickle-kothimeera-250g", label: "250g", price: "$10.99", sku: "pickle-kothimeera-250g" },
         { id: "pickle-kothimeera-500g", label: "500g", price: "$18.99", sku: "pickle-kothimeera-500g" }
       ]
     },
@@ -814,7 +814,7 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Curd rice - lemon rice - dosa - upma - chapati",
       variants: [
-        { id: "pickle-mango-ginger-250g", label: "250g", price: "$9.99", sku: "pickle-mango-ginger-250g" },
+        { id: "pickle-mango-ginger-250g", label: "250g", price: "$10.99", sku: "pickle-mango-ginger-250g" },
         { id: "pickle-mango-ginger-500g", label: "500g", price: "$18.99", sku: "pickle-mango-ginger-500g" }
       ]
     },
@@ -835,7 +835,7 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Curd rice - dosa - idli - upma - chapati - hot rice",
       variants: [
-        { id: "pickle-mango-thokku-magai-250g", label: "250g", price: "$9.99", sku: "pickle-mango-thokku-magai-250g" },
+        { id: "pickle-mango-thokku-magai-250g", label: "250g", price: "$10.99", sku: "pickle-mango-thokku-magai-250g" },
         { id: "pickle-mango-thokku-magai-500g", label: "500g", price: "$18.99", sku: "pickle-mango-thokku-magai-500g" }
       ]
     },
@@ -861,7 +861,7 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Curd rice - hot rice - chapati - dosa - idli - upma",
       variants: [
-        { id: "pickle-mixed-vegetable-250g", label: "250g", price: "$9.99", sku: "pickle-mixed-vegetable-250g" },
+        { id: "pickle-mixed-vegetable-250g", label: "250g", price: "$10.99", sku: "pickle-mixed-vegetable-250g" },
         { id: "pickle-mixed-vegetable-500g", label: "500g", price: "$18.99", sku: "pickle-mixed-vegetable-500g" }
       ]
     },
@@ -882,7 +882,7 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Very Hot",
       bestFor: "Hot rice with ghee - idli - dosa - pappu rice - curd rice",
       variants: [
-        { id: "pickle-pandu-mirchi-250g", label: "250g", price: "$9.99", sku: "pickle-pandu-mirchi-250g" },
+        { id: "pickle-pandu-mirchi-250g", label: "250g", price: "$10.99", sku: "pickle-pandu-mirchi-250g" },
         { id: "pickle-pandu-mirchi-500g", label: "500g", price: "$18.99", sku: "pickle-pandu-mirchi-500g" }
       ]
     },
@@ -905,7 +905,7 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Idli - dosa - curd rice - chapati - upma - hot rice",
       variants: [
-        { id: "pickle-tomato-250g", label: "250g", price: "$9.99", sku: "pickle-tomato-250g" },
+        { id: "pickle-tomato-250g", label: "250g", price: "$10.99", sku: "pickle-tomato-250g" },
         { id: "pickle-tomato-500g", label: "500g", price: "$18.99", sku: "pickle-tomato-500g" }
       ]
     },
@@ -1101,7 +1101,7 @@ const SHRISH_DATA = {
     {
       id: "picklespodi-drumstick-leaf-podi-munagaku-podi", category: "picklespodi",
       name: "Moringa Powder / Munagaku Podi", localName: "100g or 200g", origin: "Spice Powder",
-      price: "$7.99", unit: "100g or 200g",
+      price: "$8.99", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "Andhra-style moringa powder made with roasted munagaku leaves, dals, chillies, garlic, and spices. Nutty, earthy, and a wholesome option with hot rice, ghee, idli, and dosa.",
@@ -1115,14 +1115,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Hot rice with ghee - idli - dosa - upma - curd rice - health-conscious meals",
       variants: [
-        { id: "podi-drumstick-leaf-100g", label: "100g", price: "$7.99", sku: "podi-drumstick-leaf-100g" },
-        { id: "podi-drumstick-leaf-200g", label: "200g", price: "$14.99", sku: "podi-drumstick-leaf-200g" }
+        { id: "podi-drumstick-leaf-100g", label: "100g", price: "$8.99", sku: "podi-drumstick-leaf-100g" },
+        { id: "podi-drumstick-leaf-200g", label: "200g", price: "$16.99", sku: "podi-drumstick-leaf-200g" }
       ]
     },
     {
       id: "picklespodi-idli-podi", category: "picklespodi",
       name: "Idli Podi", localName: "100g or 200g", origin: "Spice Powder",
-      price: "$6.99", unit: "100g or 200g",
+      price: "$5.99", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: "",
       gallery: [
@@ -1139,8 +1139,8 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Idli with ghee - dosa - uttapam - upma",
       variants: [
-        { id: "podi-idli-100g", label: "100g", price: "$6.99", sku: "podi-idli-100g" },
-        { id: "podi-idli-200g", label: "200g", price: "$12.99", sku: "podi-idli-200g" }
+        { id: "podi-idli-100g", label: "100g", price: "$5.99", sku: "podi-idli-100g" },
+        { id: "podi-idli-200g", label: "200g", price: "$10.99", sku: "podi-idli-200g" }
       ]
     },
     {
@@ -1212,7 +1212,7 @@ const SHRISH_DATA = {
     {
       id: "picklespodi-karela-bitter-gourd-pickle", category: "picklespodi",
       name: "Karela Pickle / Kakarakaya Pickle", localName: "250g or 500g", origin: "Veg Pickle",
-      price: "$9.99", unit: "250g or 500g",
+      price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "Andhra-style bitter gourd pickle made with crisp fried karela pieces in a tangy, spicy tamarind and chilli masala. The frying and spices balance the natural bitterness, leaving a bold, appetising pickle for rice and tiffins.",
@@ -1226,8 +1226,8 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Hot rice with ghee - curd rice - chapati - dosa",
       variants: [
-        { id: "pickle-karela-250g", label: "250g", price: "$9.99", sku: "pickle-karela-250g" },
-        { id: "pickle-karela-500g", label: "500g", price: "$18.99", sku: "pickle-karela-500g" }
+        { id: "pickle-karela-250g", label: "250g", price: "$10.99", sku: "pickle-karela-250g" },
+        { id: "pickle-karela-500g", label: "500g", price: "$19.99", sku: "pickle-karela-500g" }
       ]
     },
     {
@@ -1254,7 +1254,7 @@ const SHRISH_DATA = {
     {
       id: "picklespodi-kakarakaya-karam-podi-bitter-gourd", category: "picklespodi",
       name: "Kakarakaya Karam Podi / Bitter Gourd Podi", localName: "100g or 200g", origin: "Spice Powder",
-      price: "$7.49", unit: "100g or 200g",
+      price: "$7.99", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "A specialty Andhra podi made from dried bitter gourd roasted with chillies, dals, and spices. Bold, earthy, and mildly bitter with a spicy kick - best mixed with hot rice and ghee for an appetising, wholesome meal.",
@@ -1268,14 +1268,14 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium-Hot",
       bestFor: "Hot rice with ghee - curd rice - idli - dosa",
       variants: [
-        { id: "podi-kakarakaya-100g", label: "100g", price: "$7.49", sku: "podi-kakarakaya-100g" },
-        { id: "podi-kakarakaya-200g", label: "200g", price: "$13.99", sku: "podi-kakarakaya-200g" }
+        { id: "podi-kakarakaya-100g", label: "100g", price: "$7.99", sku: "podi-kakarakaya-100g" },
+        { id: "podi-kakarakaya-200g", label: "200g", price: "$14.99", sku: "podi-kakarakaya-200g" }
       ]
     },
     {
       id: "picklespodi-sambar-powder", category: "picklespodi",
       name: "Sambar Powder / Sambar Karam", localName: "100g or 200g", origin: "Spice Powder",
-      price: "$6.99", unit: "100g or 200g",
+      price: "$4.99", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: SHRISH_LOGO_PRODUCT_IMAGE,
       description: "A fresh, aromatic South Indian sambar powder made from roasted coriander, dals, chillies, fenugreek, and curry leaves. Adds authentic depth and warmth to sambar, rasam, and vegetable curries.",
@@ -1289,8 +1289,8 @@ const SHRISH_DATA = {
       season: "Available Now", taste: "Spice: Medium",
       bestFor: "Sambar - rasam - vegetable curries - dal",
       variants: [
-        { id: "podi-sambar-100g", label: "100g", price: "$6.99", sku: "podi-sambar-100g" },
-        { id: "podi-sambar-200g", label: "200g", price: "$12.99", sku: "podi-sambar-200g" }
+        { id: "podi-sambar-100g", label: "100g", price: "$4.99", sku: "podi-sambar-100g" },
+        { id: "podi-sambar-200g", label: "200g", price: "$8.99", sku: "podi-sambar-200g" }
       ]
     }
   ],
