@@ -147,6 +147,36 @@ const SHRISH_DATA = {
     //  PUTHAREKULU
     // ===========================================
     {
+      id: "puth_plain_sugar", category: "putharekulu",
+      name: "Putharekulu - Classic Plain (Sugar)", localName: "",
+      origin: "Atreyapuram, Andhra Pradesh",
+      price: "$6.99", unit: "5 count or 10 count",
+      available: true, displayOnly: false, tag: "Classic",
+      image: "images/products/putharekulu/img_puth_sugar_kaju.jpg",
+      description: "The original Atreyapuram Putharekulu in its simplest, most traditional form - delicate paper-thin rice sheets layered with sugar and ghee, no dry fruits. Light, melt-in-mouth, and perfect for customers who love the classic sweet exactly as it has always been made.",
+      details: "Ingredients: Rice starch sheets, sugar and ghee. Store in a cool dry place and serve fresh.",
+      badges: ["Classic", "No Dry Fruit"],
+      variants: [
+        { id: "opt1", label: "5 count", price: "$6.99", sku: "PPLS5" },
+        { id: "opt2", label: "10 count", price: "$12.99", sku: "PPLS10" }
+      ]
+    },
+    {
+      id: "puth_plain_jaggery", category: "putharekulu",
+      name: "Putharekulu - Classic Plain (Jaggery)", localName: "",
+      origin: "Atreyapuram, Andhra Pradesh",
+      price: "$7.49", unit: "5 count or 10 count",
+      available: true, displayOnly: false, tag: "Classic",
+      image: "images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg",
+      description: "The traditional jaggery (bellam) Putharekulu with no dry fruits - paper-thin rice sheets folded with jaggery and ghee for a deeper, warmer, more rustic sweetness. A pure, old-style version for customers who prefer jaggery over sugar.",
+      details: "Ingredients: Rice starch sheets, jaggery and ghee. Richer jaggery flavour with a softer rustic sweetness. Store in a cool dry place and serve fresh.",
+      badges: ["Classic", "Jaggery Sweetened", "No Dry Fruit"],
+      variants: [
+        { id: "opt1", label: "5 count", price: "$7.49", sku: "PPLJ5" },
+        { id: "opt2", label: "10 count", price: "$13.99", sku: "PPLJ10" }
+      ]
+    },
+    {
       id: "puth_sugar_kaju", category: "putharekulu",
       name: "Putharekulu - Sugar - Kaju Badam", localName: "",
       origin: "Atreyapuram, Andhra Pradesh",

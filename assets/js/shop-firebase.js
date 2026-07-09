@@ -97,6 +97,8 @@ const PRODUCT_IMAGES = {
   neelam: ['images/products/mangoes/img_neelam.jpg', 'images/products/mangoes/img_neelam1.jpg'],
   rajapuri: ['images/products/mangoes/img_banganapalli.jpg'],
   puth_plain: ['images/products/putharekulu/img_puth_sugar_kaju.jpg'],
+  puth_plain_sugar: ['images/products/putharekulu/img_puth_sugar_kaju.jpg'],
+  puth_plain_jaggery: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg'],
   puth_sugar_kaju: ['images/products/putharekulu/img_puth_sugar_kaju.jpg'],
   puth_sugar_kaju_pista: ['images/products/putharekulu/img_puth_sugar_kaju_pista.jpg'],
   puth_jaggery_kaju: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg'],
