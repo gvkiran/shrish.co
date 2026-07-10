@@ -205,11 +205,11 @@ function normalizeCatalogProduct(product = {}) {
 
 const SHOP_CATEGORY_IDS = new Set(['mangoes', 'putharekulu', 'jellysnacks', 'sweets', 'snacks', 'picklespodi']);
 const SHOP_FILTERS = [
-  { id: 'all', label: 'All Products', categories: ['mangoes', 'putharekulu', 'jellysnacks', 'sweets', 'snacks', 'picklespodi'] },
-  { id: 'mangoes', label: 'Fruits/Mangoes', categories: ['mangoes'] },
+  { id: 'all', label: 'All Products', categories: ['picklespodi', 'putharekulu', 'jellysnacks', 'sweets', 'snacks', 'mangoes'] },
+  { id: 'picklespodi', label: 'Pickles & Podi', categories: ['picklespodi'] },
   { id: 'sweets', label: 'Sweets', categories: ['putharekulu', 'jellysnacks', 'sweets'] },
   { id: 'snacks', label: 'Snacks', categories: ['snacks'] },
-  { id: 'picklespodi', label: 'Pickles & Podi', categories: ['picklespodi'] }
+  { id: 'mangoes', label: 'Fruits/Mangoes', categories: ['mangoes'] }
 ];
 
 const SHOP_FILTER_PATHS = {
@@ -408,8 +408,13 @@ function getLegacyVariantFallback(product = {}) {
   return null;
 }
 
+const CATEGORY_DISPLAY_RANK = { picklespodi: 0, putharekulu: 1, jellysnacks: 2, sweets: 3, snacks: 4, mangoes: 5 };
+
 function sortCatalogProducts(products = []) {
   return [...products].sort((a, b) => {
+    const aCat = CATEGORY_DISPLAY_RANK[a?.category] ?? 9;
+    const bCat = CATEGORY_DISPLAY_RANK[b?.category] ?? 9;
+    if (aCat !== bCat) return aCat - bCat;
     const aOrder = Number.isFinite(Number(a?.sortOrder)) ? Number(a.sortOrder) : Number.MAX_SAFE_INTEGER;
     const bOrder = Number.isFinite(Number(b?.sortOrder)) ? Number(b.sortOrder) : Number.MAX_SAFE_INTEGER;
     if (aOrder !== bOrder) return aOrder - bOrder;
