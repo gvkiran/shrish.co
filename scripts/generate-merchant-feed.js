@@ -52,8 +52,11 @@ function buildItems(products) {
   for (const product of products) {
     const category = normalizeCategory(product.category);
     const pageUrl = `${SITE_URL}/shop/products/${category}/${product.id}/`;
-    const image = String(product.image || '').replace(/\\/g, '/');
-    const imageUrl = image && !image.includes('logo') ? `${SITE_URL}/${image}` : null;
+    const candidates = [product.image, ...(Array.isArray(product.gallery) ? product.gallery : [])]
+      .map((entry) => String(entry || '').replace(/\\/g, '/').trim())
+      .filter((entry) => entry && !entry.includes('logo'));
+    const image = candidates.find((entry) => fs.existsSync(path.join(ROOT, entry)));
+    const imageUrl = image ? `${SITE_URL}/${image}` : null;
     const description = stripHtml(product.description) || product.name;
     const availability = product.available && !product.displayOnly ? 'in_stock' : 'out_of_stock';
     const variants = Array.isArray(product.variants) ? product.variants.filter((v) => v.label && (v.sku || v.id)) : [];
