@@ -124,14 +124,14 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
     <div class="lx-hero-copy">
       <p class="lx-kicker lx-l1">Farm-fresh &mdash; India to Virginia</p>
       <h1 class="lx-display">
-        <span class="lx-line lx-l2"><em>Taste of</em></span>
-        <span class="lx-line lx-outline lx-l3" id="lxWord"><i>A</i><i>N</i><i>D</i><i>H</i><i>R</i><i>A</i></span>
-        <span class="lx-line lx-l4">at <em>your door.</em></span>
+        <span class="lx-line lx-l2"><em>Grandma-level</em></span>
+        <span class="lx-line lx-outline lx-l3" id="lxWord"><i>P</i><i>I</i><i>C</i><i>K</i><i>L</i><i>E</i><i>S</i></span>
+        <span class="lx-line lx-l4">at <em>your doorstep.</em></span>
       </h1>
       <p class="lx-lede lx-l5">Small-batch pickles, podi and Andhra sweets &mdash; handcrafted in Richmond, VA and shipped to your door anywhere in the USA.</p>
       <div class="lx-hero-cta lx-l6">
-        <a href="shop.html?category=picklespodi" class="lx-btn lx-btn-liquid"><span>Order Pickles &amp; Podi</span></a>
-        <a href="shop.html?category=sweets" class="lx-btn lx-btn-ghost"><span>Shop Sweets</span></a>
+        <a href="shop.html" class="lx-btn lx-btn-liquid"><span>Shop Bestsellers</span></a>
+        <a href="#cravings" class="lx-btn lx-btn-ghost"><span>Explore by Craving</span></a>
       </div>
       <div class="hero-stats lx-stats lx-l7">
         <div class="stat"><span class="stat-num">30+</span><span class="stat-label">Pickles &amp; Podi</span></div>
@@ -196,6 +196,29 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
     </div>
   </div>
 </div>
+
+
+<!-- ============ 00 / SHOP BY CRAVING ============ -->
+<section class="section lx-section" id="cravings" aria-label="Shop by craving">
+  <style>
+    .crave-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    .crave-tile { display: block; border: 1px solid rgba(200,121,26,.28); border-radius: 16px; padding: 26px 20px; text-align: center; background: rgba(200,121,26,.06); transition: transform .25s ease, background .25s ease, border-color .25s ease; }
+    .crave-tile:hover { transform: translateY(-4px); background: rgba(200,121,26,.14); border-color: rgba(200,121,26,.55); }
+    .crave-emoji { font-size: 30px; display: block; margin-bottom: 10px; }
+    .crave-tile h3 { font-family: var(--font-display); font-size: 22px; margin: 0 0 6px; color: inherit; }
+    .crave-tile p { font-size: 13px; margin: 0; opacity: .72; }
+  </style>
+  <div class="section-header lx-sechead" style="text-align:center">
+    <div class="section-label">Shop by craving</div>
+    <h2 class="section-title">What are you <em>craving today?</em></h2>
+  </div>
+  <div class="crave-grid">
+    <a class="crave-tile" href="shop.html?category=picklespodi&type=nonveg"><span class="crave-emoji">🍗</span><h3>Fiery Non-Veg</h3><p>Gongura chicken &middot; mutton &middot; prawn</p></a>
+    <a class="crave-tile" href="shop.html?category=picklespodi&type=veg"><span class="crave-emoji">🌶️</span><h3>Classic Pickles</h3><p>Avakaya &middot; gongura &middot; tomato</p></a>
+    <a class="crave-tile" href="shop.html?category=picklespodi&type=podi"><span class="crave-emoji">🥣</span><h3>Everyday Podi</h3><p>Idli podi &middot; kandi &middot; moringa</p></a>
+    <a class="crave-tile" href="shop.html?category=sweets"><span class="crave-emoji">🍯</span><h3>Sweet Treats</h3><p>Putharekulu &middot; laddu &middot; kaja</p></a>
+  </div>
+</section>
 
 <!-- ============ 01 / SEASON'S PICKS (bento) ============ -->
 <section class="products section lx-section" id="picks">
@@ -303,21 +326,21 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
     <div class="section-header lx-sechead">
       <span class="lx-ghost" aria-hidden="true">04</span>
       <div class="section-label">In the kitchen</div>
-      <h2 class="section-title">From our jars <em>to your table</em></h2>
-      <p class="section-desc">Five-minute South Indian classics powered by Shrish pickles and podi &mdash; and a mango favorite too.</p>
+      <h2 class="section-title">Mango <em>recipes</em></h2>
+      <p class="section-desc">From classic Mango Lassi to Kulfi &mdash; make the most of every mango.</p>
     </div>
     <div class="recipes-grid lx-recipes">
       <a href="recipes.html#rx-classic-mango-lassi" class="recipe-card lx-tilt">
         <div class="recipe-card-img" style="background-image:url('images/recipes/img_recipe_lassi.jpg')"></div>
         <div class="recipe-card-body"><span class="recipe-tag">Easy · 5 min</span><h3>Classic Mango Lassi</h3><p>Caf&eacute;-style with Alphonso or Kesar</p></div>
       </a>
-      <a href="recipes.html#rx-gongura-pickle-rice-bowl" class="recipe-card recipe-card-large lx-tilt">
-        <div class="recipe-card-img" style="background-image:url('images/products/pickles/gongura-pickle-2026.jpg')"></div>
-        <div class="recipe-card-body"><span class="recipe-tag">Easy · 10 min</span><h3>Gongura Pickle Rice Bowl</h3><p>Tangy gongura, hot rice &amp; ghee</p></div>
+      <a href="recipes.html#rx-thai-style-mango-sticky-rice" class="recipe-card recipe-card-large lx-tilt">
+        <div class="recipe-card-img" style="background-image:url('images/recipes/img_recipe_stickyrice.jpg')"></div>
+        <div class="recipe-card-body"><span class="recipe-tag">Medium · 1 hr</span><h3>Thai Mango Sticky Rice</h3><p>Coconut milk &amp; fresh ripe mango</p></div>
       </a>
-      <a href="recipes.html#rx-ghee-podi-idli" class="recipe-card lx-tilt">
-        <div class="recipe-card-img" style="background-image:url('images/products/podi/idli-podi-2026.jpg')"></div>
-        <div class="recipe-card-body"><span class="recipe-tag">Easy · 15 min</span><h3>Ghee Podi Idli</h3><p>Breakfast upgrade with Shrish Idli Podi</p></div>
+      <a href="recipes.html#rx-creamy-mango-kulfi" class="recipe-card lx-tilt">
+        <div class="recipe-card-img" style="background-image:url('images/recipes/img_recipe_kulfi.jpg')"></div>
+        <div class="recipe-card-body"><span class="recipe-tag">Easy · 6 hr freeze</span><h3>Creamy Mango Kulfi</h3><p>No ice cream maker needed</p></div>
       </a>
     </div>
     <div class="section-cta lx-center"><a href="recipes.html" class="lx-btn lx-btn-ghost"><span>All Recipes →</span></a></div>
@@ -438,13 +461,27 @@ function toggleFaq(el){
 <section class="lx-cta-band" aria-label="Shop call to action">
   <div class="lx-cta-marq" aria-hidden="true">
     <div class="lx-cta-track">
-      <span>Taste the season before it&rsquo;s gone&nbsp;&mdash;&nbsp;</span><span>Taste the season before it&rsquo;s gone&nbsp;&mdash;&nbsp;</span><span>Taste the season before it&rsquo;s gone&nbsp;&mdash;&nbsp;</span><span>Taste the season before it&rsquo;s gone&nbsp;&mdash;&nbsp;</span>
+      <span>Small batches &mdash; when it&rsquo;s gone, it&rsquo;s gone&nbsp;&mdash;&nbsp;</span><span>Small batches &mdash; when it&rsquo;s gone, it&rsquo;s gone&nbsp;&mdash;&nbsp;</span><span>Small batches &mdash; when it&rsquo;s gone, it&rsquo;s gone&nbsp;&mdash;&nbsp;</span><span>Small batches &mdash; when it&rsquo;s gone, it&rsquo;s gone&nbsp;&mdash;&nbsp;</span>
     </div>
   </div>
   <a class="lx-btn lx-btn-liquid lx-btn-xl" href="shop.html"><span>Shop All Products</span></a>
 </section>
 
 <!-- FOOTER -->
+
+<!-- ============ WHATSAPP COMMUNITY ============ -->
+<section class="section lx-section" aria-label="Join our WhatsApp community" style="padding-top:0">
+  <div style="max-width:1120px;margin:0 auto;padding:0 24px">
+    <div style="background:rgba(15,110,86,.14);border:1px solid rgba(29,158,117,.4);border-radius:18px;padding:26px 28px;display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between">
+      <div>
+        <h2 style="font-family:var(--font-display);font-size:clamp(1.4rem,3vw,2rem);margin:0 0 6px;color:inherit">Join the Shrish family on WhatsApp</h2>
+        <p style="font-size:14px;margin:0;opacity:.75">New-batch alerts, festival specials, and first access when mango season returns.</p>
+      </div>
+      <a href="https://wa.me/17653255577?text=Hi%20Shrish!%20Please%20add%20me%20to%20the%20updates%20group." class="lx-btn lx-btn-liquid" style="flex-shrink:0"><span>Join on WhatsApp</span></a>
+    </div>
+  </div>
+</section>
+
 <footer class="footer lx-footer">
   <div class="lx-wordmark" aria-hidden="true">SHRISH</div>
   <div class="footer-top lx-footer-grid">
