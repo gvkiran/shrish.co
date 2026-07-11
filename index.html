@@ -544,13 +544,15 @@ function toggleFaq(el){
 <script defer src="assets/js/data.js?v=pricing-20260709"></script>
 <script defer src="assets/js/analytics.js?v=perf2-20260624"></script>
 <script defer src="assets/js/main.js?v=premerge-20260702"></script>
-<script defer src="assets/js/luxe.js?v=searchfix-20260710"></script>
+<script defer src="assets/js/luxe.js?v=letterpop-20260711"></script>
 <script defer src="assets/js/firebase-config.js"></script>
 <script type="module" src="assets/js/home-firebase.js?v=perf-20260624"></script>
 
 <style>
   #heroL2, #heroL4, #heroLede, #heroCtaMain span, #heroImg, #lxWord { transition: opacity .45s ease; }
   .lx-hero-copy .lx-display { font-size: clamp(2.1rem, 4.6vw, 3.9rem) !important; line-height: 1.02 !important; }
+  @keyframes heroLetterPop { 0% { opacity: 0; transform: translateY(26px) scale(.7); } 60% { opacity: 1; transform: translateY(-6px) scale(1.06); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+  #lxWord i { display: inline-block; }
   .lx-hero-copy .lx-display .lx-line { display: block; white-space: nowrap; }
   .lx-hero-copy .lx-lede { font-size: 15px !important; max-width: 420px; }
   @media (max-width: 640px) { .lx-hero-copy .lx-display .lx-line { white-space: normal; } }
@@ -606,7 +608,7 @@ function toggleFaq(el){
     fadeEls.forEach(function (el) { el.style.opacity = '0'; });
     setTimeout(function () {
       els.l2.textContent = s.l2;
-      els.word.innerHTML = s.word.split('').map(function (ch) { return '<i>' + ch + '</i>'; }).join('');
+      els.word.innerHTML = s.word.split('').map(function (ch, j) { return '<i style=\"animation:heroLetterPop .55s cubic-bezier(.34,1.56,.64,1) both;animation-delay:' + (j * 70) + 'ms\">' + ch + '</i>'; }).join('');
       els.l4.innerHTML = s.l4;
       els.lede.textContent = s.lede;
       els.cta.querySelector('span').textContent = s.cta;

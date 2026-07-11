@@ -245,7 +245,7 @@
             layers.forEach(function (l) {
               l.el.style.transform = 'translate(' + (-hx * l.d) + 'px,' + (-hy * l.d) + 'px)';
             });
-            letters.forEach(function (ltr) {
+            Array.prototype.slice.call(document.querySelectorAll('#lxWord i')).forEach(function (ltr) {
               var r = ltr.getBoundingClientRect();
               var dx = e.clientX - (r.left + r.width / 2);
               var dy = e.clientY - (r.top + r.height / 2);
@@ -261,7 +261,7 @@
         }, { passive: true });
         hero.addEventListener('mouseleave', function () {
           layers.forEach(function (l) { l.el.style.transform = ''; });
-          letters.forEach(function (ltr) { ltr.style.transform = ''; });
+          Array.prototype.slice.call(document.querySelectorAll('#lxWord i')).forEach(function (ltr) { ltr.style.transform = ''; });
         });
       }
 
