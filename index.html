@@ -133,7 +133,10 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
         <a href="shop.html" class="lx-btn lx-btn-liquid" id="heroCtaMain"><span>Shop Bestsellers</span></a>
         <a href="#cravings" class="lx-btn lx-btn-ghost"><span>Explore by Craving</span></a>
       </div>
-      <div class="hero-slide-dots lx-l6" id="heroDots" role="tablist" aria-label="Featured products">
+      <div class="hero-slide-nav">
+        <button type="button" class="hero-nav-btn" id="heroPrev" aria-label="Previous product">&#8249;</button>
+        <div class="hero-slide-dots" id="heroDots" role="tablist" aria-label="Featured products"></div>
+        <button type="button" class="hero-nav-btn" id="heroNext" aria-label="Next product">&#8250;</button>
       </div>
       <div class="hero-stats lx-stats lx-l7">
         <div class="stat"><span class="stat-num">30+</span><span class="stat-label">Pickles &amp; Podi</span></div>
@@ -547,7 +550,10 @@ function toggleFaq(el){
 
 <style>
   #heroL2, #heroL4, #heroLede, #heroCtaMain span, #heroImg, #lxWord { transition: opacity .45s ease; }
-  .hero-slide-dots { display: flex; gap: 9px; margin-top: 20px; }
+  .hero-slide-nav { display: flex; align-items: center; gap: 14px; margin-top: 22px; }
+  .hero-nav-btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(200,121,26,.55); background: transparent; color: #D9A24A; font-size: 20px; line-height: 1; cursor: pointer; transition: background .25s, transform .2s; display: flex; align-items: center; justify-content: center; padding: 0 0 2px; }
+  .hero-nav-btn:hover { background: rgba(200,121,26,.18); transform: scale(1.08); }
+  .hero-slide-dots { display: flex; gap: 9px; }
   .hero-slide-dots button { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(200,121,26,.55); background: transparent; padding: 0; cursor: pointer; transition: background .25s, transform .25s; }
   .hero-slide-dots button.active { background: #C8791A; transform: scale(1.25); }
 </style>
@@ -607,6 +613,10 @@ function toggleFaq(el){
     }, 450);
   }
   function next() { show((current + 1) % SLIDES.length); }
+  function prev() { show((current - 1 + SLIDES.length) % SLIDES.length); }
+  var pb = document.getElementById('heroPrev'), nb = document.getElementById('heroNext');
+  if (pb) pb.addEventListener('click', function () { prev(); restart(); });
+  if (nb) nb.addEventListener('click', function () { next(); restart(); });
   function restart() { clearInterval(timer); timer = setInterval(next, 7000); }
   var hero = document.querySelector('.lx-hero-grid');
   if (hero) {
