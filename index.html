@@ -608,7 +608,7 @@ function toggleFaq(el){
     fadeEls.forEach(function (el) { el.style.opacity = '0'; });
     setTimeout(function () {
       els.l2.textContent = s.l2;
-      els.word.innerHTML = s.word.split('').map(function (ch, j) { return '<i style=\"animation:heroLetterPop .55s cubic-bezier(.34,1.56,.64,1) both;animation-delay:' + (j * 70) + 'ms\">' + ch + '</i>'; }).join('');
+      els.word.innerHTML = s.word.split('').map(function (ch, j) { return '<i style=\"animation:heroLetterPop .55s cubic-bezier(.34,1.56,.64,1) backwards;animation-delay:' + (j * 70) + 'ms\">' + ch + '</i>'; }).join('');
       els.l4.innerHTML = s.l4;
       els.lede.textContent = s.lede;
       els.cta.querySelector('span').textContent = s.cta;
@@ -624,6 +624,9 @@ function toggleFaq(el){
   if (pb) pb.addEventListener('click', function () { prev(); restart(); });
   if (nb) nb.addEventListener('click', function () { next(); restart(); });
   function restart() { clearInterval(timer); timer = setInterval(next, 7000); }
+  els.img.style.cursor = 'pointer';
+  els.img.addEventListener('click', function () { window.location.href = SLIDES[current].href; });
+  els.img.setAttribute('title', 'Click to order');
   var hero = document.querySelector('.lx-hero-grid');
   if (hero) {
     hero.addEventListener('mouseenter', function () { clearInterval(timer); });
