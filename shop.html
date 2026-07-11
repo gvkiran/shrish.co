@@ -298,7 +298,7 @@
 /* -- SHOP SIDEBAR FILTERS -- */
 .shop-layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:36px;max-width:1520px;margin:0 auto;padding:28px 24px 0;align-items:start}
 .shop-layout,.shop-sidebar,.shop-main,#shopContent,.shop-section,.products-grid-v2,.pc{min-width:0;max-width:100%;box-sizing:border-box}
-.shop-sidebar{position:sticky;top:96px;display:flex;flex-direction:column;gap:26px;padding:24px 20px;background:#fff;border:1px solid var(--cream-d);border-radius:var(--radius-lg);box-shadow:var(--shadow)}
+.sb-nested{margin-top:12px;padding:10px 0 2px 12px;border-left:2px solid rgba(200,121,26,.35)}.sb-nested-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.65;margin-bottom:8px}.shop-sidebar{position:sticky;top:96px;display:flex;flex-direction:column;gap:26px;padding:24px 20px;background:#fff;border:1px solid var(--cream-d);border-radius:var(--radius-lg);box-shadow:var(--shadow)}
 .sb-title{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--dark);padding-bottom:10px;border-bottom:1px solid var(--cream-d);margin-bottom:14px;font-family:var(--font-body)}
 .st-avail{display:flex;flex-direction:column;gap:8px}
 .st-avail-btn{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;padding:9px 14px;border-radius:10px;border:1.5px solid #E0D0B8;background:#fff;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .3s;color:var(--text-light);font-family:var(--font-body);text-align:left}
@@ -464,7 +464,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
         <div id="sbPickleSubList"></div>
       </div>
     </div>
-    <div class="sb-section">
+    <div class="sb-section" style="display:none">
       <div class="sb-title">Availability</div>
       <div class="st-avail" role="group" aria-label="Filter by availability">
         <button type="button" class="st-avail-btn active" data-avail="all"><span>All</span> <span class="filter-count">0</span></button>
@@ -473,14 +473,16 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
       </div>
     </div>
     <div class="sb-section st-price">
-      <div class="sb-title">Price ($)</div>
-      <div class="sb-price-row">
+      <details>
+      <summary class="sb-title" style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px">Price filter <span style="font-size:14px;opacity:.6">+</span></summary>
+      <div class="sb-price-row" style="margin-top:10px">
         <input type="number" id="stPriceMin" min="0" placeholder="Min" inputmode="numeric" aria-label="Minimum price">
         <span aria-hidden="true">&ndash;</span>
         <input type="number" id="stPriceMax" min="0" placeholder="Max" inputmode="numeric" aria-label="Maximum price">
       </div>
       <button type="button" class="st-price-apply" id="stPriceApply">Apply</button>
       <button type="button" class="st-price-clear" id="stPriceClear" hidden>Clear</button>
+      </details>
     </div>
   </aside>
   <div class="shop-main">
@@ -713,7 +715,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <script defer src="assets/js/data.js?v=pricing-20260709"></script>
 <script defer src="assets/js/analytics.js?v=perf2-20260624"></script>
 <script defer src="assets/js/main.js?v=premerge-20260702"></script>
-<script defer src="assets/js/luxe.js?v=luxe28-20260610"></script>
+<script defer src="assets/js/luxe.js?v=searchfix-20260710"></script>
 <script defer src="assets/js/firebase-config.js"></script>
 <script type="module" src="assets/js/shop-firebase.js?v=shoporder-20260710"></script>
 

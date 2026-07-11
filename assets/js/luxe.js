@@ -304,12 +304,12 @@
       }
       /* typewriter placeholder */
       var phrases = [
-        'Craving Alphonso?',
-        'Try \u201Cavakai\u201D \uD83C\uDF36',
-        'Search \u201Cpodi\u201D for breakfast magic',
-        'Putharekulu, anyone?',
-        'Find your mango\u2026',
-        'Spicy? sweet? tangy?'
+        'Try \u201Cavakaya\u201D',
+        'Try \u201Cgongura\u201D',
+        'Try \u201Cpodi\u201D',
+        'Putharekulu?',
+        'Try \u201Ckaja\u201D',
+        'Spicy? Sweet?'
       ];
       var pi = 0, ci = 0, deleting = false, twTimer = null;
       function type() {
