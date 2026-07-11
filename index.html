@@ -124,14 +124,16 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
     <div class="lx-hero-copy">
       <p class="lx-kicker lx-l1">Farm-fresh &mdash; India to Virginia</p>
       <h1 class="lx-display">
-        <span class="lx-line lx-l2"><em>Real Andhra</em></span>
+        <span class="lx-line lx-l2"><em id="heroL2">Real Andhra</em></span>
         <span class="lx-line lx-outline lx-l3" id="lxWord"><i>P</i><i>I</i><i>C</i><i>K</i><i>L</i><i>E</i><i>S</i></span>
-        <span class="lx-line lx-l4">no jar <em>can match.</em></span>
+        <span class="lx-line lx-l4" id="heroL4">no jar <em>can match.</em></span>
       </h1>
-      <p class="lx-lede lx-l5">Handcrafted in small batches with no preservatives &mdash; pure Andhra style, shipped to your door anywhere in the USA.</p>
+      <p class="lx-lede lx-l5" id="heroLede">Handcrafted in small batches with no preservatives &mdash; pure Andhra style, shipped to your door anywhere in the USA.</p>
       <div class="lx-hero-cta lx-l6">
-        <a href="shop.html" class="lx-btn lx-btn-liquid"><span>Shop Bestsellers</span></a>
+        <a href="shop.html" class="lx-btn lx-btn-liquid" id="heroCtaMain"><span>Shop Bestsellers</span></a>
         <a href="#cravings" class="lx-btn lx-btn-ghost"><span>Explore by Craving</span></a>
+      </div>
+      <div class="hero-slide-dots lx-l6" id="heroDots" role="tablist" aria-label="Featured products">
       </div>
       <div class="hero-stats lx-stats lx-l7">
         <div class="stat"><span class="stat-num">30+</span><span class="stat-label">Pickles &amp; Podi</span></div>
@@ -145,7 +147,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
     <div class="lx-hero-art" aria-hidden="false">
       <div class="lx-blob-wrap" id="lxBlob">
         <div class="lx-blob">
-          <img src="images/site/hero-pickle-2026.jpg" alt="Homemade Andhra pickle jar close-up" width="1200" height="1600" loading="eager" fetchpriority="high" decoding="async">
+          <img id="heroImg" src="images/site/hero-pickle-2026.jpg" alt="Homemade Andhra pickle jar close-up" width="1200" height="1600" loading="eager" fetchpriority="high" decoding="async">
         </div>
         <svg class="lx-stamp" viewBox="0 0 200 200" aria-hidden="true">
           <defs><path id="lxCircle" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0"/></defs>
@@ -542,5 +544,77 @@ function toggleFaq(el){
 <script defer src="assets/js/luxe.js?v=luxe28-20260610"></script>
 <script defer src="assets/js/firebase-config.js"></script>
 <script type="module" src="assets/js/home-firebase.js?v=perf-20260624"></script>
+
+<style>
+  #heroL2, #heroL4, #heroLede, #heroCtaMain span, #heroImg, #lxWord { transition: opacity .45s ease; }
+  .hero-slide-dots { display: flex; gap: 9px; margin-top: 20px; }
+  .hero-slide-dots button { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(200,121,26,.55); background: transparent; padding: 0; cursor: pointer; transition: background .25s, transform .25s; }
+  .hero-slide-dots button.active { background: #C8791A; transform: scale(1.25); }
+</style>
+<script>
+(function () {
+  /* HERO SLIDESHOW — to update a slide image after India delivery arrives:
+     change the img: path below, drop the photo in images/products/..., done. */
+  var SLIDES = [
+    { l2: 'Real Andhra', word: 'PICKLES', l4: 'no jar <em>can match.</em>',
+      lede: 'Handcrafted in small batches with no preservatives \u2014 pure Andhra style, shipped to your door anywhere in the USA.',
+      cta: 'Shop Bestsellers', href: 'shop.html',
+      img: 'images/site/hero-pickle-2026.jpg', alt: 'Homemade Andhra pickle jar close-up' },
+    { l2: 'Ghee-layered Madatha', word: 'KAJA', l4: 'syrup in <em>every layer.</em>',
+      lede: 'Flaky, juicy Madatha Kaja \u2014 arriving fresh from Andhra in a limited import batch. Order before it sells out.',
+      cta: 'Order Madatha Kaja', href: 'shop.html?category=sweets&product=sweets-madatha-kaja',
+      img: 'images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg', alt: 'Madatha Kaja layered Andhra sweet' },
+    { l2: 'Crisp, syrupy Gottam', word: 'KAJA', l4: 'a coastal Andhra <em>legend.</em>',
+      lede: 'Crunchy outside, syrup-filled inside \u2014 Gottam Kaja the way coastal Andhra makes it. Limited batch from India.',
+      cta: 'Order Gottam Kaja', href: 'shop.html?category=sweets&product=sweets-gottam-kaja',
+      img: 'images/products/putharekulu/img_puth_sugar_kaju.jpg', alt: 'Gottam Kaja crunchy Andhra sweet' },
+    { l2: 'Dry-fruit Samosa', word: 'SAMOSA', l4: 'putharekulu, <em>paper-thin magic.</em>',
+      lede: 'GI-tagged Atreyapuram paper sweet, folded like a samosa and stuffed with dry fruits. A true Andhra exotic.',
+      cta: 'Order Samosa Putharekulu', href: 'shop.html?category=sweets&product=puth_samosa_sugar_dryfruit',
+      img: 'images/products/putharekulu/img_puth_sugar_kaju_pista.jpg', alt: 'Samosa Putharekulu dry fruit paper sweet' }
+  ];
+  var els = {
+    l2: document.getElementById('heroL2'), l4: document.getElementById('heroL4'),
+    lede: document.getElementById('heroLede'), cta: document.getElementById('heroCtaMain'),
+    img: document.getElementById('heroImg'), word: document.getElementById('lxWord'),
+    dots: document.getElementById('heroDots')
+  };
+  if (!els.l2 || !els.word || !els.dots) return;
+  var current = 0, timer = null;
+  SLIDES.forEach(function (s, i) {
+    var b = document.createElement('button');
+    b.setAttribute('aria-label', s.cta);
+    if (i === 0) b.className = 'active';
+    b.addEventListener('click', function () { show(i); restart(); });
+    els.dots.appendChild(b);
+  });
+  var fadeEls = [els.l2, els.l4, els.lede, els.img, els.word];
+  function show(i) {
+    if (i === current) return;
+    current = i;
+    var s = SLIDES[i];
+    fadeEls.forEach(function (el) { el.style.opacity = '0'; });
+    setTimeout(function () {
+      els.l2.textContent = s.l2;
+      els.word.innerHTML = s.word.split('').map(function (ch) { return '<i>' + ch + '</i>'; }).join('');
+      els.l4.innerHTML = s.l4;
+      els.lede.textContent = s.lede;
+      els.cta.querySelector('span').textContent = s.cta;
+      els.cta.setAttribute('href', s.href);
+      els.img.src = s.img; els.img.alt = s.alt;
+      Array.prototype.forEach.call(els.dots.children, function (d, j) { d.className = j === i ? 'active' : ''; });
+      fadeEls.forEach(function (el) { el.style.opacity = '1'; });
+    }, 450);
+  }
+  function next() { show((current + 1) % SLIDES.length); }
+  function restart() { clearInterval(timer); timer = setInterval(next, 7000); }
+  var hero = document.querySelector('.lx-hero-grid');
+  if (hero) {
+    hero.addEventListener('mouseenter', function () { clearInterval(timer); });
+    hero.addEventListener('mouseleave', restart);
+  }
+  restart();
+})();
+</script>
 </body>
 </html>
