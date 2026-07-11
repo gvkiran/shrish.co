@@ -550,6 +550,10 @@ function toggleFaq(el){
 
 <style>
   #heroL2, #heroL4, #heroLede, #heroCtaMain span, #heroImg, #lxWord { transition: opacity .45s ease; }
+  .lx-hero-copy .lx-display { font-size: clamp(2.1rem, 4.6vw, 3.9rem) !important; line-height: 1.02 !important; }
+  .lx-hero-copy .lx-display .lx-line { display: block; white-space: nowrap; }
+  .lx-hero-copy .lx-lede { font-size: 15px !important; max-width: 420px; }
+  @media (max-width: 640px) { .lx-hero-copy .lx-display .lx-line { white-space: normal; } }
   .hero-slide-nav { display: flex; align-items: center; gap: 14px; margin-top: 22px; }
   .hero-nav-btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(200,121,26,.55); background: transparent; color: #D9A24A; font-size: 20px; line-height: 1; cursor: pointer; transition: background .25s, transform .2s; display: flex; align-items: center; justify-content: center; padding: 0 0 2px; }
   .hero-nav-btn:hover { background: rgba(200,121,26,.18); transform: scale(1.08); }
@@ -566,15 +570,15 @@ function toggleFaq(el){
       lede: 'Handcrafted in small batches with no preservatives \u2014 pure Andhra style, shipped to your door anywhere in the USA.',
       cta: 'Shop Bestsellers', href: 'shop.html',
       img: 'images/site/hero-pickle-2026.jpg', alt: 'Homemade Andhra pickle jar close-up' },
-    { l2: 'Ghee-layered Madatha', word: 'KAJA', l4: 'syrup in <em>every layer.</em>',
+    { l2: 'Madatha', word: 'KAJA', l4: 'syrup in <em>every layer.</em>',
       lede: 'Flaky, juicy Madatha Kaja \u2014 arriving fresh from Andhra in a limited import batch. Order before it sells out.',
       cta: 'Order Madatha Kaja', href: 'shop.html?category=sweets&product=sweets-madatha-kaja',
       img: 'images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg', alt: 'Madatha Kaja layered Andhra sweet' },
-    { l2: 'Crisp, syrupy Gottam', word: 'KAJA', l4: 'a coastal Andhra <em>legend.</em>',
+    { l2: 'Gottam', word: 'KAJA', l4: 'crisp coastal <em>legend.</em>',
       lede: 'Crunchy outside, syrup-filled inside \u2014 Gottam Kaja the way coastal Andhra makes it. Limited batch from India.',
       cta: 'Order Gottam Kaja', href: 'shop.html?category=sweets&product=sweets-gottam-kaja',
       img: 'images/products/putharekulu/img_puth_sugar_kaju.jpg', alt: 'Gottam Kaja crunchy Andhra sweet' },
-    { l2: 'Dry-fruit Samosa', word: 'SAMOSA', l4: 'putharekulu, <em>paper-thin magic.</em>',
+    { l2: 'Dry-fruit', word: 'SAMOSA', l4: 'putharekulu <em>magic.</em>',
       lede: 'GI-tagged Atreyapuram paper sweet, folded like a samosa and stuffed with dry fruits. A true Andhra exotic.',
       cta: 'Order Samosa Putharekulu', href: 'shop.html?category=sweets&product=puth_samosa_sugar_dryfruit',
       img: 'images/products/putharekulu/img_puth_sugar_kaju_pista.jpg', alt: 'Samosa Putharekulu dry fruit paper sweet' }
