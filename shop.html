@@ -351,6 +351,27 @@
 .cu-price{font-size:13px;color:var(--saffron);font-weight:700}
 .cu-add{padding:8px 14px;border-radius:50px;border:none;background:var(--dark);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:background .3s;white-space:nowrap}
 .cu-add:hover{background:var(--saffron)}
+/* --- floating action stack: one tidy column, never overlapping cards --- */
+#backToTop{bottom:184px !important;right:20px !important}
+.geet-launcher{bottom:120px !important;right:20px !important}
+.cart-fab{bottom:24px;right:20px}
+@media (max-width:640px){
+  #backToTop{bottom:158px !important;right:12px !important}
+  .geet-launcher{bottom:100px !important;right:12px !important}
+  .cart-fab{bottom:14px;right:12px}
+}
+/* --- cart drawer: added items read as solid cards --- */
+.cart-item{background:rgba(200,121,26,.12);border:1px solid rgba(200,121,26,.38);border-radius:14px;padding:12px 14px;margin-bottom:12px;border-bottom:1px solid rgba(200,121,26,.38)}
+.cart-item:last-of-type{margin-bottom:4px}
+/* --- suggestions: clearly secondary, compact, calm --- */
+.cart-upsell{background:rgba(255,255,255,.05);border:none;border-radius:14px;margin-top:20px;padding:14px 16px}
+.cu-head{font-family:var(--font-body);font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--saffron);text-decoration:none;margin-bottom:10px}
+.cu-item{padding:7px 0;border-bottom:1px dashed rgba(200,121,26,.22)}
+.cu-item:last-child{border-bottom:none}
+.cu-img{width:40px;height:40px;border-radius:8px}
+.cu-name{font-size:13px;font-weight:500}
+.cu-add{background:transparent;border:1px solid var(--saffron);color:var(--saffron);padding:6px 12px;font-size:11.5px}
+.cu-add:hover{background:var(--saffron);color:#fff}
 /* luxe2 shop header */
 body.luxe .lx-shop-hero{padding:40px 24px 18px}
 body.luxe .lx-shop-hero .lx-kicker{margin-bottom:8px}
