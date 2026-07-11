@@ -364,6 +364,7 @@ function renderProductPage(product, products) {
           <a class="btn-primary" href="${shopProductUrl(product)}" data-product-action="order_from_shop">Order from shop</a>
           <a class="btn-secondary" href="${ROOT_PREFIX}shop.html" data-product-action="back_to_shop">Back to shop</a>
         </div>
+        <p style="font-size:13px;color:var(--saffron);font-weight:700;margin:-14px 0 24px">&#128666; Free US shipping on orders $75+</p>
         ${rows.length ? `<div class="product-detail-list">${rows.map(([label, value]) => `<div class="product-detail-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('')}</div>` : ''}
         ${relatedHtml(product, products)}
       </article>
