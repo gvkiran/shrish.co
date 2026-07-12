@@ -553,7 +553,7 @@ function renderCartDrawer() {
     list.innerHTML = `<div class="cart-empty-state">
       <div class="ce-icon">Cart</div>
       <p style="font-size:16px;font-weight:600;color:var(--dark);margin-bottom:8px">Your cart is empty</p>
-      <p style="font-size:14px;color:var(--text-light);margin-bottom:20px">Browse our fresh Indian mangoes and add some to your cart!</p>
+      <p style="font-size:14px;color:var(--text-light);margin-bottom:20px">Browse our pickles, podi and Andhra sweets — shipped anywhere in the USA!</p>
       <a href="shop.html" onclick="closeCart()" style="display:inline-flex;align-items:center;gap:8px;background:var(--saffron);color:white;padding:12px 24px;border-radius:50px;font-family:var(--font-body);font-size:14px;font-weight:700;text-decoration:none;transition:all .3s">Shop</a>
     </div>`;
     foot.style.display = 'none';
@@ -563,6 +563,23 @@ function renderCartDrawer() {
   foot.style.display = 'block';
   const totalQty = cart.reduce((s, i) => s + i.qty, 0);
   totalEl.textContent = `${totalQty} box${totalQty !== 1 ? 'es' : ''}`;
+  const subEl = document.getElementById('cartSubtotal');
+  const hintEl = document.getElementById('cartShipHint');
+  if (subEl) {
+    const subtotal = cart.reduce((s, item) => s + ((parseFloat(String(item.price || '0').replace(/[^0-9.]/g, '')) || 0) * (item.qty || 0)), 0);
+    subEl.textContent = '$' + subtotal.toFixed(2);
+    if (hintEl) {
+      if (subtotal > 0 && subtotal < 75) {
+        hintEl.textContent = 'You\u2019re $' + (75 - subtotal).toFixed(2) + ' away from FREE US shipping';
+        hintEl.style.display = 'block';
+      } else if (subtotal >= 75) {
+        hintEl.textContent = '\uD83C\uDF89 Free US shipping unlocked';
+        hintEl.style.display = 'block';
+      } else {
+        hintEl.style.display = 'none';
+      }
+    }
+  }
   list.innerHTML = cart.map((item) => {
     const imgHtml = `<img src="${escapeHtml(item.image || SHRISH_LOGO_PRODUCT_IMAGE)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='images/brand/logo-small.png'">`;
     return `<div class="cart-item">
