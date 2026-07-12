@@ -456,7 +456,7 @@ function promoDiscountFor(itemSubtotal) {
 function computeCheckoutTotals(itemSubtotal, fulfillmentType = selectedFulfillmentType) {
   const { discount, freeShipping } = promoDiscountFor(itemSubtotal);
   const discountedSubtotal = roundMoney(Math.max(0, itemSubtotal - discount));
-  const salesTaxAmount = calculateSalesTax(discountedSubtotal);
+  const salesTaxAmount = calculateSalesTax(discountedSubtotal, fulfillmentType);
   let shippingAmount = calculateShippingAmount(itemSubtotal, fulfillmentType);
   if (freeShipping && fulfillmentType === 'shipping') shippingAmount = 0;
   const orderTotal = roundMoney(discountedSubtotal + salesTaxAmount + shippingAmount);
@@ -496,7 +496,14 @@ function removePromoCode() {
 window.applyPromoCode = applyPromoCode;
 window.removePromoCode = removePromoCode;
 
-function calculateSalesTax(subtotal) {
+function shippingDestinationIsOutOfState() {
+  if (selectedFulfillmentType !== 'shipping') return false;
+  const st = String(shippingInputValue('shippingState') || '').trim().toUpperCase();
+  return st.length === 2 && st !== 'VA';
+}
+
+function calculateSalesTax(subtotal, fulfillmentType = selectedFulfillmentType) {
+  if (fulfillmentType === 'shipping' && shippingDestinationIsOutOfState()) return 0;
   const rate = Number.isFinite(VIRGINIA_SALES_TAX_RATE) ? VIRGINIA_SALES_TAX_RATE : 0;
   return roundMoney(Math.max(0, subtotal) * Math.max(0, rate));
 }
@@ -848,7 +855,7 @@ function renderCartReview() {
       <div class="rt-qty">${totalQty}</div>
       <div>
         <div class="rt-price">${formatCurrency(orderTotal)}</div>
-        <div class="review-total-note">Includes ${escapeHtml(VIRGINIA_SALES_TAX_LABEL)}</div>
+        <div class="review-total-note">${salesTaxAmount > 0 ? `Includes ${escapeHtml(VIRGINIA_SALES_TAX_LABEL)}` : 'No sales tax (shipped outside Virginia)'}</div>
       </div>
       <div></div>
     </div>
@@ -859,7 +866,7 @@ function renderCartReview() {
         <div class="review-total-line"><span>Subtotal</span><span>${formatCurrency(itemSubtotal)}</span></div>
         ${promoDiscount > 0 ? `<div class="review-total-line" style="color:#1E7B34"><span>Promo ${escapeHtml(appliedPromo?.code || '')}</span><span>-${formatCurrency(promoDiscount)}</span></div>` : ''}
         ${(appliedPromo?.type === 'free_shipping' && selectedFulfillmentType === 'shipping') ? `<div class="review-total-line" style="color:#1E7B34"><span>Promo ${escapeHtml(appliedPromo.code)}</span><span>Free shipping</span></div>` : ''}
-        <div class="review-total-line"><span>${escapeHtml(VIRGINIA_SALES_TAX_LABEL)}</span><span>${formatCurrency(salesTaxAmount)}</span></div>
+        <div class="review-total-line"><span>${salesTaxAmount > 0 ? escapeHtml(VIRGINIA_SALES_TAX_LABEL) : 'Sales tax (out-of-state)'}</span><span>${formatCurrency(salesTaxAmount)}</span></div>
         <div class="review-total-line"><span>${escapeHtml(SHIPPING_LABEL)}</span><span>${shippingAmount > 0 ? formatCurrency(shippingAmount) : (selectedFulfillmentType === 'shipping' ? 'Free' : 'Not selected')}</span></div>
         <div class="review-total-line total"><span>Total</span><span>${formatCurrency(orderTotal)}</span></div>
         <div class="review-total-line" style="margin-top:8px;gap:8px">${appliedPromo
@@ -1752,6 +1759,7 @@ function bindFulfillmentUi() {
       }
       validateShippingFields(false);
       rebuildErrorBanner();
+      if (id === 'shippingState') renderCartReview();
     });
   });
 
