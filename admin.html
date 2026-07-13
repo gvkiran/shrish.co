@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css" />
-  <link rel="stylesheet" href="assets/css/admin-luxury.css?v=reminder-modal-polish-20260529">
+  <link rel="stylesheet" href="assets/css/admin-luxury.css?v=admin-product-cleanup-20260713">
 </head>
 <body>
 
@@ -261,8 +261,10 @@
               <h2>Manage Products</h2>
               <p>Add new catalog items here. New products will use the same live and coming soon behavior as your existing shop cards.</p>
             </div>
-            <button class="add-product-btn" onclick="openAddProductForm()">+ Add New Product</button>
-            <button class="add-product-btn" onclick="syncCatalogPrices()" style="margin-left:8px;background:#1F4E2E" title="Push catalog prices, sizes and availability to the live store (what customers are charged at checkout)">🔄 Sync Prices to Live Store</button>
+            <div class="products-toolbar-actions">
+              <button class="add-product-btn product-add-btn" type="button" onclick="openAddProductForm()">+ Add New Product</button>
+              <button class="add-product-btn product-sync-btn" type="button" onclick="syncCatalogPrices()" title="Push catalog prices and text to the live store while preserving admin live/off/hidden statuses">Sync Catalog Details</button>
+            </div>
           </div>
           <div class="product-form-card" id="productFormCard">
             <div class="product-form-head">
@@ -771,7 +773,7 @@
 
 <script src="assets/js/data.js?v=pricing-20260709"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/admin-firebase.js?v=sync-prices-20260709"></script>
+<script type="module" src="assets/js/admin-firebase.js?v=admin-product-cleanup-20260713"></script>
 <link rel="stylesheet" href="assets/css/admin-boost.css?v=boost3-20260610">
   <link rel="stylesheet" href="assets/css/admin-growth-v2.css?v=v2-20260615">
 <script defer src="assets/js/admin-boost.js?v=boost3-20260610"></script>
