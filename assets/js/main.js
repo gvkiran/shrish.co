@@ -775,7 +775,7 @@ function injectGeetAssistant() {
     renderGeetMessages(messagesEl, savedSession.messages);
     renderGeetChips(chipsEl, savedSession.chips.length ? savedSession.chips : withGeetConnectChip(GEET_RESPONSES.fallback.chips));
   } else {
-    appendGeetMessage(messagesEl, "Hi I'm Geet can i help you today", 'geet');
+    appendGeetMessage(messagesEl, "Hi, I'm Geet. I can help you choose pickles, podi, sweets, or mangoes.", 'geet');
     renderGeetChips(chipsEl, GEET_RESPONSES.fallback.chips);
   }
 
@@ -812,9 +812,7 @@ function injectGeetAssistant() {
     answerWith(classifyGeetMessage(question), question);
   });
 
-  if (!sessionStorage.getItem('shrish_geet_seen') && !sessionStorage.getItem('shrish_geet_closed')) {
-    window.setTimeout(() => openGeet('auto'), 1200);
-  }
+  launcher.classList.add('geet-launcher-ready');
 }
 
 function injectGlobalUI() {

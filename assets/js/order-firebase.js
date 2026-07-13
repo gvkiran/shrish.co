@@ -1233,26 +1233,15 @@ async function getGoogleMapsApiKey() {
     return googleMapsApiKey;
   };
 
-  const fromVercel = async () => {
-    const response = await fetch('/api/public-config', {
-      cache: 'no-store',
-      headers: { Accept: 'application/json' }
-    });
-    if (!response.ok) throw new Error('Runtime config unavailable');
-    const config = await response.json();
-    return String(config?.googleMapsApiKey || '').trim();
-  };
   const fromFirebase = async () => {
     const result = await getPublicConfigCallable();
     return String(result?.data?.googleMapsApiKey || '').trim();
   };
 
   // Prefer Firebase Functions config so deploy-time Vercel env staleness cannot
-  // block address autocomplete. Fall back to the current host endpoint.
-  // Treat an EMPTY key as "try the next source" so a deployed-but-unconfigured
-  // source can't silently block one that is configured. Degrades to manual entry.
+  // block address autocomplete. If unavailable, checkout degrades to manual entry.
   googleMapsApiKeyPromise = (async () => {
-    for (const source of [fromFirebase, fromVercel]) {
+    for (const source of [fromFirebase]) {
       try {
         const key = await source();
         if (key) return applyKey(key);

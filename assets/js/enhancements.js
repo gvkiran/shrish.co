@@ -95,7 +95,7 @@
     var shareUrl = window.location.origin + '/shrish.co/shop.html?product=' + productId;
     var waText = encodeURIComponent(
       '🥭 Check out ' + productName + ' (' + productPrice + ') from Shrish LLC!\n'
-      + 'Fresh Indian mangoes, pickup in Richmond VA.\n'
+      + 'Andhra pickles, podi, sweets, seasonal mangoes, shipping and Richmond pickup.\n'
       + shareUrl
     );
 
@@ -172,7 +172,7 @@
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
       name: 'Shrish LLC',
-      description: 'Fresh Indian mangoes and authentic sweets — Alphonso, Kesar, Putharekulu — available for pickup in Richmond, Virginia.',
+      description: 'Handcrafted Andhra pickles, podi, putharekulu and sweets with eligible US shipping; seasonal Indian mangoes for Richmond pickup.',
       url: 'https://shrish.co',
       telephone: '+1-765-325-5577',
       email: 'contact@shrish.co',
