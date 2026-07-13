@@ -374,7 +374,7 @@
 .cu-add:hover{background:var(--saffron);color:#fff}
 body:has(.cart-drawer.open) .geet-launcher,
 body:has(.cart-drawer.open) #backToTop,
-body:has(.cart-drawer.open) .cart-fab{opacity:0;pointer-events:none;transition:opacity .2s}
+body:has(.cart-drawer.open) .cart-fab{opacity:0 !important;visibility:hidden !important;pointer-events:none !important;transition:opacity .2s, visibility .2s}
 /* luxe2 shop header */
 body.luxe .lx-shop-hero{padding:40px 24px 18px}
 body.luxe .lx-shop-hero .lx-kicker{margin-bottom:8px}
