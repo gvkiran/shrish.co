@@ -1234,7 +1234,7 @@ const SHRISH_DATA = {
       price: "$7.99", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/flaxseed-podi-2026-1.jpg",
-      gallery: ["images/products/podi/flaxseed-podi-2026-1.jpg", "images/products/podi/flaxseed-podi-2026-2.jpg", "images/products/podi/flaxseed-podi-2026-3.jpg", "images/products/podi/flaxseed-podi-2026-4.jpg", "images/products/podi/flaxseed-podi-2026-5.jpg", "images/products/podi/flaxseed-podi-2026-6.jpg"],
+      gallery: ["images/products/podi/flaxseed-podi-2026-1.jpg", "images/products/podi/flaxseed-podi-2026-2.jpg"],
       description: "A wholesome Andhra-style flaxseed podi made with roasted avise ginjalu, dals, chillies, and garlic. Nutty, earthy, and rich in fibre and omega-3 - a healthy option mixed with hot rice and ghee or sprinkled over idli and dosa.",
       ingredientsText: "Roasted flaxseeds / avise ginjalu, chana dal, red chillies, garlic, cumin, salt",
       storageNote: "Use within 45-60 days after opening for best aroma. Keep airtight; refrigerate if humid. Store unopened packs cool, dry, and away from sunlight.",
