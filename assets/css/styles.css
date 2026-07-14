@@ -422,10 +422,10 @@ button.btn-primary:active {
   }
 
   .nav-inner {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    padding: 0 18px 0 16px;
+    grid-template-columns: minmax(82px, 96px) minmax(0, 1fr) minmax(82px, 96px);
+    padding: 0 16px;
     min-height: 84px;
-    column-gap: 12px;
+    column-gap: 8px;
   }
 
   .nav-logo {
@@ -535,7 +535,8 @@ button.btn-primary:active {
 @media (max-width: 380px) {
   .nav-inner {
     padding: 0 12px;
-    column-gap: 8px;
+    grid-template-columns: 74px minmax(0, 1fr) 74px;
+    column-gap: 6px;
   }
 
   .logo-img {
