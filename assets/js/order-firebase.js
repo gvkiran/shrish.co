@@ -1522,6 +1522,8 @@ function updateFulfillmentUi() {
 
   const pickupSection = document.getElementById('pickupLocationSection');
   if (pickupSection) pickupSection.style.display = selectedFulfillmentType === 'shipping' ? 'none' : '';
+  const pickupInfoCard = document.getElementById('pickupInfoCard');
+  if (pickupInfoCard) pickupInfoCard.hidden = selectedFulfillmentType === 'shipping';
   const shippingFields = document.getElementById('shippingFields');
   if (shippingFields) shippingFields.classList.toggle('show', selectedFulfillmentType === 'shipping');
   const locationError = document.getElementById('err-location');
