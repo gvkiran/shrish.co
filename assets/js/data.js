@@ -668,7 +668,7 @@ const SHRISH_DATA = {
       price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/drumstick-pickle-2026-1.jpg",
-      gallery: ["images/products/pickles/drumstick-pickle-2026-1.jpg", "images/products/pickles/drumstick-pickle-2026-2.jpg", "images/products/pickles/drumstick-pickle-2026-3.jpg", "images/products/pickles/drumstick-pickle-2026-4.jpg"],
+      gallery: ["images/products/pickles/drumstick-pickle-2026-1.jpg", "images/products/pickles/drumstick-pickle-2026-2.jpg"],
       description: "Traditional drumstick pickle with spicy, tangy flavor. A good South Indian side for rice and dal.",
       ingredientsText: "Drumstick pieces, red chilli powder, mustard, fenugreek, lemon, salt, turmeric, peanut/groundnut oil",
       storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
