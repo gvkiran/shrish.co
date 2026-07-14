@@ -1190,7 +1190,7 @@ const SHRISH_DATA = {
       price: "$7.49", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/curry-leaf-podi-2026-1.jpg",
-      gallery: ["images/products/podi/curry-leaf-podi-2026-1.jpg", "images/products/podi/curry-leaf-podi-2026-2.jpg", "images/products/podi/curry-leaf-podi-2026-3.jpg", "images/products/podi/curry-leaf-podi-2026-4.jpg", "images/products/podi/curry-leaf-podi-2026-5.jpg", "images/products/podi/curry-leaf-podi-2026-6.jpg", "images/products/podi/curry-leaf-podi-2026-7.jpg", "images/products/podi/curry-leaf-podi-2026-8.jpg"],
+      gallery: ["images/products/podi/curry-leaf-podi-2026-1.jpg", "images/products/podi/curry-leaf-podi-2026-2.jpg"],
       description: "Aromatic curry leaf podi with traditional South Indian spices. Mix with hot rice and ghee or enjoy with idli, dosa, and upma.",
       ingredientsText: "Curry leaves, red chillies, chana dal, cumin, garlic optional, tamarind optional, salt",
       storageNote: "Use within 45-60 days after opening for best aroma. Keep airtight; refrigerate if humid. Store unopened packs cool, dry, and away from sunlight.",
