@@ -422,18 +422,20 @@ button.btn-primary:active {
   }
 
   .nav-inner {
-    grid-template-columns: 1fr auto auto;
-    padding: 0 14px 0 12px;
-    min-height: 78px;
-    column-gap: 10px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: 0 18px 0 16px;
+    min-height: 84px;
+    column-gap: 12px;
   }
 
   .nav-logo {
     margin-left: 0;
+    justify-self: start;
   }
 
   .logo-img {
-    height: 78px;
+    height: 72px;
+    max-width: 96px;
   }
 
   .nav-links,
@@ -442,9 +444,11 @@ button.btn-primary:active {
   }
 
   .nav-cart-wrap {
+    grid-column: 2;
     min-width: 0;
     padding-right: 0;
-    justify-self: end;
+    justify-self: center;
+    justify-content: center;
   }
 
   .nav-account-btn,
@@ -453,19 +457,100 @@ button.btn-primary:active {
   }
 
   .nav-cart-btn {
-    padding: 6px 10px;
-    gap: 4px;
+    min-width: 86px;
+    min-height: 42px;
+    justify-content: center;
+    padding: 7px 12px;
+    gap: 6px;
+    border: 1px solid rgba(212,160,23,0.28);
+  }
+
+  .nav-cart-icon {
+    font-size: 19px;
+  }
+
+  .nav-cart-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 7px;
+    line-height: 1;
   }
 
   .nav-hamburger {
     display: flex;
+    grid-column: 3;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
     justify-self: end;
     order: 3;
-    margin-left: 2px;
+    margin-left: 0;
+    padding: 0;
+    border: 1px solid rgba(212,160,23,0.18);
+    border-radius: 14px;
+    background: rgba(200,121,26,0.08);
+  }
+
+  .nav-hamburger span {
+    width: 25px;
+    height: 3px;
   }
 
   .nav-mobile.open {
     display: flex;
+  }
+
+  .nav-mobile {
+    max-height: calc(100vh - 96px);
+    overflow-y: auto;
+    padding: 18px 20px calc(22px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .nav-mobile a,
+  .nav-mobile button {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 12px 0;
+  }
+
+  .nav-mobile .mobile-cta {
+    justify-content: center;
+    min-height: 52px;
+    margin: 14px 0 8px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--saffron);
+    color: #fff;
+  }
+}
+
+@media (max-width: 380px) {
+  .nav-inner {
+    padding: 0 12px;
+    column-gap: 8px;
+  }
+
+  .logo-img {
+    height: 66px;
+    max-width: 86px;
+  }
+
+  .nav-cart-btn {
+    min-width: 76px;
+    padding: 6px 9px;
+  }
+
+  .nav-hamburger {
+    width: 42px;
+    height: 42px;
   }
 }
 

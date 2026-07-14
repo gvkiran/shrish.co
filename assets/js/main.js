@@ -997,28 +997,35 @@ function injectGlobalUI() {
       }
       .mobile-product-search {
         display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 8px;
-        margin-top: 10px;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        margin: 14px 0 4px;
         position: relative;
       }
       .mobile-product-search input {
         min-width: 0;
+        width: 100%;
+        min-height: 48px;
         border: 1.5px solid rgba(200,121,26,.24);
         border-radius: 50px;
         background: #fff;
-        padding: 11px 14px;
+        padding: 0 18px;
         font: inherit;
-        font-size: 14px;
+        font-size: 16px;
         color: var(--text, #3D2A0A);
         outline: none;
       }
       .mobile-product-search button {
+        min-width: 92px;
+        min-height: 48px;
         border: 0;
         border-radius: 50px;
         background: var(--saffron, #C8791A);
         color: #fff;
-        padding: 0 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 18px;
         font-weight: 800;
       }
       .mobile-product-search .product-search-results {

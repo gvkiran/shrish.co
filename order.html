@@ -13,8 +13,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="icon" href="images/brand/logo-small.png" type="image/png">
-<link rel="stylesheet" href="assets/css/styles.css?v=trust-marquee-20260609">
-<link rel="stylesheet" href="assets/css/checkout-luxe.css?v=mobile-cartfab-20260706">
+<link rel="stylesheet" href="assets/css/styles.css?v=mobile-polish-20260714">
+<link rel="stylesheet" href="assets/css/checkout-luxe.css?v=mobile-polish-20260714">
 <style>
 /* Layout */
 .checkout-wrap{max-width:1520px;margin:0 auto;padding:60px 24px 80px;display:grid;grid-template-columns:1.2fr .95fr;gap:48px}
@@ -221,6 +221,57 @@
 
 @media(max-width:900px){.checkout-wrap{grid-template-columns:1fr;padding:40px 20px 60px}}
 @media(max-width:480px){.loc-cards,.payment-options,.fulfillment-options{grid-template-columns:1fr}.community-btns{flex-direction:column;align-items:center}}
+
+@media(max-width:640px){
+  .checkout-hero{padding:42px 18px 30px}
+  .checkout-hero h1{font-size:clamp(2.4rem,13vw,3.35rem);line-height:1}
+  .checkout-hero p{font-size:15px;max-width:32ch;margin-left:auto;margin-right:auto}
+  .checkout-wrap{padding:30px 14px calc(124px + env(safe-area-inset-bottom,0px));gap:22px}
+  .review-card,.form-card,.info-card{border-radius:18px;padding:20px 16px}
+  .review-card-title{align-items:flex-start;gap:12px;font-size:25px;margin-bottom:16px}
+  .review-card-title a{min-height:36px;display:inline-flex;align-items:center;white-space:nowrap}
+  .review-head{display:none}
+  .review-item{grid-template-columns:minmax(0,1fr) 106px 66px;grid-template-areas:"info info remove" "qty price price";gap:10px 12px;padding:16px 0;align-items:center}
+  .ri-info{grid-area:info;display:flex;align-items:center;min-width:0}
+  .ri-info .pk-thumb{width:54px;height:54px;margin-right:12px;border-radius:12px;flex:0 0 54px}
+  .ri-name{font-size:15px;line-height:1.3;overflow-wrap:anywhere}
+  .ri-unit{font-size:11px;line-height:1.35;margin-top:3px}
+  .ri-qty{grid-area:qty;justify-self:start;text-align:left}
+  .ri-qty-ctrl{min-width:104px;gap:0;padding:2px;border-radius:999px}
+  body.packing-room .ri-qty-ctrl{min-width:104px;gap:0;padding:2px}
+  .ri-qty-btn{width:32px;height:32px;flex:0 0 32px;font-size:18px}
+  body.packing-room .ri-qty-btn{width:32px;height:32px;flex:0 0 32px}
+  .ri-qty-value{min-width:34px}
+  body.packing-room .ri-qty-value{min-width:34px}
+  .ri-price{grid-area:price;justify-self:end;text-align:right;font-size:16px}
+  .ri-actions{grid-area:remove;justify-self:end;align-self:start}
+  .ri-remove{width:44px;height:44px;border-radius:14px;font-size:20px}
+  body.packing-room .ri-remove{width:44px;height:44px;border-radius:14px}
+  .review-total{grid-template-columns:1fr auto;grid-template-areas:"label price" "qty note" "lines lines";gap:8px 12px;padding:18px 0 0}
+  .review-total .rt-label{grid-area:label}
+  .review-total .rt-qty{display:none}
+  .review-total .rt-price{grid-area:price;font-size:28px}
+  .review-total-note{grid-area:note;text-align:right;font-size:12px;max-width:150px}
+  .review-total-lines{grid-area:lines;grid-column:auto;justify-self:stretch;min-width:0;margin-top:8px}
+  .review-total-line{gap:12px;white-space:normal}
+  .review-total-line span:last-child{text-align:right}
+  .shipping-address-suggestions{position:fixed;left:14px;right:14px;top:auto;bottom:calc(98px + env(safe-area-inset-bottom,0px));max-height:42vh;overflow:auto}
+  .cart-remove-modal{align-items:center;padding:18px}
+  .cart-remove-card{border-radius:18px;padding:22px;max-width:360px}
+  .cart-remove-actions{display:grid;grid-template-columns:1fr;gap:10px}
+  .cart-remove-actions button{width:100%;min-height:46px}
+}
+@media(max-width:380px){
+  .checkout-wrap{padding-left:10px;padding-right:10px}
+  .review-card,.form-card,.info-card{padding:18px 14px}
+  .review-item{grid-template-columns:minmax(0,1fr) 98px 58px;gap:9px}
+  .ri-info .pk-thumb{width:48px;height:48px;flex-basis:48px}
+  .ri-qty-ctrl{min-width:98px}
+  body.packing-room .ri-qty-ctrl{min-width:98px}
+  .ri-remove{width:40px;height:40px}
+  body.packing-room .ri-remove{width:40px;height:40px}
+  .review-total .rt-price{font-size:24px}
+}
 
 /* ── REFUND TAB STYLES ─────────────────────────────────────────────────── */
 .refund-card {
@@ -644,7 +695,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 
 <script src="assets/js/data.js?v=premerge-20260702"></script>
 <script src="assets/js/analytics.js?v=perf2-20260624"></script>
-<script src="assets/js/main.js?v=premerge-20260702"></script>
+<script src="assets/js/main.js?v=mobile-polish-20260714"></script>
 <script src="assets/js/firebase-config.js?v=runtime-config-20260701"></script>
 <script type="module" src="assets/js/order-firebase.js?v=va-tax-dest-20260711"></script>
 

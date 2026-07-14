@@ -303,6 +303,16 @@ body.packing-room [style*="background:var(--dark)"],body.packing-room [style*="b
   body.packing-room .geet-launcher{bottom:calc(150px + env(safe-area-inset-bottom,0px))}
   body.packing-room .global-cart-fab,body.packing-room .cart-fab{display:none}
 }
+@media (max-width: 640px){
+  .pk-paybar{
+    gap:12px;
+    padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));
+  }
+  .pk-paybar .pp-total{font-size:21px}
+  .pk-paybar button{min-height:54px;font-size:15px}
+  body.packing-room{padding-bottom:112px}
+  body.packing-room .geet-launcher{bottom:calc(128px + env(safe-area-inset-bottom,0px))}
+}
 
 /* ============================================================
    BOX SEALED — order confirmation ceremony
