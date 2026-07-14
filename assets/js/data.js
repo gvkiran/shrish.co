@@ -912,7 +912,7 @@ const SHRISH_DATA = {
       price: "$14.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/chicken-pickle-2026-1.jpg",
-      gallery: ["images/products/pickles/chicken-pickle-2026-1.jpg", "images/products/pickles/chicken-pickle-2026-2.jpg", "images/products/pickles/chicken-pickle-2026-3.jpg", "images/products/pickles/chicken-pickle-2026-4.jpg", "images/products/pickles/chicken-pickle-2026-5.jpg", "images/products/pickles/chicken-pickle-2026-6.jpg"],
+      gallery: ["images/products/pickles/chicken-pickle-2026-1.jpg", "images/products/pickles/chicken-pickle-2026-2.jpg", "images/products/pickles/chicken-pickle-2026-3.jpg"],
       description: "Spicy Andhra-style boneless chicken pickle with bold masala and rich flavor. Best with rice, roti, dosa, and curd rice.",
       ingredientsText: "Boneless chicken, red chilli powder, ginger garlic, garam masala, salt, peanut/groundnut oil, lemon, spices",
       storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
