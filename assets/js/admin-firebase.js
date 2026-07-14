@@ -203,31 +203,41 @@ async function seedProductsIfNeeded() {
   showToast(`${missingProducts.length} missing products added to Firestore`);
 }
 
-// Push prices, sizes (variants), availability and hidden/coming-soon status from the
-// website catalog (data.js -> BASE_PRODUCTS) into the live Firestore products collection.
-// This is what customers are charged at checkout. Photos, gallery and sort order are
-// preserved (merge:true and those fields are intentionally not written).
+// Push prices, sizes and catalog text from the website catalog (data.js -> BASE_PRODUCTS)
+// into Firestore. Admin-controlled live/off/coming-soon/hidden states are preserved for
+// existing products so a catalog price sync cannot accidentally make sold-out mangoes live.
+function adminCatalogSyncMessage() {
+  return [
+    'Update the LIVE store to match the website catalog?',
+    '',
+    'This syncs prices, pack sizes, names and descriptions used at checkout.',
+    'Current admin statuses are preserved: Live, Off, Coming Soon and Hidden will not be changed.',
+    '',
+    'Product photos and sort order are kept.',
+    '',
+    'Continue?'
+  ].join('\n');
+}
+
 async function syncCatalogPrices() {
-  const confirmed = window.confirm(
-    'Update the LIVE store to match the website catalog?\n\n' +
-    'This syncs prices, pack sizes, availability and hidden items — it is what customers ' +
-    'are charged at checkout. Product photos and sort order are kept.\n\nContinue?'
-  );
+  const confirmed = window.confirm(adminCatalogSyncMessage());
   if (!confirmed) return;
-  showToast('Syncing catalog to live store...');
+  showToast('Syncing catalog details while keeping admin statuses...');
   const iso = new Date().toISOString();
+  const existingById = new Map(state.products.map((product) => [product.id, product]));
   const CARRY = ['ingredientsText', 'storageNote', 'shelfLifeDisplay', 'foodSafetyNote',
     'shippingNote', 'details', 'season', 'taste', 'bestFor', 'filterGroup', 'preorderOnly', 'origin'];
   const buildPayload = (p) => {
+    const existing = existingById.get(p.id);
     const out = {
       name: p.name,
       category: p.category,
       localName: p.localName != null ? p.localName : '',
       price: p.price != null ? p.price : '',
       unit: p.unit != null ? p.unit : '',
-      available: p.available !== false,
-      displayOnly: Boolean(p.displayOnly),
-      hidden: Boolean(p.hidden),
+      available: existing ? Boolean(existing.available) : p.available !== false,
+      displayOnly: existing ? Boolean(existing.displayOnly) : Boolean(p.displayOnly),
+      hidden: existing ? Boolean(existing.hidden) : Boolean(p.hidden),
       description: p.description != null ? p.description : '',
       tag: p.tag != null ? p.tag : '',
       catalogSyncedAt: iso,
@@ -244,7 +254,7 @@ async function syncCatalogPrices() {
   const ok = results.filter((r) => r.status === 'fulfilled').length;
   const fail = results.length - ok;
   if (fail) console.warn('Catalog sync failures', results.filter((r) => r.status === 'rejected'));
-  showToast(`Synced ${ok} products to live store${fail ? `, ${fail} failed (see console)` : ''}. Checkout prices are now live.`);
+  showToast(`Synced ${ok} products; admin live/off/hidden statuses were preserved${fail ? `, ${fail} failed (see console)` : ''}.`);
 }
 
 function renderStats() {
@@ -2954,6 +2964,7 @@ function renderProducts() {
     const isComingSoon = product.displayOnly;
     const isHidden = Boolean(product.hidden);
     const statusText = isHidden ? 'Hidden' : isComingSoon ? 'Soon' : (product.available ? 'Live' : 'Off');
+    const statusClass = isHidden ? 'pm-status-hidden' : isComingSoon ? 'pm-status-soon' : (product.available ? 'pm-status-live' : 'pm-status-off');
     const shortDescription = String(product.description || '').trim();
     const variants = Array.isArray(product.variants) ? product.variants.filter((variant) => variant?.label) : [];
     const variantSummary = variants.length
@@ -2967,7 +2978,7 @@ function renderProducts() {
       <div class="pm-emoji">🥭</div>
       <div class="pm-info">
         <div class="pm-meta">
-          <span class="pm-chip pm-status">${escapeHtml(statusText)}</span>
+          <span class="pm-chip pm-status ${statusClass}">${escapeHtml(statusText)}</span>
           <span class="pm-chip">${escapeHtml(productCategoryLabel(product.category))}</span>
           ${product.tag ? `<span class="pm-chip">${escapeHtml(product.tag)}</span>` : ''}
         </div>
