@@ -149,22 +149,10 @@ const PRODUCT_GALLERY_OVERRIDES = {
     'images/products/mangoes/img_banganapalli_2026_2.jpg',
     'images/products/mangoes/img_banganapalli.jpg'
   ],
-  'picklespodi-drumstick-pickle': [
-    'images/products/pickles/drumstick-pickle-2026.jpg'
-  ],
-  'picklespodi-gongura-pickle': [
-    'images/products/pickles/gongura-pickle-2026.jpg'
-  ],
   'picklespodi-mixed-vegetable-pickle': [
     'images/products/pickles/mixed-vegetable-2026-1.jpg',
     'images/products/pickles/mixed-vegetable-2026-2.jpg',
     'images/products/pickles/mixed-vegetable-2026-3.jpg'
-  ],
-  'picklespodi-idli-podi': [
-    'images/products/podi/idli-podi-2026.jpg'
-  ],
-  'picklespodi-karivepaku-podi-curry-leaf-powder': [
-    'images/products/podi/karivepaku-podi-2026.jpg'
   ]
 };
 

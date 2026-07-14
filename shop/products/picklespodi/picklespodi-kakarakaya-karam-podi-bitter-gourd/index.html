@@ -33,8 +33,14 @@
     .product-breadcrumb { display: flex; gap: 8px; flex-wrap: wrap; color: var(--text-light); font-size: 13px; margin-bottom: 22px; }
     .product-breadcrumb a { color: var(--saffron); font-weight: 700; }
     .product-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 520px); gap: 42px; align-items: start; }
-    .product-media { background: var(--white); border: 1px solid rgba(200,121,26,.12); border-radius: 18px; min-height: 520px; display: flex; align-items: center; justify-content: center; padding: 36px; box-shadow: var(--shadow); }
-    .product-media img { max-height: 460px; width: 100%; object-fit: contain; }
+    .product-gallery { display: flex; flex-direction: column; gap: 14px; }
+    .product-media { background: var(--white); border: 1px solid rgba(200,121,26,.12); border-radius: 18px; aspect-ratio: 1 / 1; width: 100%; overflow: hidden; box-shadow: var(--shadow); }
+    .product-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .product-thumbs { display: flex; gap: 10px; flex-wrap: wrap; }
+    .product-thumbs .pthumb { width: 72px; height: 72px; border-radius: 12px; overflow: hidden; border: 2px solid transparent; padding: 0; cursor: pointer; background: var(--white); box-shadow: var(--shadow); transition: border-color .15s ease; }
+    .product-thumbs .pthumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .product-thumbs .pthumb:hover { border-color: rgba(200,121,26,.55); }
+    .product-thumbs .pthumb.is-active { border-color: var(--saffron); }
     .product-content { padding-top: 8px; }
     .product-kicker { color: var(--saffron); font-size: 12px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 10px; }
     .product-title { font-family: var(--font-display); color: var(--dark); font-size: clamp(2.4rem, 5vw, 4.2rem); line-height: .98; margin-bottom: 10px; }
@@ -69,7 +75,7 @@
       .product-nav-inner { align-items: flex-start; }
       .product-nav-links { gap: 14px; flex-wrap: wrap; justify-content: flex-end; font-size: 14px; }
       .product-layout { grid-template-columns: 1fr; gap: 26px; }
-      .product-media { min-height: 320px; padding: 24px; }
+      .product-thumbs .pthumb { width: 58px; height: 58px; }
       .product-detail-row { grid-template-columns: 1fr; gap: 4px; }
     }
   </style>
@@ -146,8 +152,20 @@
       <span>Kakarakaya Karam Podi / Bitter Gourd Podi</span>
     </div>
     <section class="product-layout">
-      <div class="product-media">
-        <img src="../../../../images/products/podi/karela-podi-2026-1.jpg" alt="Kakarakaya Karam Podi / Bitter Gourd Podi" loading="eager">
+      <div class="product-gallery">
+        <div class="product-media">
+          <img id="pmain" src="../../../../images/products/podi/karela-podi-2026-1.jpg" alt="Kakarakaya Karam Podi / Bitter Gourd Podi" loading="eager">
+        </div>
+        <div class="product-thumbs" id="pthumbs">
+          <button type="button" class="pthumb is-active" data-src="../../../../images/products/podi/karela-podi-2026-1.jpg" aria-label="View image 1"><img src="../../../../images/products/podi/karela-podi-2026-1.jpg" alt="Kakarakaya Karam Podi / Bitter Gourd Podi 1" loading="lazy"></button>
+          <button type="button" class="pthumb" data-src="../../../../images/products/podi/karela-podi-2026-2.jpg" aria-label="View image 2"><img src="../../../../images/products/podi/karela-podi-2026-2.jpg" alt="Kakarakaya Karam Podi / Bitter Gourd Podi 2" loading="lazy"></button>
+          <button type="button" class="pthumb" data-src="../../../../images/products/podi/karela-podi-2026-3.jpg" aria-label="View image 3"><img src="../../../../images/products/podi/karela-podi-2026-3.jpg" alt="Kakarakaya Karam Podi / Bitter Gourd Podi 3" loading="lazy"></button>
+          <button type="button" class="pthumb" data-src="../../../../images/products/podi/karela-podi-2026-4.jpg" aria-label="View image 4"><img src="../../../../images/products/podi/karela-podi-2026-4.jpg" alt="Kakarakaya Karam Podi / Bitter Gourd Podi 4" loading="lazy"></button>
+          <button type="button" class="pthumb" data-src="../../../../images/products/podi/karela-podi-2026-5.jpg" aria-label="View image 5"><img src="../../../../images/products/podi/karela-podi-2026-5.jpg" alt="Kakarakaya Karam Podi / Bitter Gourd Podi 5" loading="lazy"></button>
+          <button type="button" class="pthumb" data-src="../../../../images/products/podi/karela-podi-2026-6.jpg" aria-label="View image 6"><img src="../../../../images/products/podi/karela-podi-2026-6.jpg" alt="Kakarakaya Karam Podi / Bitter Gourd Podi 6" loading="lazy"></button>
+          <button type="button" class="pthumb" data-src="../../../../images/products/podi/karela-podi-2026-7.jpg" aria-label="View image 7"><img src="../../../../images/products/podi/karela-podi-2026-7.jpg" alt="Kakarakaya Karam Podi / Bitter Gourd Podi 7" loading="lazy"></button>
+          <button type="button" class="pthumb" data-src="../../../../images/products/podi/karela-podi-2026-8.jpg" aria-label="View image 8"><img src="../../../../images/products/podi/karela-podi-2026-8.jpg" alt="Kakarakaya Karam Podi / Bitter Gourd Podi 8" loading="lazy"></button>
+        </div>
       </div>
       <article class="product-content">
         <div class="product-kicker">Pickles &amp; Podi</div>
@@ -207,6 +225,20 @@
       link.addEventListener('click', function () {
         track('product_page_action_clicked', { action: link.getAttribute('data-product-action') || 'unknown' });
       });
+    });
+  })();
+  </script>
+  <script>
+  (function () {
+    var main = document.getElementById('pmain');
+    var thumbs = document.getElementById('pthumbs');
+    if (!main || !thumbs) return;
+    thumbs.addEventListener('click', function (e) {
+      var b = e.target.closest('.pthumb');
+      if (!b) return;
+      main.setAttribute('src', b.getAttribute('data-src'));
+      thumbs.querySelectorAll('.pthumb').forEach(function (t) { t.classList.remove('is-active'); });
+      b.classList.add('is-active');
     });
   })();
   </script>
