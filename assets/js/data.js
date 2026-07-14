@@ -625,7 +625,7 @@ const SHRISH_DATA = {
       price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/cauliflower-pickle-2026-1.jpg",
-      gallery: ["images/products/pickles/cauliflower-pickle-2026-1.jpg", "images/products/pickles/cauliflower-pickle-2026-2.jpg", "images/products/pickles/cauliflower-pickle-2026-3.jpg", "images/products/pickles/cauliflower-pickle-2026-4.jpg", "images/products/pickles/cauliflower-pickle-2026-5.jpg"],
+      gallery: ["images/products/pickles/cauliflower-pickle-2026-1.jpg", "images/products/pickles/cauliflower-pickle-2026-2.jpg", "images/products/pickles/cauliflower-pickle-2026-3.jpg", "images/products/pickles/cauliflower-pickle-2026-4.jpg"],
       description: "Andhra-style cauliflower pickle with crunchy cauliflower florets coated in red chilli, mustard, fenugreek, turmeric, salt, and oil. Tangy, spicy, and great as a rice or tiffin side.",
       ingredientsText: "Cauliflower florets, red chilli powder, mustard powder, fenugreek, turmeric, salt, peanut/groundnut oil, lemon",
       storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
