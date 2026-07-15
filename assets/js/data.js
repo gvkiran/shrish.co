@@ -711,7 +711,7 @@ const SHRISH_DATA = {
       price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/gongura-pickle-2026-1.jpg",
-      gallery: ["images/products/pickles/gongura-pickle-2026-1.jpg", "images/products/pickles/gongura-pickle-2026-2.jpg", "images/products/pickles/gongura-pickle-2026-3.jpg", "images/products/pickles/gongura-pickle-2026-4.jpg", "images/products/pickles/gongura-pickle-2026-5.jpg", "images/products/pickles/gongura-pickle-2026-6.jpg"],
+      gallery: ["images/products/pickles/gongura-pickle-2026-1.jpg", "images/products/pickles/gongura-pickle-2026-2.jpg", "images/products/pickles/gongura-pickle-2026-3.jpg"],
       description: "Tangy gongura pickle with bold South Indian spice. A Telugu favorite that pairs beautifully with hot rice and ghee.",
       ingredientsText: "Gongura leaves, red chilli, garlic, mustard, fenugreek, salt, oil, tempering spices",
       storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
