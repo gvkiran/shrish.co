@@ -1104,7 +1104,7 @@ const SHRISH_DATA = {
       price: "$8.99", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/moringa-podi-2026-1.jpg",
-      gallery: ["images/products/podi/moringa-podi-2026-1.jpg", "images/products/podi/moringa-podi-2026-2.jpg", "images/products/podi/moringa-podi-2026-3.jpg", "images/products/podi/moringa-podi-2026-4.jpg", "images/products/podi/moringa-podi-2026-5.jpg", "images/products/podi/moringa-podi-2026-6.jpg"],
+      gallery: ["images/products/podi/moringa-podi-2026-1.jpg", "images/products/podi/moringa-podi-2026-2.jpg"],
       description: "Andhra-style moringa powder made with roasted munagaku leaves, dals, chillies, garlic, and spices. Nutty, earthy, and a wholesome option with hot rice, ghee, idli, and dosa.",
       ingredientsText: "Moringa leaves / munagaku, chana dal, red chillies, garlic optional, cumin, salt",
       storageNote: "Use within 45-60 days after opening for best aroma. Keep airtight; refrigerate if humid. Store unopened packs cool, dry, and away from sunlight.",
