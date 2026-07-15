@@ -1212,7 +1212,7 @@ const SHRISH_DATA = {
       price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
       image: "images/products/pickles/karela-pickle-2026-1.jpg",
-      gallery: ["images/products/pickles/karela-pickle-2026-1.jpg", "images/products/pickles/karela-pickle-2026-2.jpg", "images/products/pickles/karela-pickle-2026-3.jpg", "images/products/pickles/karela-pickle-2026-4.jpg", "images/products/pickles/karela-pickle-2026-5.jpg", "images/products/pickles/karela-pickle-2026-6.jpg", "images/products/pickles/karela-pickle-2026-7.jpg", "images/products/pickles/karela-pickle-2026-8.jpg"],
+      gallery: ["images/products/pickles/karela-pickle-2026-1.jpg", "images/products/pickles/karela-pickle-2026-2.jpg"],
       description: "Andhra-style bitter gourd pickle made with crisp fried karela pieces in a tangy, spicy tamarind and chilli masala. The frying and spices balance the natural bitterness, leaving a bold, appetising pickle for rice and tiffins.",
       ingredientsText: "Bitter gourd / kakarakaya, red chilli powder, tamarind, mustard, fenugreek, garlic, salt, turmeric, peanut/groundnut oil",
       storageNote: "Refrigerate after opening and use within 30-60 days. Always use a clean, dry spoon. Store unopened packs cool, dry, and away from sunlight.",
