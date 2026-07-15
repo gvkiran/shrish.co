@@ -934,7 +934,7 @@ const SHRISH_DATA = {
       price: "$18.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
       image: "images/products/pickles/mutton-pickle-2026-1.jpg",
-      gallery: ["images/products/pickles/mutton-pickle-2026-1.jpg", "images/products/pickles/mutton-pickle-2026-2.jpg", "images/products/pickles/mutton-pickle-2026-3.jpg"],
+      gallery: ["images/products/pickles/mutton-pickle-2026-1.jpg", "images/products/pickles/mutton-pickle-2026-2.jpg"],
       description: "Premium boneless mutton pickle with rich spice, deep flavor, and strong Andhra-style masala.",
       ingredientsText: "Boneless mutton, red chilli powder, ginger garlic, garam masala, salt, peanut/groundnut oil, lemon, spices",
       storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
