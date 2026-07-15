@@ -1126,7 +1126,7 @@ const SHRISH_DATA = {
       price: "$5.99", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/idli-podi-2026-1.jpg",
-      gallery: ["images/products/podi/idli-podi-2026-1.jpg", "images/products/podi/idli-podi-2026-2.jpg", "images/products/podi/idli-podi-2026-3.jpg", "images/products/podi/idli-podi-2026-4.jpg", "images/products/podi/idli-podi-2026-5.jpg", "images/products/podi/idli-podi-2026-6.jpg", "images/products/podi/idli-podi-2026-7.jpg", "images/products/podi/idli-podi-2026-8.jpg"],
+      gallery: ["images/products/podi/idli-podi-2026-1.jpg", "images/products/podi/idli-podi-2026-2.jpg"],
       description: "Classic South Indian idli karam podi. Mix with ghee or oil and serve with idli, dosa, uttapam, or hot rice.",
       ingredientsText: "Chana dal, red chillies, curry leaves optional, garlic, salt, tamarind, cumin seeds",
       storageNote: "Use within 60-90 days after opening for best aroma. Keep airtight; refrigerate if your kitchen is humid. Store unopened packs cool, dry, and away from sunlight.",
