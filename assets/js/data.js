@@ -1256,7 +1256,7 @@ const SHRISH_DATA = {
       price: "$7.99", unit: "100g or 200g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Podi",
       image: "images/products/podi/karela-podi-2026-1.jpg",
-      gallery: ["images/products/podi/karela-podi-2026-1.jpg", "images/products/podi/karela-podi-2026-2.jpg", "images/products/podi/karela-podi-2026-3.jpg", "images/products/podi/karela-podi-2026-4.jpg", "images/products/podi/karela-podi-2026-5.jpg", "images/products/podi/karela-podi-2026-6.jpg", "images/products/podi/karela-podi-2026-7.jpg", "images/products/podi/karela-podi-2026-8.jpg"],
+      gallery: ["images/products/podi/karela-podi-2026-1.jpg", "images/products/podi/karela-podi-2026-2.jpg"],
       description: "A specialty Andhra podi made from dried bitter gourd roasted with chillies, dals, and spices. Bold, earthy, and mildly bitter with a spicy kick - best mixed with hot rice and ghee for an appetising, wholesome meal.",
       ingredientsText: "Dried bitter gourd / kakarakaya, red chillies, chana dal, garlic, cumin, tamarind optional, salt",
       storageNote: "Use within 45-60 days after opening for best aroma. Keep airtight; refrigerate if humid. Store unopened packs cool, dry, and away from sunlight.",
