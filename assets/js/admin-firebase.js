@@ -2437,15 +2437,16 @@ function renderProductsFilterBar() {
 function mergeProductsWithBase(docs = []) {
   const normalizedDocs = docs.map((product) => ({ ...product, category: normalizeProductCategory(product.category) }));
   const byId = new Map(normalizedDocs.map((product) => [product.id, product]));
-  const mergedBase = BASE_PRODUCTS.map((product) => applyCatalogFieldOverrides({ ...product, ...(byId.get(product.id) || {}) }));
+  const mergedBase = BASE_PRODUCTS.map((product) => applyVerifiedProductImageOverride(applyCatalogFieldOverrides({ ...product, ...(byId.get(product.id) || {}) })));
   const extraProducts = normalizedDocs
     .filter((product) => !BASE_PRODUCTS.some((baseProduct) => baseProduct.id === product.id))
-    .map((product) => applyCatalogFieldOverrides(applyLegacySweetVariantFallback({ ...product })));
+    .map((product) => applyVerifiedProductImageOverride(applyCatalogFieldOverrides(applyLegacySweetVariantFallback({ ...product }))));
 
   return [...mergedBase, ...extraProducts];
 }
 
 const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
+const VERIFIED_PRODUCT_IMAGE_OVERRIDES = window.SHRISH_VERIFIED_PRODUCT_IMAGE_OVERRIDES || {};
 const FORCE_CATALOG_FIELD_OVERRIDE_IDS = new Set([
   'picklespodi-drumstick-leaf-podi-munagaku-podi'
 ]);
@@ -2486,6 +2487,16 @@ function applyCatalogFieldOverrides(product = {}) {
     variants: Array.isArray(override.variants)
       ? override.variants.map((variant) => ({ ...variant }))
       : product.variants
+  };
+}
+
+function applyVerifiedProductImageOverride(product = {}) {
+  const override = VERIFIED_PRODUCT_IMAGE_OVERRIDES[product.id];
+  if (!override) return product;
+  return {
+    ...product,
+    image: override.image || '',
+    gallery: Array.isArray(override.gallery) ? [...override.gallery] : []
   };
 }
 

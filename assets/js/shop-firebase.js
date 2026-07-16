@@ -339,6 +339,7 @@ const FORCE_CATALOG_FIELD_OVERRIDE_IDS = new Set([
 ]);
 const SWEET_CATALOG_OVERRIDE_CATEGORIES = new Set(['putharekulu', 'jellysnacks']);
 const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
+const VERIFIED_PRODUCT_IMAGE_OVERRIDES = window.SHRISH_VERIFIED_PRODUCT_IMAGE_OVERRIDES || {};
 
 function hasAdminManagedCatalogFields(product = {}) {
   return Boolean(product.catalogManagedAt);
@@ -355,6 +356,16 @@ function applyCatalogFieldOverrides(product = {}) {
     variants: Array.isArray(override.variants)
       ? override.variants.map((variant) => ({ ...variant }))
       : product.variants
+  };
+}
+
+function applyVerifiedProductImageOverride(product = {}) {
+  const override = VERIFIED_PRODUCT_IMAGE_OVERRIDES[product.id];
+  if (!override) return product;
+  return {
+    ...product,
+    image: override.image || '',
+    gallery: Array.isArray(override.gallery) ? [...override.gallery] : []
   };
 }
 
@@ -445,17 +456,17 @@ function mergeProducts(docs) {
       merged.unit = namedFallback.unit;
       merged.price = namedFallback.price;
     }
-    return normalizeCatalogProduct(applyCatalogFieldOverrides(merged));
+    return normalizeCatalogProduct(applyVerifiedProductImageOverride(applyCatalogFieldOverrides(merged)));
   });
   const extraProducts = normalizedDocs
     .filter((item) => !normalizedBaseProducts.some((product) => product.id === item.id))
     .map((item) => {
       const fallback = getLegacyVariantFallback(item);
-      if (!fallback) return applyCatalogFieldOverrides({ ...item });
+      if (!fallback) return applyVerifiedProductImageOverride(applyCatalogFieldOverrides({ ...item }));
       const hasVariants = Array.isArray(item.variants) && item.variants.length;
       return hasVariants
-        ? applyCatalogFieldOverrides({ ...item })
-        : applyCatalogFieldOverrides({ ...item, ...fallback });
+        ? applyVerifiedProductImageOverride(applyCatalogFieldOverrides({ ...item }))
+        : applyVerifiedProductImageOverride(applyCatalogFieldOverrides({ ...item, ...fallback }));
     });
   window.SHRISH_DATA.products = sortCatalogProducts(
     [...mergedBase, ...extraProducts]
@@ -1752,5 +1763,4 @@ window.cartUpsellAdd = cartUpsellAdd;
 window.clearShopRefinements = clearShopRefinements;
 
 init();
-
 

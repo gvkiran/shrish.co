@@ -1409,8 +1409,34 @@ const SHRISH_CATALOG_FIELD_OVERRIDES = Object.fromEntries(
     }])
 );
 
+const SHRISH_VERIFIED_PRODUCT_IMAGE_IDS = new Set([
+  "picklespodi-cauliflower-pickle",
+  "picklespodi-drumstick-pickle",
+  "picklespodi-gongura-pickle",
+  "picklespodi-mixed-vegetable-pickle",
+  "picklespodi-boneless-chicken-pickle",
+  "picklespodi-boneless-mutton-pickle",
+  "picklespodi-prawns-pickle",
+  "picklespodi-drumstick-leaf-podi-munagaku-podi",
+  "picklespodi-idli-podi",
+  "picklespodi-karivepaku-podi-curry-leaf-powder",
+  "picklespodi-karela-bitter-gourd-pickle",
+  "picklespodi-flaxseed-podi-avise-podi",
+  "picklespodi-kakarakaya-karam-podi-bitter-gourd"
+]);
+
+const SHRISH_VERIFIED_PRODUCT_IMAGE_OVERRIDES = Object.fromEntries(
+  SHRISH_DATA.products
+    .filter((product) => SHRISH_VERIFIED_PRODUCT_IMAGE_IDS.has(product.id))
+    .map((product) => [product.id, {
+      image: product.image || "",
+      gallery: Array.isArray(product.gallery) ? [...product.gallery] : []
+    }])
+);
+
 window.SHRISH_RECOMMENDATION_TAGS = SHRISH_RECOMMENDATION_TAGS;
 window.SHRISH_CATALOG_FIELD_OVERRIDES = SHRISH_CATALOG_FIELD_OVERRIDES;
+window.SHRISH_VERIFIED_PRODUCT_IMAGE_OVERRIDES = SHRISH_VERIFIED_PRODUCT_IMAGE_OVERRIDES;
 window.SHRISH_MAJOR_ALLERGEN_NOTICE = SHRISH_MAJOR_ALLERGEN_NOTICE;
 window.SHRISH_SPICE_NOTICE = SHRISH_SPICE_NOTICE;
 window.SHRISH_PRODUCT_IMAGE_DISCLAIMER = SHRISH_PRODUCT_IMAGE_DISCLAIMER;
