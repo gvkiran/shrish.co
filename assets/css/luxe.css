@@ -403,7 +403,6 @@ body.luxe .pc-tag.t-coming{background:#070401;border:1px solid rgba(212,160,23,.
 body.luxe .shop-sidebar .filter-bar{display:flex;flex-direction:column;gap:8px;padding:0;justify-content:flex-start}
 body.luxe .shop-sidebar .filter-btn{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;border-radius:12px;padding:10px 14px;font-size:13.5px}
 body.luxe .shop-sidebar .filter-btn .filter-count{margin-left:auto}
-body.luxe .shop-sidebar .filter-btn-sweets::before{margin-right:4px;padding:1px 6px;font-size:9px}
 @media (max-width:900px){
   body.luxe .shop-sidebar .filter-bar{flex-direction:row;flex-wrap:wrap}
   body.luxe .shop-sidebar .filter-btn{width:auto}
@@ -446,14 +445,11 @@ body.luxe .marquee-track span[data-img]:hover{color:#FFF3C4;text-shadow:0 0 18px
 body.luxe .lx-marq-tilt .marquee-wrap:hover .marquee-track{animation-play-state:paused}
 
 /* v2.3 — scrollable sidebar + nested pickle filter */
-body.luxe .shop-sidebar{max-height:calc(100vh - 116px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#3a2a12 transparent}
-body.luxe .shop-sidebar::-webkit-scrollbar{width:6px}
-body.luxe .shop-sidebar::-webkit-scrollbar-thumb{background:#3a2a12;border-radius:6px}
-body.luxe .shop-sidebar::-webkit-scrollbar-thumb:hover{background:var(--gold)}
-@media (max-width:900px){body.luxe .shop-sidebar{max-height:none;overflow:visible}}
+body.luxe .shop-sidebar{max-height:none;overflow:visible;overscroll-behavior:auto;scrollbar-width:auto}
 .sb-nested{margin-top:10px;padding:10px 0 2px 14px;border-left:2px solid rgba(212,160,23,.3)}
 .sb-nested-label{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9D8C70;font-weight:700;margin-bottom:8px;font-family:'Jost',sans-serif}
 body.luxe .sb-nested .pickle-type-btn{padding:8px 12px;font-size:13px;border-radius:10px}
+body.luxe .shop-sidebar .filter-bar .sb-nested{width:100%;box-sizing:border-box}
 
 /* v2.5 — compact shop section head */
 body.luxe .shop-main .shop-section{padding-top:10px;padding-bottom:8px}
@@ -667,12 +663,12 @@ body.luxe a,body.luxe button,body.luxe input,body.luxe select{touch-action:manip
   /* shop filters: app-style horizontal scroll rows instead of tall stacks */
   body.luxe .shop-sidebar{flex-direction:column;gap:14px;padding:14px 12px}
   body.luxe .shop-sidebar .sb-section{flex:none;width:100%;min-width:0}
-  body.luxe .shop-sidebar .filter-bar,
   body.luxe .shop-sidebar .st-avail,
   body.luxe .shop-sidebar .pickle-subfilters{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:8px;padding-bottom:4px;scrollbar-width:none}
-  body.luxe .shop-sidebar .filter-bar::-webkit-scrollbar,
   body.luxe .shop-sidebar .st-avail::-webkit-scrollbar,
   body.luxe .shop-sidebar .pickle-subfilters::-webkit-scrollbar{display:none}
+  body.luxe .shop-sidebar .filter-bar{flex-direction:row;flex-wrap:wrap;overflow:visible;gap:8px}
+  body.luxe .shop-sidebar .filter-bar .sb-nested{flex:1 0 100%;width:100%}
   body.luxe .shop-sidebar .filter-btn,
   body.luxe .shop-sidebar .st-avail-btn,
   body.luxe .shop-sidebar .pickle-type-btn{flex:0 0 auto;width:auto;white-space:nowrap;min-height:42px}

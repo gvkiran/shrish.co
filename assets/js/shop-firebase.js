@@ -39,6 +39,7 @@ const CARD_SAFETY_NOTE = 'Allergy/spice caution: may contain peanut oil and othe
 function productFilterId(product) {
   if (!product) return 'all';
   if (product.category === 'putharekulu' || product.category === 'jellysnacks' || product.category === 'sweets') return 'sweets';
+  if (product.category === 'picklespodi') return product.filterGroup === 'Podi' ? 'podi' : 'pickles';
   return SHOP_CATEGORY_IDS.has(product.category) ? product.category : 'all';
 }
 
@@ -189,10 +190,11 @@ function normalizeCatalogProduct(product = {}) {
 const SHOP_CATEGORY_IDS = new Set(['mangoes', 'putharekulu', 'jellysnacks', 'sweets', 'snacks', 'picklespodi']);
 const SHOP_FILTERS = [
   { id: 'all', label: 'All Products', categories: ['picklespodi', 'putharekulu', 'jellysnacks', 'sweets', 'snacks', 'mangoes'] },
-  { id: 'picklespodi', label: 'Pickles & Podi', categories: ['picklespodi'] },
   { id: 'sweets', label: 'Sweets', categories: ['putharekulu', 'jellysnacks', 'sweets'] },
+  { id: 'pickles', label: 'Pickles', categories: ['picklespodi'] },
+  { id: 'podi', label: 'Podi', categories: ['picklespodi'] },
   { id: 'snacks', label: 'Snacks', categories: ['snacks'] },
-  { id: 'mangoes', label: 'Fruits/Mangoes', categories: ['mangoes'] }
+  { id: 'mangoes', label: 'Mangoes', categories: ['mangoes'] }
 ];
 
 const SHOP_FILTER_PATHS = {
@@ -200,12 +202,17 @@ const SHOP_FILTER_PATHS = {
   mangoes: '/shop/mangoes/',
   sweets: '/shop/sweets/',
   snacks: '/shop/snacks/',
-  picklespodi: '/shop/pickles-podi/'
+  pickles: '/shop/pickles-podi/',
+  podi: '/shop/pickles-podi/'
 };
 
-const SHOP_FILTERS_BY_PATH = Object.fromEntries(
-  Object.entries(SHOP_FILTER_PATHS).map(([filterId, path]) => [path, filterId])
-);
+const SHOP_FILTERS_BY_PATH = {
+  '/shop/all-products/': 'all',
+  '/shop/mangoes/': 'mangoes',
+  '/shop/sweets/': 'sweets',
+  '/shop/snacks/': 'snacks',
+  '/shop/pickles-podi/': 'pickles'
+};
 
 function normalizeShopPath(pathname = window.location.pathname) {
   const path = pathname.replace(/\/index\.html$/i, '/');
@@ -217,21 +224,24 @@ function filterFromShopPath(pathname = window.location.pathname) {
 }
 
 function filterFromCurrentLocation() {
-  const pathFilter = filterFromShopPath();
-  if (pathFilter) return pathFilter;
   const params = new URLSearchParams(window.location.search);
+  const pathFilter = filterFromShopPath();
+  if (pathFilter === 'pickles' && params.get('type') === 'podi') return 'podi';
+  if (pathFilter) return pathFilter;
   const queryFilter = params.get('category') || params.get('filter');
+  if (queryFilter === 'picklespodi') return params.get('type') === 'podi' ? 'podi' : 'pickles';
   if (queryFilter && SHOP_FILTERS.some((filter) => filter.id === queryFilter)) return queryFilter;
   if (window.location.pathname.endsWith('/shop.html')) return 'all';
   return null;
 }
 
 function shopUrlForFilter(filterId = activeFilter, overrides = {}) {
-  const safeFilterId = SHOP_FILTER_PATHS[filterId] ? filterId : 'all';
+  const safeFilterId = SHOP_FILTERS.some((filter) => filter.id === filterId) ? filterId : 'all';
   const params = new URLSearchParams(window.location.search);
   params.delete('category');
   params.delete('filter');
-  if (safeFilterId !== 'picklespodi' || overrides.clearPickleType) params.delete('type');
+  if (safeFilterId === 'podi') params.set('type', 'podi');
+  else if (safeFilterId !== 'pickles' || overrides.clearPickleType) params.delete('type');
   if (overrides.clearSearch) {
     params.delete('search');
     params.delete('q');
@@ -273,9 +283,9 @@ function applyInitialShopFiltersFromUrl() {
     if (category && SHOP_FILTERS.some((filter) => filter.id === category)) {
       activeFilter = category;
     } else if (product) {
-      activeFilter = product.category === 'putharekulu' || product.category === 'jellysnacks' ? 'sweets' : product.category;
+      activeFilter = productFilterId(product);
     }
-    if (['all', 'veg', 'nonveg', 'podi'].includes(pickleType)) {
+    if (activeFilter === 'pickles' && ['all', 'veg', 'nonveg'].includes(pickleType)) {
       picklePodiFilter = pickleType;
     }
   } catch (error) {
@@ -1271,8 +1281,16 @@ function applyShopRefinements(items) {
 function activeFilterProducts() {
   const config = SHOP_FILTERS.find((filter) => filter.id === activeFilter) || SHOP_FILTERS[0];
   return window.SHRISH_DATA.products.filter((p) => !p.hidden
-    && config.categories.includes(normalizeProductCategory(p.category))
+    && filterIncludesProduct(config, p)
     && productMatchesSearch(p));
+}
+
+function filterIncludesProduct(filter, product) {
+  const category = normalizeProductCategory(product.category);
+  if (!filter.categories.includes(category)) return false;
+  if (filter.id === 'pickles') return product.filterGroup !== 'Podi';
+  if (filter.id === 'podi') return product.filterGroup === 'Podi';
+  return true;
 }
 
 function updateShopToolbarCounts() {
@@ -1354,12 +1372,14 @@ function initShopToolbar() {
 function buildFilters() {
   const bar = document.getElementById('filterBar');
   if (!bar) return;
+  const pickleSub = document.getElementById('sbPickleSub');
+  if (pickleSub?.parentElement === bar) bar.parentElement.appendChild(pickleSub);
   bar.innerHTML = '';
   SHOP_FILTERS.forEach((cat) => {
     const normalizedCatId = cat.id;
     const count = normalizedCatId === 'all'
       ? window.SHRISH_DATA.products.filter((p) => !p.hidden).length
-      : window.SHRISH_DATA.products.filter((p) => !p.hidden && cat.categories.includes(normalizeProductCategory(p.category))).length;
+      : window.SHRISH_DATA.products.filter((p) => !p.hidden && filterIncludesProduct(cat, p)).length;
     const btn = document.createElement('button');
     btn.className = `filter-btn filter-btn-${normalizedCatId}${normalizedCatId === activeFilter ? ' active' : ''}`;
     btn.innerHTML = `${escapeHtml(cat.label)} <span class="filter-count">${count}</span>`;
@@ -1367,7 +1387,7 @@ function buildFilters() {
       document.querySelectorAll('.filter-btn').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       activeFilter = normalizedCatId;
-      if (normalizedCatId !== 'picklespodi') picklePodiFilter = 'all';
+      if (normalizedCatId !== 'pickles') picklePodiFilter = 'all';
       updateShopCategoryUrl(normalizedCatId);
       trackShopEvent('shop_category_filter_clicked', {
         filter_id: normalizedCatId,
@@ -1376,31 +1396,29 @@ function buildFilters() {
       renderShop();
     };
     bar.appendChild(btn);
+    if (normalizedCatId === 'pickles' && pickleSub) bar.appendChild(pickleSub);
   });
 }
 
 function picklesPodiMatches(product) {
   if (picklePodiFilter === 'veg') return product.filterGroup === 'Veg Pickles';
   if (picklePodiFilter === 'nonveg') return product.filterGroup === 'Non-Veg Pickles';
-  if (picklePodiFilter === 'podi') return product.filterGroup === 'Podi';
-  return true;
+  return product.filterGroup !== 'Podi';
 }
 
 function renderPicklesPodiFilters(items) {
   const filters = [
-    { id: 'all', label: 'All' },
-    { id: 'veg', label: 'Veg Pickles' },
-    { id: 'nonveg', label: 'Non-Veg Pickles' },
-    { id: 'podi', label: 'Podi' }
+    { id: 'all', label: 'All Pickles' },
+    { id: 'veg', label: 'Veg' },
+    { id: 'nonveg', label: 'Non-Veg' }
   ];
   const countFor = (filterId) => items.filter((product) => {
     if (filterId === 'veg') return product.filterGroup === 'Veg Pickles';
     if (filterId === 'nonveg') return product.filterGroup === 'Non-Veg Pickles';
-    if (filterId === 'podi') return product.filterGroup === 'Podi';
-    return true;
+    return product.filterGroup !== 'Podi';
   }).length;
 
-  return `<div class="pickle-subfilters" aria-label="Pickles and podi filters">${filters.map((filter) => `
+  return `<div class="pickle-subfilters" aria-label="Pickle type filters">${filters.map((filter) => `
     <button type="button" class="pickle-type-btn${picklePodiFilter === filter.id ? ' active' : ''}" onclick="setPicklesPodiFilter('${filter.id}')">
       ${escapeHtml(filter.label)} <span>${countFor(filter.id)}</span>
     </button>
@@ -1409,18 +1427,16 @@ function renderPicklesPodiFilters(items) {
 
 function setPicklesPodiFilter(filterId) {
   picklePodiFilter = filterId;
-  if (activeFilter !== 'picklespodi') {
-    activeFilter = 'picklespodi';
+  if (activeFilter !== 'pickles') {
+    activeFilter = 'pickles';
     document.querySelectorAll('.filter-btn').forEach((b) => {
-      b.classList.toggle('active', b.classList.contains('filter-btn-picklespodi'));
+      b.classList.toggle('active', b.classList.contains('filter-btn-pickles'));
     });
-    updateShopCategoryUrl('picklespodi');
   }
-  const url = new URL(window.location.href);
+  const url = new URL(shopUrlForFilter('pickles', { clearProduct: true }), window.location.origin);
   if (filterId === 'all') url.searchParams.delete('type');
   else url.searchParams.set('type', filterId);
-  url.searchParams.delete('product');
-  window.history.replaceState({ shrishPicklesPodiFilter: filterId }, '', url);
+  window.history.replaceState({ shrishPicklesPodiFilter: filterId }, '', `${url.pathname}${url.search}`);
   trackShopEvent('pickles_podi_filter_clicked', {
     filter_id: filterId
   });
@@ -1531,9 +1547,20 @@ function renderShop() {
   cats.forEach((catId) => {
     const allCatItems = sortWithinAvailability(window.SHRISH_DATA.products.filter((p) => !p.hidden && p.category === catId));
     const searchedItems = allCatItems.filter((product) => productMatchesSearch(product));
-    const baseItems = catId === 'picklespodi' ? searchedItems.filter(picklesPodiMatches) : searchedItems;
+    let baseItems = searchedItems;
+    if (catId === 'picklespodi' && activeFilter !== 'all') {
+      baseItems = baseItems.filter((product) => filterIncludesProduct(activeFilterConfig, product));
+    }
+    if (catId === 'picklespodi' && activeFilter === 'pickles') {
+      baseItems = baseItems.filter(picklesPodiMatches);
+    }
     const items = applyShopRefinements(baseItems);
-    const m = catMeta[catId] || { title: catId, em: '', sub: '', banner: false };
+    let m = catMeta[catId] || { title: catId, em: '', sub: '', banner: false };
+    if (catId === 'picklespodi' && activeFilter === 'pickles') {
+      m = { title: 'Pickles', em: '', sub: 'Traditional Andhra-style pickles. Non-veg pickles are preorder only and depend on supplier batch and pickup timing.', banner: false };
+    } else if (catId === 'picklespodi' && activeFilter === 'podi') {
+      m = { title: 'Podi', em: '', sub: 'Traditional South Indian podi and powders, prepared in small batches.', banner: false };
+    }
     const showEmptyCategory = activeFilter === catId && ['snacks'].includes(catId);
     if (!allCatItems.length && !showEmptyCategory) return;
     if (productSearchQuery && !items.length) return;
@@ -1546,10 +1573,10 @@ function renderShop() {
     if (catId === 'jellysnacks' && hasLiveItems) {
       sectionSub = 'Traditional Mamidi Thandra & Thati Thandra from Atreyapuram. Available items are shown first.';
     }
-    if (catId === 'picklespodi') {
+    if (catId === 'picklespodi' && activeFilter === 'all') {
       sectionSub = 'Traditional Andhra-style pickles and podi. Non-veg pickles are preorder only and depend on supplier batch and pickup timing.';
     }
-    if (catId === 'picklespodi' && activeFilter === 'picklespodi') updatePickleSidebarFilters(allCatItems);
+    if (catId === 'picklespodi' && activeFilter === 'pickles') updatePickleSidebarFilters(allCatItems.filter((product) => product.filterGroup !== 'Podi'));
     const searchNote = productSearchQuery ? `<div class="shop-search-note">Showing matches for <strong>${escapedSearchQuery}</strong>. <a href="${escapeHtml(shopUrlForFilter(activeFilter, { clearSearch: true, clearProduct: true }))}">Clear search</a></div>` : '';
     const safetyNotice = `<details class="shop-safety-notice"><summary>⚠ Food allergy &amp; spice notice — tap to read</summary><p>${escapeHtml(SHOP_ALLERGEN_NOTICE)} ${escapeHtml(SHOP_SPICE_NOTICE)}</p></details>`;
     let html = `<div class="shop-section"><div class="shop-section-head"><div><div class="shop-section-title">${m.title} <em>${m.em}</em></div><div class="section-divider"></div></div></div>${searchNote}<p style="color:var(--text-light);font-size:14px;margin-bottom:14px">${sectionSub}</p>${safetyNotice}`;
@@ -1596,7 +1623,7 @@ function handleShopHistoryChange() {
     const pathFilter = filterFromCurrentLocation();
     if (pathFilter && pathFilter !== activeFilter) {
       activeFilter = pathFilter;
-      if (pathFilter !== 'picklespodi') picklePodiFilter = 'all';
+      if (pathFilter !== 'pickles') picklePodiFilter = 'all';
       buildFilters();
       renderShop();
     }
@@ -1725,7 +1752,5 @@ window.cartUpsellAdd = cartUpsellAdd;
 window.clearShopRefinements = clearShopRefinements;
 
 init();
-
-
 
 
