@@ -520,7 +520,11 @@ const SHRISH_DATA = {
       origin: "Andhra Pradesh",
       price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Crunchy Snack",
-      image: SHRISH_LOGO_PRODUCT_IMAGE,
+      image: "images/products/snacks/ragi-murukulu-2026-1.jpg",
+      gallery: [
+        "images/products/snacks/ragi-murukulu-2026-1.jpg",
+        "images/products/snacks/ragi-murukulu-2026-2.jpg"
+      ],
       description: "Crispy spiral murukulu made with nutritious ragi (finger millet) and rice flour, seasoned with cumin and a gentle spice. A wholesome, crunchy tea-time snack with an earthy millet flavour.",
       details: "Ingredients: Ragi (finger millet) flour, rice flour, chana dal, cumin, sesame, salt and oil. Store airtight in a cool dry place to keep crisp.",
       badges: ["Crunchy Snack", "Millet Based", "Tea Time"],
@@ -1422,7 +1426,8 @@ const SHRISH_VERIFIED_PRODUCT_IMAGE_IDS = new Set([
   "picklespodi-karivepaku-podi-curry-leaf-powder",
   "picklespodi-karela-bitter-gourd-pickle",
   "picklespodi-flaxseed-podi-avise-podi",
-  "picklespodi-kakarakaya-karam-podi-bitter-gourd"
+  "picklespodi-kakarakaya-karam-podi-bitter-gourd",
+  "snacks-ragi-murukulu"
 ]);
 
 const SHRISH_VERIFIED_PRODUCT_IMAGE_OVERRIDES = Object.fromEntries(
