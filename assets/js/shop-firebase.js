@@ -101,7 +101,10 @@ const PRODUCT_IMAGES = {
   puth_plain_sugar: ['images/products/putharekulu/img_puth_sugar_kaju.jpg'],
   puth_plain_jaggery: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg'],
   puth_sugar_kaju: ['images/products/putharekulu/img_puth_sugar_kaju.jpg'],
-  puth_sugar_kaju_pista: ['images/products/putharekulu/img_puth_sugar_kaju_pista.jpg'],
+  puth_sugar_kaju_pista: [
+    'images/products/putharekulu/puth-sugar-kaju-badam-pista-2026-1.jpg',
+    'images/products/putharekulu/puth-sugar-kaju-badam-pista-2026-2.jpg'
+  ],
   puth_jaggery_kaju: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg'],
   puth_jaggery_kaju_badam: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg'],
   puth_jaggery_kaju_pista: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg'],
@@ -1763,4 +1766,3 @@ window.cartUpsellAdd = cartUpsellAdd;
 window.clearShopRefinements = clearShopRefinements;
 
 init();
-

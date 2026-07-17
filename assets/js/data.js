@@ -197,7 +197,11 @@ const SHRISH_DATA = {
       origin: "Atreyapuram, Andhra Pradesh",
       price: "$9.99", unit: "5 count or 10 count",
       available: true, displayOnly: false, tag: "Premium",
-      image: "images/products/putharekulu/img_puth_sugar_kaju_pista.jpg",
+      image: "images/products/putharekulu/puth-sugar-kaju-badam-pista-2026-1.jpg",
+      gallery: [
+        "images/products/putharekulu/puth-sugar-kaju-badam-pista-2026-1.jpg",
+        "images/products/putharekulu/puth-sugar-kaju-badam-pista-2026-2.jpg"
+      ],
       description: "Traditional Atreyapuram Putharekulu finished with sugar and a premium trio of cashews, almonds, and pistachios. It delivers the delicate paper-like layers customers expect, with an extra festive dry-fruit richness in every piece.",
       details: "Ingredients: Rice starch sheets, sugar, cashews, almonds, pistachios and ghee. A premium gifting-friendly variant.",
       badges: ["Premium Dry Fruit", "Gifting Special"],
