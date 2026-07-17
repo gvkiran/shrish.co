@@ -325,7 +325,11 @@ const SHRISH_DATA = {
       origin: "Atreyapuram, Andhra Pradesh",
       price: "$9.99", unit: "5 count or 10 count",
       available: true, displayOnly: false, tag: "New Shape",
-      image: SHRISH_LOGO_PRODUCT_IMAGE,
+      image: "images/products/putharekulu/puth-samosa-jaggery-dryfruit-2026-1.jpg",
+      gallery: [
+        "images/products/putharekulu/puth-samosa-jaggery-dryfruit-2026-1.jpg",
+        "images/products/putharekulu/puth-samosa-jaggery-dryfruit-2026-2.jpg"
+      ],
       description: "The samosa-folded Putharekulu made with jaggery instead of sugar for a deeper, warmer sweetness. Delicate rice sheets are folded around roasted cashews, almonds, and pistachios, giving a traditional village-style finish in a fun, easy-to-share shape.",
       details: "Ingredients: Rice starch sheets, jaggery, cashews, almonds, pistachios and ghee. Richer jaggery flavour with a rustic sweetness.",
       badges: ["New Shape", "Jaggery Sweetened", "Premium Dry Fruit"],
@@ -1436,7 +1440,8 @@ const SHRISH_VERIFIED_PRODUCT_IMAGE_IDS = new Set([
   "picklespodi-flaxseed-podi-avise-podi",
   "picklespodi-kakarakaya-karam-podi-bitter-gourd",
   "snacks-ragi-murukulu",
-  "puth_jaggery_kaju_pista"
+  "puth_jaggery_kaju_pista",
+  "puth_samosa_jaggery_dryfruit"
 ]);
 
 const SHRISH_VERIFIED_PRODUCT_IMAGE_OVERRIDES = Object.fromEntries(

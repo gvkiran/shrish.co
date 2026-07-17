@@ -105,6 +105,10 @@ const PRODUCT_IMAGES = {
     'images/products/putharekulu/puth-sugar-kaju-badam-pista-2026-1.jpg',
     'images/products/putharekulu/puth-sugar-kaju-badam-pista-2026-2.jpg'
   ],
+  puth_samosa_jaggery_dryfruit: [
+    'images/products/putharekulu/puth-samosa-jaggery-dryfruit-2026-1.jpg',
+    'images/products/putharekulu/puth-samosa-jaggery-dryfruit-2026-2.jpg'
+  ],
   puth_jaggery_kaju: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg'],
   puth_jaggery_kaju_badam: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg'],
   puth_jaggery_kaju_pista: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg'],
