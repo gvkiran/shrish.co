@@ -242,7 +242,11 @@ const SHRISH_DATA = {
       origin: "Atreyapuram, Andhra Pradesh",
       price: "$9.99", unit: "5 count or 10 count",
       available: true, displayOnly: false, tag: "Most Requested",
-      image: "images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg",
+      image: "images/products/putharekulu/puth-jaggery-kaju-badam-pista-2026-1.jpg",
+      gallery: [
+        "images/products/putharekulu/puth-jaggery-kaju-badam-pista-2026-1.jpg",
+        "images/products/putharekulu/puth-jaggery-kaju-badam-pista-2026-2.jpg"
+      ],
       description: "A premium jaggery Putharekulu layered with cashews, almonds, and pistachios inside delicate rice flour sheets. It offers a richer, more indulgent dry-fruit profile with the darker sweetness and aroma customers expect from traditional jaggery sweets.",
       details: "Ingredients: Rice starch sheets, jaggery, cashews, almonds, pistachios and ghee. One of the most premium dry-fruit jaggery options in the range.",
       badges: ["Most Requested", "Premium Dry Fruit", "Jaggery Sweetened"],
@@ -1427,7 +1431,8 @@ const SHRISH_VERIFIED_PRODUCT_IMAGE_IDS = new Set([
   "picklespodi-karela-bitter-gourd-pickle",
   "picklespodi-flaxseed-podi-avise-podi",
   "picklespodi-kakarakaya-karam-podi-bitter-gourd",
-  "snacks-ragi-murukulu"
+  "snacks-ragi-murukulu",
+  "puth_jaggery_kaju_pista"
 ]);
 
 const SHRISH_VERIFIED_PRODUCT_IMAGE_OVERRIDES = Object.fromEntries(
