@@ -2403,7 +2403,7 @@ span { color: inherit; }
   top: 54px !important;
   z-index: 5 !important;
   display: flex !important;
-  align-items: center !important;
+  align-items: stretch !important;
   gap: 8px !important;
   flex-wrap: wrap !important;
   margin: 0 0 10px !important;
@@ -2412,6 +2412,24 @@ span { color: inherit; }
   border: 1px solid rgba(200,121,26,0.14) !important;
   border-radius: 12px !important;
   backdrop-filter: blur(12px) !important;
+}
+
+.products-filter-primary,
+.products-filter-secondary {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+  width: 100% !important;
+}
+
+.products-filter-secondary {
+  padding-top: 8px !important;
+  border-top: 1px solid rgba(200,121,26,0.14) !important;
+}
+
+.products-filter-secondary .products-filter-label {
+  color: var(--gold) !important;
 }
 
 .products-filter-label {

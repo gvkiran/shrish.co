@@ -70,6 +70,7 @@ const state = {
   ownerAnalyticsError: '',
   selectedAccountingBatch: '',
   productFilter: 'all',
+  productPickleFilter: 'all',
   selectedReminderOrderIds: new Set(),
   orderSheet: 'active',
   orderEditor: {
@@ -2409,10 +2410,42 @@ function getSortedProducts(products = []) {
   });
 }
 
+function productFilterMetadata(product = {}) {
+  return [
+    product.id,
+    product.name,
+    product.tag,
+    product.filterGroup,
+    ...(Array.isArray(product.badges) ? product.badges : []),
+    ...(Array.isArray(product.recommendationTags) ? product.recommendationTags : []),
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
+function isPodiProduct(product = {}) {
+  if (normalizeProductCategory(product.category) !== 'picklespodi') return false;
+  return /\bpodi\b|\bpowder\b/.test(productFilterMetadata(product));
+}
+
+function isPickleProduct(product = {}) {
+  return normalizeProductCategory(product.category) === 'picklespodi' && !isPodiProduct(product);
+}
+
+function isNonVegPickleProduct(product = {}) {
+  if (!isPickleProduct(product)) return false;
+  return /non[\s-]?veg|chicken|mutton|fish|prawn|shrimp|seafood|natu kodi|country chicken|koramenu/.test(productFilterMetadata(product));
+}
+
 function productMatchesFilter(product, filter = state.productFilter) {
   const category = normalizeProductCategory(product.category);
   if (filter === 'all') return true;
   if (filter === 'sweets') return ['putharekulu', 'jellysnacks'].includes(category);
+  if (filter === 'pickles') {
+    if (!isPickleProduct(product)) return false;
+    if (state.productPickleFilter === 'veg') return !isNonVegPickleProduct(product);
+    if (state.productPickleFilter === 'nonveg') return isNonVegPickleProduct(product);
+    return true;
+  }
+  if (filter === 'podi') return isPodiProduct(product);
   return category === filter;
 }
 
@@ -2420,18 +2453,41 @@ function renderProductsFilterBar() {
   const bar = document.getElementById('productsFilterBar');
   if (!bar) return;
 
+  const pickleProducts = state.products.filter(isPickleProduct);
+  const podiProducts = state.products.filter(isPodiProduct);
+  const nonVegPickles = pickleProducts.filter(isNonVegPickleProduct);
+  const vegPickles = pickleProducts.filter((product) => !isNonVegPickleProduct(product));
   const options = [
     { id: 'all', label: 'All', count: state.products.length },
     { id: 'mangoes', label: 'Fruits/Mangoes', count: state.products.filter((product) => normalizeProductCategory(product.category) === 'mangoes').length },
     { id: 'sweets', label: 'Sweets', count: state.products.filter((product) => ['putharekulu', 'jellysnacks'].includes(normalizeProductCategory(product.category))).length },
     { id: 'snacks', label: 'Snacks', count: state.products.filter((product) => normalizeProductCategory(product.category) === 'snacks').length },
-    { id: 'picklespodi', label: 'Pickles & Podi', count: state.products.filter((product) => normalizeProductCategory(product.category) === 'picklespodi').length },
+    { id: 'pickles', label: 'Pickles', count: pickleProducts.length },
+    { id: 'podi', label: 'Podi', count: podiProducts.length },
   ];
 
-  bar.innerHTML = `<span class="products-filter-label">Filter Products</span>${options.map((option) => `
-    <button type="button" class="product-filter-pill ${state.productFilter === option.id ? 'active' : ''}" onclick="setProductCategoryFilter('${escapeHtml(option.id)}')">
-      ${escapeHtml(option.label)} (${option.count})
-    </button>`).join('')}`;
+  const pickleOptions = [
+    { id: 'all', label: 'All Pickles', count: pickleProducts.length },
+    { id: 'veg', label: 'Veg Pickles', count: vegPickles.length },
+    { id: 'nonveg', label: 'Non-Veg Pickles', count: nonVegPickles.length },
+  ];
+
+  bar.innerHTML = `
+    <div class="products-filter-primary">
+      <span class="products-filter-label">Filter Products</span>
+      ${options.map((option) => `
+        <button type="button" class="product-filter-pill ${state.productFilter === option.id ? 'active' : ''}" aria-pressed="${state.productFilter === option.id}" onclick="setProductCategoryFilter('${escapeHtml(option.id)}')">
+          ${escapeHtml(option.label)} (${option.count})
+        </button>`).join('')}
+    </div>
+    ${state.productFilter === 'pickles' ? `
+      <div class="products-filter-secondary">
+        <span class="products-filter-label">Pickle Type</span>
+        ${pickleOptions.map((option) => `
+          <button type="button" class="product-filter-pill ${state.productPickleFilter === option.id ? 'active' : ''}" aria-pressed="${state.productPickleFilter === option.id}" onclick="setProductPickleFilter('${escapeHtml(option.id)}')">
+            ${escapeHtml(option.label)} (${option.count})
+          </button>`).join('')}
+      </div>` : ''}`;
 }
 
 function mergeProductsWithBase(docs = []) {
@@ -3005,6 +3061,13 @@ function renderProducts() {
 
 function setProductCategoryFilter(filter) {
   state.productFilter = filter || 'all';
+  state.productPickleFilter = 'all';
+  renderProducts();
+}
+
+function setProductPickleFilter(filter) {
+  const allowedFilters = ['all', 'veg', 'nonveg'];
+  state.productPickleFilter = allowedFilters.includes(filter) ? filter : 'all';
   renderProducts();
 }
 
@@ -4837,6 +4900,7 @@ window.closeAddProductForm = closeAddProductForm;
 window.resetAddProductForm = resetAddProductForm;
 window.editProduct = editProduct;
 window.setProductCategoryFilter = setProductCategoryFilter;
+window.setProductPickleFilter = setProductPickleFilter;
 window.saveProductSortOrder = saveProductSortOrder;
 window.openOrderEditor = openOrderEditor;
 window.closeOrderEditor = closeOrderEditor;
