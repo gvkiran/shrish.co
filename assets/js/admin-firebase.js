@@ -1411,6 +1411,13 @@ function getOrdersForSheet(sheet = state.orderSheet) {
       (order.status || 'pending') === 'pending' && orderItemsForSheet(order, 'specialty').length > 0
     );
   }
+  if (sheet === 'shipping') {
+    // Every order being mailed, newest first. Cancelled orders are excluded but
+    // fulfilled ones stay so a packing slip can be reprinted after shipping.
+    return state.orders
+      .filter((order) => isShippingOrder(order) && (order.status || 'pending') !== 'cancelled')
+      .sort((a, b) => orderDateKey(b).localeCompare(orderDateKey(a)));
+  }
   if (sheet === 'processed') {
     return state.orders.filter((order) => {
       const status = order.status || 'pending';
@@ -1487,6 +1494,10 @@ function updateOrdersSheetUi() {
       title: 'Processed Orders',
       help: 'Processed Orders shows fulfilled pickups that still need payment or accounting review. Cancelled and no-show records live in All Orders.',
     },
+    shipping: {
+      title: 'Shipping Orders',
+      help: 'Shipping Orders lists every order being mailed, newest first. Tick the orders you are packing and hit Print Packing Slips for a one-page slip per order with the full address and contents, or print a single slip from the row.',
+    },
     all: {
       title: 'All Orders',
       help: 'All Orders is the permanent master history in date order. Status can still be updated, but nothing is deleted here.',
@@ -1514,6 +1525,8 @@ function updateOrdersSheetUi() {
   if (sheetSwitcher) sheetSwitcher.style.display = document.getElementById('tab-orders')?.style.display === 'none' ? 'none' : 'flex';
   if (printButton) {
     const isSpecialty = state.orderSheet === 'specialty';
+    // The pickup checklist is meaningless on the shipping sheet.
+    printButton.style.display = state.orderSheet === 'shipping' ? 'none' : 'inline-flex';
     printButton.textContent = isSpecialty ? 'Print Pickles / Sweets / Snacks' : 'Print Checklist';
     printButton.title = isSpecialty ? 'Print the non-mango pickup checklist' : 'Print pickup checklist for today';
   }
@@ -1521,6 +1534,7 @@ function updateOrdersSheetUi() {
     const exportLabels = {
       active: '⬇ Export Active Excel',
       specialty: '⬇ Export Pickles / Sweets / Snacks',
+      shipping: '⬇ Export Shipping Excel',
       processed: '⬇ Export Processed Excel',
       all: '⬇ Export All Excel'
     };
@@ -2051,6 +2065,24 @@ function whatsappPhoneDigits(order = {}) {
   return raw.length > 11 ? raw : '';
 }
 
+// Sheets whose rows can be checkbox-selected. 'active' drives reminders,
+// 'shipping' drives bulk packing-slip printing.
+function isSelectableSheet(sheet = state.orderSheet) {
+  return sheet === 'active' || sheet === 'shipping';
+}
+
+// Rows selectable on the current sheet: pending only for reminders, any
+// non-cancelled shipping order so a slip can be reprinted.
+function selectableOrdersForSheet(sheet = state.orderSheet) {
+  if (sheet === 'shipping') return getFilteredOrders('shipping');
+  if (sheet === 'active') return getFilteredOrders('active').filter((order) => (order.status || 'pending') === 'pending');
+  return [];
+}
+
+function selectedOrdersOnSheet(sheet = state.orderSheet) {
+  return selectableOrdersForSheet(sheet).filter((order) => state.selectedReminderOrderIds.has(order.id));
+}
+
 function updateReminderActionUi() {
   const isActiveSheet = state.orderSheet === 'active';
   const selectedOrders = activeReminderOrdersFromSelection();
@@ -2075,11 +2107,22 @@ function updateReminderActionUi() {
   }
 
   if (selectAll) {
-    const visiblePending = getFilteredOrders('active').filter((order) => (order.status || 'pending') === 'pending');
-    const selectedVisible = visiblePending.filter((order) => state.selectedReminderOrderIds.has(order.id));
-    selectAll.disabled = !isActiveSheet || !visiblePending.length;
-    selectAll.checked = Boolean(visiblePending.length && selectedVisible.length === visiblePending.length);
-    selectAll.indeterminate = Boolean(selectedVisible.length && selectedVisible.length < visiblePending.length);
+    const selectable = selectableOrdersForSheet();
+    const selectedVisible = selectable.filter((order) => state.selectedReminderOrderIds.has(order.id));
+    selectAll.disabled = !isSelectableSheet() || !selectable.length;
+    selectAll.checked = Boolean(selectable.length && selectedVisible.length === selectable.length);
+    selectAll.indeterminate = Boolean(selectedVisible.length && selectedVisible.length < selectable.length);
+  }
+
+  const shippingPrintBtn = document.getElementById('printShippingBtn');
+  if (shippingPrintBtn) {
+    const isShippingSheet = state.orderSheet === 'shipping';
+    const selectedCount = isShippingSheet ? selectedOrdersOnSheet('shipping').length : 0;
+    shippingPrintBtn.style.display = isShippingSheet ? 'inline-flex' : 'none';
+    shippingPrintBtn.disabled = isShippingSheet && !selectableOrdersForSheet('shipping').length;
+    shippingPrintBtn.textContent = selectedCount
+      ? `📦 Print Packing Slips (${selectedCount})`
+      : '📦 Print All Packing Slips';
   }
 }
 
@@ -2094,9 +2137,8 @@ function toggleReminderOrderSelection(orderId, checked) {
 }
 
 function toggleVisibleReminderOrders(checked) {
-  if (state.orderSheet !== 'active') return;
-  getFilteredOrders('active').forEach((order) => {
-    if ((order.status || 'pending') !== 'pending') return;
+  if (!isSelectableSheet()) return;
+  selectableOrdersForSheet().forEach((order) => {
     if (checked) {
       state.selectedReminderOrderIds.add(order.id);
     } else {
@@ -2313,6 +2355,7 @@ function renderOrders() {
   const orders = getFilteredOrders();
   const isActiveSheet = state.orderSheet === 'active';
   const isSpecialtySheet = state.orderSheet === 'specialty';
+  const isShippingSheet = state.orderSheet === 'shipping';
   const isPendingSheet = isActiveSheet || isSpecialtySheet;
   updateOrdersSheetUi();
   renderActiveOrderSummary(orders);
@@ -2348,7 +2391,7 @@ function renderOrders() {
       ? '<div style="margin-top:4px;display:inline-block;font-size:11px;font-weight:700;color:#B54708;background:#FFF3E0;border:1px solid #F0C68A;border-radius:10px;padding:1px 8px;">Online — awaiting payment</div>'
       : '<div style="margin-top:4px;display:inline-block;font-size:11px;font-weight:600;color:#8a6d3b;background:#fbf3e2;border:1px solid #e6d3a8;border-radius:10px;padding:1px 8px;">Pay at pickup</div>';
     const fallbackBatch = batchNameFromDate(todayDateInputValue());
-    const canSelect = isActiveSheet && status === 'pending';
+    const canSelect = (isActiveSheet && status === 'pending') || isShippingSheet;
     const checked = state.selectedReminderOrderIds.has(order.id) ? 'checked' : '';
     const quickPaymentButtons = status === 'fulfilled'
       ? `<div class="payment-quick-actions" aria-label="Quick payment method">
@@ -2386,7 +2429,7 @@ function renderOrders() {
       <td><div class="total-amount">${formatCurrency(visibleTotal)}</div></td>
       <td style="font-size:13px">${orderLocationCellHtml(order)}</td>
       ${isPendingSheet ? '' : `<td>${paymentCellHtml}</td><td><span class="status-badge ${statusClass}">${statusLabel}</span></td>`}
-      <td><div class="action-btns"><button class="action-btn btn-fulfill" onclick="setStatus('${escapeHtml(order.id)}','fulfilled')">✓ Fulfill</button><button class="action-btn btn-noshow" onclick="setStatus('${escapeHtml(order.id)}','no_show')">No Show</button><button class="action-btn btn-cancel" onclick="setStatus('${escapeHtml(order.id)}','cancelled')">✕ Cancel</button><button class="action-btn btn-reset" onclick="setStatus('${escapeHtml(order.id)}','pending')">↺ Reset</button></div></td>
+      <td><div class="action-btns">${isShippingSheet ? `<button class="action-btn btn-print" onclick="printShippingOrders('${escapeHtml(order.id)}')" title="Print packing slip for this order">🖨️ Slip</button>` : ''}<button class="action-btn btn-fulfill" onclick="setStatus('${escapeHtml(order.id)}','fulfilled')">✓ Fulfill</button><button class="action-btn btn-noshow" onclick="setStatus('${escapeHtml(order.id)}','no_show')">No Show</button><button class="action-btn btn-cancel" onclick="setStatus('${escapeHtml(order.id)}','cancelled')">✕ Cancel</button><button class="action-btn btn-reset" onclick="setStatus('${escapeHtml(order.id)}','pending')">↺ Reset</button></div></td>
     </tr>`;
   }).join('');
 
@@ -2412,8 +2455,8 @@ function renderOrders() {
 function renderOrdersTableHead(isPendingSheet = ['active', 'specialty'].includes(state.orderSheet), isSpecialtySheet = state.orderSheet === 'specialty') {
   const headRow = document.querySelector('.orders-table thead tr');
   if (!headRow) return;
-  const selectAllHtml = state.orderSheet === 'active'
-    ? '<input type="checkbox" id="selectAllActiveOrders" onchange="toggleVisibleReminderOrders(this.checked)" aria-label="Select all visible active orders">'
+  const selectAllHtml = isSelectableSheet()
+    ? '<input type="checkbox" id="selectAllActiveOrders" onchange="toggleVisibleReminderOrders(this.checked)" aria-label="Select all visible orders">'
     : '';
   headRow.innerHTML = `
     <th class="order-select-col">${selectAllHtml}</th>
@@ -3877,8 +3920,11 @@ function exportCSV() {
 
 function setOrderSheet(sheet) {
   syncCurrentOrderFilters();
+  const previous = state.orderSheet;
   state.orderSheet = sheet;
-  if (sheet !== 'active') state.selectedReminderOrderIds.clear();
+  // Selection is per-sheet in meaning (reminders vs packing slips), so drop it
+  // whenever we leave a selectable sheet or switch between them.
+  if (!isSelectableSheet(sheet) || sheet !== previous) state.selectedReminderOrderIds.clear();
   renderOrders();
 }
 
@@ -4112,6 +4158,193 @@ function printActiveOrders() {
 <script>window.onload=()=>window.print();<\/script>
 </body></html>`);
   pw.document.close();
+}
+
+// Money helper that tolerates older orders missing the derived total fields.
+function slipAmount(value) {
+  const n = moneyNumber(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function buildPackingSlipHtml(order = {}) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  const address = order.shippingAddress || {};
+  const name = String(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`).trim();
+  const addressLines = shippingAddressLines(address);
+
+  const subtotal = slipAmount(order.itemSubtotal) || orderItemsTotal(items);
+  const shipping = slipAmount(order.shippingAmount);
+  const tax = slipAmount(order.salesTaxAmount);
+  const discount = slipAmount(order.promoDiscount);
+  const total = slipAmount(order.totalPrice) || (subtotal + shipping + tax - discount);
+  const boxes = items.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+
+  const paid = String(order.payment || '').toLowerCase() === 'paid'
+    || String(order.paymentStatus || '').toLowerCase() === 'paid'
+    || Boolean(order.paymentCollected);
+  const payBadge = paid
+    ? '<span class="badge paid">PAID</span>'
+    : `<span class="badge due">${escapeHtml(order.paymentMethodLabel || 'Payment due')}</span>`;
+
+  const itemRows = items.map((item) => {
+    const qty = Number(item.qty || 1);
+    const line = slipAmount(item.lineTotal) || slipAmount(item.price) * qty;
+    const unit = item.unit ? ` <span class="unit">(${escapeHtml(item.unit)})</span>` : '';
+    return `<tr>
+      <td class="pack"><span class="chk"></span></td>
+      <td>${escapeHtml(item.name || 'Item')}${unit}</td>
+      <td class="qty">${escapeHtml(String(qty))}</td>
+      <td class="amt">${escapeHtml(formatCurrency(line))}</td>
+    </tr>`;
+  }).join('');
+
+  const totalRow = (label, value, cls = '') =>
+    `<tr class="${cls}"><td colspan="2"></td><td class="tl">${escapeHtml(label)}</td><td class="amt">${escapeHtml(formatCurrency(value))}</td></tr>`;
+
+  return `<section class="slip">
+    <header class="slip-hdr">
+      <div class="brand">
+        <div class="brand-name">SHRISH</div>
+        <div class="brand-sub">Handcrafted Andhra Pickles, Podi &amp; Sweets</div>
+      </div>
+      <div class="slip-meta">
+        <div class="slip-title">PACKING SLIP</div>
+        <div class="onum">${escapeHtml(String(order.orderNumber || order.id || ''))}</div>
+        <div class="odate">${escapeHtml(formatDate(order.createdAt))}</div>
+        ${payBadge}
+      </div>
+    </header>
+
+    <div class="addr-row">
+      <div class="from">
+        <div class="lbl">FROM</div>
+        <div><strong>Shrish LLC</strong></div>
+        <div>Richmond, VA</div>
+        <div>contact@shrish.co</div>
+        <div>+1 (765) 325-5577</div>
+      </div>
+      <div class="shipto">
+        <div class="lbl">SHIP TO</div>
+        <div class="to-name">${escapeHtml(name || '--')}</div>
+        ${addressLines.length
+          ? addressLines.map((line) => `<div class="to-line">${escapeHtml(line)}</div>`).join('')
+          : '<div class="to-line missing">No shipping address on file</div>'}
+        ${order.phone ? `<div class="to-phone">${escapeHtml(order.phone)}</div>` : ''}
+      </div>
+    </div>
+
+    <table class="items">
+      <thead>
+        <tr><th class="pack">Packed</th><th>Item</th><th class="qty">Qty</th><th class="amt">Amount</th></tr>
+      </thead>
+      <tbody>
+        ${itemRows || '<tr><td colspan="4" class="empty">No items on this order.</td></tr>'}
+      </tbody>
+      <tfoot>
+        ${totalRow('Subtotal', subtotal)}
+        ${discount > 0 ? totalRow(`Discount${order.promoCode ? ` (${order.promoCode})` : ''}`, -discount) : ''}
+        ${shipping > 0 ? totalRow(order.shippingLabel || 'Shipping', shipping) : totalRow('Shipping', 0)}
+        ${tax > 0 ? totalRow(order.salesTaxLabel || 'Sales tax', tax) : ''}
+        ${totalRow('TOTAL', total, 'grand')}
+      </tfoot>
+    </table>
+
+    <div class="foot">
+      <div class="count">${escapeHtml(String(items.length))} line item(s) &bull; ${escapeHtml(String(boxes))} unit(s)</div>
+      ${order.notes ? `<div class="notes"><strong>Notes:</strong> ${escapeHtml(order.notes)}</div>` : ''}
+      <div class="thanks">Thank you for ordering from Shrish! &nbsp;shrish.co</div>
+    </div>
+  </section>`;
+}
+
+// Prints one packing slip per shipping order, one per page.
+// printShippingOrders('<id>') prints a single order; with no argument it prints
+// the checked orders, falling back to every order matching the current filters.
+function printShippingOrders(orderId = null) {
+  let orders;
+  if (orderId) {
+    const single = state.orders.find((order) => order.id === orderId);
+    if (!single) { showToast('Order not found.'); return; }
+    orders = [single];
+  } else {
+    const selected = selectedOrdersOnSheet('shipping');
+    orders = selected.length ? selected : getFilteredOrders('shipping');
+  }
+
+  if (!orders.length) { showToast('No shipping orders to print.'); return; }
+
+  const withoutAddress = orders.filter((order) => !shippingAddressLines(order.shippingAddress || {}).length).length;
+  const slips = orders.map(buildPackingSlipHtml).join('');
+  const now = new Date();
+
+  const pw = window.open('', '_blank', 'width=980,height=900');
+  if (!pw) { showToast('Allow popups to print.'); return; }
+
+  pw.document.write(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<title>Shrish Packing Slips (${orders.length})</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,Helvetica,sans-serif;color:#111;background:#f4f4f4;font-size:12px}
+  .slip{background:#fff;width:7.9in;min-height:10.2in;margin:0 auto 16px;padding:0.42in 0.45in;page-break-after:always;break-after:page;display:flex;flex-direction:column}
+  .slip:last-child{page-break-after:auto;break-after:auto}
+
+  .slip-hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #C8791A;padding-bottom:10px;margin-bottom:16px}
+  .brand-name{font-size:27px;font-weight:700;letter-spacing:3px;color:#C8791A;line-height:1}
+  .brand-sub{font-size:10.5px;color:#777;margin-top:4px}
+  .slip-meta{text-align:right}
+  .slip-title{font-size:13px;font-weight:700;letter-spacing:2px;color:#7A4410}
+  .onum{font-size:17px;font-weight:700;margin-top:3px}
+  .odate{font-size:10.5px;color:#777;margin-top:2px}
+  .badge{display:inline-block;margin-top:6px;padding:3px 9px;border-radius:11px;font-size:10px;font-weight:700;letter-spacing:.5px}
+  .badge.paid{background:#E4F4E9;color:#1E7A46;border:1px solid #1E7A46}
+  .badge.due{background:#FDF0E4;color:#B3402B;border:1px solid #B3402B}
+
+  .addr-row{display:flex;gap:16px;margin-bottom:16px}
+  .from{width:33%;font-size:10.5px;color:#555;line-height:1.5}
+  .shipto{flex:1;border:2px solid #111;border-radius:5px;padding:11px 13px}
+  .lbl{font-size:9.5px;font-weight:700;letter-spacing:1.3px;color:#999;margin-bottom:5px}
+  .shipto .lbl{color:#C8791A}
+  .to-name{font-size:17px;font-weight:700;line-height:1.3}
+  .to-line{font-size:15px;line-height:1.45}
+  .to-line.missing{font-size:12px;color:#B3402B;font-style:italic}
+  .to-phone{font-size:12px;color:#555;margin-top:5px}
+
+  table.items{width:100%;border-collapse:collapse;margin-bottom:14px}
+  table.items th{background:#7C1C22;color:#fff;font-size:10px;letter-spacing:.8px;text-transform:uppercase;padding:7px 8px;text-align:left}
+  table.items td{padding:7px 8px;border-bottom:1px solid #E5DED2;font-size:12.5px;vertical-align:middle}
+  th.qty,td.qty{text-align:center;width:52px}
+  th.amt,td.amt{text-align:right;width:88px}
+  th.pack,td.pack{width:58px;text-align:center}
+  .chk{display:inline-block;width:13px;height:13px;border:1.6px solid #999;border-radius:3px}
+  .unit{color:#888;font-size:10.5px}
+  td.empty{text-align:center;color:#999;font-style:italic;padding:16px}
+  tfoot td{border-bottom:none;padding:3px 8px;font-size:12.5px}
+  tfoot .tl{text-align:right;color:#555}
+  tfoot tr.grand td{padding-top:8px;font-size:15px;font-weight:700;color:#7C1C22;border-top:2px solid #7C1C22}
+
+  .foot{margin-top:auto;padding-top:12px;border-top:1px dashed #CFC4B2;font-size:10.5px;color:#666}
+  .foot .count{font-weight:700;color:#444}
+  .foot .notes{margin-top:5px}
+  .foot .thanks{margin-top:7px;color:#C8791A;font-weight:700}
+
+  .warn{max-width:7.9in;margin:0 auto 12px;padding:9px 12px;background:#FDF0E4;border:1px solid #B3402B;color:#B3402B;border-radius:5px;font-size:11.5px}
+
+  @page{size:letter portrait;margin:0.3in}
+  @media print{
+    body{background:#fff}
+    .slip{width:auto;min-height:auto;margin:0;padding:0;box-shadow:none}
+    .warn{display:none}
+    tr,section{page-break-inside:avoid;break-inside:avoid}
+  }
+</style>
+</head><body>
+${withoutAddress ? `<div class="warn"><strong>Heads up:</strong> ${withoutAddress} of ${orders.length} order(s) have no shipping address saved and will print without one.</div>` : ''}
+${slips}
+<script>window.onload=()=>window.print();<\/script>
+</body></html>`);
+  pw.document.close();
+  showToast(`Packing slip${orders.length === 1 ? '' : 's'} ready for ${orders.length} order${orders.length === 1 ? '' : 's'}.`);
 }
 
 function renderExcelCalculations() {
@@ -4917,6 +5150,7 @@ window.closeWhatsAppReminderModal = closeWhatsAppReminderModal;
 window.handleWhatsAppReminderOverlayClick = handleWhatsAppReminderOverlayClick;
 window.openWhatsAppReminderForOrder = openWhatsAppReminderForOrder;
 window.printActiveOrders = printActiveOrders;
+window.printShippingOrders = printShippingOrders;
 window.exportCSV = exportCSV;
 window.renderCustomers = renderCustomers;
 window.exportCustomersCSV = exportCustomersCSV;

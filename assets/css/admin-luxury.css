@@ -803,6 +803,8 @@ select option { background: var(--obs-700); color: var(--text); }
 .btn-reset    { background: var(--glass-mid);  color: var(--text-light); border-color: var(--glass-border); }
 .btn-edit     { background: var(--glass-mid);  color: var(--gold-300);   border-color: rgba(200,121,26,0.3); }
 .btn-edit:hover { background: rgba(200,121,26,0.12); }
+.btn-print    { background: var(--glass-mid);  color: var(--gold-300);   border-color: rgba(200,121,26,0.35); }
+.btn-print:hover { background: rgba(200,121,26,0.18); box-shadow: 0 4px 12px rgba(200,121,26,0.18); }
 
 /* Payment method select in table */
 .payment-select {

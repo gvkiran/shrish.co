@@ -48,6 +48,7 @@
           <div class="sidebar-sheet-group">
             <div class="sheet-switcher" id="ordersSheetSwitcher">
               <button class="sheet-pill active" id="ordersSheetActive" onclick="setOrderSheet('active', this)">Active Orders</button>
+              <button class="sheet-pill" id="ordersSheetShipping" onclick="setOrderSheet('shipping', this)">📦 Shipping</button>
               <button class="sheet-pill" id="ordersSheetSpecialty" onclick="setOrderSheet('specialty', this)">Pickles / Sweets / Snacks</button>
               <button class="sheet-pill" id="ordersSheetProcessed" onclick="setOrderSheet('processed', this)">Processed Orders</button>
               <button class="sheet-pill" id="ordersSheetAll" onclick="setOrderSheet('all', this)">All Orders</button>
@@ -93,6 +94,7 @@
               <button class="toolbar-btn" id="whatsappReminderBtn" type="button" onclick="openWhatsAppReminderModal()" style="display:none;">WhatsApp Reminder</button>
               <button class="toolbar-btn" id="bulkFulfillBtn" onclick="markFilteredActiveFulfilled()">✓ Mark Filtered Fulfilled</button>
               <button class="toolbar-btn print-btn" id="printChecklistBtn" onclick="printActiveOrders()" title="Print pickup checklist for today">🖨️ Print Checklist</button>
+              <button class="toolbar-btn print-btn" id="printShippingBtn" type="button" onclick="printShippingOrders()" style="display:none;" title="Print packing slips for the selected shipping orders (or all filtered if none selected)">📦 Print Packing Slips</button>
               <button class="toolbar-btn" onclick="exportCSV()">⬇ Export CSV</button>
             </div>
           </div>
