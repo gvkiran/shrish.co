@@ -917,6 +917,44 @@ function locationLabel(location = '') {
   return labels[location] || location || '';
 }
 
+function shippingAddressLines(address = {}) {
+  const line1 = String(address.addressLine1 || '').trim();
+  const line2 = String(address.addressLine2 || '').trim();
+  const city = String(address.city || '').trim();
+  const state = String(address.state || '').trim();
+  const zip = String(address.zip || '').trim();
+  const cityLine = [city, [state, zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  return [line1, line2, cityLine].filter(Boolean);
+}
+
+function shippingAddressText(address = {}) {
+  return shippingAddressLines(address).join(', ');
+}
+
+function isShippingOrder(order = {}) {
+  return order.fulfillmentType === 'shipping' || order.location === 'shipping';
+}
+
+// Active Orders location cell: show the full destination address for shipping
+// orders. The stored `locationLabel` is intentionally coarse (city/state/zip)
+// because it also drives location grouping and pickup tallies, so the full
+// street address is read from the saved `shippingAddress` object instead.
+function orderLocationCellHtml(order = {}) {
+  const address = order.shippingAddress || null;
+  if (isShippingOrder(order) && address && (address.addressLine1 || address.city)) {
+    const name = String(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`).trim();
+    const lines = shippingAddressLines(address)
+      .map((line) => `<div>${escapeHtml(line)}</div>`)
+      .join('');
+    return `<div class="ship-to" style="line-height:1.35">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-light);margin-bottom:2px">Shipping to</div>
+        ${name ? `<div style="font-weight:600">${escapeHtml(name)}</div>` : ''}
+        ${lines}
+      </div>`;
+  }
+  return escapeHtml(order.locationLabel || order.location || '—');
+}
+
 function normalizeLookup(value = '') {
   return String(value || '').trim().toLowerCase();
 }
@@ -1424,6 +1462,7 @@ function getFilteredOrders(sheet = state.orderSheet) {
         order.phone || '',
         order.email || '',
         order.locationLabel || order.location || '',
+        shippingAddressText(order.shippingAddress || {}),
         ...orderItemsForSheet(order, sheet).map((item) => item?.name || '')
       ].join(' ').toLowerCase();
 
@@ -2345,7 +2384,7 @@ function renderOrders() {
       <td><div class="customer-name">${escapeHtml(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim())}</div><div class="customer-phone">${escapeHtml(order.phone)}</div><div class="customer-email">${escapeHtml(order.email)}</div></td>
       <td>${itemsHtml}</td>
       <td><div class="total-amount">${formatCurrency(visibleTotal)}</div></td>
-      <td style="font-size:13px">${escapeHtml(order.locationLabel || order.location || '—')}</td>
+      <td style="font-size:13px">${orderLocationCellHtml(order)}</td>
       ${isPendingSheet ? '' : `<td>${paymentCellHtml}</td><td><span class="status-badge ${statusClass}">${statusLabel}</span></td>`}
       <td><div class="action-btns"><button class="action-btn btn-fulfill" onclick="setStatus('${escapeHtml(order.id)}','fulfilled')">✓ Fulfill</button><button class="action-btn btn-noshow" onclick="setStatus('${escapeHtml(order.id)}','no_show')">No Show</button><button class="action-btn btn-cancel" onclick="setStatus('${escapeHtml(order.id)}','cancelled')">✕ Cancel</button><button class="action-btn btn-reset" onclick="setStatus('${escapeHtml(order.id)}','pending')">↺ Reset</button></div></td>
     </tr>`;
@@ -3801,7 +3840,7 @@ function exportCSV() {
 
   const rows = [[
     'Order ID', 'Customer', 'Phone', 'Email', 'Items', 'Boxes', 'Total',
-    'Location', 'Pickup Date', 'Payment', 'Payment Method', 'Collected', 'Status', 'Created'
+    'Location', 'Shipping Address', 'Pickup Date', 'Payment', 'Payment Method', 'Collected', 'Status', 'Created'
   ]];
   orders.forEach((order) => {
     const visibleItems = orderItemsForSheet(order);
@@ -3816,6 +3855,7 @@ function exportCSV() {
       state.orderSheet === 'specialty' ? visibleBoxes : order.totalBoxes || 0,
       visibleTotal,
       order.locationLabel || order.location || '',
+      shippingAddressText(order.shippingAddress || {}),
       order.pickupDate || '',
       order.payment || 'pending',
       order.paymentMethod || '',
