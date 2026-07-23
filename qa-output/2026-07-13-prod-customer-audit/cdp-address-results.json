@@ -1,0 +1,22 @@
+{
+  "res": {
+    "googleLoaded": true,
+    "keyPresent": true,
+    "assist": "Start typing your street address for suggestions.",
+    "suggestions": [
+      "1600 Pennsylvania Avenue Northwest\nWashington, DC, USA",
+      "1600 Pennsylvania Avenue Southeast\nWashington, DC, USA",
+      "1600 Pennsylvania Avenue\nCharleston, WV, USA",
+      "1600 Penn SE Apartments\nPennsylvania Avenue Southeast, Washington, DC, USA",
+      "1600 Pennsylvania Avenue\nBaltimore, MD, USA"
+    ],
+    "visibleShipping": true,
+    "eventsText": [
+      "Start typing",
+      "suggestion",
+      "Google",
+      "shipping address"
+    ]
+  },
+  "events": []
+}

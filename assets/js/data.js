@@ -769,8 +769,9 @@ const SHRISH_DATA = {
       name: "Kothimeera Pachadi / Coriander Pickle", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
-      image: "",
+      image: "images/products/pickles/kothimeera-coriander-pickle-2026-1.png",
       gallery: [
+        "images/products/pickles/kothimeera-coriander-pickle-2026-1.png"
       ],
       description: "Fresh coriander-style pickle with a herby, spicy, and tangy taste. A good everyday pickle for rice, dosa, idli, and chapati.",
       ingredientsText: "Fresh coriander leaves, green chilli or red chilli, garlic, tamarind, mustard, salt, peanut/groundnut oil, tempering spices, jaggery",
@@ -857,11 +858,9 @@ const SHRISH_DATA = {
       name: "Mixed Vegetable Pickle", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
-      image: "",
+      image: "images/products/pickles/mixed-vegetable-pickle-2026-1.png",
       gallery: [
-        "images/products/pickles/mixed-vegetable-2026-1.jpg",
-        "images/products/pickles/mixed-vegetable-2026-2.jpg",
-        "images/products/pickles/mixed-vegetable-2026-3.jpg"
+        "images/products/pickles/mixed-vegetable-pickle-2026-1.png"
       ],
       description: "Andhra-style mixed vegetable pickle with carrot, cauliflower, green chilli, and seasonal vegetables in a bold chilli-mustard spice mix. A colorful, crunchy side for rice and tiffins.",
       ingredientsText: "Mixed vegetables such as beans, carrot, cauliflower, green chilli, and seasonal vegetables, red chilli powder, mustard powder, fenugreek, turmeric, salt, peanut/groundnut oil, lemon",
@@ -904,8 +903,9 @@ const SHRISH_DATA = {
       name: "Tomato Pickle", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
-      image: "",
+      image: "images/products/pickles/tomato-pickle-2026-1.png",
       gallery: [
+        "images/products/pickles/tomato-pickle-2026-1.png"
       ],
       description: "Rich and spicy tomato pickle with a deep, tangy flavor. Great with rice, dosa, upma, idli, chapati, and curd rice.",
       ingredientsText: "Tomatoes, turmeric, red chilli powder, tamarind, mustard, fenugreek, salt, peanut/groundnut oil, garlic",
@@ -971,7 +971,10 @@ const SHRISH_DATA = {
       name: "Fish Pickle / Koramenu Pickle", localName: "250g or 500g", origin: "Non-Veg Pickle",
       price: "$17.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: true, tag: "Preorder Only",
-      image: SHRISH_LOGO_PRODUCT_IMAGE,
+      image: "images/products/pickles/fish-pickle-koramenu-2026-1.jpg",
+      gallery: [
+        "images/products/pickles/fish-pickle-koramenu-2026-1.jpg"
+      ],
       description: "Spicy fish pickle with Andhra-style masala. Premium seafood pickle for preorder customers.",
       ingredientsText: "Fish pieces, red chilli powder, ginger garlic, mustard, fenugreek, salt, peanut/groundnut oil, lemon, garam masala, spices. Fish variety may be Koramenu or Chanduva based on availability.",
       storageNote: "Refrigerate immediately after opening and use within 15-30 days. Do not leave at room temperature after opening. Store unopened packs cool, dry, and away from sunlight.",
