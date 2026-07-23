@@ -62,7 +62,6 @@
           <button class="admin-tab" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
           <button class="admin-tab" onclick="switchTab('refunds',this);loadRefundTab()">💸 Refunds</button>
           <button class="admin-tab" onclick="switchTab('promos',this)">🎟️ Promo Codes</button>
-            <button class="admin-tab" onclick="switchTab('accounting',this)">📒 Accounting</button>
           <button class="admin-tab" onclick="switchTab('pickup-tally',this)">🧾 Pickup Tally</button>
         </div>
       </aside>
@@ -95,6 +94,8 @@
               <button class="toolbar-btn" id="bulkFulfillBtn" onclick="markFilteredActiveFulfilled()">✓ Mark Filtered Fulfilled</button>
               <button class="toolbar-btn print-btn" id="printChecklistBtn" onclick="printActiveOrders()" title="Print pickup checklist for today">🖨️ Print Checklist</button>
               <button class="toolbar-btn print-btn" id="printShippingBtn" type="button" onclick="printShippingOrders()" style="display:none;" title="Print packing slips for the selected shipping orders (or all filtered if none selected)">📦 Print Packing Slips</button>
+              <button class="toolbar-btn print-btn" id="printLabelsBtn" type="button" onclick="printShippingLabels()" style="display:none;" title="Print 4x6 thermal shipping labels (Rollo / DYMO) for the selected orders">🏷️ 4×6 Labels</button>
+              <button class="toolbar-btn" id="markShippedBtn" type="button" onclick="markSelectedShippingFulfilled()" style="display:none;" title="Mark the selected shipping orders as fulfilled">✓ Mark Selected Shipped</button>
               <button class="toolbar-btn" onclick="exportCSV()">⬇ Export CSV</button>
             </div>
           </div>
