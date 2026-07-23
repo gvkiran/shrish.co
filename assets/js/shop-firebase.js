@@ -1058,7 +1058,7 @@ function renderCard(p) {
   const variants = getProductVariants(p);
   const hasChoices = usesVariantUI(p);
   const selectedCardVariant = getCardSelectedVariant(p);
-  const cardPriceText = usesDirectVariantButtons(p)
+  const cardPriceText = hasChoices
     ? (getVariantPriceRange(variants) || selectedCardVariant.price || p.price)
     : (selectedCardVariant.price || p.price);
 
@@ -1070,7 +1070,7 @@ function renderCard(p) {
   } else if (isAvail && hasChoices && usesDirectVariantButtons(p)) {
     actionHtml = `<div class="pc-card-actions pc-card-actions-variant pc-card-actions-direct" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button>${renderDirectVariantButtons(p, variants)}</div>`;
   } else if (isAvail && hasChoices) {
-    actionHtml = `<div class="pc-card-actions pc-card-actions-variant" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><div class="pc-variant-list"><select class="pc-variant-select" onchange="cardVariantChanged('${escapeHtml(p.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === selectedCardVariant.id ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select><button class="pc-add-btn" onclick="quickAddSelectedVariant('${escapeHtml(p.id)}')">${isPreorder ? '+ Preorder' : '+ Add to Cart'}</button></div></div>`;
+    actionHtml = `<div class="pc-card-actions pc-card-actions-variant pc-card-actions-direct" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><div class="pc-variant-list">${renderCardVariantChoices(p, variants, selectedCardVariant)}<button class="pc-add-btn" onclick="quickAddSelectedVariant('${escapeHtml(p.id)}')">${isPreorder ? '+ Preorder' : '+ Add to Cart'}</button></div></div>`;
   } else if (isAvail) {
     actionHtml = `<div class="pc-card-actions" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" onclick="quickAdd('${escapeHtml(p.id)}')">${isPreorder ? '+ Preorder' : '+ Add to Cart'}</button></div>`;
   } else {
@@ -1138,6 +1138,15 @@ function getCartVariantQty(productId, variantId) {
   return item ? item.qty : 0;
 }
 
+function renderCardVariantChoices(product, variants, selectedVariant) {
+  const safeProductId = escapeHtml(product.id);
+  const selectedId = selectedVariant && selectedVariant.id;
+  return `<div class="pc-direct-variants pc-choice-variants">${variants.map((variant) => {
+    const selected = variant.id === selectedId;
+    return `<button type="button" class="pc-size-add-btn pc-choice-btn ${selected ? 'selected' : ''}" onclick="cardVariantChanged('${safeProductId}','${escapeHtml(variant.id)}')" aria-pressed="${selected ? 'true' : 'false'}"><span>${escapeHtml(variant.label)}</span><strong>${escapeHtml(variant.price || product.price || '')}</strong></button>`;
+  }).join('')}</div>`;
+}
+
 function renderDirectVariantButtons(product, variants) {
   return `<div class="pc-direct-variants">${variants.map((variant) => {
     const qty = getCartVariantQty(product.id, variant.id);
@@ -1171,17 +1180,17 @@ function renderCardQty(productId) {
       return;
     }
     const selectedVariant = getCardSelectedVariant(product);
-    updateCardDisplayedPrice(product.id, selectedVariant.price || product.price);
+    updateCardDisplayedPrice(product.id, getVariantPriceRange(variants) || selectedVariant.price || product.price);
     const cartItemId = buildCartItemId(product.id, selectedVariant.id);
     const item = cart.find((x) => x.id === cartItemId);
     const qty = item ? item.qty : 0;
 
     if (qty === 0) {
-      wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><div class="pc-variant-list"><select class="pc-variant-select" onchange="cardVariantChanged('${escapeHtml(product.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === selectedVariant.id ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select><button class="pc-add-btn" onclick="quickAddSelectedVariant('${escapeHtml(product.id)}')">${addLabel}</button></div>`;
+      wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><div class="pc-variant-list">${renderCardVariantChoices(product, variants, selectedVariant)}<button class="pc-add-btn" onclick="quickAddSelectedVariant('${escapeHtml(product.id)}')">${addLabel}</button></div>`;
       return;
     }
 
-    wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><div class="pc-variant-list"><select class="pc-variant-select" onchange="cardVariantChanged('${escapeHtml(product.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === selectedVariant.id ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select><div class="card-qty-wrap"><button class="card-qty-btn remove-btn" onclick="cardVariantQtyChange('${escapeHtml(product.id)}','${escapeHtml(selectedVariant.id)}',-1)" title="Remove one">-</button><div class="card-qty-mid"><span class="cqn">${qty}</span><span style="font-size:11px;opacity:.85">${escapeHtml(selectedVariant.label)}</span></div><button class="card-qty-btn" onclick="cardVariantQtyChange('${escapeHtml(product.id)}','${escapeHtml(selectedVariant.id)}',1)" title="Add one">+</button></div></div>`;
+    wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><div class="pc-variant-list">${renderCardVariantChoices(product, variants, selectedVariant)}<div class="card-qty-wrap"><button class="card-qty-btn remove-btn" onclick="cardVariantQtyChange('${escapeHtml(product.id)}','${escapeHtml(selectedVariant.id)}',-1)" title="Remove one">-</button><div class="card-qty-mid"><span class="cqn">${qty}</span><span style="font-size:11px;opacity:.85">${escapeHtml(selectedVariant.label)}</span></div><button class="card-qty-btn" onclick="cardVariantQtyChange('${escapeHtml(product.id)}','${escapeHtml(selectedVariant.id)}',1)" title="Add one">+</button></div></div>`;
     return;
   }
   updateCardDisplayedPrice(product.id, product.price);
