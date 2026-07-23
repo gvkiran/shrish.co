@@ -830,20 +830,33 @@ function openModal(productId, options = {}) {
       ['Image disclaimer', p.imageDisclaimer || SHOP_IMAGE_DISCLAIMER]
     ];
     const productSafetyHtml = `<div class="modal-safety-note">${productSafetyNotes.map(([label, value]) => `<p><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</p>`).join('')}</div>`;
+
+    // Buy-first: keep name/desc/price/qty/add-to-cart visible; tuck tags,
+    // ingredients, storage, and allergen notes into one collapsible section so
+    // the primary action isn't buried under a wall of text.
+    const priceRowHtml = `<div class="modal-price-row"><div><div class="modal-price">${escapeHtml(selectedVariant.price || p.price)}</div><div class="modal-unit">${escapeHtml(selectedVariant.unit || p.unit)}</div></div></div>`;
+    const buyBoxHtml = `<div class="modal-buybox">${priceRowHtml}${actionHtml}</div>`;
+
+    const detailBits = [
+      chips ? `<div class="modal-chips">${chips}</div>` : '',
+      badges ? `<div class="modal-badges">${badges}</div>` : '',
+      (p.details && !isPicklesPodi) ? `<div class="modal-note">Info: ${escapeHtml(p.details)}</div>` : '',
+      picklesPodiDetails,
+      p.bestFor ? `<div class="modal-best"><strong>Best for:</strong> ${escapeHtml(p.bestFor)}</div>` : '',
+      productSafetyHtml
+    ].filter(Boolean).join('');
+    const detailsAccordion = detailBits
+      ? `<details class="modal-accordion"><summary>Product details, ingredients &amp; allergens</summary><div class="modal-accordion-body">${detailBits}</div></details>`
+      : '';
+
     info.innerHTML = `
       <div class="modal-origin">${escapeHtml(p.origin)}</div>
       <div class="modal-name">${escapeHtml(p.name)}</div>
       ${p.localName ? `<div class="modal-local">${escapeHtml(p.localName)}</div>` : ''}
       <div class="modal-status ${statusCls}">${statusText}</div>
       <div class="modal-desc">${escapeHtml(p.description)}</div>
-      ${chips ? `<div class="modal-chips">${chips}</div>` : ''}
-      ${badges ? `<div class="modal-badges">${badges}</div>` : ''}
-      ${p.details && !isPicklesPodi ? `<div class="modal-note">Info: ${escapeHtml(p.details)}</div>` : ''}
-      ${picklesPodiDetails}
-      ${productSafetyHtml}
-      ${p.bestFor ? `<div class="modal-best"><strong>Best for:</strong> ${escapeHtml(p.bestFor)}</div>` : ''}
-      <div class="modal-price-row"><div><div class="modal-price">${escapeHtml(selectedVariant.price || p.price)}</div><div class="modal-unit">${escapeHtml(selectedVariant.unit || p.unit)}</div></div></div>
-      ${actionHtml}`;
+      ${buyBoxHtml}
+      ${detailsAccordion}`;
   }
 
   document.getElementById('productModal')?.classList.add('open');

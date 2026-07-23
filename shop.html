@@ -145,7 +145,7 @@
 .modal-close:hover{background:rgba(0,0,0,.25)}
 
 /* Modal image panel */
-.modal-images{background:#fff;border-radius:24px 0 0 24px;padding:0;overflow:hidden;position:sticky;top:0;align-self:start;min-height:auto;display:flex;flex-direction:column;border-right:1px solid rgba(200,121,26,.08)}
+.modal-images{background:#fff;border-radius:24px 0 0 24px;padding:0;overflow:hidden;position:sticky;top:0;align-self:stretch;min-height:auto;display:flex;flex-direction:column;justify-content:flex-start;border-right:1px solid rgba(200,121,26,.08)}
 #modalMainImgWrap{flex:0 0 auto;aspect-ratio:1/1;width:100%;display:flex;align-items:center;justify-content:center;background:#fff;padding:0;overflow:hidden}
 .modal-main-img{width:100%;height:100%;object-fit:cover;display:block}
 .modal-img-placeholder{width:100%;height:100%;min-height:340px;display:flex;align-items:center;justify-content:center;font-size:72px;background:#fff;color:rgba(26,18,8,.7)}
@@ -201,6 +201,27 @@
 .modal-add-btn.added{background:#2E7D32}
 .modal-notify-btn{width:100%;padding:12px;border:none;background:var(--dark);color:var(--gold-l);border-radius:50px;font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer;transition:all .3s}
 .modal-notify-btn:hover{background:#2E1F08}
+
+/* Buy-first: price + size + qty + add-to-cart grouped in one prominent card */
+.modal-desc{-webkit-line-clamp:none}
+.modal-buybox{background:linear-gradient(180deg,#fffaf2,var(--cream));border:1px solid rgba(200,121,26,.22);border-radius:18px;padding:16px 16px 18px;margin:4px 0 16px;box-shadow:0 8px 24px rgba(26,18,8,.06)}
+.modal-buybox .modal-price-row{margin-bottom:14px}
+.modal-buybox .modal-price{font-size:27px}
+.modal-buybox .modal-variant-group{margin-bottom:12px}
+.modal-buybox .modal-qty-row{margin-bottom:0}
+.modal-buybox .modal-add-btn{box-shadow:0 6px 18px rgba(200,121,26,.22)}
+
+/* Collapsible product details — hides tags, ingredients, allergens until wanted */
+.modal-accordion{border:1px solid rgba(200,121,26,.16);border-radius:14px;margin-bottom:8px;overflow:hidden;background:#fff}
+.modal-accordion+.modal-accordion{margin-top:0}
+.modal-accordion>summary{list-style:none;cursor:pointer;padding:13px 16px;font-size:13px;font-weight:700;color:var(--dark);display:flex;align-items:center;justify-content:space-between;gap:10px;user-select:none;transition:background .2s}
+.modal-accordion>summary::-webkit-details-marker{display:none}
+.modal-accordion>summary::after{content:'\25be';color:var(--saffron);font-size:15px;transition:transform .25s;flex-shrink:0}
+.modal-accordion[open]>summary::after{transform:rotate(180deg)}
+.modal-accordion>summary:hover{background:var(--cream-d)}
+.modal-accordion-body{padding:6px 16px 16px}
+.modal-accordion-body>*:last-child{margin-bottom:0}
+.modal-accordion-body .modal-chips,.modal-accordion-body .modal-badges{margin-bottom:14px}
 
 /* Notify modal */
 .notify-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:2300;backdrop-filter:blur(4px)}
