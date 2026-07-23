@@ -802,7 +802,7 @@ function openModal(productId, options = {}) {
   } else if (isAvail) {
     const variants = getProductVariants(p);
     const variantSelect = usesVariantUI(p)
-      ? `<div class="modal-variant-group"><div class="modal-variant-title">${p.category === 'putharekulu' ? 'Choose count' : 'Choose size'}</div><select class="modal-variant-select" onchange="modalSelectVariant('${escapeHtml(p.id)}', this.value)">${variants.map((variant) => `<option value="${escapeHtml(variant.id)}" ${variant.id === modalVariantId ? 'selected' : ''}>${escapeHtml(variant.label)} - ${escapeHtml(variant.price)}</option>`).join('')}</select></div>`
+      ? `<div class="modal-variant-group"><div class="modal-variant-title">${p.category === 'putharekulu' ? 'Choose count' : 'Choose size'}</div><div class="modal-variant-buttons">${variants.map((variant) => `<button type="button" class="modal-variant-btn${variant.id === modalVariantId ? ' active' : ''}" aria-pressed="${variant.id === modalVariantId}" onclick="modalSelectVariant('${escapeHtml(p.id)}', '${escapeHtml(variant.id)}')"><span>${escapeHtml(variant.label)}</span><strong>${escapeHtml(variant.price)}</strong></button>`).join('')}</div></div>`
       : '';
     actionHtml = `${variantSelect}<div class="modal-qty-row"><div class="modal-qty-ctrl"><button class="modal-qty-btn" onclick="modalChangeQty(-1)">-</button><span class="modal-qty-num" id="modalQtyNum">1</span><button class="modal-qty-btn" onclick="modalChangeQty(1)">+</button></div><button class="modal-add-btn" id="modalAddBtn" onclick="modalAddToCart()">${isPreorder ? 'Preorder' : 'Add to Cart'}</button></div>`;
   } else {
@@ -837,17 +837,25 @@ function openModal(productId, options = {}) {
     const priceRowHtml = `<div class="modal-price-row"><div><div class="modal-price">${escapeHtml(selectedVariant.price || p.price)}</div><div class="modal-unit">${escapeHtml(selectedVariant.unit || p.unit)}</div></div></div>`;
     const buyBoxHtml = `<div class="modal-buybox">${priceRowHtml}${actionHtml}</div>`;
 
-    const detailBits = [
+    // Details in tabs so content swaps in place — no accordion that grows the
+    // modal and leaves an empty gap beside the image.
+    const detailsInner = [
       chips ? `<div class="modal-chips">${chips}</div>` : '',
       badges ? `<div class="modal-badges">${badges}</div>` : '',
       (p.details && !isPicklesPodi) ? `<div class="modal-note">Info: ${escapeHtml(p.details)}</div>` : '',
       picklesPodiDetails,
-      p.bestFor ? `<div class="modal-best"><strong>Best for:</strong> ${escapeHtml(p.bestFor)}</div>` : '',
-      productSafetyHtml
+      p.bestFor ? `<div class="modal-best"><strong>Best for:</strong> ${escapeHtml(p.bestFor)}</div>` : ''
     ].filter(Boolean).join('');
-    const detailsAccordion = detailBits
-      ? `<details class="modal-accordion"><summary>Product details, ingredients &amp; allergens</summary><div class="modal-accordion-body">${detailBits}</div></details>`
-      : '';
+    const tabDefs = [
+      ['details', 'Product details', detailsInner],
+      ['safety', 'Allergens & safety', productSafetyHtml]
+    ].filter((tab) => tab[2]);
+    let detailsTabs = '';
+    if (tabDefs.length) {
+      const controls = tabDefs.map((tab, i) => `<input class="mtab-radio" type="radio" name="mtabs" id="mtab-${tab[0]}"${i === 0 ? ' checked' : ''}><label class="mtab-label" for="mtab-${tab[0]}">${escapeHtml(tab[1])}</label>`).join('');
+      const panels = tabDefs.map((tab) => `<div class="mtab-body mtab-body-${tab[0]}">${tab[2]}</div>`).join('');
+      detailsTabs = `<div class="modal-tabs">${controls}${panels}</div>`;
+    }
 
     info.innerHTML = `
       <div class="modal-origin">${escapeHtml(p.origin)}</div>
@@ -856,7 +864,7 @@ function openModal(productId, options = {}) {
       <div class="modal-status ${statusCls}">${statusText}</div>
       <div class="modal-desc">${escapeHtml(p.description)}</div>
       ${buyBoxHtml}
-      ${detailsAccordion}`;
+      ${detailsTabs}`;
   }
 
   document.getElementById('productModal')?.classList.add('open');
