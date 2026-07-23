@@ -770,7 +770,7 @@ function openModal(productId, options = {}) {
   const thumbs = document.getElementById('modalThumbs');
   if (thumbs) {
     if (imgs.length) {
-      thumbs.innerHTML = imgs.map((src, i) => `<img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(p.name)} ${i + 1}" loading="lazy" decoding="async" onclick="switchModalImg('${escapeHtml(src)}',this)" onerror="this.onerror=null;this.src='images/brand/logo-small.png'">`).join('');
+      thumbs.innerHTML = imgs.map((src, i) => `<img class="modal-thumb ${i === 0 ? 'active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(p.name)} ${i + 1}" loading="eager" decoding="async" onclick="switchModalImg('${escapeHtml(src)}',this)" onerror="this.onerror=null;this.src='images/brand/logo-small.png'">`).join('');
       thumbs.style.display = 'flex';
     } else {
       thumbs.innerHTML = '';
