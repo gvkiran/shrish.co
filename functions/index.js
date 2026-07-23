@@ -26,6 +26,8 @@ const SHRISH_SUPPORT_PHONE = "+1 (765) 325-5577";
 const SHRISH_INSTAGRAM_URL = "https://www.instagram.com/shrish_llc/";
 const SHRISH_WHATSAPP_URL = "https://wa.me/17653255577";
 const SHRISH_LOGO_URL = "https://gvkiran.github.io/shrish.co/images/brand/logo-small.png";
+const SHRISH_REVIEW_URL = "https://g.page/r/CS0iwi3C14P8EAE/review";
+const SHRISH_REVIEW_QR_URL = "https://gvkiran.github.io/shrish.co/images/brand/google-review-qr.png";
 const SHRISH_SITE_URL = "https://shrish.co";
 const ORDER_COUNTER_START = 671499;
 const MAX_REMINDER_EMAILS_PER_SEND = 50;
@@ -514,9 +516,21 @@ function buildCustomerEmail(order) {
                 What happens next
               </div>
               <div style="font-size:14px; line-height:1.7; color:#3d3225;">
-                We will review your order and share the exact pickup time and address details through our WhatsApp group. 
+                We will review your order and share the exact pickup time and address details through our WhatsApp group.
                 To make changes to your order, please reply to this email or contact us on WhatsApp.
               </div>
+            </div>
+
+            <div style="background:#fff8ec; border:1px solid #ecd9b6; border-radius:14px; padding:20px 18px; margin-bottom:18px; text-align:center;">
+              <div style="font-size:15px; font-weight:700; color:#2b2218;">Enjoying Shrish? ⭐</div>
+              <div style="font-size:13px; line-height:1.65; color:#6b5842; margin:7px auto 15px; max-width:440px;">
+                Once your order arrives and you've had a taste, a quick Google review means the world to our small family kitchen — it takes about 30 seconds and helps other families find us.
+              </div>
+              <a href="${SHRISH_REVIEW_URL}" style="display:inline-block; background:#b87512; color:#ffffff; text-decoration:none; font-weight:700; font-size:14px; padding:12px 28px; border-radius:50px;">
+                ★ Leave a Google review
+              </a>
+              <div style="margin-top:16px; font-size:11px; color:#9c8a6b;">Reading on your computer? Scan with your phone camera:</div>
+              <img src="${SHRISH_REVIEW_QR_URL}" width="108" height="108" alt="Scan to review Shrish on Google" style="display:block; width:108px; height:108px; margin:9px auto 0; border-radius:8px; background:#ffffff;" />
             </div>
 
             <div style="font-size:14px; line-height:1.8; color:#2b2218;">
