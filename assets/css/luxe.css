@@ -353,6 +353,8 @@ body.luxe .pc-tag{background:linear-gradient(135deg,var(--gold),#B8860B);color:#
 body.luxe .pc-rec-tags span{background:rgba(212,160,23,.1);border:1px solid rgba(212,160,23,.22);color:#CDBC9D}
 body.luxe .pc-add-btn,body.luxe .pc-size-add-btn{background:linear-gradient(135deg,#E8A93C,#C8791A);color:#140C03;border:none;font-weight:700;transition:transform .3s,box-shadow .3s}
 body.luxe .pc-add-btn:hover,body.luxe .pc-size-add-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(212,160,23,.4)}
+body.luxe .pc-choice-btn.selected{background:linear-gradient(135deg,#F5B53E,#C8791A);border-color:rgba(255,209,102,.75);color:#140C03;box-shadow:0 10px 26px rgba(212,160,23,.28)}
+body.luxe .pc-choice-btn.selected strong{color:#140C03}
 body.luxe .pc-details-btn{background:transparent;border:1.5px solid rgba(212,160,23,.4);color:var(--gold-l)}
 body.luxe .pc-details-btn:hover{background:rgba(212,160,23,.12)}
 body.luxe .pc-notify-btn{background:#1D1306;border:1.5px solid rgba(212,160,23,.35);color:var(--gold-l)}

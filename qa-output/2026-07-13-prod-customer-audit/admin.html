@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard – SHRISH LLC</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="icon" href="images/brand/logo-small.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/css/admin-luxury.css?v=reminder-modal-polish-20260529">
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="loginScreen" class="admin-login-wrap">
+  <div class="admin-login-card">
+    <img src="images/brand/logo-small.png" alt="Shrish LLC" />
+    <h2>Admin Access</h2>
+    <p>Enter your admin email and password to manage orders and products</p>
+    <input type="email" id="adminEmail" placeholder="Admin email" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()" />
+    <input type="password" id="adminPw" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+    <button onclick="doLogin()">Login →</button>
+    <p class="login-error" id="loginErr">Login failed. Check your Firebase Auth admin user.</p>
+  </div>
+</div>
+
+<!-- ── DASHBOARD ── -->
+<div id="dashboard" style="display:none;">
+
+  <!-- Top bar -->
+  <div class="admin-topbar">
+    <div class="admin-topbar-left">
+      <img src="images/brand/logo-small.png" alt="Shrish" />
+      <h1>Admin Dashboard</h1>
+    </div>
+    <span id="adminUserEmail" style="font-size:13px;color:var(--text-light);margin-right:8px"></span><button class="admin-logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+
+  <div class="admin-wrap">
+    <div class="admin-layout">
+      <aside class="admin-sidebar">
+        <div class="sidebar-title">Navigation</div>
+        <div class="admin-tabs">
+          <button class="admin-tab active" onclick="switchTab('orders',this)">📋 Orders</button>
+          <div class="sidebar-sheet-group">
+            <div class="sheet-switcher" id="ordersSheetSwitcher">
+              <button class="sheet-pill active" id="ordersSheetActive" onclick="setOrderSheet('active', this)">Active Orders</button>
+              <button class="sheet-pill" id="ordersSheetSpecialty" onclick="setOrderSheet('specialty', this)">Pickles / Sweets / Snacks</button>
+              <button class="sheet-pill" id="ordersSheetProcessed" onclick="setOrderSheet('processed', this)">Processed Orders</button>
+              <button class="sheet-pill" id="ordersSheetAll" onclick="setOrderSheet('all', this)">All Orders</button>
+            </div>
+          </div>
+          <div class="sidebar-divider"></div>
+          <button class="admin-tab" onclick="switchTab('products',this)">🛒 Manage Products</button>
+          <button class="admin-tab" onclick="switchTab('customers',this)">Customer Accounts</button>
+          <button class="admin-tab" onclick="switchTab('feedback',this)">Feedback</button>
+          <button class="admin-tab" onclick="switchTab('growth',this)">Growth Dashboard</button>
+          <button class="admin-tab" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
+          <button class="admin-tab" onclick="switchTab('refunds',this);loadRefundTab()">💸 Refunds</button>
+          <button class="admin-tab" onclick="switchTab('promos',this)">🎟️ Promo Codes</button>
+            <button class="admin-tab" onclick="switchTab('accounting',this)">📒 Accounting</button>
+          <button class="admin-tab" onclick="switchTab('pickup-tally',this)">🧾 Pickup Tally</button>
+        </div>
+      </aside>
+
+      <main class="admin-main">
+        <!-- ── ORDERS TAB ── -->
+        <div id="tab-orders">
+          <div class="orders-toolbar">
+            <h2 id="ordersSectionTitle">Active Orders</h2>
+            <div class="toolbar-actions">
+              <input type="search" id="filterSearch" class="filter-input" placeholder="Search order #, name, phone, email" onchange="renderOrders()">
+              <select id="filterLocation" class="filter-input" onchange="renderOrders()">
+                <option value="all">All Locations</option>
+                <option value="shortpump">Short Pump</option>
+                <option value="chesterfield">Chesterfield</option>
+                <option value="mechanicsville">Mechanicsville</option>
+              </select>
+              <input type="date" id="filterDateFrom" class="filter-input" onchange="renderOrders()">
+              <input type="date" id="filterDateTo" class="filter-input" onchange="renderOrders()">
+              <select id="filterStatus" class="filter-input" onchange="renderOrders()">
+                <option value="all">All Orders</option>
+                <option value="pending">Pending</option>
+                <option value="fulfilled">Fulfilled</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="no_show">No Show</option>
+              </select>
+              <button class="toolbar-btn" type="button" onclick="openManualOrderForm()">+ Manual Order</button>
+              <button class="toolbar-btn" id="emailReminderBtn" type="button" onclick="openEmailReminderModal()" style="display:none;">Email Reminder</button>
+              <button class="toolbar-btn" id="whatsappReminderBtn" type="button" onclick="openWhatsAppReminderModal()" style="display:none;">WhatsApp Reminder</button>
+              <button class="toolbar-btn" id="bulkFulfillBtn" onclick="markFilteredActiveFulfilled()">✓ Mark Filtered Fulfilled</button>
+              <button class="toolbar-btn print-btn" id="printChecklistBtn" onclick="printActiveOrders()" title="Print pickup checklist for today">🖨️ Print Checklist</button>
+              <button class="toolbar-btn" onclick="exportCSV()">⬇ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="orders-help" id="ordersHelpText">
+            Active Orders shows your current pending pickup list. Processed Orders shows fulfilled pickups that still need review. Cancelled and no-show records live in All Orders.
+          </div>
+
+          <div class="active-order-summary" id="activeOrderSummary"></div>
+
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th class="order-select-col"><input type="checkbox" id="selectAllActiveOrders" onchange="toggleVisibleReminderOrders(this.checked)" aria-label="Select all visible active orders"></th>
+                  <th>Order #</th>
+                  <th>Received Date</th>
+                  <th>Customer</th>
+                  <th>Products &amp; Qty</th>
+                  <th>Total</th>
+                  <th>Location</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ordersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── PRODUCTS TAB ── -->
+        <div class="order-editor-modal" id="orderEditorModal" onclick="handleOrderEditorOverlayClick(event)">
+          <div class="order-editor-card" role="dialog" aria-modal="true" aria-labelledby="orderEditorOrderNumber">
+            <div class="order-editor-head">
+              <div>
+                <h3>Edit Order <span id="orderEditorOrderNumber"></span></h3>
+                <p id="orderEditorCustomer"></p>
+              </div>
+              <button class="order-editor-close" type="button" onclick="closeOrderEditor()" aria-label="Close">&times;</button>
+            </div>
+            <div class="order-editor-toolbar">
+              <select id="orderEditorAddSelect">
+                <option value="">Add an item</option>
+              </select>
+              <button class="toolbar-btn" type="button" onclick="addOrderDraftItem()">+ Add Item</button>
+            </div>
+            <div class="manual-order-fields" id="manualOrderFields">
+              <label class="manual-order-field">
+                First Name
+                <input type="text" id="manualFirstName" autocomplete="off">
+              </label>
+              <label class="manual-order-field">
+                Last Name
+                <input type="text" id="manualLastName" autocomplete="off">
+              </label>
+              <label class="manual-order-field">
+                Phone
+                <input type="tel" id="manualPhone" autocomplete="off">
+              </label>
+              <label class="manual-order-field">
+                Email
+                <input type="email" id="manualEmail" autocomplete="off">
+              </label>
+              <label class="manual-order-field">
+                Pickup Location
+                <select id="manualLocation">
+                  <option value="shortpump">Short Pump, VA</option>
+                  <option value="chesterfield">Chesterfield, VA</option>
+                  <option value="mechanicsville">Mechanicsville, VA</option>
+                </select>
+              </label>
+              <label class="manual-order-field">
+                Pickup Date
+                <input type="date" id="manualPickupDate">
+              </label>
+              <label class="manual-order-field">
+                Payment Method
+                <select id="manualPaymentMethod">
+                  <option value="cash">Cash</option>
+                  <option value="zelle">Zelle</option>
+                  <option value="card">Card</option>
+                  <option value="">Not collected</option>
+                </select>
+              </label>
+              <label class="manual-order-field">
+                Batch Date (for tally)
+                <input type="date" id="manualBatchDate" autocomplete="off">
+              </label>
+              <label class="manual-order-field full">
+                Notes
+                <textarea id="manualNotes" rows="2"></textarea>
+              </label>
+            </div>
+            <div class="order-editor-list" id="orderEditorItems"></div>
+            <div class="order-editor-empty" id="orderEditorEmpty">This order has no items yet. Add a catalog item before saving.</div>
+            <div class="order-editor-foot">
+              <div class="order-editor-summary">
+                <div class="order-editor-pill">Boxes: <strong id="orderEditorBoxes">0</strong></div>
+                <div class="order-editor-pill">Total: <strong id="orderEditorTotal">$0.00</strong></div>
+              </div>
+              <div class="order-editor-actions">
+                <button class="toolbar-btn" type="button" onclick="closeOrderEditor()">Cancel</button>
+                <button class="toolbar-btn" id="orderEditorSaveBtn" type="button" onclick="saveEditedOrder()">Save Changes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-editor-modal" id="emailReminderModal" onclick="handleEmailReminderOverlayClick(event)">
+          <div class="order-editor-card reminder-editor-card" role="dialog" aria-modal="true" aria-labelledby="emailReminderTitle">
+            <div class="order-editor-head">
+              <div>
+                <h3 id="emailReminderTitle">Email Pickup Reminder</h3>
+                <p id="emailReminderSummary">Review selected customers before sending.</p>
+              </div>
+              <button class="order-editor-close" type="button" onclick="closeEmailReminderModal()" aria-label="Close">&times;</button>
+            </div>
+            <div class="reminder-form">
+              <div class="reminder-recipient-list" id="emailReminderRecipients"></div>
+              <label class="reminder-field">
+                Subject
+                <input type="text" id="emailReminderSubject" maxlength="160">
+              </label>
+              <label class="reminder-field">
+                Message
+                <textarea id="emailReminderBody"></textarea>
+              </label>
+              <p class="reminder-help">
+                You can use placeholders: {{firstName}}, {{fullName}}, {{orderNumber}}, {{pickupLocation}}, {{items}}, {{totalBoxes}}, and {{totalPrice}}.
+              </p>
+              <div class="order-editor-actions">
+                <button class="toolbar-btn" type="button" onclick="closeEmailReminderModal()">Cancel</button>
+                <button class="toolbar-btn" id="emailReminderSendBtn" type="button" onclick="sendSelectedReminderEmails()">Send Reminder Emails</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-editor-modal" id="whatsappReminderModal" onclick="handleWhatsAppReminderOverlayClick(event)">
+          <div class="order-editor-card reminder-editor-card" role="dialog" aria-modal="true" aria-labelledby="whatsappReminderTitle">
+            <div class="order-editor-head">
+              <div>
+                <h3 id="whatsappReminderTitle">WhatsApp Pickup Reminder</h3>
+                <p id="whatsappReminderSummary">Review selected customers before opening WhatsApp.</p>
+              </div>
+              <button class="order-editor-close" type="button" onclick="closeWhatsAppReminderModal()" aria-label="Close">&times;</button>
+            </div>
+            <div class="reminder-form">
+              <div class="reminder-recipient-list" id="whatsappReminderRecipients"></div>
+              <label class="reminder-field">
+                Message
+                <textarea id="whatsappReminderBody"></textarea>
+              </label>
+              <p class="reminder-help">
+                Review the message, then use each Open WhatsApp button. WhatsApp opens with the message filled in, and you send it manually.
+              </p>
+              <div class="order-editor-actions">
+                <button class="toolbar-btn" type="button" onclick="closeWhatsAppReminderModal()">Done</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-products" style="display:none;">
+          <div class="products-toolbar">
+            <div class="products-toolbar-copy">
+              <h2>Manage Products</h2>
+              <p>Add new catalog items here. New products will use the same live and coming soon behavior as your existing shop cards.</p>
+            </div>
+            <button class="add-product-btn" onclick="openAddProductForm()">+ Add New Product</button>
+            <button class="add-product-btn" onclick="syncCatalogPrices()" style="margin-left:8px;background:#1F4E2E" title="Push catalog prices, sizes and availability to the live store (what customers are charged at checkout)">🔄 Sync Prices to Live Store</button>
+          </div>
+          <div class="product-form-card" id="productFormCard">
+            <div class="product-form-head">
+              <div>
+                <h3>Add New Product</h3>
+                <p>Keep category within your current shop groups so the new product appears safely in the existing filters and modal.</p>
+              </div>
+              <button class="product-form-close" type="button" onclick="closeAddProductForm()">Close</button>
+            </div>
+            <form id="addProductForm">
+              <input id="editingProductId" name="editingProductId" type="hidden">
+              <div class="product-form-grid">
+                <div class="product-field">
+                  <label for="newProductName">Product Name</label>
+                  <input id="newProductName" name="name" type="text" required maxlength="120" placeholder="Ex: Imam Pasand Special">
+                </div>
+                <div class="product-field">
+                  <label for="newProductCategory">Category</label>
+                  <select id="newProductCategory" name="category" required>
+                    <option value="mangoes">Fruits/Mangoes</option>
+                    <option value="putharekulu">Putharekulu</option>
+                    <option value="jellysnacks">Jelly</option>
+                    <option value="sweets">Sweets (Kaja &amp; Laddus)</option>
+                    <option value="snacks">Snacks</option>
+                    <option value="picklespodi">Pickles & Podi</option>
+                  </select>
+                </div>
+                <div class="product-field">
+                  <label for="newProductLocalName">Local Name</label>
+                  <input id="newProductLocalName" name="localName" type="text" maxlength="120" placeholder="Optional local language name">
+                </div>
+                <div class="product-field">
+                  <label for="newProductOrigin">Origin</label>
+                  <input id="newProductOrigin" name="origin" type="text" maxlength="120" required placeholder="Ex: Andhra Pradesh">
+                </div>
+                <div class="product-field">
+                  <label for="newProductStatus">Shop Status</label>
+                  <select id="newProductStatus" name="status" required>
+                    <option value="live">Live and orderable</option>
+                    <option value="off">Visible but sold out</option>
+                    <option value="soon">Coming soon / notify only</option>
+                  </select>
+                </div>
+                <div class="product-field">
+                  <label for="newProductTag">Tag</label>
+                  <input id="newProductTag" name="tag" type="text" maxlength="60" placeholder="Ex: Limited, Premium, Best Seller">
+                </div>
+                <div class="product-field">
+                  <label for="newProductPrice">Price (numbers only)</label>
+                  <input id="newProductPrice" name="price" type="number" min="0" step="0.01" placeholder="56">
+                  <small>Leave empty for coming soon products.</small>
+                </div>
+                <div class="product-field">
+                  <label for="newProductUnit">Unit</label>
+                  <input id="newProductUnit" name="unit" type="text" maxlength="80" required value="per box">
+                </div>
+                <div class="product-field">
+                  <label for="newProductImage">Main Image</label>
+                  <input id="newProductImage" name="image" type="text" maxlength="200" placeholder="Ex: img_new_product.jpg">
+                  <small>Use one main cover image here.</small>
+                </div>
+                <div class="product-field">
+                  <label for="newProductGallery">Gallery Images</label>
+                  <input id="newProductGallery" name="gallery" type="text" maxlength="500" placeholder="Ex: img_new_product_1.jpg, img_new_product_2.jpg">
+                  <small>Add extra images here, separated by commas.</small>
+                </div>
+                <div class="product-field">
+                  <label for="newProductSeason">Season</label>
+                  <input id="newProductSeason" name="season" type="text" maxlength="80" placeholder="Ex: May - July">
+                </div>
+                <div class="product-field">
+                  <label for="newProductTaste">Taste</label>
+                  <input id="newProductTaste" name="taste" type="text" maxlength="120" placeholder="Ex: Sweet - Rich - Fiberless">
+                </div>
+                <div class="product-field">
+                  <label for="newProductBestFor">Best For</label>
+                  <input id="newProductBestFor" name="bestFor" type="text" maxlength="160" placeholder="Ex: Eating fresh - Lassi - Dessert">
+                </div>
+                <div class="product-field full">
+                  <label for="newProductDescription">Description</label>
+                  <textarea id="newProductDescription" name="description" maxlength="700" required placeholder="Write the short description you want to show in the shop card and product modal."></textarea>
+                </div>
+                <div class="variant-fields" id="variantFields">
+                  <h4>Category Size / Count Options</h4>
+                  <div class="variant-help">Use these for Putharekulu, Jelly & Snacks, and Pickles & Podi products when you want selectable size/count options with different pricing.</div>
+                  <div class="product-field">
+                    <label id="variantOneLabelText" for="variantOneLabel">Option 1 Label</label>
+                    <input id="variantOneLabel" name="variantOneLabel" type="text" maxlength="60" placeholder="Ex: 5 count or 250g">
+                  </div>
+                  <div class="product-field">
+                    <label id="variantOnePriceText" for="variantOnePrice">Option 1 Price</label>
+                    <input id="variantOnePrice" name="variantOnePrice" type="number" min="0" step="0.01" placeholder="7.99">
+                  </div>
+                  <div class="product-field">
+                    <label id="variantOneSkuText" for="variantOneSku">Option 1 SKU</label>
+                    <input id="variantOneSku" name="variantOneSku" type="text" maxlength="40" placeholder="Ex: PSK5 or MJS250">
+                  </div>
+                  <div class="product-field">
+                    <label id="variantTwoLabelText" for="variantTwoLabel">Option 2 Label</label>
+                    <input id="variantTwoLabel" name="variantTwoLabel" type="text" maxlength="60" placeholder="Ex: 10 count or 500g">
+                  </div>
+                  <div class="product-field">
+                    <label id="variantTwoPriceText" for="variantTwoPrice">Option 2 Price</label>
+                    <input id="variantTwoPrice" name="variantTwoPrice" type="number" min="0" step="0.01" placeholder="14.99">
+                  </div>
+                  <div class="product-field">
+                    <label id="variantTwoSkuText" for="variantTwoSku">Option 2 SKU</label>
+                    <input id="variantTwoSku" name="variantTwoSku" type="text" maxlength="40" placeholder="Ex: PSK10 or MJS500">
+                  </div>
+                </div>
+              </div>
+              <div class="product-form-actions">
+                <button class="product-secondary-btn" type="button" onclick="resetAddProductForm()">Reset</button>
+                <button class="product-primary-btn" id="addProductSubmitBtn" type="submit">Save Product</button>
+              </div>
+            </form>
+          </div>
+          <div class="products-filter-bar" id="productsFilterBar">
+            <span class="products-filter-label">Filter Products</span>
+          </div>
+          <div class="products-manage-grid" id="productsGrid"></div>
+        </div>
+
+        <div id="tab-subscribers" style="display:none;">
+          <div class="orders-toolbar">
+            <h2>Email Subscribers</h2>
+            <div class="toolbar-actions">
+              <button class="toolbar-btn" onclick="exportSubscribersCSV()">⬇ Export CSV</button>
+            </div>
+          </div>
+
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Subscription</th>
+                  <th>Source</th>
+                  <th>Status</th>
+                  <th>Consent</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="subscribersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="tab-customers" style="display:none;">
+          <div class="orders-toolbar">
+            <div>
+              <h2>Customer Accounts</h2>
+              <p class="orders-help">Read-only customer profiles. Delete is available only for accounts with no orders.</p>
+            </div>
+            <div class="toolbar-actions">
+              <input type="search" id="customerSearch" class="filter-input" placeholder="Search name, email, phone" oninput="renderCustomers()">
+              <button class="toolbar-btn" onclick="exportCustomersCSV()">Export CSV</button>
+            </div>
+          </div>
+          <div class="customers-summary" id="customersSummary"></div>
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email / UID</th>
+                  <th>Phone</th>
+                  <th>Preferred Pickup</th>
+                  <th>Address</th>
+                  <th>Orders</th>
+                  <th>Created / Updated</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="customersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="tab-feedback" style="display:none;">
+          <div class="orders-toolbar">
+            <div>
+              <h2>Customer Feedback</h2>
+              <p class="orders-help">Review order feedback saved in Firestore. Use filters to spot product, pickup, or low-rating patterns.</p>
+            </div>
+            <div class="toolbar-actions">
+              <input type="search" id="feedbackSearch" class="filter-input" placeholder="Search order, item, email" oninput="renderFeedback()">
+              <select id="feedbackRating" class="filter-input" onchange="renderFeedback()">
+                <option value="all">All ratings</option>
+                <option value="low">Low ratings 1-3</option>
+                <option value="5">5 stars</option>
+                <option value="4">4 stars</option>
+                <option value="3">3 stars</option>
+                <option value="2">2 stars</option>
+                <option value="1">1 star</option>
+              </select>
+              <select id="feedbackLocation" class="filter-input" onchange="renderFeedback()">
+                <option value="all">All locations</option>
+                <option value="shortpump">Short Pump</option>
+                <option value="chesterfield">Chesterfield</option>
+                <option value="mechanicsville">Mechanicsville</option>
+              </select>
+              <button class="toolbar-btn" onclick="exportFeedbackCSV()">Export CSV</button>
+            </div>
+          </div>
+          <div class="customers-summary" id="feedbackSummary"></div>
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th>Rating</th>
+                  <th>Answers</th>
+                  <th>Items</th>
+                  <th>Pickup</th>
+                  <th>Submitted</th>
+                </tr>
+              </thead>
+              <tbody id="feedbackBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="tab-growth" style="display:none;">
+          <div class="growth-toolbar">
+            <div>
+              <h2>Growth Dashboard</h2>
+              <p class="orders-help">Plain-English view of traffic, shopping drop-off, product interest, and order signals.</p>
+            </div>
+            <div class="toolbar-actions">
+              <select id="growthRange" class="filter-input" onchange="refreshOwnerAnalytics()">
+                <option value="7">Last 7 days</option>
+                <option value="30" selected>Last 30 days</option>
+                <option value="90">Last 90 days</option>
+              </select>
+              <select id="growthCategory" class="filter-input" onchange="renderOwnerAnalytics()">
+                <option value="all">All categories</option>
+                <option value="mangoes">Mangoes</option>
+                <option value="sweets">Sweets</option>
+                <option value="pickles">Pickles</option>
+                <option value="podi">Podi</option>
+                <option value="snacks">Snacks</option>
+              </select>
+              <button class="toolbar-btn" onclick="refreshOwnerAnalytics()">Refresh</button>
+              <a class="toolbar-btn growth-link" href="https://us.posthog.com/project/409686/dashboard/1543847" target="_blank" rel="noopener">Open PostHog</a>
+              <a class="toolbar-btn growth-link" href="https://vercel.com/dashboard" target="_blank" rel="noopener">Open Vercel</a>
+            </div>
+          </div>
+
+          <div class="growth-status" id="growthStatus">Loading owner dashboard...</div>
+          <div class="growth-kpis" id="growthKpis"></div>
+
+          <div class="growth-section-label">📈 Product Performance Breakdown</div>
+
+          <div class="growth-grid">
+            <section class="growth-card growth-card-wide">
+              <div class="growth-card-head">
+                <h3>🚶 Customer Drop-off Funnel</h3>
+                <p>Where people stop before ordering.</p>
+              </div>
+              <div class="growth-funnel" id="growthFunnel"></div>
+            </section>
+
+            <section class="growth-card">
+              <div class="growth-card-head">
+                <h3>💡 What To Do Next</h3>
+                <p>Quick owner notes based on the numbers.</p>
+              </div>
+              <div class="growth-actions-list" id="growthActions"></div>
+            </section>
+
+            <section class="growth-card">
+              <div class="growth-card-head">
+                <h3>📊 Category Performance</h3>
+                <p>Which categories are creating demand.</p>
+              </div>
+              <div class="growth-chart-list" id="growthCategoryBreakdown"></div>
+            </section>
+
+            <section class="growth-card">
+              <div class="growth-card-head">
+                <h3>⚠️ Website Issues To Fix</h3>
+                <p>Signals that point to lost orders or missing data.</p>
+              </div>
+              <div class="growth-actions-list" id="growthIssues"></div>
+            </section>
+          </div>
+
+          <div class="growth-grid">
+            <section class="growth-card">
+              <div class="growth-card-head">
+                <h3>👀 Most Visited Pages</h3>
+                <p>What customers are looking at.</p>
+              </div>
+              <div class="growth-table" id="growthPages"></div>
+            </section>
+
+            <section class="growth-card">
+              <div class="growth-card-head">
+                <h3>🛍️ Products Customers Click</h3>
+                <p>High interest before cart.</p>
+              </div>
+              <div class="growth-table" id="growthClickedProducts"></div>
+            </section>
+
+            <section class="growth-card">
+              <div class="growth-card-head">
+                <h3>🛒 Products Added To Cart</h3>
+                <p>Closest signal to purchase intent.</p>
+              </div>
+              <div class="growth-table" id="growthAddedProducts"></div>
+            </section>
+
+            <section class="growth-card">
+              <div class="growth-card-head">
+                <h3>✅ Products Actually Ordered</h3>
+                <p>Real demand from submitted orders.</p>
+              </div>
+              <div class="growth-table" id="growthOrderedProducts"></div>
+            </section>
+
+            <section class="growth-card">
+              <div class="growth-card-head">
+                <h3>📍 Pickup And Order Mix</h3>
+                <p>Where orders are going and what still needs attention.</p>
+              </div>
+              <div class="growth-table" id="growthOrderMix"></div>
+            </section>
+
+            <section class="growth-card">
+              <div class="growth-card-head">
+                <h3>Missing Metrics Setup</h3>
+                <p>Only needed if a section says it is missing.</p>
+              </div>
+              <div class="growth-setup" id="growthSetup"></div>
+            </section>
+          </div>
+        </div>
+
+          <div id="tab-accounting" style="display:none;">
+            <div class="accounting-toolbar">
+              <h2>Accounting</h2>
+              <div class="toolbar-actions">
+                <input type="date" id="accountingDate" class="filter-input" onchange="renderAccounting()" />
+                <div class="accounting-batch" id="accountingBatchName">SHR-BATCH-YYYY-MM-DD</div>
+                <button class="toolbar-btn" onclick="saveAccountingBatch()">Save Tally</button>
+                <button class="toolbar-btn" id="closeBatchBtn" onclick="closeAccountingBatch()">Close Batch</button>
+                <button class="toolbar-btn" id="reopenBatchBtn" onclick="reopenAccountingBatch()" style="display:none;">Reopen Batch</button>
+                <button class="toolbar-btn" onclick="exportAccountingBatchCSV()">Export Batch CSV</button>
+              </div>
+            </div>
+            <div class="sheet-switcher accounting-view-switcher" id="accountingViewSwitcher">
+              <button class="sheet-pill active" id="accountingViewOpen" onclick="setAccountingView('open')">Open Batches</button>
+              <button class="sheet-pill" id="accountingViewClosed" onclick="setAccountingView('closed')">Closed Batches</button>
+            </div>
+            <div class="batch-list-card">
+              <h3 id="accountingBatchListTitle">Open Batches</h3>
+              <div class="batch-list-help" id="accountingBatchListHelp">Open batches stay here until you finish tallying and close them. Closed batches move to their own tab, and reopened batches come back here.</div>
+              <div class="accounting-batch-picker">
+                <label for="accountingBatchSelect">Select batch</label>
+                <select id="accountingBatchSelect" class="filter-input" onchange="setSelectedAccountingBatch(this.value)"></select>
+              </div>
+              <div class="accounting-batch-summary" id="accountingBatchListBody">
+                <div class="empty-state"><div class="empty-icon">📒</div><p>No open batches yet.</p></div>
+              </div>
+            </div>
+            <div class="accounting-grid" id="accountingStats"></div>
+
+          <div class="tally-box">
+            <h3>Tally Check</h3>
+            <div class="tally-help">Difference compares the actual amounts you enter below against the collected total for this batch.</div>
+            <div class="batch-status-box" id="batchStatusBox">Batch is open. Save the tally during pickup and close the batch once the day is finalized.</div>
+            <div class="tally-grid">
+              <div class="tally-field">
+                <label for="actualCash">Actual Cash Counted</label>
+                <input type="number" id="actualCash" min="0" step="0.01" placeholder="0.00" oninput="renderAccounting()">
+              </div>
+              <div class="tally-field">
+                <label for="actualZelle">Actual Zelle Received</label>
+                <input type="number" id="actualZelle" min="0" step="0.01" placeholder="0.00" oninput="renderAccounting()">
+              </div>
+              <div class="tally-field">
+                <label for="actualCard">Actual Card Total</label>
+                <input type="number" id="actualCard" min="0" step="0.01" placeholder="0.00" oninput="renderAccounting()">
+              </div>
+            </div>
+            <div class="tally-actions">
+              <button class="toolbar-btn" onclick="saveAccountingBatch()">Save Tally</button>
+              <button class="toolbar-btn" onclick="exportAccountingBatchCSV()">Export Batch CSV</button>
+            </div>
+          </div>
+
+          <div class="orders-table-wrap">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Customer</th>
+                  <th>Total</th>
+                  <th>Method</th>
+                  <th>Collected</th>
+                  <th>Payment Time</th>
+                  <th>Batch</th>
+                </tr>
+              </thead>
+              <tbody id="accountingBody"></tbody>
+            </table>
+          </div>
+        <div class="export-banner" style="margin-top:18px;">
+          <p>Processed orders with payment method and collected status are included in the daily batch totals. Batch format: <strong>SHR-BATCH-YYYY-MM-DD</strong>.</p>
+        </div>
+      </div>
+
+      <div id="tab-pickup-tally" style="display:none;">
+        <div class="excel-calc-toolbar">
+          <div class="excel-calc-copy">
+            <h2>Pickup Tally</h2>
+            <p>Tally your pickup event: ordered boxes, walk-up sales, leftover, spoiled, and cate from everything else.</p>
+          </div>
+          <div class="toolbar-actions">
+            <select id="excelCalcSavedSheet" class="filter-input" onchange="setExcelCalcSheet(this.value)">
+              <option value="">Current Sheet</option>
+            </select>
+            <input type="date" id="excelCalcDate" class="filter-input">
+            <input type="number" id="excelCalcBatchSeq" class="filter-input" min="1" step="1" value="1" style="width:92px">
+            <div class="excel-calc-batch" id="excelCalcBatchName">SHR-BATCH-YYYY-MM-DD_1</div>
+            <button class="toolbar-btn" type="button" onclick="newExcelCalculationsSheet()">New Sheet</button>
+            <button class="toolbar-btn" id="excelCalcSaveBtn" onclick="saveExcelCalculations()">Save Sheet</button>
+          </div>
+        </div>
+
+        <div class="excel-sheet-frame">
+          <div id="excelCalcSheet"></div>
+        </div>
+      </div>
+
+
+        <!-- ── PROMO CODES PANEL ──────────────────────────────────── -->
+        <div id="tab-promos" class="tab-panel" style="display:none">
+          <h2>Promo Codes</h2>
+          <p style="color:var(--text-light);font-size:13px;margin-bottom:16px">
+            Create discount codes customers enter at checkout. Discounts are re-validated on the server, so they can't be faked.
+          </p>
+          <div style="background:rgba(212,160,23,.06);border:1px solid rgba(212,160,23,.25);border-radius:14px;padding:16px;margin-bottom:20px;max-width:860px">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+              <div><label class="form-label">Code</label><input id="promoCode" class="form-control" placeholder="WELCOME10" maxlength="20" style="text-transform:uppercase"></div>
+              <div><label class="form-label">Type</label>
+                <select id="promoType" class="form-control" onchange="document.getElementById('promoValueWrap').style.display=this.value==='free_shipping'?'none':''">
+                  <option value="percent">Percent off (%)</option>
+                  <option value="fixed">Fixed amount off ($)</option>
+                  <option value="free_shipping">Free shipping</option>
+                </select>
+              </div>
+              <div id="promoValueWrap"><label class="form-label">Value</label><input id="promoValue" class="form-control" type="number" min="0" step="0.01" placeholder="10"></div>
+              <div><label class="form-label">Min order ($)</label><input id="promoMin" class="form-control" type="number" min="0" step="0.01" placeholder="0"></div>
+              <div><label class="form-label">Total uses cap</label><input id="promoMaxUses" class="form-control" type="number" min="0" step="1" placeholder="unlimited"></div>
+              <div><label class="form-label">Expiry</label><input id="promoExpiry" class="form-control" type="date"></div>
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px">
+              <input type="checkbox" id="promoPerCustomer"> One use per customer (by phone)
+            </label>
+            <div style="margin-top:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+              <button class="action-btn btn-fulfill" onclick="createPromoCode()">＋ Create code</button>
+              <span id="promoFormMsg" style="font-size:13px"></span>
+            </div>
+          </div>
+          <table class="orders-table" style="width:100%">
+            <thead><tr>
+              <th>Code</th><th>Discount</th><th>Min</th><th>Expires</th><th>Uses</th><th>Per customer</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="promoList"><tr><td colspan="8" style="text-align:center;color:var(--text-light);padding:16px">Loading…</td></tr></tbody>
+          </table>
+        </div>
+
+        <!-- ── REFUNDS PANEL ──────────────────────────────────────── -->
+        <section id="tab-refunds" class="tab-panel" style="display:none">
+          <h2>Refund Requests</h2>
+          <p style="color:var(--text-light);font-size:13px;margin-bottom:16px">
+            Pending requests are shown first. For Stripe orders, clicking "Issue Stripe Refund"
+            will call the Stripe API automatically. For pickup orders, mark manually after completing
+            the refund via Zelle/cash.
+          </p>
+          <div class="refund-filter-bar">
+            <button class="refund-filter-btn active" id="refundFilter_pending" onclick="setRefundFilter('pending')">Pending (0)</button>
+            <button class="refund-filter-btn" id="refundFilter_approved" onclick="setRefundFilter('approved')">Approved (0)</button>
+            <button class="refund-filter-btn" id="refundFilter_rejected" onclick="setRefundFilter('rejected')">Rejected (0)</button>
+            <button class="refund-filter-btn" id="refundFilter_all" onclick="setRefundFilter('all')">All (0)</button>
+          </div>
+          <div id="refundsContainer">
+            <div class="refund-empty">Click "Refunds" tab to load requests.</div>
+          </div>
+        </section>
+      </main>
+
+        <aside class="admin-stats-rail">
+        <div class="admin-stats" id="adminStats"></div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- Toast --><!-- deploy-20260527-021204 -->
+<div class="admin-toast" id="adminToast"></div>
+
+<script src="assets/js/data.js?v=pricing-20260709"></script>
+<script src="assets/js/firebase-config.js"></script>
+<script type="module" src="assets/js/admin-firebase.js?v=sync-prices-20260709"></script>
+<link rel="stylesheet" href="assets/css/admin-boost.css?v=boost3-20260610">
+  <link rel="stylesheet" href="assets/css/admin-growth-v2.css?v=v2-20260615">
+<script defer src="assets/js/admin-boost.js?v=boost3-20260610"></script>
+
+
+<canvas id="particle-canvas"></canvas>
+<script>
+// ── PARTICLE SYSTEM ──────────────────────────────────────────────
+(function() {
+  function afterFirstPaint(callback, timeout = 1800) {
+    window.setTimeout(function() {
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(callback, { timeout: 800 });
+        return;
+      }
+      callback();
+    }, timeout);
+  }
+
+  function startParticles() {
+    if (window.matchMedia('(max-width: 760px), (prefers-reduced-motion: reduce)').matches) return;
+    const canvas = document.getElementById('particle-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  class Particle {
+    constructor() { this.reset(); }
+    reset() {
+      this.x  = Math.random() * W;
+      this.y  = Math.random() * H;
+      this.vx = (Math.random() - 0.5) * 0.3;
+      this.vy = (Math.random() - 0.5) * 0.3;
+      this.r  = Math.random() * 1.5 + 0.3;
+      this.alpha = Math.random() * 0.4 + 0.05;
+      this.gold = Math.random() > 0.6;
+    }
+    update() {
+      this.x += this.vx; this.y += this.vy;
+      if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fillStyle = this.gold
+        ? `rgba(200,121,26,${this.alpha})`
+        : `rgba(245,201,122,${this.alpha * 0.5})`;
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animate);
+  }
+  animate();
+  }
+  afterFirstPaint(startParticles, 2400);
+})();
+
+// ── MAGNETIC BUTTONS ────────────────────────────────────────────
+(function() {
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  let lastMove = null;
+  let raf = 0;
+  document.addEventListener('mousemove', function(e) {
+    lastMove = e;
+    if (raf) return;
+    raf = requestAnimationFrame(function() {
+      raf = 0;
+      const move = lastMove;
+      document.querySelectorAll('.admin-tab.active, .toolbar-btn, .admin-logout-btn, .print-btn').forEach(el => {
+        const rect = el.getBoundingClientRect();
+        const cx = rect.left + rect.width  / 2;
+        const cy = rect.top  + rect.height / 2;
+        const dx = move.clientX - cx;
+        const dy = move.clientY - cy;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const maxDist = 80;
+        if (dist > 0 && dist < maxDist) {
+          const force = (1 - dist / maxDist) * 6;
+          el.style.transform = `translate(${dx * force / dist}px, ${dy * force / dist}px)`;
+        } else {
+          el.style.transform = '';
+        }
+      });
+    });
+  }, { passive: true });
+})();
+
+// ── SMOOTH TAB TRANSITIONS ──────────────────────────────────────
+const _origSwitchTab = window.switchTab;
+if (_origSwitchTab) {
+  window.switchTab = function(tab, el) {
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      if (p.style.display !== 'none') {
+        p.style.opacity = '0';
+        p.style.transform = 'translateY(8px)';
+      }
+    });
+    setTimeout(() => {
+      _origSwitchTab(tab, el);
+      const panel = document.getElementById('tab-' + tab);
+      if (panel) {
+        panel.style.opacity = '0';
+        panel.style.transform = 'translateY(12px)';
+        requestAnimationFrame(() => {
+          panel.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+          panel.style.opacity = '1';
+          panel.style.transform = 'translateY(0)';
+        });
+      }
+    }, 80);
+  };
+}
+</script>
+
+</body>
+</html>
