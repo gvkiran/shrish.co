@@ -132,7 +132,6 @@ const LOGO_ONLY_PRODUCT_IDS = [
   'picklespodi-mango-avakai-pickle',
   'picklespodi-mango-thokku-magai-pickle',
   'picklespodi-pandu-mirchi-pickle',
-  'picklespodi-fish-pickle-koramenu-pickle',
   'picklespodi-gongura-chicken-pickle',
   'picklespodi-gongura-mutton-pickle',
   'picklespodi-gongura-prawn-pickle',
@@ -140,9 +139,7 @@ const LOGO_ONLY_PRODUCT_IDS = [
   'picklespodi-dhaniyalu-podi-coriander-spice-powder',
   'picklespodi-kandi-podi',
   'picklespodi-karapu-podi-with-garlic',
-  'picklespodi-kothimeera-coriander-pickle',
-  'picklespodi-mango-ginger-pickle',
-  'picklespodi-tomato-pickle'
+  'picklespodi-mango-ginger-pickle'
 ];
 
 const PRODUCT_GALLERY_OVERRIDES = {
@@ -151,11 +148,6 @@ const PRODUCT_GALLERY_OVERRIDES = {
     'images/products/mangoes/img_banganapalli_2026_1.jpg',
     'images/products/mangoes/img_banganapalli_2026_2.jpg',
     'images/products/mangoes/img_banganapalli.jpg'
-  ],
-  'picklespodi-mixed-vegetable-pickle': [
-    'images/products/pickles/mixed-vegetable-2026-1.jpg',
-    'images/products/pickles/mixed-vegetable-2026-2.jpg',
-    'images/products/pickles/mixed-vegetable-2026-3.jpg'
   ]
 };
 
