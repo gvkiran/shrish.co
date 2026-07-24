@@ -31,6 +31,17 @@
 .account-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px}
 .account-button{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:999px;background:var(--saffron);color:#fff;padding:13px 24px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:var(--transition)}
 .account-button:hover{background:var(--saffron-d);transform:translateY(-1px)}
+.account-danger-zone{margin-top:22px;padding-top:18px;border-top:1px solid rgba(180,40,30,.18)}
+.account-danger-head{font-weight:800;color:#b4281e;font-size:14px;margin-bottom:2px}
+.account-danger-btn{background:#b4281e}
+.account-danger-btn:hover{background:#95201a}
+.account-danger-btn:disabled{background:#d9a8a3;cursor:not-allowed;transform:none}
+.delete-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px}
+.delete-modal-overlay[hidden]{display:none}
+.delete-modal-box{background:#fff;border-radius:20px;max-width:460px;width:100%;padding:26px 24px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.delete-modal-box h3{font-size:22px;color:#b4281e;margin:0 0 10px}
+.delete-modal-list{margin:8px 0 12px 18px;color:var(--text-light);font-size:14px;line-height:1.7}
+.delete-modal-box .form-control{margin-top:6px}
 .account-button.secondary{background:transparent;color:var(--saffron);border:2px solid var(--saffron)}
 .account-button.secondary:hover{background:var(--saffron);color:#fff}
 .account-button.subtle{background:var(--cream-d);color:var(--text);border:0}
@@ -331,7 +342,32 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
       <button class="account-button" type="button" id="editProfileBtn">Edit Profile</button>
       <a class="account-button subtle" href="shop.html">Shop Now</a>
     </div>
+    <div class="account-danger-zone">
+      <div class="account-danger-head">Delete account</div>
+      <p class="account-muted">Permanently close your account. This can't be undone.</p>
+      <button class="account-button account-danger-btn" type="button" id="deleteAccountBtn">Delete My Account</button>
+    </div>
   </section>
+
+  <div class="delete-modal-overlay" id="deleteAccountModal" hidden>
+    <div class="delete-modal-box" role="dialog" aria-modal="true" aria-labelledby="deleteAccountTitle">
+      <h3 id="deleteAccountTitle">Delete your account?</h3>
+      <p class="account-muted">This permanently closes your Shrish account. You will lose access to:</p>
+      <ul class="delete-modal-list">
+        <li>Your order history</li>
+        <li>Saved payment cards</li>
+        <li>Saved addresses &amp; profile details</li>
+      </ul>
+      <p class="account-muted">For tax and legal reasons we keep anonymized sales records, but your <strong>personal information is kept for only 90 days</strong> after deletion and is then permanently removed from our systems automatically.</p>
+      <label class="form-label" for="deleteConfirmInput">Type <strong>Shrish</strong> to confirm</label>
+      <input class="form-control" id="deleteConfirmInput" type="text" autocomplete="off" spellcheck="false" placeholder="Shrish">
+      <div class="account-message" id="deleteAccountMsg"></div>
+      <div class="account-actions">
+        <button class="account-button account-danger-btn" type="button" id="confirmDeleteAccountBtn" disabled>Delete Account</button>
+        <button class="account-button subtle" type="button" id="cancelDeleteAccountBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
 
   <section class="account-panel account-state" id="adminPanel">
     <div class="profile-header">

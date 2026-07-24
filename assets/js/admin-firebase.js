@@ -2114,15 +2114,33 @@ function updateReminderActionUi() {
     selectAll.indeterminate = Boolean(selectedVisible.length && selectedVisible.length < selectable.length);
   }
 
+  const isShippingSheet = state.orderSheet === 'shipping';
+  const shippingSelected = isShippingSheet ? selectedOrdersOnSheet('shipping').length : 0;
+  const shippingAvailable = isShippingSheet ? selectableOrdersForSheet('shipping').length : 0;
+
   const shippingPrintBtn = document.getElementById('printShippingBtn');
   if (shippingPrintBtn) {
-    const isShippingSheet = state.orderSheet === 'shipping';
-    const selectedCount = isShippingSheet ? selectedOrdersOnSheet('shipping').length : 0;
     shippingPrintBtn.style.display = isShippingSheet ? 'inline-flex' : 'none';
-    shippingPrintBtn.disabled = isShippingSheet && !selectableOrdersForSheet('shipping').length;
-    shippingPrintBtn.textContent = selectedCount
-      ? `📦 Print Packing Slips (${selectedCount})`
+    shippingPrintBtn.disabled = isShippingSheet && !shippingAvailable;
+    shippingPrintBtn.textContent = shippingSelected
+      ? `📦 Print Packing Slips (${shippingSelected})`
       : '📦 Print All Packing Slips';
+  }
+
+  const labelsBtn = document.getElementById('printLabelsBtn');
+  if (labelsBtn) {
+    labelsBtn.style.display = isShippingSheet ? 'inline-flex' : 'none';
+    labelsBtn.disabled = isShippingSheet && !shippingAvailable;
+    labelsBtn.textContent = shippingSelected ? `🏷️ 4×6 Labels (${shippingSelected})` : '🏷️ 4×6 Labels (All)';
+  }
+
+  const markShippedBtn = document.getElementById('markShippedBtn');
+  if (markShippedBtn) {
+    markShippedBtn.style.display = isShippingSheet ? 'inline-flex' : 'none';
+    markShippedBtn.disabled = !shippingSelected;
+    markShippedBtn.textContent = shippingSelected
+      ? `✓ Mark ${shippingSelected} Shipped`
+      : '✓ Mark Selected Shipped';
   }
 }
 
@@ -4347,6 +4365,103 @@ ${slips}
   showToast(`Packing slip${orders.length === 1 ? '' : 's'} ready for ${orders.length} order${orders.length === 1 ? '' : 's'}.`);
 }
 
+function buildShippingLabelHtml(order = {}) {
+  const name = String(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`).trim();
+  const lines = shippingAddressLines(order.shippingAddress || {});
+  const items = Array.isArray(order.items) ? order.items : [];
+  const units = items.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+  return `<section class="label">
+    <div class="lbl-from"><strong>SHRISH LLC</strong> &bull; Richmond, VA &bull; shrish.co</div>
+    <div class="lbl-to">
+      <div class="to-tag">SHIP TO</div>
+      <div class="to-name">${escapeHtml(name || '--')}</div>
+      ${lines.map((line) => `<div class="to-line">${escapeHtml(line)}</div>`).join('')}
+      ${order.phone ? `<div class="to-phone">${escapeHtml(order.phone)}</div>` : ''}
+    </div>
+    <div class="lbl-foot">
+      <span class="onum">${escapeHtml(String(order.orderNumber || order.id || ''))}</span>
+      <span>${escapeHtml(String(items.length))} item(s) &bull; ${escapeHtml(String(units))} unit(s)</span>
+    </div>
+  </section>`;
+}
+
+// 4x6 thermal shipping labels (Rollo / DYMO / Zebra). Address only — the
+// packing slip carries the contents. Orders with no saved address are skipped
+// rather than wasting a label on a blank.
+function printShippingLabels(orderId = null) {
+  let orders;
+  if (orderId) {
+    const single = state.orders.find((order) => order.id === orderId);
+    if (!single) { showToast('Order not found.'); return; }
+    orders = [single];
+  } else {
+    const selected = selectedOrdersOnSheet('shipping');
+    orders = selected.length ? selected : getFilteredOrders('shipping');
+  }
+
+  const printable = orders.filter((order) => shippingAddressLines(order.shippingAddress || {}).length);
+  const skipped = orders.length - printable.length;
+
+  if (!printable.length) {
+    showToast(orders.length ? 'None of those orders have a saved shipping address.' : 'No shipping orders to print.');
+    return;
+  }
+
+  const pw = window.open('', '_blank', 'width=520,height=820');
+  if (!pw) { showToast('Allow popups to print.'); return; }
+
+  pw.document.write(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<title>Shrish 4x6 Labels (${printable.length})</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,Helvetica,sans-serif;background:#eee;color:#000}
+  .label{width:4in;height:6in;background:#fff;padding:0.2in 0.22in;margin:0 auto 10px;display:flex;flex-direction:column;page-break-after:always;break-after:page}
+  .label:last-child{page-break-after:auto;break-after:auto}
+  .lbl-from{font-size:8.5pt;border-bottom:1.5pt solid #000;padding-bottom:5pt;margin-bottom:12pt}
+  .lbl-to{flex:1}
+  .to-tag{font-size:8pt;font-weight:700;letter-spacing:1.5pt;margin-bottom:7pt}
+  .to-name{font-size:17pt;font-weight:700;line-height:1.25}
+  .to-line{font-size:15pt;line-height:1.38}
+  .to-phone{font-size:11pt;margin-top:9pt}
+  .lbl-foot{border-top:1pt dashed #666;padding-top:6pt;display:flex;justify-content:space-between;align-items:center;font-size:9pt}
+  .onum{font-weight:700}
+  .warn{max-width:4in;margin:0 auto 10px;padding:8px 10px;background:#FDF0E4;border:1px solid #B3402B;color:#B3402B;border-radius:4px;font-size:11px}
+  @page{size:4in 6in;margin:0}
+  @media print{ body{background:#fff} .label{margin:0} .warn{display:none} section{page-break-inside:avoid;break-inside:avoid} }
+</style>
+</head><body>
+${skipped ? `<div class="warn"><strong>${skipped} order(s) skipped</strong> — no shipping address saved.</div>` : ''}
+${printable.map(buildShippingLabelHtml).join('')}
+<script>window.onload=()=>window.print();<\/script>
+</body></html>`);
+  pw.document.close();
+  showToast(`${printable.length} label${printable.length === 1 ? '' : 's'} ready${skipped ? ` (${skipped} skipped, no address)` : ''}.`);
+}
+
+// Bulk-close orders once they are packed and handed to the carrier.
+async function markSelectedShippingFulfilled() {
+  const selected = selectedOrdersOnSheet('shipping');
+  if (!selected.length) {
+    showToast('Tick the orders you have shipped first.');
+    return;
+  }
+  const targets = selected.filter((order) => (order.status || 'pending') !== 'fulfilled');
+  if (!targets.length) {
+    showToast('Those orders are already marked fulfilled.');
+    return;
+  }
+  if (!window.confirm(`Mark ${targets.length} order${targets.length === 1 ? '' : 's'} as shipped (fulfilled)?`)) return;
+
+  for (const order of targets) {
+    await applyOrderStatus(order.id, 'fulfilled', true);
+  }
+
+  state.selectedReminderOrderIds.clear();
+  renderOrders();
+  showToast(`${targets.length} order${targets.length === 1 ? '' : 's'} marked shipped.`);
+}
+
 function renderExcelCalculations() {
   const tab = document.getElementById('tab-pickup-tally');
   if (!tab) return;
@@ -5151,6 +5266,8 @@ window.handleWhatsAppReminderOverlayClick = handleWhatsAppReminderOverlayClick;
 window.openWhatsAppReminderForOrder = openWhatsAppReminderForOrder;
 window.printActiveOrders = printActiveOrders;
 window.printShippingOrders = printShippingOrders;
+window.printShippingLabels = printShippingLabels;
+window.markSelectedShippingFulfilled = markSelectedShippingFulfilled;
 window.exportCSV = exportCSV;
 window.renderCustomers = renderCustomers;
 window.exportCustomersCSV = exportCustomersCSV;

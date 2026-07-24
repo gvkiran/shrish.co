@@ -38,6 +38,7 @@ const updateCustomerPendingOrder = httpsCallable(cloudFunctions, 'updateCustomer
 const claimCustomerOrder = httpsCallable(cloudFunctions, 'claimCustomerOrder');
 const submitOrderFeedback = httpsCallable(cloudFunctions, 'submitOrderFeedback');
 const sendCustomerPasswordReset = httpsCallable(cloudFunctions, 'sendCustomerPasswordReset');
+const requestAccountDeletion = httpsCallable(cloudFunctions, 'requestAccountDeletion');
 const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
 const CHECKOUT_ACCOUNT_PREFILL_KEY = 'shrish_checkout_account_prefill';
 const RECENT_ORDER_CLAIM_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -1520,6 +1521,48 @@ function bindForms() {
   el('signOutBtn')?.addEventListener('click', async () => {
     await signOut(auth);
     trackAccountEvent('customer_signed_out');
+  });
+
+  // ---- Delete account flow ----
+  const closeDeleteModal = () => {
+    const modal = el('deleteAccountModal');
+    if (modal) modal.hidden = true;
+    if (el('deleteConfirmInput')) el('deleteConfirmInput').value = '';
+    if (el('confirmDeleteAccountBtn')) el('confirmDeleteAccountBtn').disabled = true;
+    if (el('deleteAccountMsg')) el('deleteAccountMsg').textContent = '';
+  };
+  el('deleteAccountBtn')?.addEventListener('click', () => {
+    const modal = el('deleteAccountModal');
+    if (modal) modal.hidden = false;
+    el('deleteConfirmInput')?.focus();
+  });
+  el('cancelDeleteAccountBtn')?.addEventListener('click', closeDeleteModal);
+  el('deleteAccountModal')?.addEventListener('click', (event) => {
+    if (event.target === el('deleteAccountModal')) closeDeleteModal();
+  });
+  el('deleteConfirmInput')?.addEventListener('input', (event) => {
+    const ok = event.target.value.trim().toLowerCase() === 'shrish';
+    if (el('confirmDeleteAccountBtn')) el('confirmDeleteAccountBtn').disabled = !ok;
+  });
+  el('confirmDeleteAccountBtn')?.addEventListener('click', async () => {
+    const btn = el('confirmDeleteAccountBtn');
+    const msg = el('deleteAccountMsg');
+    const confirm = (el('deleteConfirmInput')?.value || '').trim();
+    if (confirm.toLowerCase() !== 'shrish') return;
+    btn.disabled = true;
+    if (msg) { msg.className = 'account-message'; msg.textContent = 'Deleting your account...'; }
+    try {
+      await requestAccountDeletion({ confirm });
+      trackAccountEvent('customer_account_deletion_requested');
+      if (msg) { msg.className = 'account-message success'; msg.textContent = 'Your account has been closed. Signing you out...'; }
+      setTimeout(async () => {
+        await signOut(auth).catch(() => {});
+        window.location.href = 'index.html';
+      }, 1800);
+    } catch (error) {
+      if (msg) { msg.className = 'account-message error'; msg.textContent = error?.message || 'Could not delete the account right now. Please try again.'; }
+      btn.disabled = false;
+    }
   });
 
   el('adminSignOutBtn')?.addEventListener('click', async () => {

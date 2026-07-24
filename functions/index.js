@@ -1,4 +1,5 @@
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
@@ -1972,6 +1973,143 @@ exports.deleteCustomerAccount = onCall(
     await posthog.flush();
 
     return { status: "deleted" };
+  }
+);
+
+// Personal data is purged this many days after a customer requests deletion.
+// Sales/order records are anonymized (not deleted) and kept ~7 years for IRS.
+const PII_PURGE_DAYS = 90;
+
+// Customer-initiated account deletion. Requires the customer to be signed in and
+// to type "Shrish" to confirm. Saved cards are removed and login is disabled
+// immediately; personal data is purged after PII_PURGE_DAYS by a scheduled job.
+exports.requestAccountDeletion = onCall(
+  callableOptions({ secrets: [STRIPE_SECRET_KEY] }),
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", "Please sign in to delete your account.");
+    }
+    const confirmText = String(request.data?.confirm || "").trim();
+    if (confirmText.toLowerCase() !== "shrish") {
+      throw new HttpsError("failed-precondition", 'Type "Shrish" exactly to confirm account deletion.');
+    }
+
+    const db = admin.firestore();
+    const profileRef = db.collection("user_profiles").doc(uid);
+    const snapshot = await profileRef.get();
+    const profile = snapshot.exists ? snapshot.data() || {} : {};
+
+    if (String(profile.email || "").trim().toLowerCase() === SHRISH_ADMIN_EMAIL) {
+      throw new HttpsError("failed-precondition", "This account cannot be deleted here.");
+    }
+
+    // 1) Remove saved cards / Stripe customer immediately.
+    const stripeCustomerId = String(profile.stripeCustomerId || "").trim();
+    if (stripeCustomerId) {
+      try {
+        await stripeClient().customers.del(stripeCustomerId);
+      } catch (error) {
+        console.warn("requestAccountDeletion: Stripe customer delete failed", { uid, message: error?.message });
+      }
+    }
+
+    // 2) Flag the profile for a scheduled personal-data purge. Identity fields
+    //    stay visible to admin until the purge; the Stripe reference is dropped now.
+    const now = admin.firestore.Timestamp.now();
+    const purgeAt = admin.firestore.Timestamp.fromMillis(
+      now.toMillis() + PII_PURGE_DAYS * 24 * 60 * 60 * 1000
+    );
+    await profileRef.set(
+      {
+        status: "deletion_requested",
+        deletionRequestedAt: now,
+        piiPurgeAt: purgeAt,
+        stripeCustomerId: admin.firestore.FieldValue.delete(),
+      },
+      { merge: true }
+    );
+
+    // 3) Disable login immediately so the account is effectively closed.
+    try {
+      await admin.auth().updateUser(uid, { disabled: true });
+    } catch (error) {
+      console.warn("requestAccountDeletion: auth disable failed", { uid, message: error?.message });
+    }
+
+    try {
+      posthog.capture({
+        distinctId: String(profile.email || uid),
+        event: "customer_account_deletion_requested",
+        properties: { customer_uid: uid, purge_at: purgeAt.toDate().toISOString() },
+      });
+      await posthog.flush();
+    } catch (_) {}
+
+    return {
+      status: "deletion_requested",
+      purgeAt: purgeAt.toDate().toISOString(),
+      purgeDays: PII_PURGE_DAYS,
+    };
+  }
+);
+
+// Daily job: permanently remove personal data for accounts whose purge window
+// has elapsed. Orders are ANONYMIZED (not deleted) so the sales/tax record
+// survives ~7 years for IRS compliance.
+exports.purgeDeletedAccounts = onSchedule(
+  { schedule: "every day 03:15", timeZone: "America/New_York", region: "us-central1" },
+  async () => {
+    const db = admin.firestore();
+    const now = admin.firestore.Timestamp.now();
+    const due = await db
+      .collection("user_profiles")
+      .where("status", "==", "deletion_requested")
+      .where("piiPurgeAt", "<=", now)
+      .limit(200)
+      .get();
+
+    if (due.empty) {
+      console.log("purgeDeletedAccounts: nothing due");
+      return;
+    }
+
+    let purged = 0;
+    for (const doc of due.docs) {
+      const uid = doc.id;
+      try {
+        // Anonymize this customer's orders (retain financial record ~7 years).
+        const orders = await db.collection("orders").where("customerUid", "==", uid).get();
+        for (let i = 0; i < orders.docs.length; i += 400) {
+          const batch = db.batch();
+          orders.docs.slice(i, i + 400).forEach((orderDoc) => {
+            batch.update(orderDoc.ref, {
+              firstName: "[deleted]",
+              lastName: "",
+              fullName: "[deleted customer]",
+              email: "",
+              customerEmail: "",
+              phone: "",
+              phoneDigits: "",
+              shippingAddress: admin.firestore.FieldValue.delete(),
+              customerUid: admin.firestore.FieldValue.delete(),
+              piiRedactedAt: now,
+            });
+          });
+          await batch.commit();
+        }
+
+        // Remove the auth user and the profile document — personal data gone.
+        await admin.auth().deleteUser(uid).catch((error) => {
+          if (error?.code !== "auth/user-not-found") throw error;
+        });
+        await doc.ref.delete();
+        purged += 1;
+      } catch (error) {
+        console.error("purgeDeletedAccounts: failed for", uid, error?.message);
+      }
+    }
+    console.log(`purgeDeletedAccounts: purged ${purged}/${due.size}`);
   }
 );
 
