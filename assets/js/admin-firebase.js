@@ -53,6 +53,8 @@ window._firestoreExports = { collection, doc, updateDoc, addDoc: typeof addDoc !
 const NON_REVENUE_ORDER_STATUSES = ['cancelled', 'no_show'];
 const ADMIN_EMAIL = normalizeLookup(window.SHRISH_APP_CONFIG?.adminEmailHint || 'contact@shrish.co');
 const deleteCustomerAccount = httpsCallable(cloudFunctions, 'deleteCustomerAccount');
+const issueStripeRefundCallable = httpsCallable(cloudFunctions, 'issueStripeRefund');
+let refundOrderTargetId = null;
 const getOwnerAnalytics = httpsCallable(cloudFunctions, 'getOwnerAnalytics');
 const sendProductAvailabilityEmails = httpsCallable(cloudFunctions, 'sendProductAvailabilityEmails');
 
@@ -1810,6 +1812,68 @@ function handleOrderEditorOverlayClick(event) {
   if (event.target?.id === 'orderEditorModal') closeOrderEditor();
 }
 
+// ---- Admin-initiated order refund (Stripe) ----
+function openRefundOrder(orderId) {
+  const order = state.orders.find((o) => o.id === orderId);
+  if (!order) { showToast('Order not found.'); return; }
+  if (!order.stripePaymentIntentId) { showToast('This order has no online payment to refund.'); return; }
+  refundOrderTargetId = orderId;
+  const total = moneyNumber(order.totalPrice || 0);
+  const refunded = moneyNumber(order.refundedAmount || 0);
+  const set = (id, txt) => { const n = document.getElementById(id); if (n) n.textContent = txt; };
+  set('refundModalSummary', `Order ${order.orderNumber || order.id} — ${(order.fullName || '').trim()}`);
+  set('refundOrderTotal', formatCurrency(total));
+  set('refundOrderRefunded', formatCurrency(refunded));
+  const amt = document.getElementById('refundAmountInput'); if (amt) { amt.value = ''; amt.max = String(Math.max(0, total - refunded).toFixed(2)); }
+  const rsn = document.getElementById('refundReasonInput'); if (rsn) rsn.value = '';
+  set('refundModalMsg', '');
+  const btn = document.getElementById('refundIssueBtn'); if (btn) { btn.disabled = false; btn.textContent = 'Issue Refund'; }
+  document.getElementById('refundOrderModal')?.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeRefundModal() {
+  refundOrderTargetId = null;
+  document.getElementById('refundOrderModal')?.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function handleRefundOverlayClick(event) {
+  if (event.target?.id === 'refundOrderModal') closeRefundModal();
+}
+
+async function submitOrderRefund() {
+  const order = state.orders.find((o) => o.id === refundOrderTargetId);
+  const msg = document.getElementById('refundModalMsg');
+  const btn = document.getElementById('refundIssueBtn');
+  const showMsg = (text, color) => { if (msg) { msg.style.color = color; msg.textContent = text; } };
+  if (!order) { closeRefundModal(); return; }
+  const amount = parseFloat(document.getElementById('refundAmountInput')?.value || '0');
+  const reason = String(document.getElementById('refundReasonInput')?.value || '').trim();
+  const remaining = moneyNumber(order.totalPrice || 0) - moneyNumber(order.refundedAmount || 0);
+  if (!amount || amount <= 0) { showMsg('Enter a valid refund amount.', '#e0736b'); return; }
+  if (amount > remaining + 0.001) { showMsg(`Max refundable is ${formatCurrency(remaining)}.`, '#e0736b'); return; }
+  if (!window.confirm(`Refund ${formatCurrency(amount)} to ${order.fullName || 'the customer'}? This sends money back to their card and cannot be undone.`)) return;
+  if (btn) { btn.disabled = true; btn.textContent = 'Processing...'; }
+  showMsg('Contacting Stripe...', '#B3A287');
+  try {
+    const res = await issueStripeRefundCallable({
+      paymentIntentId: order.stripePaymentIntentId,
+      orderId: order.id,
+      orderNumber: order.orderNumber || '',
+      amount,
+      reason
+    });
+    const data = res?.data || {};
+    showMsg(`Refunded ${formatCurrency(amount)}.${data.remaining != null ? ' ' + formatCurrency(data.remaining) + ' still refundable.' : ''}`, '#5bbf7a');
+    showToast(`Refund of ${formatCurrency(amount)} issued`);
+    setTimeout(closeRefundModal, 1800);
+  } catch (error) {
+    showMsg(error?.message || 'Refund failed — nothing was charged back.', '#e0736b');
+    if (btn) { btn.disabled = false; btn.textContent = 'Issue Refund'; }
+  }
+}
+
 function updateOrderDraftQty(index, value) {
   const item = state.orderEditor.items[index];
   if (!item) return;
@@ -2447,7 +2511,7 @@ function renderOrders() {
       <td><div class="total-amount">${formatCurrency(visibleTotal)}</div></td>
       <td style="font-size:13px">${orderLocationCellHtml(order)}</td>
       ${isPendingSheet ? '' : `<td>${paymentCellHtml}</td><td><span class="status-badge ${statusClass}">${statusLabel}</span></td>`}
-      <td><div class="action-btns">${isShippingSheet ? `<button class="action-btn btn-print" onclick="printShippingOrders('${escapeHtml(order.id)}')" title="Print packing slip for this order">🖨️ Slip</button>` : ''}<button class="action-btn btn-fulfill" onclick="setStatus('${escapeHtml(order.id)}','fulfilled')">✓ Fulfill</button><button class="action-btn btn-noshow" onclick="setStatus('${escapeHtml(order.id)}','no_show')">No Show</button><button class="action-btn btn-cancel" onclick="setStatus('${escapeHtml(order.id)}','cancelled')">✕ Cancel</button><button class="action-btn btn-reset" onclick="setStatus('${escapeHtml(order.id)}','pending')">↺ Reset</button></div></td>
+      <td><div class="action-btns">${isShippingSheet ? `<button class="action-btn btn-print" onclick="printShippingOrders('${escapeHtml(order.id)}')" title="Print packing slip for this order">🖨️ Slip</button>` : ''}${isStripeOrder && order.stripePaymentIntentId ? `<button class="action-btn btn-refund" onclick="openRefundOrder('${escapeHtml(order.id)}')" title="Refund this online payment">💵 Refund</button>` : ''}<button class="action-btn btn-fulfill" onclick="setStatus('${escapeHtml(order.id)}','fulfilled')">✓ Fulfill</button><button class="action-btn btn-noshow" onclick="setStatus('${escapeHtml(order.id)}','no_show')">No Show</button><button class="action-btn btn-cancel" onclick="setStatus('${escapeHtml(order.id)}','cancelled')">✕ Cancel</button><button class="action-btn btn-reset" onclick="setStatus('${escapeHtml(order.id)}','pending')">↺ Reset</button></div></td>
     </tr>`;
   }).join('');
 
@@ -5532,10 +5596,12 @@ async function issueRefund(refundId) {
     // For Stripe orders — call cloud function
     if (refund.paymentMethod === 'stripe' && refund.stripePaymentIntentId) {
       try {
-        const issueStripeRefund = httpsCallable(cloudFunctions, 'issueStripeRefund');
-        await issueStripeRefund({
+        await issueStripeRefundCallable({
           paymentIntentId: refund.stripePaymentIntentId,
-          amount: Math.round(amount * 100), // cents
+          amount, // dollars — the function converts to cents
+          orderId: refund.orderId || '',
+          orderNumber: refund.orderNumber || '',
+          reason: 'Customer refund request',
           refundRequestId: refundId
         });
       } catch (stripeErr) {
@@ -5587,6 +5653,10 @@ function setRefundFilter(f) {
 
 window.issueRefund = issueRefund;
 window.rejectRefund = rejectRefund;
+window.openRefundOrder = openRefundOrder;
+window.closeRefundModal = closeRefundModal;
+window.handleRefundOverlayClick = handleRefundOverlayClick;
+window.submitOrderRefund = submitOrderRefund;
 window.setRefundFilter = setRefundFilter;
 window.loadRefundTab = loadRefundTab;
 
