@@ -28,7 +28,7 @@
   --font-body:    'Jost', system-ui, sans-serif;
 }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: clip; }
 
 body {
   font-family: var(--font-body);
@@ -36,7 +36,9 @@ body {
   color: var(--text);
   line-height: 1.7;
   font-size: 17px;
-  overflow-x: hidden;
+  overflow-x: hidden; /* fallback for browsers without clip */
+  overflow-x: clip;   /* stops sideways overflow without breaking sticky nav or vertical scroll */
+  max-width: 100%;
 }
 
 img { max-width: 100%; display: block; }

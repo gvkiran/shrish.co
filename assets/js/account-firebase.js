@@ -421,7 +421,7 @@ function profilePayloadFromForm(user) {
     addressLine1: el('profileAddress1').value.trim(),
     addressLine2: el('profileAddress2').value.trim(),
     city: el('profileCity').value.trim(),
-    state: 'VA',
+    state: (el('profileState')?.value || '').trim().toUpperCase(),
     zip: el('profileZip').value.trim(),
     updatedAt: serverTimestamp()
   };
@@ -438,6 +438,7 @@ function fillProfile(profile = {}, user) {
   el('profileAddress1').value = profile.addressLine1 || '';
   el('profileAddress2').value = profile.addressLine2 || '';
   el('profileCity').value = profile.city || '';
+  if (el('profileState')) el('profileState').value = profile.state || '';
   el('profileZip').value = profile.zip || '';
   latestProfileSnapshot = { ...profile, email };
   renderProfileView(latestProfileSnapshot);
@@ -453,7 +454,8 @@ function renderProfileView(profile = {}) {
   if (!view) return;
   const name = `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
   const pickup = profile.preferredPickupLocationLabel || LOCATION_LABELS[profile.preferredPickupLocation] || '';
-  const address = [profile.addressLine1, profile.addressLine2, profile.city, profile.zip]
+  const cityStateZip = [profile.city, profile.state].filter(Boolean).join(', ') + (profile.zip ? ` ${profile.zip}` : '');
+  const address = [profile.addressLine1, profile.addressLine2, cityStateZip.trim()]
     .filter(Boolean)
     .join(', ');
   view.innerHTML = `
@@ -461,7 +463,7 @@ function renderProfileView(profile = {}) {
     <div class="profile-view-card"><span>Name</span><strong>${profileValue(name)}</strong></div>
     <div class="profile-view-card"><span>Phone</span><strong>${profileValue(profile.phone)}</strong></div>
     <div class="profile-view-card"><span>Preferred Pickup</span><strong>${profileValue(pickup)}</strong></div>
-    <div class="profile-view-card"><span>City</span><strong>${profileValue(profile.city)}</strong></div>
+    <div class="profile-view-card"><span>City / State</span><strong>${profileValue([profile.city, profile.state].filter(Boolean).join(', '))}</strong></div>
     <div class="profile-view-card full"><span>Address</span><strong>${profileValue(address)}</strong></div>
   `;
 }
