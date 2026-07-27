@@ -24,13 +24,14 @@ let selectedFulfillmentType = 'pickup';
 let isSubmitting = false;
 let currentCustomer = null;
 let currentCustomerProfile = null;
-// Expose Firestore for refund module
-window._firestoreExports = { collection, doc, updateDoc, addDoc, onSnapshot };
+// Expose Firestore for refund and post-checkout modules.
+window._firestoreExports = { collection, doc, getDoc, updateDoc, addDoc, onSnapshot };
 
 let selectedPaymentMethod = 'pickup';
 let guestStripeConfirmed = false;
 const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
 const CHECKOUT_ACCOUNT_PREFILL_KEY = 'shrish_checkout_account_prefill';
+const STRIPE_SUCCESS_SNAPSHOT_KEY = 'shrish_stripe_success_order';
 const CONFIRMATION_WAIT_MS = 30000;
 const createStripeCheckoutSession = httpsCallable(cloudFunctions, 'createStripeCheckoutSession');
 const getPublicConfigCallable = httpsCallable(cloudFunctions, 'getPublicConfig');
@@ -260,6 +261,108 @@ function readRecentOrderClaim() {
   }
 }
 
+function rememberStripeSuccessSnapshot(orderId, order) {
+  const items = Array.isArray(order?.items)
+    ? order.items.map((item) => ({
+        name: String(item?.name || 'Item'),
+        unit: String(item?.unit || ''),
+        qty: Math.max(1, Number(item?.qty || 1)),
+        price: String(item?.price || ''),
+        lineTotal: Number(item?.lineTotal || 0)
+      }))
+    : [];
+
+  try {
+    sessionStorage.setItem(STRIPE_SUCCESS_SNAPSHOT_KEY, JSON.stringify({
+      orderId,
+      savedAt: Date.now(),
+      items,
+      itemSubtotal: Number(order?.itemSubtotal || 0),
+      salesTaxLabel: String(order?.salesTaxLabel || VIRGINIA_SALES_TAX_LABEL),
+      salesTaxAmount: Number(order?.salesTaxAmount || 0),
+      shippingAmount: Number(order?.shippingAmount || 0),
+      totalPrice: Number(order?.totalPrice || 0),
+      fulfillmentType: order?.fulfillmentType === 'shipping' ? 'shipping' : 'pickup',
+      pickupLocationLabel: String(order?.pickupLocationLabel || order?.locationLabel || '')
+    }));
+  } catch (error) {
+    console.warn('Could not save the checkout receipt for the return page', error);
+  }
+}
+
+function readStripeSuccessSnapshot(orderId) {
+  try {
+    const snapshot = JSON.parse(sessionStorage.getItem(STRIPE_SUCCESS_SNAPSHOT_KEY) || 'null');
+    const isRecent = Number(snapshot?.savedAt || 0) > Date.now() - (24 * 60 * 60 * 1000);
+    return snapshot?.orderId === orderId && isRecent ? snapshot : null;
+  } catch {
+    return null;
+  }
+}
+
+function successItemsMarkup(items = []) {
+  const safeItems = Array.isArray(items) ? items : [];
+  if (!safeItems.length) return '';
+
+  const itemLines = safeItems.map((item) => {
+    const qty = Math.max(1, Number(item?.qty || 1));
+    const unit = String(item?.unit || '').trim();
+    const numericLineTotal = Number(item?.lineTotal);
+    const fallbackLineTotal = moneyValue(item?.price) * qty;
+    const lineTotal = Number.isFinite(numericLineTotal) && numericLineTotal > 0
+      ? numericLineTotal
+      : fallbackLineTotal;
+    return `<div class="ss-item">
+      <div class="ss-item-name">
+        ${escapeHtml(item?.name || 'Item')}
+        ${unit ? `<span class="ss-item-unit">${escapeHtml(unit)}</span>` : ''}
+      </div>
+      <div class="ss-item-qty">${qty}</div>
+      <div class="ss-item-price">${lineTotal > 0 ? formatCurrency(lineTotal) : escapeHtml(item?.price || '')}</div>
+    </div>`;
+  }).join('');
+
+  const totalQty = safeItems.reduce((sum, item) => sum + Math.max(1, Number(item?.qty || 1)), 0);
+  return `<div class="ss-section-title">Items in your order</div>
+    <div class="ss-table">
+      <div class="ss-head">
+        <div>Item</div>
+        <div class="ss-item-qty">Qty</div>
+        <div class="ss-item-price">Line total</div>
+      </div>
+      ${itemLines}
+      <div class="ss-total">
+        <div>Total items</div>
+        <div class="ss-total-qty">${totalQty}</div>
+        <div></div>
+      </div>
+    </div>`;
+}
+
+function renderPaidOrderSummary(summary, order, orderNumber) {
+  if (!summary) return;
+  if (!order) {
+    summary.innerHTML = `
+      <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Paid online</span></div>
+      <div class="ss-row"><span>Order Confirmation No</span><span>${orderNumber ? orderNumberHighlight(orderNumber) : escapeHtml('Your confirmation email will include it')}</span></div>`;
+    return;
+  }
+
+  const fulfillmentType = order.fulfillmentType || 'pickup';
+  const destination = fulfillmentType === 'shipping'
+    ? (order.shippingAddress ? shippingAddressLabel(order.shippingAddress) : 'Shipping')
+    : (order.pickupLocationLabel || order.locationLabel || 'Selected pickup location');
+  summary.innerHTML = `
+    ${successItemsMarkup(order.items)}
+    <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Paid online</span></div>
+    <div class="ss-row"><span>Subtotal</span><span>${formatCurrency(order.itemSubtotal || 0)}</span></div>
+    <div class="ss-row"><span>${escapeHtml(order.salesTaxLabel || VIRGINIA_SALES_TAX_LABEL)}</span><span>${formatCurrency(order.salesTaxAmount || 0)}</span></div>
+    <div class="ss-row"><span>Shipping</span><span>${Number(order.shippingAmount || 0) > 0 ? formatCurrency(order.shippingAmount) : (fulfillmentType === 'shipping' ? 'Free' : 'Not selected')}</span></div>
+    <div class="ss-row"><span>Total</span><span>${formatCurrency(order.totalPrice || 0)}</span></div>
+    <div class="ss-row"><span>${fulfillmentType === 'shipping' ? 'Delivery' : 'Pickup'}</span><span>${escapeHtml(destination)}</span></div>
+    <div class="ss-row"><span>Order Confirmation No</span><span>${orderNumber ? orderNumberHighlight(orderNumber) : escapeHtml('Your confirmation email will include it')}</span></div>`;
+}
+
 function renderStripeSuccessAccountPrompt(orderId, orderNumber, customer) {
   const prompt = document.getElementById('successAccountPrompt');
   if (!prompt || !customerAccountsEnabled()) return;
@@ -326,6 +429,7 @@ async function renderStripeReturnMessage() {
     const customer = await waitForCustomerAuthState();
     currentCustomer = customer;
     const orderNumber = await resolveStripeOrderNumber(orderId, params);
+    const localOrderSnapshot = readStripeSuccessSnapshot(orderId);
     sessionStorage.removeItem('shrish_cart');
     cart = [];
     updateNavCart();
@@ -339,11 +443,7 @@ async function renderStripeReturnMessage() {
     const paymentCopy = document.querySelectorAll('#successScreen > p')[1];
     if (paymentCopy) paymentCopy.textContent = 'Payment is already completed online.';
     const summary = document.getElementById('successSummary');
-    if (summary) {
-      summary.innerHTML = `
-        <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Paid online</span></div>
-        <div class="ss-row"><span>Order Confirmation No</span><span>${orderNumber ? orderNumberHighlight(orderNumber) : escapeHtml('Your confirmation email will include it')}</span></div>`;
-    }
+    renderPaidOrderSummary(summary, localOrderSnapshot, orderNumber);
     renderStripeSuccessAccountPrompt(orderId, orderNumber, customer);
 
     // Show refund request section for Stripe orders
@@ -354,20 +454,7 @@ async function renderStripeReturnMessage() {
         const orderSnap = await getDoc(doc(db, 'orders', orderId));
         if (orderSnap.exists()) {
           const od = orderSnap.data();
-          if (summary) {
-            const fulfillmentType = od.fulfillmentType || 'pickup';
-            const destination = fulfillmentType === 'shipping'
-              ? shippingAddressLabel(od.shippingAddress || {})
-              : (od.pickupLocationLabel || od.locationLabel || 'Selected pickup location');
-            summary.innerHTML = `
-              <div class="ss-row"><span>Payment</span><span style="color:#2E7D32;font-weight:700">Paid online</span></div>
-              <div class="ss-row"><span>Subtotal</span><span>${formatCurrency(od.itemSubtotal || 0)}</span></div>
-              <div class="ss-row"><span>${escapeHtml(od.salesTaxLabel || VIRGINIA_SALES_TAX_LABEL)}</span><span>${formatCurrency(od.salesTaxAmount || 0)}</span></div>
-              <div class="ss-row"><span>Shipping</span><span>${Number(od.shippingAmount || 0) > 0 ? formatCurrency(od.shippingAmount) : (fulfillmentType === 'shipping' ? 'Free' : 'Not selected')}</span></div>
-              <div class="ss-row"><span>Total</span><span>${formatCurrency(od.totalPrice || 0)}</span></div>
-              <div class="ss-row"><span>${fulfillmentType === 'shipping' ? 'Ship to' : 'Pickup'}</span><span>${escapeHtml(destination)}</span></div>
-              <div class="ss-row"><span>Order Confirmation No</span><span>${orderNumber ? orderNumberHighlight(orderNumber) : escapeHtml('Your confirmation email will include it')}</span></div>`;
-          }
+          renderPaidOrderSummary(summary, od, orderNumber);
           injectRefundSection(
             orderId,
             orderNumber,
@@ -2114,6 +2201,7 @@ async function submitOrder() {
       const checkoutUrl = session?.data?.url;
       if (!checkoutUrl) throw new Error('STRIPE_CHECKOUT_URL_MISSING');
       rememberRecentOrderForAccount(orderRef, order, session?.data?.orderNumber || orderRef.id);
+      rememberStripeSuccessSnapshot(orderRef.id, order);
       saveCheckoutFormState();
       window.location.href = checkoutUrl;
       return;
