@@ -775,9 +775,9 @@ const SHRISH_DATA = {
       name: "Kothimeera Pachadi / Coriander Pickle", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
-      image: "images/products/pickles/kothimeera-coriander-pickle-2026-1.png",
+      image: "images/products/pickles/kothimeera-coriander-pickle-2026-1.jpg",
       gallery: [
-        "images/products/pickles/kothimeera-coriander-pickle-2026-1.png"
+        "images/products/pickles/kothimeera-coriander-pickle-2026-1.jpg"
       ],
       description: "Fresh coriander-style pickle with a herby, spicy, and tangy taste. A good everyday pickle for rice, dosa, idli, and chapati.",
       ingredientsText: "Fresh coriander leaves, green chilli or red chilli, garlic, tamarind, mustard, salt, peanut/groundnut oil, tempering spices, jaggery",
@@ -864,9 +864,9 @@ const SHRISH_DATA = {
       name: "Mixed Vegetable Pickle", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
-      image: "images/products/pickles/mixed-vegetable-pickle-2026-1.png",
+      image: "images/products/pickles/mixed-vegetable-pickle-2026-1.jpg",
       gallery: [
-        "images/products/pickles/mixed-vegetable-pickle-2026-1.png"
+        "images/products/pickles/mixed-vegetable-pickle-2026-1.jpg"
       ],
       description: "Andhra-style mixed vegetable pickle with carrot, cauliflower, green chilli, and seasonal vegetables in a bold chilli-mustard spice mix. A colorful, crunchy side for rice and tiffins.",
       ingredientsText: "Mixed vegetables such as beans, carrot, cauliflower, green chilli, and seasonal vegetables, red chilli powder, mustard powder, fenugreek, turmeric, salt, peanut/groundnut oil, lemon",
@@ -909,9 +909,9 @@ const SHRISH_DATA = {
       name: "Tomato Pickle", localName: "250g or 500g", origin: "Veg Pickle",
       price: "$9.99", unit: "250g or 500g",
       available: true, displayOnly: false, preorderOnly: false, tag: "Veg",
-      image: "images/products/pickles/tomato-pickle-2026-1.png",
+      image: "images/products/pickles/tomato-pickle-2026-1.jpg",
       gallery: [
-        "images/products/pickles/tomato-pickle-2026-1.png"
+        "images/products/pickles/tomato-pickle-2026-1.jpg"
       ],
       description: "Rich and spicy tomato pickle with a deep, tangy flavor. Great with rice, dosa, upma, idli, chapati, and curd rice.",
       ingredientsText: "Tomatoes, turmeric, red chilli powder, tamarind, mustard, fenugreek, salt, peanut/groundnut oil, garlic",
