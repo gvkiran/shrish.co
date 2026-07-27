@@ -3331,8 +3331,13 @@ function renderCustomers() {
       ? `<button class="action-btn btn-cancel delete-customer-btn" type="button" data-customer-uid="${escapeHtml(customer.id)}" data-customer-email="${escapeHtml(customer.email || '')}">Delete</button>`
       : `<button class="action-btn" type="button" disabled title="${protectedAccount ? 'Admin account is protected' : 'Customer has order history'}">${protectedAccount ? 'Protected' : 'Has orders'}</button>`;
 
+    const delRequested = customer.status === 'deletion_requested';
+    const purgeDate = customer.piiPurgeAt?.toDate ? customer.piiPurgeAt.toDate().toLocaleDateString('en-US') : '';
+    const delBadge = delRequested
+      ? `<div style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:#e0736b;background:rgba(180,40,30,.14);border:1px solid rgba(180,40,30,.35);border-radius:8px;padding:2px 7px">🗑 Deletion requested${purgeDate ? ` · purges ${escapeHtml(purgeDate)}` : ''}</div>`
+      : '';
     return `<tr>
-      <td><div class="customer-name">${escapeHtml(name)}</div><div class="customer-profile-muted">${escapeHtml(customer.city || '')}</div></td>
+      <td><div class="customer-name">${escapeHtml(name)}</div>${delBadge}<div class="customer-profile-muted">${escapeHtml(customer.city || '')}</div></td>
       <td><div class="customer-name">${escapeHtml(customer.email || '--')}</div><div class="customer-profile-muted">${escapeHtml(customer.id || customer.uid || '')}</div></td>
       <td>${escapeHtml(customer.phone || '--')}</td>
       <td>${escapeHtml(pickup)}</td>
