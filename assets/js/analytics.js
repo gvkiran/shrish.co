@@ -1,3 +1,27 @@
+// Meta Pixel base tracking for Shrish website sales campaigns.
+// Purchase tracking is intentionally configured separately after checkout confirmation is verified.
+(function () {
+  'use strict';
+
+  const META_PIXEL_ID = '1576599090538377';
+  const isLocal = /^(localhost|127\.0\.0\.1|::1)$/i.test(window.location.hostname);
+
+  if (!META_PIXEL_ID || isLocal || window.__SHRISH_META_PIXEL_INITIALIZED__) return;
+  window.__SHRISH_META_PIXEL_INITIALIZED__ = true;
+
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+
+  window.fbq('init', META_PIXEL_ID);
+  window.fbq('track', 'PageView');
+})();
+
 // SHRISH privacy-safe PostHog analytics.
 // Tracks business events only; does not identify customers or send contact details.
 (function () {
