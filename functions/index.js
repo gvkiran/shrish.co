@@ -267,7 +267,19 @@ async function classifyOrderPaymentItems(db, order = {}) {
   };
 }
 
+// Shrish only has VA sales-tax nexus. Pickup happens in VA (taxable); shipping
+// is taxable only when the destination state is VA. Any non-VA or unknown
+// destination must NOT be charged Virginia sales tax.
+function orderShipsOutsideVirginia(order = {}) {
+  const isShipping = String(order.fulfillmentType || "pickup").toLowerCase() === "shipping"
+    || String(order.location || "").toLowerCase() === "shipping";
+  if (!isShipping) return false;
+  const state = String(order.shippingAddress?.state || order.shippingState || "").trim().toUpperCase();
+  return state !== "VA";
+}
+
 function orderSalesTaxAmount(order = {}, subtotalOverride) {
+  if (orderShipsOutsideVirginia(order)) return 0;
   if (Number.isFinite(subtotalOverride)) {
     return roundCurrency(Number(subtotalOverride) * configuredVirginiaSalesTaxRate());
   }
@@ -2110,6 +2122,93 @@ exports.purgeDeletedAccounts = onSchedule(
       }
     }
     console.log(`purgeDeletedAccounts: purged ${purged}/${due.size}`);
+  }
+);
+
+// Admin-only: issue a partial or full Stripe refund against an order's payment.
+// Guardrails: admin auth, positive amount, and never refund more than the amount
+// still refundable on the Stripe charge (prevents over-refunds and double-refunds).
+exports.issueStripeRefund = onCall(
+  callableOptions({ secrets: [STRIPE_SECRET_KEY] }),
+  async (request) => {
+    if (!request.auth || !isAdminRequest(request)) {
+      throw new HttpsError("permission-denied", "Admin access is required.");
+    }
+    const paymentIntentId = String(request.data?.paymentIntentId || "").trim();
+    const orderId = String(request.data?.orderId || "").trim();
+    const orderNumber = String(request.data?.orderNumber || "").trim();
+    const reason = String(request.data?.reason || "").trim().slice(0, 200);
+    const amountDollars = Number(request.data?.amount);
+
+    if (!paymentIntentId) {
+      throw new HttpsError("invalid-argument", "This order has no online payment to refund.");
+    }
+    if (!Number.isFinite(amountDollars) || amountDollars <= 0) {
+      throw new HttpsError("invalid-argument", "Enter a valid refund amount.");
+    }
+    const amountCents = Math.round(amountDollars * 100);
+
+    const stripe = stripeClient();
+    const intent = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ["latest_charge"] });
+    const charge = intent && typeof intent.latest_charge === "object" ? intent.latest_charge : null;
+    const captured = Number(charge?.amount ?? intent?.amount ?? 0);
+    const refundedSoFar = Number(charge?.amount_refunded ?? 0);
+    const remainingCents = captured - refundedSoFar;
+
+    if (remainingCents <= 0) {
+      throw new HttpsError("failed-precondition", "This payment has already been fully refunded.");
+    }
+    if (amountCents > remainingCents) {
+      throw new HttpsError(
+        "failed-precondition",
+        `Only $${(remainingCents / 100).toFixed(2)} is left to refund on this payment.`
+      );
+    }
+
+    const refund = await stripe.refunds.create({
+      payment_intent: paymentIntentId,
+      amount: amountCents,
+      metadata: { orderId, orderNumber, reason, issuedBy: request.auth.token?.email || "" },
+    });
+
+    // Record the refund on the order for the admin / accounting trail.
+    if (orderId) {
+      try {
+        await admin.firestore().collection("orders").doc(orderId).set(
+          {
+            refundedAmount: admin.firestore.FieldValue.increment(amountCents / 100),
+            lastRefundAt: admin.firestore.FieldValue.serverTimestamp(),
+            refundHistory: admin.firestore.FieldValue.arrayUnion({
+              amount: amountCents / 100,
+              reason,
+              stripeRefundId: refund.id,
+              issuedBy: request.auth.token?.email || "",
+              at: new Date().toISOString(),
+            }),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        );
+      } catch (error) {
+        console.warn("issueStripeRefund: order record update failed", { orderId, message: error?.message });
+      }
+    }
+
+    try {
+      posthog.capture({
+        distinctId: request.auth.token?.email || "admin",
+        event: "admin_stripe_refund_issued",
+        properties: { order_id: orderId, amount: amountCents / 100, stripe_refund_id: refund.id },
+      });
+      await posthog.flush();
+    } catch (_) {}
+
+    return {
+      status: refund.status,
+      refundId: refund.id,
+      amount: amountCents / 100,
+      remaining: (remainingCents - amountCents) / 100,
+    };
   }
 );
 

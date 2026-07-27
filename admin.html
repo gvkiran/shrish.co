@@ -203,6 +203,30 @@
           </div>
         </div>
 
+        <div class="order-editor-modal" id="refundOrderModal" onclick="handleRefundOverlayClick(event)">
+          <div class="order-editor-card reminder-editor-card" role="dialog" aria-modal="true" aria-labelledby="refundModalTitle">
+            <div class="order-editor-head">
+              <div>
+                <h3 id="refundModalTitle">Refund Order</h3>
+                <p id="refundModalSummary">Refund a partial or full amount to the customer's card.</p>
+              </div>
+            </div>
+            <div class="order-editor-body" style="padding:12px 6px">
+              <div class="order-editor-pill">Order total: <strong id="refundOrderTotal">$0.00</strong></div>
+              <div class="order-editor-pill" style="margin-top:6px">Already refunded: <strong id="refundOrderRefunded">$0.00</strong></div>
+              <label style="display:block;margin:14px 0 4px;font-size:13px;font-weight:700">Refund amount ($)</label>
+              <input id="refundAmountInput" type="number" min="0.01" step="0.01" placeholder="0.00" style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid rgba(200,121,26,.4);background:#120c05;color:#EFE4CE;font-size:15px">
+              <label style="display:block;margin:12px 0 4px;font-size:13px;font-weight:700">Reason (optional)</label>
+              <input id="refundReasonInput" type="text" maxlength="200" placeholder="e.g. missing item" style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid rgba(200,121,26,.4);background:#120c05;color:#EFE4CE;font-size:15px">
+              <div id="refundModalMsg" style="min-height:18px;margin-top:10px;font-size:13px;font-weight:600"></div>
+              <div class="order-editor-actions">
+                <button class="toolbar-btn" type="button" onclick="closeRefundModal()">Cancel</button>
+                <button class="toolbar-btn btn-refund-issue" id="refundIssueBtn" type="button" onclick="submitOrderRefund()">Issue Refund</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="order-editor-modal" id="emailReminderModal" onclick="handleEmailReminderOverlayClick(event)">
           <div class="order-editor-card reminder-editor-card" role="dialog" aria-modal="true" aria-labelledby="emailReminderTitle">
             <div class="order-editor-head">
