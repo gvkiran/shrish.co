@@ -486,7 +486,11 @@ const SHRISH_DATA = {
       origin: "Andhra Pradesh",
       price: "$11.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Healthy Choice",
-      image: SHRISH_LOGO_PRODUCT_IMAGE,
+      image: "images/products/sweets/flaxseed-laddu-2026-1.jpg",
+      gallery: [
+        "images/products/sweets/flaxseed-laddu-2026-1.jpg",
+        "images/products/sweets/flaxseed-laddu-2026-2.jpg"
+      ],
       description: "A nourishing laddu made from roasted flaxseeds bound with jaggery and a touch of ghee. Earthy, lightly sweet, and rich in fibre and omega-3 - a guilt-free treat for health-conscious customers.",
       details: "Ingredients: Roasted flaxseeds (avise ginjalu), jaggery, ghee and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Healthy Choice", "Fibre Rich", "Jaggery Sweetened"],
@@ -1444,6 +1448,7 @@ const SHRISH_VERIFIED_PRODUCT_IMAGE_IDS = new Set([
   "picklespodi-karela-bitter-gourd-pickle",
   "picklespodi-flaxseed-podi-avise-podi",
   "picklespodi-kakarakaya-karam-podi-bitter-gourd",
+  "sweets-flaxseed-laddu",
   "snacks-ragi-murukulu",
   "puth_jaggery_kaju_pista",
   "puth_samosa_jaggery_dryfruit"
