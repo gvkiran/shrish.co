@@ -4,7 +4,8 @@
   'use strict';
 
   const META_PIXEL_ID = '1576599090538377';
-  const PURCHASE_DEDUP_PREFIX = 'shrish_meta_purchase_v1:';
+  const PURCHASE_DEDUP_PREFIX = 'shrish_meta_purchase_v2:';
+  const PURCHASE_WATCH_TIMEOUT_MS = 120000;
   const isLocal = /^(localhost|127\.0\.0\.1|::1)$/i.test(window.location.hostname);
 
   if (!META_PIXEL_ID || isLocal || window.__SHRISH_META_PIXEL_INITIALIZED__) return;
@@ -47,6 +48,10 @@
     return Number.isFinite(amount) ? Math.round((amount + Number.EPSILON) * 100) / 100 : 0;
   }
 
+  function metaPixelLibraryIsReady() {
+    return typeof window.fbq === 'function' && typeof window.fbq.callMethod === 'function';
+  }
+
   function confirmedStripePurchase() {
     const params = new URLSearchParams(window.location.search || '');
     if (params.get('payment') !== 'success') return null;
@@ -69,7 +74,7 @@
 
   function trackConfirmedStripePurchase() {
     const purchase = confirmedStripePurchase();
-    if (!purchase || typeof window.fbq !== 'function') return false;
+    if (!purchase || !metaPixelLibraryIsReady()) return false;
 
     window.fbq(
       'track',
@@ -105,7 +110,8 @@
       characterData: true
     });
     intervalId = window.setInterval(check, 500);
-    timeoutId = window.setTimeout(cleanup, 30000);
+    timeoutId = window.setTimeout(cleanup, PURCHASE_WATCH_TIMEOUT_MS);
+    window.addEventListener('load', check, { once: true });
     check();
   }
 
