@@ -499,7 +499,10 @@ window.removePromoCode = removePromoCode;
 function shippingDestinationIsOutOfState() {
   if (selectedFulfillmentType !== 'shipping') return false;
   const st = String(shippingInputValue('shippingState') || '').trim().toUpperCase();
-  return st.length === 2 && st !== 'VA';
+  // Shrish only has VA sales-tax nexus, so VA tax applies to VA destinations
+  // only. Any non-VA state — and an unknown/blank state — is treated as
+  // out-of-state so we never charge VA tax on, e.g., a PA shipment.
+  return st !== 'VA';
 }
 
 function calculateSalesTax(subtotal, fulfillmentType = selectedFulfillmentType) {

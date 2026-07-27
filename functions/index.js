@@ -267,7 +267,19 @@ async function classifyOrderPaymentItems(db, order = {}) {
   };
 }
 
+// Shrish only has VA sales-tax nexus. Pickup happens in VA (taxable); shipping
+// is taxable only when the destination state is VA. Any non-VA or unknown
+// destination must NOT be charged Virginia sales tax.
+function orderShipsOutsideVirginia(order = {}) {
+  const isShipping = String(order.fulfillmentType || "pickup").toLowerCase() === "shipping"
+    || String(order.location || "").toLowerCase() === "shipping";
+  if (!isShipping) return false;
+  const state = String(order.shippingAddress?.state || order.shippingState || "").trim().toUpperCase();
+  return state !== "VA";
+}
+
 function orderSalesTaxAmount(order = {}, subtotalOverride) {
+  if (orderShipsOutsideVirginia(order)) return 0;
   if (Number.isFinite(subtotalOverride)) {
     return roundCurrency(Number(subtotalOverride) * configuredVirginiaSalesTaxRate());
   }
