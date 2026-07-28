@@ -15,6 +15,6 @@ window.SHRISH_APP_CONFIG = {
   defaultOrderStatus: "pending",
   customerAccountsEnabled: true,
   googleMapsApiKey: "",
-  // Fill after registering shrish.co in Firebase App Check. Leave blank until tested.
-  appCheckSiteKey: ""
+  // reCAPTCHA Enterprise site key for Firebase App Check (public by design).
+  appCheckSiteKey: "6Le8PWktAAAAALMSeN_VwnRsmzoKqZpaA5ZMbnku"
 };
