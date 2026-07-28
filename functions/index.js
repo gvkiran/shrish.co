@@ -1104,8 +1104,8 @@ exports.sendOrderReminderEmails = onCall(
     secrets: [RESEND_API_KEY],
   }),
   async (request) => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Sign in as admin before sending reminders.");
+    if (!isAdminRequest(request)) {
+      throw new HttpsError("permission-denied", "Admin access is required to send reminder emails.");
     }
 
     const rawOrderIds = Array.isArray(request.data?.orderIds) ? request.data.orderIds : [];
@@ -1113,7 +1113,7 @@ exports.sendOrderReminderEmails = onCall(
     const subjectTemplate = String(request.data?.subject || "").trim().slice(0, 160);
     const bodyTemplate = String(request.data?.body || "").trim().slice(0, 5000);
 
-    if (!orderIds.length) {
+      if (!orderIds.length) {
       throw new HttpsError("invalid-argument", "Select at least one active order.");
     }
     if (orderIds.length > MAX_REMINDER_EMAILS_PER_SEND) {
