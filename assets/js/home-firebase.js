@@ -1,4 +1,4 @@
-import { db, collection, doc, getDoc, onSnapshot, setDoc, serverTimestamp, escapeHtml } from './firebase-catalog.js';
+import { db, collection, doc, onSnapshot, setDoc, serverTimestamp, escapeHtml } from './firebase-catalog.js';
 
 let homeModalProductId = null;
 let homeModalQty = 1;
@@ -158,14 +158,7 @@ async function subscribeFooterEmail(event) {
   setSubscribeMessage('info', 'Saving your subscription...');
 
   try {
-    const subscriberRef = doc(db, 'email_subscribers', email);
-    const existing = await getDoc(subscriberRef);
-
-    if (existing.exists()) {
-      setSubscribeMessage('info', 'This email is already subscribed for updates.');
-      return;
-    }
-
+    const subscriberRef = doc(collection(db, 'email_subscribers'));
     await setDoc(subscriberRef, {
       email,
       status: 'subscribed',

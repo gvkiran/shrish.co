@@ -2,12 +2,21 @@ const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
-const admin = require("firebase-admin");
+const { initializeApp } = require("firebase-admin/app");
+const { getAuth } = require("firebase-admin/auth");
+const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestore");
 const { Resend } = require("resend");
 const { PostHog } = require("posthog-node");
 const Stripe = require("stripe");
 
-admin.initializeApp();
+initializeApp();
+
+// Keep the existing call sites concise while using Firebase Admin's supported
+// modular entry points (legacy namespace imports were removed in Admin v14).
+const admin = {
+  auth: getAuth,
+  firestore: Object.assign(getFirestore, { FieldValue, Timestamp }),
+};
 
 const posthog = new PostHog(process.env.POSTHOG_API_KEY, {
   host: process.env.POSTHOG_HOST,

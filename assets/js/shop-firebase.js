@@ -1,4 +1,4 @@
-import { db, collection, doc, getDoc, onSnapshot, setDoc, serverTimestamp, escapeHtml } from './firebase-catalog.js';
+import { db, collection, doc, onSnapshot, setDoc, serverTimestamp, escapeHtml } from './firebase-catalog.js';
 
 'use strict';
 
@@ -1001,15 +1001,7 @@ async function submitNotifyRequest(event) {
   setNotifyMessage('info', 'Saving your notification request...');
 
   try {
-    const docId = `${notifyTarget.productId}__${email.replace(/[^a-z0-9@._-]/gi, '_')}`;
-    const requestRef = doc(db, 'notify_requests', docId);
-    const existing = await getDoc(requestRef);
-
-    if (existing.exists()) {
-      setNotifyMessage('info', 'This email is already subscribed for this product.');
-      return;
-    }
-
+    const requestRef = doc(collection(db, 'notify_requests'));
     await setDoc(requestRef, {
       email,
       productId: notifyTarget.productId,

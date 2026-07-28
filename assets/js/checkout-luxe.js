@@ -6,6 +6,7 @@
    ============================================================ */
 (function () {
   'use strict';
+  document.documentElement.setAttribute('data-checkout-luxe-version', '20260728-5');
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 
@@ -247,6 +248,13 @@
           var hasItems = cart.items.length > 0;
           var success = $('successScreen');
           var done = !!(success && success.style.display && success.style.display !== 'none');
+          var paymentPolicy = cartPaymentPolicy(cart.items);
+          var stripeOption = document.querySelector('.payment-option[data-payment="stripe"]');
+          var onlineOnly = paymentPolicy.requiresStripe || !!(
+            stripeOption &&
+            stripeOption.classList.contains('selected') &&
+            !stripeOption.hidden
+          );
           var sig = [
             (($('firstName') || {}).value || ''),
             (($('phone') || {}).value || ''),
@@ -254,6 +262,9 @@
             (document.querySelector('.loc-card.selected') || { dataset: {} }).dataset.loc || '',
             cart.items.map(function (i) { return i.id + ':' + i.qty; }).join(','),
             cart.total,
+            paymentPolicy.requiresStripe ? 1 : 0,
+            paymentPolicy.isMixed ? 1 : 0,
+            onlineOnly ? 1 : 0,
             done ? 1 : 0
           ].join('|');
           if (sig === lastSig) return;
@@ -282,8 +293,6 @@
 
           $('pkTotal').textContent = cart.total || '—';
           $('ppTotal').textContent = cart.total || '—';
-          var paymentPolicy = cartPaymentPolicy(sessionCart());
-          var onlineOnly = paymentPolicy.requiresStripe;
           var totalLabel = $('pkTotalLabel');
           var dueLine = $('pkDueLine');
           var trustLine = $('pkTrust');
@@ -400,6 +409,14 @@
         document.addEventListener(evt, queueRefresh, { passive: true });
       });
       new MutationObserver(function () { queueRefresh(); }).observe(review, { childList: true, subtree: true });
+      var paymentOptions = $('paymentOptions');
+      if (paymentOptions) {
+        new MutationObserver(function () { queueRefresh(); }).observe(paymentOptions, {
+          attributes: true,
+          subtree: true,
+          attributeFilter: ['class', 'hidden']
+        });
+      }
       setInterval(queueRefresh, 4000);
       refresh();
     } catch (e) { /* never break checkout */ }

@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-07-28T07:58:31.236Z",
+  "sitemapStatus": 200,
+  "pageCount": 83,
+  "resourceCount": 249,
+  "badPages": [],
+  "badResources": [
+    {
+      "url": "https://www.shrish.co/images/products/sweets/madatha-kaja-2026-1.jpg",
+      "status": 404
+    }
+  ],
+  "rootHeaders": {
+    "strict-transport-security": "max-age=63072000",
+    "x-content-type-options": null,
+    "x-frame-options": null,
+    "referrer-policy": null,
+    "permissions-policy": null,
+    "cross-origin-opener-policy": null
+  },
+  "statuses": {
+    "200": 83
+  }
+}

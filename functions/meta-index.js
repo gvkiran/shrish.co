@@ -1,9 +1,10 @@
 const existingFunctions = require("./index.js");
 const { onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const { defineSecret } = require("firebase-functions/params");
-const admin = require("firebase-admin");
+const { FieldValue } = require("firebase-admin/firestore");
 const crypto = require("node:crypto");
 
+const admin = { firestore: { FieldValue } };
 const META_CONVERSIONS_API_TOKEN = defineSecret("META_CONVERSIONS_API_TOKEN");
 const META_DATASET_ID = "1576599090538377";
 const META_GRAPH_API_VERSION = String(process.env.META_GRAPH_API_VERSION || "v25.0").trim();
@@ -157,13 +158,16 @@ const metaPurchaseOnPaid = onDocumentUpdated(
     retry: true,
   },
   async (event) => {
+    const beforeSnapshot = event.data?.before;
     const snapshot = event.data?.after;
     if (!snapshot?.exists) return;
 
+    const previousOrder = beforeSnapshot?.exists ? (beforeSnapshot.data() || {}) : {};
     const order = snapshot.data() || {};
     const orderId = String(event.params?.orderId || snapshot.id || "").trim();
+    const wasPaid = String(previousOrder.paymentStatus || previousOrder.payment || "").toLowerCase() === "paid";
     const isPaid = String(order.paymentStatus || order.payment || "").toLowerCase() === "paid";
-    if (!orderId || !isPaid || order.metaPurchaseStatus === "sent") return;
+    if (!orderId || !isPaid || wasPaid || order.metaPurchaseStatus === "sent") return;
 
     const paidAtMillis = typeof order.paidAt?.toMillis === "function"
       ? order.paidAt.toMillis()

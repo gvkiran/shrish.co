@@ -35,7 +35,9 @@ service cloud.firestore {
     }
 
     match /orders/{orderId} {
-      allow create: if newOrderCustomerIsValid();
+      allow create: if orderId.matches('^[A-Za-z0-9]{20}$')
+        && newOrderCustomerIsValid()
+        && request.resource.data.status in ['pending', 'awaiting_payment'];
       allow get: if isAdmin()
         || (
           isSignedIn()
@@ -56,7 +58,8 @@ service cloud.firestore {
 
     match /refund_requests/{docId} {
       allow get, list: if isAdmin();
-      allow create: if true;
+      allow create: if docId.matches('^[A-Za-z0-9]{20}$')
+        && request.resource.data.status == 'pending';
       allow update, delete: if isAdmin();
     }
 
@@ -85,15 +88,14 @@ service cloud.firestore {
     }
 
     match /notify_requests/{docId} {
-      allow get: if true;
-      allow create: if true;
-      allow list, update, delete: if isAdmin();
+      allow get, list: if isAdmin();
+      allow create: if docId.matches('^[A-Za-z0-9]{20}$');
+      allow update, delete: if isAdmin();
     }
 
     match /email_subscribers/{emailId} {
-      allow get: if true;
-      allow list: if isAdmin();
-      allow create: if true;
+      allow get, list: if isAdmin();
+      allow create: if emailId.matches('^[A-Za-z0-9]{20}$');
       allow update, delete: if isAdmin();
     }
 

@@ -136,7 +136,7 @@
       '<div class="rx-cook-stage">' +
         '<div class="rx-cook-stepnum" id="rxCookNum"></div>' +
         '<div class="rx-cook-text" id="rxCookText"></div>' +
-        '<button type="button" class="rx-timer-btn" id="rxTimerBtn" hidden></button>' +
+        '<button type="button" class="rx-timer-btn" id="rxTimerBtn" aria-label="Recipe timer" hidden></button>' +
         '<div class="rx-timer" id="rxTimer" hidden></div>' +
       '</div>' +
       '<details class="rx-cook-ings"><summary>Ingredients</summary><ul id="rxCookIngs"></ul></details>' +
@@ -181,6 +181,7 @@
       if (m) {
         tb.hidden = false;
         tb.textContent = T('timer').replace('{n}', m[1]);
+        tb.setAttribute('aria-label', tb.textContent);
         tb.onclick = function () { startTimer(parseInt(m[1], 10) * 60); tb.hidden = true; };
       } else { tb.hidden = true; }
     }

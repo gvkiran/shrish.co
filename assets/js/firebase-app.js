@@ -6,7 +6,7 @@ import {
   getFirestore, serverTimestamp, Timestamp,
   collection, doc, addDoc, getDocs, getDoc, setDoc, updateDoc, deleteDoc,
   query, where, orderBy, onSnapshot, limit,
-  runTransaction   // â added for sequential order IDs
+  runTransaction   // added for sequential order IDs
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 import {
   getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
@@ -38,7 +38,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const cloudFunctions = getFunctions(app, 'us-central1');
 
-function safeText(value, fallback = 'â') {
+function safeText(value, fallback = '—') {
   if (value === undefined || value === null || value === '') return fallback;
   return String(value);
 }
@@ -55,9 +55,9 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 function formatDate(value) {
-  if (!value) return 'â';
+  if (!value) return '—';
   const date = value?.toDate ? value.toDate() : new Date(value);
-  if (Number.isNaN(date.getTime())) return 'â';
+  if (Number.isNaN(date.getTime())) return '—';
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 function formatDateInput(value) {
@@ -74,14 +74,14 @@ function normalizePhone(value) {
   return String(value || '').replace(/\D/g, '');
 }
 function orderItemsSummary(items = []) {
-  return items.map((item) => `${item.name} Ã ${item.qty}`).join(', ');
+  return items.map((item) => `${item.name} × ${item.qty}`).join(', ');
 }
 
 export {
   db, auth, cloudFunctions, httpsCallable,
   collection, doc, addDoc, getDocs, getDoc, setDoc, updateDoc, deleteDoc,
   query, where, orderBy, onSnapshot, limit,
-  runTransaction,   // â exported
+  runTransaction,
   onAuthStateChanged, createUserWithEmailAndPassword,
   signInWithEmailAndPassword, sendPasswordResetEmail, signOut,
   EmailAuthProvider, reauthenticateWithCredential, updateEmail,

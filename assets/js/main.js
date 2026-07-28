@@ -1,19 +1,19 @@
 // ============================================================
-// SHRISH LLC â Main JavaScript v3.1
+// SHRISH LLC — Main JavaScript v3.1
 // Update SHRISH_CONFIG below with your real links
 // ============================================================
 const SHRISH_CONFIG = {
   whatsappNumber: '17653255577',
-  whatsappGroup: 'https://chat.whatsapp.com/L0LQeykYaYZImyYSlykx5E', // â WhatsApp group link
+  whatsappGroup: 'https://chat.whatsapp.com/L0LQeykYaYZImyYSlykx5E', // WhatsApp group link
   instagram: 'https://www.instagram.com/shrish_llc/',                        // Instagram
-  whatsappMessage: "Hi Shrish! I'd like to know more about your mangoes ð¥­"
+  whatsappMessage: "Hi Shrish! I'd like to know more about your mangoes 🥭"
 };
 
 function trackShrishEvent(eventName, props = {}) {
   window.SHRISH_ANALYTICS?.track(eventName, props);
 }
 
-// ââ INJECT GLOBAL UI (runs on every page) âââââââââââââââââ
+// INJECT GLOBAL UI (runs on every page)
 const GEET_SESSION_KEY = 'shrish_geet_conversation_v1';
 let productDataLoadPromise = null;
 const SHRISH_MAIN_SCRIPT_BASE = (() => {
@@ -1326,7 +1326,7 @@ function injectGlobalUI() {
     .sfs-ig:hover { background: linear-gradient(135deg,#f09433,#dc2743,#bc1888); color: white; border-color: transparent; }
     .sfs-wa svg, .sfs-ig svg { width:16px; height:16px; flex-shrink:0; }
 
-    /* ââ TOAST FIX (Issue 6) ââââââââââââââââââââââââââââââââ */
+    /* TOAST FIX (Issue 6) */
     /* The .toast base style exists in shop.html but .show rule was missing */
     .toast {
       position: fixed;
@@ -1403,7 +1403,7 @@ function injectGlobalUI() {
   shrishAfterFirstPaint(injectGeetAssistant, 3600);
 }
 
-// ââ DOM READY âââââââââââââââââââââââââââââââââââââââââââââââ
+// DOM READY
 function renderAccountNavSignedOut(container) {
   container.innerHTML = `
     <a href="account.html" class="nav-account-btn" aria-label="Customer account">Account</a>
@@ -1554,7 +1554,7 @@ document.addEventListener('DOMContentLoaded', () => {
     link.classList.toggle('active', (isShopLink && isShopRoute) || href === currentPage || hrefPage === currentPage || (currentPath === '/' && hrefPage === 'index.html'));
   });
 
-  // ââ Homepage product grid (with real images) âââââââââââââââ
+  // Homepage product grid (with real images)
   const productsGrid = document.getElementById('productsGrid');
   if (productsGrid && window.SHRISH_DATA && productsGrid.dataset.liveProducts !== 'true') {
     const mangoes = SHRISH_DATA.products.filter(p => p.category === 'mangoes');
@@ -1570,18 +1570,18 @@ document.addEventListener('DOMContentLoaded', () => {
           ${p.tag ? `<div class="product-card-badge">${p.tag}</div>` : ''}
           <div class="product-card-img" style="padding:0;overflow:hidden;${p.image ? '' : 'display:flex;align-items:center;justify-content:center'}">
             ${imgHtml}
-            <span ${fallbackStyle} style="font-size:56px;display:flex;align-items:center;justify-content:center;width:100%;height:100%">ð¥­</span>
+            <span ${fallbackStyle} style="font-size:56px;display:flex;align-items:center;justify-content:center;width:100%;height:100%">🥭</span>
           </div>
           <div class="product-card-body">
             <h3>${p.name}</h3>
-            <p>${p.description.slice(0, 80)}â¦</p>
+            <p>${p.description.slice(0, 80)}…</p>
             <div class="product-card-footer">
               <div>
                 <div class="product-price">${p.price}</div>
                 <div class="product-unit">${p.unit}</div>
               </div>
               <span class="product-status-badge ${p.available ? 'available' : 'unavailable'}">
-                ${p.available ? 'â Available' : 'Sold Out'}
+                ${p.available ? '✓ Available' : 'Sold Out'}
               </span>
             </div>
           </div>
@@ -1589,7 +1589,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ââ Scroll reveal animations (FIXED: skip already-visible elements) ââ
+  // Scroll reveal animations (FIXED: skip already-visible elements)
   // Issue 5 fix: only hide elements that are BELOW the fold.
   // Elements already on screen when the page loads stay visible immediately.
   if ('IntersectionObserver' in window) {
@@ -1619,7 +1619,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// ââ Dynamic copyright year ââââââââââââââââââââââââââââââââââââ
+// Dynamic copyright year
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.copy-year').forEach(function(el) {
     el.textContent = new Date().getFullYear();

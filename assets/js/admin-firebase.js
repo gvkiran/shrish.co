@@ -51,6 +51,31 @@ const REMINDER_EMAIL_BATCH_SIZE = 50;
 window._firestoreExports = { collection, doc, updateDoc, addDoc: typeof addDoc !== 'undefined' ? addDoc : null, onSnapshot, orderBy, query };
 
 const NON_REVENUE_ORDER_STATUSES = ['cancelled', 'no_show'];
+const SAFE_ORDER_STATUSES = new Set(['pending', 'awaiting_payment', 'payment_expired', 'fulfilled', 'cancelled', 'no_show']);
+const SAFE_REFUND_STATUSES = new Set(['pending', 'approved', 'rejected']);
+
+function safeOrderStatus(value) {
+  const status = String(value || 'pending').toLowerCase();
+  return SAFE_ORDER_STATUSES.has(status) ? status : 'pending';
+}
+
+function safeRefundStatus(value) {
+  const status = String(value || 'pending').toLowerCase();
+  return SAFE_REFUND_STATUSES.has(status) ? status : 'pending';
+}
+
+function inlineJsArg(value) {
+  return escapeHtml(
+    JSON.stringify(String(value ?? ''))
+      .replace(/\u2028/g, '\\u2028')
+      .replace(/\u2029/g, '\\u2029')
+  );
+}
+
+function safeDomId(value) {
+  return String(value ?? '').replace(/[^A-Za-z0-9_-]/g, '_');
+}
+
 const ADMIN_EMAIL = normalizeLookup(window.SHRISH_APP_CONFIG?.adminEmailHint || 'contact@shrish.co');
 const deleteCustomerAccount = httpsCallable(cloudFunctions, 'deleteCustomerAccount');
 const issueStripeRefundCallable = httpsCallable(cloudFunctions, 'issueStripeRefund');
@@ -525,7 +550,7 @@ function localOrderMix(days = growthDays()) {
     const key = orderDateKey(order);
     if (!key || key < cutoff) return;
     const location = order.pickupLocationLabel || order.locationLabel || order.location || order.pickupLocation || 'Unknown pickup';
-    const status = order.status || 'pending';
+    const status = safeOrderStatus(order.status);
     const method = order.paymentMethodLabel || order.paymentMethod || order.payment || 'Not selected';
 
     locations.set(location, (locations.get(location) || 0) + 1);
@@ -2477,9 +2502,9 @@ function renderOrders() {
     const checked = state.selectedReminderOrderIds.has(order.id) ? 'checked' : '';
     const quickPaymentButtons = status === 'fulfilled'
       ? `<div class="payment-quick-actions" aria-label="Quick payment method">
-          <button type="button" class="payment-quick-btn ${paymentMethod === 'cash' && paymentCollected ? 'active' : ''}" title="Cash collected" onclick="setQuickPaymentMethod('${escapeHtml(order.id)}','cash')">C</button>
-          <button type="button" class="payment-quick-btn ${paymentMethod === 'zelle' && paymentCollected ? 'active' : ''}" title="Zelle collected" onclick="setQuickPaymentMethod('${escapeHtml(order.id)}','zelle')">Z</button>
-          <button type="button" class="payment-quick-btn ${paymentMethod === 'card' && paymentCollected ? 'active' : ''}" title="Card collected" onclick="setQuickPaymentMethod('${escapeHtml(order.id)}','card')">CD</button>
+          <button type="button" class="payment-quick-btn ${paymentMethod === 'cash' && paymentCollected ? 'active' : ''}" title="Cash collected" onclick="setQuickPaymentMethod(${inlineJsArg(order.id)},'cash')">C</button>
+          <button type="button" class="payment-quick-btn ${paymentMethod === 'zelle' && paymentCollected ? 'active' : ''}" title="Zelle collected" onclick="setQuickPaymentMethod(${inlineJsArg(order.id)},'zelle')">Z</button>
+          <button type="button" class="payment-quick-btn ${paymentMethod === 'card' && paymentCollected ? 'active' : ''}" title="Card collected" onclick="setQuickPaymentMethod(${inlineJsArg(order.id)},'card')">CD</button>
         </div>`
       : '';
     const paymentCellHtml = status === 'no_show'
@@ -2488,22 +2513,22 @@ function renderOrders() {
       ? `<div class="payment-note">Collect at pickup. Add method after processing.</div>`
       : `<div class="payment-cell">
           ${quickPaymentButtons}
-          <select class="payment-select" onchange="updatePaymentMethod('${escapeHtml(order.id)}', this.value)">
+          <select class="payment-select" onchange="updatePaymentMethod(${inlineJsArg(order.id)}, this.value)">
             <option value="" ${paymentMethod === '' ? 'selected' : ''}>Select method</option>
             <option value="cash" ${paymentMethod === 'cash' ? 'selected' : ''}>Cash</option>
             <option value="zelle" ${paymentMethod === 'zelle' ? 'selected' : ''}>Zelle</option>
             <option value="card" ${paymentMethod === 'card' ? 'selected' : ''}>Card</option>
           </select>
           <label class="payment-collected">
-            <input type="checkbox" ${paymentCollected ? 'checked' : ''} onchange="togglePaymentCollected('${escapeHtml(order.id)}', this.checked)">
+            <input type="checkbox" ${paymentCollected ? 'checked' : ''} onchange="togglePaymentCollected(${inlineJsArg(order.id)}, this.checked)">
             Collected
           </label>
           <div class="payment-note">${escapeHtml(order.accountingBatch || fallbackBatch)}</div>
           <div class="payment-note">${escapeHtml(order.paymentCollectedAt ? formatDateTime(order.paymentCollectedAt) : '--')}</div>
         </div>`;
 
-    return `<tr id="row-${escapeHtml(order.id)}">
-      <td class="order-select-col">${canSelect ? `<input type="checkbox" class="order-select-checkbox" ${checked} onchange="toggleReminderOrderSelection('${escapeHtml(order.id)}', this.checked)">` : ''}</td>
+    return `<tr id="row-${safeDomId(order.id)}">
+      <td class="order-select-col">${canSelect ? `<input type="checkbox" class="order-select-checkbox" ${checked} onchange="toggleReminderOrderSelection(${inlineJsArg(order.id)}, this.checked)">` : ''}</td>
       <td><div class="order-id">${escapeHtml(order.orderNumber || order.id)}</div>${payBadgeHtml}</td>
       <td style="font-size:12px;color:var(--text-light)">${formatDate(order.createdAt)}</td>
       <td><div class="customer-name">${escapeHtml(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim())}</div><div class="customer-phone">${escapeHtml(order.phone)}</div><div class="customer-email">${escapeHtml(order.email)}</div></td>
@@ -2511,14 +2536,14 @@ function renderOrders() {
       <td><div class="total-amount">${formatCurrency(visibleTotal)}</div></td>
       <td style="font-size:13px">${orderLocationCellHtml(order)}</td>
       ${isPendingSheet ? '' : `<td>${paymentCellHtml}</td><td><span class="status-badge ${statusClass}">${statusLabel}</span></td>`}
-      <td><div class="action-btns">${isShippingSheet ? `<button class="action-btn btn-print" onclick="printShippingOrders('${escapeHtml(order.id)}')" title="Print packing slip for this order">🖨️ Slip</button>` : ''}${isStripeOrder && order.stripePaymentIntentId ? `<button class="action-btn btn-refund" onclick="openRefundOrder('${escapeHtml(order.id)}')" title="Refund this online payment">💵 Refund</button>` : ''}<button class="action-btn btn-fulfill" onclick="setStatus('${escapeHtml(order.id)}','fulfilled')">✓ Fulfill</button><button class="action-btn btn-noshow" onclick="setStatus('${escapeHtml(order.id)}','no_show')">No Show</button><button class="action-btn btn-cancel" onclick="setStatus('${escapeHtml(order.id)}','cancelled')">✕ Cancel</button><button class="action-btn btn-reset" onclick="setStatus('${escapeHtml(order.id)}','pending')">↺ Reset</button></div></td>
+      <td><div class="action-btns">${isShippingSheet ? `<button class="action-btn btn-print" onclick="printShippingOrders(${inlineJsArg(order.id)})" title="Print packing slip for this order">🖨️ Slip</button>` : ''}${isStripeOrder && order.stripePaymentIntentId ? `<button class="action-btn btn-refund" onclick="openRefundOrder(${inlineJsArg(order.id)})" title="Refund this online payment">💵 Refund</button>` : ''}<button class="action-btn btn-fulfill" onclick="setStatus(${inlineJsArg(order.id)},'fulfilled')">✓ Fulfill</button><button class="action-btn btn-noshow" onclick="setStatus(${inlineJsArg(order.id)},'no_show')">No Show</button><button class="action-btn btn-cancel" onclick="setStatus(${inlineJsArg(order.id)},'cancelled')">✕ Cancel</button><button class="action-btn btn-reset" onclick="setStatus(${inlineJsArg(order.id)},'pending')">↺ Reset</button></div></td>
     </tr>`;
   }).join('');
 
   if (isPendingSheet) {
     orders.forEach((order) => {
       if ((order.status || 'pending') !== 'pending') return;
-      const row = document.getElementById(`row-${order.id}`);
+      const row = document.getElementById(`row-${safeDomId(order.id)}`);
       const actions = row?.querySelector('.action-btns');
       if (!actions || actions.querySelector('.btn-edit')) return;
       const editBtn = document.createElement('button');
@@ -2725,7 +2750,7 @@ function getLegacySweetVariantFallback(product = {}) {
 
   const normalizedName = String(product?.name || '')
     .toLowerCase()
-    .replace(/â€”/g, '-')
+    .replace(/—/g, '-')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -5514,11 +5539,11 @@ function renderRefunds() {
 
   const filtered = refundFilter === 'all'
     ? refundRequests
-    : refundRequests.filter(r => (r.status || 'pending') === refundFilter);
+    : refundRequests.filter(r => safeRefundStatus(r.status) === refundFilter);
 
   // Update counts on filter buttons
   const counts = { pending: 0, approved: 0, rejected: 0, all: refundRequests.length };
-  refundRequests.forEach(r => { const s = r.status || 'pending'; if (counts[s] !== undefined) counts[s]++; });
+  refundRequests.forEach(r => { const s = safeRefundStatus(r.status); if (counts[s] !== undefined) counts[s]++; });
   ['pending','approved','rejected','all'].forEach(f => {
     const btn = document.getElementById(`refundFilter_${f}`);
     if (btn) btn.textContent = `${f.charAt(0).toUpperCase()+f.slice(1)} (${counts[f]})`;
@@ -5531,42 +5556,46 @@ function renderRefunds() {
 
   container.innerHTML = filtered.map(r => {
     const isStripe = r.paymentMethod === 'stripe';
-    const statusClass = `status-${r.status || 'pending'}`;
+    const status = safeRefundStatus(r.status);
+    const statusClass = `status-${status}`;
+    const refundDomId = safeDomId(r.id);
+    const orderTotalNumber = Number.isFinite(Number(r.orderTotal)) ? Math.max(0, Number(r.orderTotal)) : 0;
+    const requestedAmountNumber = Number.isFinite(Number(r.requestedAmount)) ? Math.max(0, Number(r.requestedAmount)) : 0;
     const payBadge = isStripe
       ? `<span class="refund-payment-type refund-payment-stripe">Stripe</span>`
       : `<span class="refund-payment-type refund-payment-pickup">Pickup</span>`;
-    const orderTotal = r.orderTotal ? `$${parseFloat(r.orderTotal).toFixed(2)}` : '—';
-    const requestedAmt = r.requestedAmount ? `$${parseFloat(r.requestedAmount).toFixed(2)}` : '—';
+    const orderTotal = orderTotalNumber ? `$${orderTotalNumber.toFixed(2)}` : '—';
+    const requestedAmt = requestedAmountNumber ? `$${requestedAmountNumber.toFixed(2)}` : '—';
     const createdAt = r.createdAt ? new Date(r.createdAt).toLocaleString('en-US', {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
 
     const actionHtml = (() => {
-      if ((r.status || 'pending') === 'approved') {
+      if (status === 'approved') {
         return `<div class="refund-issued-badge">✓ Refunded $${parseFloat(r.refundedAmount||0).toFixed(2)}</div>
                 <div class="refund-meta" style="text-align:center;margin-top:4px">${r.refundedAt ? new Date(r.refundedAt).toLocaleDateString() : ''}</div>`;
       }
-      if ((r.status || 'pending') === 'rejected') {
+      if (status === 'rejected') {
         return `<div class="refund-rejected-badge">✗ Rejected</div>
                 <div class="refund-meta" style="text-align:center;margin-top:4px">${r.rejectedAt ? new Date(r.rejectedAt).toLocaleDateString() : ''}</div>`;
       }
       return `<div class="refund-actions">
         <div style="font-size:11px;color:var(--text-light);font-weight:600;margin-bottom:2px">REFUND AMOUNT ($)</div>
-        <input class="refund-amount-input" type="number" id="refundAmt_${r.id}"
-               min="0" max="${r.orderTotal||999}" step="0.01"
-               value="${r.requestedAmount || r.orderTotal || ''}"
+        <input class="refund-amount-input" type="number" id="refundAmt_${refundDomId}"
+               min="0" max="${orderTotalNumber || 999}" step="0.01"
+               value="${requestedAmountNumber || orderTotalNumber || ''}"
                placeholder="Enter amount">
-        <button class="btn-refund-issue" onclick="issueRefund('${r.id}')">
+        <button class="btn-refund-issue" onclick="issueRefund(${inlineJsArg(r.id)})">
           ${isStripe ? '💳 Issue Stripe Refund' : '✓ Mark as Refunded'}
         </button>
-        <button class="btn-refund-reject" onclick="rejectRefund('${r.id}')">✗ Reject Request</button>
+        <button class="btn-refund-reject" onclick="rejectRefund(${inlineJsArg(r.id)})">✗ Reject Request</button>
       </div>`;
     })();
 
-    return `<div class="refund-card ${statusClass}" id="refundCard_${r.id}">
+    return `<div class="refund-card ${statusClass}" id="refundCard_${refundDomId}">
       <div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <strong style="font-size:14px">${escapeHtml(r.customerName||'Customer')}</strong>
           ${payBadge}
-          <span class="status-badge status-${r.status||'pending'}" style="font-size:11px">${(r.status||'pending').toUpperCase()}</span>
+          <span class="status-badge status-${status}" style="font-size:11px">${status.toUpperCase()}</span>
         </div>
         <div class="refund-meta">
           <strong>Order #</strong> ${escapeHtml(r.orderNumber||r.orderId||'—')} &nbsp;·&nbsp;
@@ -5588,11 +5617,11 @@ async function issueRefund(refundId) {
   const refund = refundRequests.find(r => r.id === refundId);
   if (!refund) return;
 
-  const amtInput = document.getElementById(`refundAmt_${refundId}`);
+  const amtInput = document.getElementById(`refundAmt_${safeDomId(refundId)}`);
   const amount = parseFloat(amtInput?.value || '0');
   if (!amount || amount <= 0) { showToast('Enter a valid refund amount'); return; }
 
-  const btn = document.querySelector(`#refundCard_${refundId} .btn-refund-issue`);
+  const btn = document.querySelector(`#refundCard_${safeDomId(refundId)} .btn-refund-issue`);
   if (btn) { btn.disabled = true; btn.textContent = 'Processing...'; }
 
   const { doc, updateDoc, Timestamp } = window._firestoreExports;
