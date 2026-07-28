@@ -1457,7 +1457,10 @@ const SHRISH_VERIFIED_PRODUCT_IMAGE_IDS = new Set([
   "picklespodi-karela-bitter-gourd-pickle",
   "picklespodi-flaxseed-podi-avise-podi",
   "picklespodi-kakarakaya-karam-podi-bitter-gourd",
+<<<<<<< HEAD
   "sweets-flaxseed-laddu",
+=======
+>>>>>>> main
   "sweets-rava-laddu",
   "sweets-ragi-laddu",
   "snacks-ragi-murukulu",
