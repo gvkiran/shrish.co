@@ -439,7 +439,8 @@ const SHRISH_DATA = {
       origin: "Andhra Pradesh",
       price: "$10.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Everyday Favourite",
-      image: SHRISH_LOGO_PRODUCT_IMAGE,
+      image: "images/products/sweets/rava-laddu-2026-1.jpg",
+      gallery: ["images/products/sweets/rava-laddu-2026-1.jpg"],
       description: "Classic semolina laddus roasted in ghee and bound with sugar syrup, studded with cashews and a hint of cardamom. Soft, melt-in-mouth, and always a crowd-pleaser for festivals and everyday treats.",
       details: "Ingredients: Rava (semolina), sugar, ghee, cashews and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Everyday Favourite", "Ghee Roasted", "Festive Sweet"],
@@ -499,7 +500,12 @@ const SHRISH_DATA = {
       origin: "Andhra Pradesh",
       price: "$11.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Healthy Choice",
-      image: SHRISH_LOGO_PRODUCT_IMAGE,
+      image: "images/products/sweets/ragi-laddu-2026-1.jpg",
+      gallery: [
+        "images/products/sweets/ragi-laddu-2026-1.jpg",
+        "images/products/sweets/ragi-laddu-2026-2.jpg",
+        "images/products/sweets/ragi-laddu-2026-3.jpg"
+      ],
       description: "A wholesome millet laddu made with roasted ragi flour, jaggery, ghee, and nuts. Naturally rich in iron and calcium with a warm, malty sweetness - a nutritious sweet the whole family can enjoy.",
       details: "Ingredients: Ragi (finger millet) flour, jaggery, ghee, cashews and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Healthy Choice", "Millet Based", "Jaggery Sweetened"],
@@ -1445,6 +1451,8 @@ const SHRISH_VERIFIED_PRODUCT_IMAGE_IDS = new Set([
   "picklespodi-karela-bitter-gourd-pickle",
   "picklespodi-flaxseed-podi-avise-podi",
   "picklespodi-kakarakaya-karam-podi-bitter-gourd",
+  "sweets-rava-laddu",
+  "sweets-ragi-laddu",
   "snacks-ragi-murukulu",
   "puth_jaggery_kaju_pista",
   "puth_samosa_jaggery_dryfruit"

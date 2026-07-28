@@ -1,3 +1,127 @@
+// Meta Pixel tracking for Shrish website sales campaigns.
+// Sends PageView on all live pages and Purchase only after a confirmed Stripe return.
+(function () {
+  'use strict';
+
+  const META_PIXEL_ID = '1576599090538377';
+  const PURCHASE_DEDUP_PREFIX = 'shrish_meta_purchase_v2:';
+  const PURCHASE_WATCH_TIMEOUT_MS = 120000;
+  const isLocal = /^(localhost|127\.0\.0\.1|::1)$/i.test(window.location.hostname);
+
+  if (!META_PIXEL_ID || isLocal || window.__SHRISH_META_PIXEL_INITIALIZED__) return;
+  window.__SHRISH_META_PIXEL_INITIALIZED__ = true;
+
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+
+  window.fbq('init', META_PIXEL_ID);
+  window.fbq('track', 'PageView');
+
+  function purchaseDedupKey(orderId) {
+    return `${PURCHASE_DEDUP_PREFIX}${orderId}`;
+  }
+
+  function purchaseWasTracked(orderId) {
+    try {
+      return window.localStorage.getItem(purchaseDedupKey(orderId)) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  function markPurchaseTracked(orderId) {
+    try {
+      window.localStorage.setItem(purchaseDedupKey(orderId), '1');
+    } catch {
+      // Tracking still succeeds when storage is unavailable; deduplication is best effort.
+    }
+  }
+
+  function parseCurrency(value) {
+    const amount = Number.parseFloat(String(value || '').replace(/[^0-9.-]/g, ''));
+    return Number.isFinite(amount) ? Math.round((amount + Number.EPSILON) * 100) / 100 : 0;
+  }
+
+  function metaPixelLibraryIsReady() {
+    return typeof window.fbq === 'function' && typeof window.fbq.callMethod === 'function';
+  }
+
+  function confirmedStripePurchase() {
+    const params = new URLSearchParams(window.location.search || '');
+    if (params.get('payment') !== 'success') return null;
+
+    const orderId = String(params.get('orderId') || '').trim();
+    if (!orderId || purchaseWasTracked(orderId)) return null;
+
+    const successScreen = document.getElementById('successScreen');
+    if (!successScreen || window.getComputedStyle(successScreen).display === 'none') return null;
+
+    const totalRow = [...document.querySelectorAll('#successSummary .ss-row')].find((row) => {
+      const label = row.querySelector('span:first-child')?.textContent?.trim().toLowerCase();
+      return label === 'total';
+    });
+    const value = parseCurrency(totalRow?.querySelector('span:last-child')?.textContent);
+    if (!(value > 0)) return null;
+
+    return { orderId, value };
+  }
+
+  function trackConfirmedStripePurchase() {
+    const purchase = confirmedStripePurchase();
+    if (!purchase || !metaPixelLibraryIsReady()) return false;
+
+    window.fbq(
+      'track',
+      'Purchase',
+      { value: purchase.value, currency: 'USD' },
+      { eventID: `stripe_${purchase.orderId}` }
+    );
+    markPurchaseTracked(purchase.orderId);
+    return true;
+  }
+
+  function watchForConfirmedStripePurchase() {
+    const params = new URLSearchParams(window.location.search || '');
+    if (params.get('payment') !== 'success' || !params.get('orderId')) return;
+
+    let observer;
+    let intervalId;
+    let timeoutId;
+
+    const cleanup = () => {
+      if (observer) observer.disconnect();
+      if (intervalId) window.clearInterval(intervalId);
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+    const check = () => {
+      if (trackConfirmedStripePurchase()) cleanup();
+    };
+
+    observer = new MutationObserver(check);
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
+    intervalId = window.setInterval(check, 500);
+    timeoutId = window.setTimeout(cleanup, PURCHASE_WATCH_TIMEOUT_MS);
+    window.addEventListener('load', check, { once: true });
+    check();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', watchForConfirmedStripePurchase, { once: true });
+  } else {
+    watchForConfirmedStripePurchase();
+  }
+})();
+
 // SHRISH privacy-safe PostHog analytics.
 // Tracks business events only; does not identify customers or send contact details.
 (function () {
