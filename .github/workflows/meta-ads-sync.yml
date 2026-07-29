@@ -1,0 +1,33 @@
+name: Meta Ads -> Firestore sync
+
+# Pulls daily Meta ad insights into Firestore (collection: ad_metrics_meta),
+# which the admin "Meta Ads" tab reads. Runs once a day; can also be run
+# manually from the Actions tab (Run workflow) to backfill immediately.
+
+on:
+  schedule:
+    - cron: '0 9 * * *'   # 09:00 UTC daily (~4-5am US Eastern)
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: tools/meta-sync
+        run: npm install --no-audit --no-fund
+
+      - name: Run Meta -> Firestore sync
+        working-directory: tools/meta-sync
+        env:
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          META_AD_ACCOUNT_ID: ${{ vars.META_AD_ACCOUNT_ID }}
+          SYNC_DAYS: '90'
+        run: node sync-meta-insights.mjs

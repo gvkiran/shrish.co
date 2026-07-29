@@ -100,5 +100,10 @@ service cloud.firestore {
     match /accounting_batches/{batchId} {
       allow get, list, create, update, delete: if isAdmin();
     }
+
+    match /ad_metrics_meta/{docId} {
+      allow get, list: if isAdmin();            // admin dashboard reads synced Meta ad metrics
+      allow create, update, delete: if false;   // written only by the sync job via Admin SDK
+    }
   }
 }

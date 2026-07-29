@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css" />
-  <link rel="stylesheet" href="assets/css/admin-luxury.css?v=admin-product-cleanup-20260713">
+  <link rel="stylesheet" href="assets/css/admin-luxury.css?v=refund-fix-20260728">
 </head>
 <body>
 
@@ -59,6 +59,7 @@
           <button class="admin-tab" onclick="switchTab('customers',this)">Customer Accounts</button>
           <button class="admin-tab" onclick="switchTab('feedback',this)">Feedback</button>
           <button class="admin-tab" onclick="switchTab('growth',this)">Growth Dashboard</button>
+          <button class="admin-tab" onclick="switchTab('meta-ads',this)">📣 Meta Ads</button>
           <button class="admin-tab" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
           <button class="admin-tab" onclick="switchTab('refunds',this);loadRefundTab()">💸 Refunds</button>
           <button class="admin-tab" onclick="switchTab('promos',this)">🎟️ Promo Codes</button>
@@ -633,6 +634,40 @@
           </div>
         </div>
 
+          <!-- ── META ADS TAB (added: ad performance, non-disruptive) ── -->
+          <div id="tab-meta-ads" style="display:none;">
+            <div class="growth-toolbar">
+              <div>
+                <h2>📣 Meta Ads</h2>
+                <p class="orders-help">Facebook / Instagram ad performance, pulled once a day into your own database. These are Meta’s reported figures — cross-check purchases against your real orders.</p>
+              </div>
+              <div class="toolbar-actions">
+                <select id="metaAdsRange" class="filter-input" onchange="loadMetaAds()">
+                  <option value="1">Last 24 hours</option>
+                  <option value="7">Last 7 days</option>
+                  <option value="30" selected>Last 30 days</option>
+                  <option value="90">Last 90 days</option>
+                </select>
+                <button class="toolbar-btn" onclick="refreshMetaAds()">Refresh</button>
+                <a class="toolbar-btn growth-link" href="https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=1053287494061502" target="_blank" rel="noopener">Open Ads Manager</a>
+              </div>
+            </div>
+
+            <div class="growth-status" id="metaAdsStatus">Loading Meta ad metrics…</div>
+            <div class="growth-kpis" id="metaAdsKpis"></div>
+
+            <div class="growth-section-label">📅 Daily Breakdown</div>
+            <div class="growth-grid">
+              <section class="growth-card growth-card-wide">
+                <div class="growth-card-head">
+                  <h3>Day-by-day</h3>
+                  <p>Each day’s spend, reach, clicks and Meta-attributed purchases.</p>
+                </div>
+                <div class="growth-table" id="metaAdsDaily"></div>
+              </section>
+            </div>
+          </div>
+
           <div id="tab-accounting" style="display:none;">
             <div class="accounting-toolbar">
               <h2>Accounting</h2>
@@ -800,7 +835,8 @@
 
 <script src="assets/js/data.js?v=hotfix-20260728"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/admin-firebase.js?v=admin-product-cleanup-20260713"></script>
+<script type="module" src="assets/js/admin-firebase.js?v=meta-ads-20260728"></script>
+<script type="module" src="assets/js/admin-ads.js?v=meta-ads-20260728"></script>
 <link rel="stylesheet" href="assets/css/admin-boost.css?v=boost3-20260610">
   <link rel="stylesheet" href="assets/css/admin-growth-v2.css?v=v2-20260615">
 <script defer src="assets/js/admin-boost.js?v=boost3-20260610"></script>
