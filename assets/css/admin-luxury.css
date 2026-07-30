@@ -1394,7 +1394,7 @@ input[type="checkbox"] {
 /* ═══════════════════════════════════════════════════════════════════
    ORDER EDITOR (Manual)
    ═══════════════════════════════════════════════════════════════════ */
-#orderEditorModal, #emailReminderModal, #whatsappReminderModal {
+#orderEditorModal, #emailReminderModal, #whatsappReminderModal, #refundOrderModal {
   display: none;
   position: fixed;
   inset: 0;
@@ -1405,7 +1405,7 @@ input[type="checkbox"] {
   justify-content: center;
   padding: 20px;
 }
-#orderEditorModal.open, #emailReminderModal.open, #whatsappReminderModal.open { display: flex; }
+#orderEditorModal.open, #emailReminderModal.open, #whatsappReminderModal.open, #refundOrderModal.open { display: flex; }
 
 .order-editor-card {
   width: min(960px, calc(100vw - 40px));

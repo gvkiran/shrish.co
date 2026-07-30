@@ -1,0 +1,13 @@
+{
+  "name": "shrish-meta-sync",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Daily Meta Ads -> Firestore sync for the Shrish admin dashboard",
+  "scripts": {
+    "sync": "node sync-meta-insights.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  }
+}

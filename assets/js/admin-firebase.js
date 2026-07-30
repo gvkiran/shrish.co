@@ -5135,6 +5135,8 @@ function switchTab(tab, btn) {
   document.getElementById('tab-feedback').style.display = tab === 'feedback' ? 'block' : 'none';
   document.getElementById('tab-subscribers').style.display = tab === 'subscribers' ? 'block' : 'none';
   document.getElementById('tab-growth').style.display = tab === 'growth' ? 'block' : 'none';
+  const metaAdsPanel = document.getElementById('tab-meta-ads');
+  if (metaAdsPanel) metaAdsPanel.style.display = tab === 'meta-ads' ? 'block' : 'none';
   document.getElementById('tab-accounting').style.display = tab === 'accounting' ? 'block' : 'none';
   document.getElementById('tab-pickup-tally').style.display = tab === 'pickup-tally' ? 'block' : 'none';
   const refundsPanel = document.getElementById('tab-refunds');
@@ -5150,6 +5152,7 @@ function switchTab(tab, btn) {
     renderOwnerAnalytics();
     if (!state.ownerAnalytics && !state.ownerAnalyticsError) refreshOwnerAnalytics();
   }
+  if (tab === 'meta-ads' && typeof window.loadMetaAds === 'function') window.loadMetaAds();
   if (tab === 'accounting') renderAccounting();
   if (tab === 'pickup-tally') renderExcelCalculations();
   if (tab === 'refunds') loadRefundTab();
