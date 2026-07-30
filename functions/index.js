@@ -1,4 +1,4 @@
-const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
@@ -8,6 +8,13 @@ const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestor
 const { Resend } = require("resend");
 const { PostHog } = require("posthog-node");
 const Stripe = require("stripe");
+const {
+  SecurityGuardError,
+  hashIdentifier,
+  rateLimitDocumentId,
+  requestRateLimitSubject,
+  validateWebsiteOrder,
+} = require("./security-guards");
 
 initializeApp();
 
@@ -46,6 +53,12 @@ const STRIPE_PAYMENTS_ENABLED = process.env.STRIPE_PAYMENTS_ENABLED === "true";
 const DEFAULT_VIRGINIA_SALES_TAX_RATE = 0.01;
 const DEFAULT_STANDARD_SHIPPING_AMOUNT = 8.99;
 const DEFAULT_FREE_SHIPPING_THRESHOLD = 75;
+const WEBSITE_ORDER_RATE_LIMIT = 8;
+const WEBSITE_ORDER_RATE_WINDOW_MS = 60 * 60 * 1000;
+const STRIPE_SESSION_RATE_LIMIT = 10;
+const STRIPE_SESSION_RATE_WINDOW_MS = 10 * 60 * 1000;
+const PROMO_CHECK_RATE_LIMIT = 30;
+const PROMO_CHECK_RATE_WINDOW_MS = 10 * 60 * 1000;
 
 function isAdminRequest(request) {
   return String(request.auth?.token?.email || "").trim().toLowerCase() === SHRISH_ADMIN_EMAIL;
@@ -61,6 +74,42 @@ function callableOptions(options = {}) {
     enforceAppCheck: process.env.SHRISH_ENFORCE_APP_CHECK === "true",
     ...options,
   };
+}
+
+function asHttpsError(error) {
+  if (error instanceof HttpsError) return error;
+  if (error instanceof SecurityGuardError) {
+    return new HttpsError(error.code || "invalid-argument", error.message);
+  }
+  return new HttpsError("internal", "The request could not be completed.");
+}
+
+async function enforceCallableRateLimit(db, request, options = {}) {
+  const scope = String(options.scope || "callable").trim();
+  const limit = Math.max(1, Number(options.limit) || 1);
+  const windowMs = Math.max(1_000, Number(options.windowMs) || 60_000);
+  const subject = String(options.subject || requestRateLimitSubject(request));
+  const bucket = rateLimitDocumentId(scope, subject, windowMs);
+  const ref = db.collection("_security_rate_limits").doc(bucket.id);
+
+  await db.runTransaction(async (tx) => {
+    const snapshot = await tx.get(ref);
+    const count = Number(snapshot.data()?.count || 0);
+    if (count >= limit) {
+      throw new HttpsError(
+        "resource-exhausted",
+        "Too many requests. Please wait a few minutes and try again."
+      );
+    }
+    tx.set(ref, {
+      scope,
+      subjectHash: hashIdentifier(subject),
+      count: count + 1,
+      windowStart: admin.firestore.Timestamp.fromMillis(bucket.windowStart),
+      expiresAt: admin.firestore.Timestamp.fromMillis(bucket.windowEnd + 24 * 60 * 60 * 1000),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  });
 }
 
 function stripeClient() {
@@ -1266,6 +1315,57 @@ async function validateAndApplyPromo(db, order, itemSubtotal) {
   return { code, type: p.type, discount: roundCurrency(discount), freeShipping };
 }
 
+exports.validatePromoCode = onCall(
+  callableOptions(),
+  async (request) => {
+    const db = admin.firestore();
+    await enforceCallableRateLimit(db, request, {
+      scope: "promo-code-check",
+      limit: PROMO_CHECK_RATE_LIMIT,
+      windowMs: PROMO_CHECK_RATE_WINDOW_MS,
+    });
+
+    const code = String(request.data?.code || "").trim().toUpperCase();
+    const itemSubtotal = roundCurrency(request.data?.itemSubtotal);
+    if (!/^[A-Z0-9_-]{3,20}$/.test(code)) {
+      throw new HttpsError("invalid-argument", "That promo code is not valid.");
+    }
+    if (!(itemSubtotal >= 0 && itemSubtotal <= 100_000)) {
+      throw new HttpsError("invalid-argument", "Cart subtotal is invalid.");
+    }
+
+    const snapshot = await db.collection("promo_codes").doc(code).get();
+    if (!snapshot.exists) {
+      throw new HttpsError("not-found", "That promo code is not valid.");
+    }
+    const promo = snapshot.data() || {};
+    if (!promo.active) {
+      throw new HttpsError("failed-precondition", "That promo code is no longer active.");
+    }
+    if (promo.expiresAt) {
+      const expiresAt = promo.expiresAt.toDate ? promo.expiresAt.toDate() : new Date(promo.expiresAt);
+      if (expiresAt instanceof Date && !Number.isNaN(expiresAt.getTime()) && expiresAt < new Date()) {
+        throw new HttpsError("failed-precondition", "That promo code has expired.");
+      }
+    }
+    if (promo.maxUses && Number(promo.usedCount || 0) >= Number(promo.maxUses)) {
+      throw new HttpsError("failed-precondition", "That promo code has reached its usage limit.");
+    }
+    if (promo.minSubtotal && itemSubtotal < Number(promo.minSubtotal)) {
+      throw new HttpsError(
+        "failed-precondition",
+        `Spend ${currency(promo.minSubtotal)} or more to use this code.`
+      );
+    }
+    return {
+      code,
+      type: String(promo.type || ""),
+      value: Number(promo.value) || 0,
+      minSubtotal: Number(promo.minSubtotal) || 0,
+    };
+  }
+);
+
 // Atomically record one redemption per order (bump usedCount + per-customer marker).
 async function recordPromoRedemption(db, order, orderId) {
   const code = String(order.promoCode || "").trim().toUpperCase();
@@ -1290,6 +1390,167 @@ async function recordPromoRedemption(db, order, orderId) {
   }).catch((e) => console.error("recordPromoRedemption failed", { code, error: e?.message }));
 }
 
+function websiteOrderFinalizationResult(orderId, order, options = {}) {
+  return {
+    orderId,
+    orderNumber: String(order.orderNumber || ""),
+    itemSubtotal: roundCurrency(order.itemSubtotal),
+    promoDiscount: roundCurrency(order.promoDiscount),
+    salesTaxAmount: roundCurrency(order.salesTaxAmount),
+    shippingAmount: roundCurrency(order.shippingAmount),
+    totalPrice: roundCurrency(order.totalPrice),
+    noShow: Boolean(options.noShow),
+    alreadyFinalized: Boolean(options.alreadyFinalized),
+  };
+}
+
+exports.finalizeWebsiteOrder = onCall(
+  callableOptions({
+    secrets: [RESEND_API_KEY],
+  }),
+  async (request) => {
+    const orderId = String(request.data?.orderId || "").trim();
+    if (!/^[A-Za-z0-9]{20}$/.test(orderId)) {
+      throw new HttpsError("invalid-argument", "Order ID is invalid.");
+    }
+
+    const db = admin.firestore();
+    const orderRef = db.collection("orders").doc(orderId);
+    const snapshot = await orderRef.get();
+    if (!snapshot.exists) {
+      throw new HttpsError("not-found", "Order not found.");
+    }
+
+    const currentOrder = snapshot.data() || {};
+    if (currentOrder.websiteFinalizationState === "complete") {
+      return websiteOrderFinalizationResult(orderId, currentOrder, {
+        alreadyFinalized: true,
+      });
+    }
+
+    try {
+      const validated = validateWebsiteOrder(currentOrder, request.auth?.uid || "");
+      await enforceCallableRateLimit(db, request, {
+        scope: "website-order-finalize",
+        limit: WEBSITE_ORDER_RATE_LIMIT,
+        windowMs: WEBSITE_ORDER_RATE_WINDOW_MS,
+      });
+      await enforceCallableRateLimit(db, request, {
+        scope: "website-order-phone",
+        limit: 4,
+        windowMs: WEBSITE_ORDER_RATE_WINDOW_MS,
+        subject: `phone:${validated.phoneDigits}`,
+      });
+
+      const claimedOrder = await db.runTransaction(async (tx) => {
+        const freshSnapshot = await tx.get(orderRef);
+        if (!freshSnapshot.exists) {
+          throw new HttpsError("not-found", "Order not found.");
+        }
+        const freshOrder = freshSnapshot.data() || {};
+        if (freshOrder.websiteFinalizationState === "complete") {
+          return { alreadyFinalized: true, order: freshOrder };
+        }
+        if (freshOrder.websiteFinalizationState === "processing") {
+          throw new HttpsError("already-exists", "This order is already being finalized.");
+        }
+        tx.update(orderRef, {
+          websiteFinalizationState: "processing",
+          websiteFinalizationStartedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        return { alreadyFinalized: false, order: freshOrder };
+      });
+
+      if (claimedOrder.alreadyFinalized) {
+        return websiteOrderFinalizationResult(orderId, claimedOrder.order, {
+          alreadyFinalized: true,
+        });
+      }
+
+      const order = claimedOrder.order;
+      const paymentPolicy = await classifyOrderPaymentItems(db, order);
+      if (paymentPolicy.requiresStripe && validated.paymentMethod !== "stripe") {
+        throw new HttpsError("failed-precondition", "Online payment is required for this cart.");
+      }
+      if (!paymentPolicy.requiresStripe && validated.paymentMethod === "stripe") {
+        throw new HttpsError("failed-precondition", "This cart is not eligible for online-only checkout.");
+      }
+      if (validated.fulfillmentType === "shipping" && !paymentPolicy.requiresStripe) {
+        throw new HttpsError("failed-precondition", "This cart is not eligible for shipping.");
+      }
+
+      const { itemSubtotal } = await buildServerPricedCheckout(db, order);
+      const promo = await validateAndApplyPromo(db, order, itemSubtotal);
+      const promoDiscount = promo?.discount || 0;
+      const discountedSubtotal = roundCurrency(Math.max(0, itemSubtotal - promoDiscount));
+      const salesTaxAmount = orderSalesTaxAmount(order, discountedSubtotal);
+      let shippingAmount = orderShippingAmount(order, itemSubtotal);
+      if (promo?.freeShipping && validated.fulfillmentType === "shipping") shippingAmount = 0;
+      const totalPrice = roundCurrency(discountedSubtotal + salesTaxAmount + shippingAmount);
+      const orderNumber = await assignSequentialOrderNumber(orderRef, order.orderNumber);
+
+      const lockSnapshot = await db.collection("order_locks").doc(validated.phoneDigits).get();
+      const noShow = lockSnapshot.exists && String(lockSnapshot.data()?.status || "") === "no_show";
+
+      const finalizedOrder = {
+        ...order,
+        orderNumber,
+        itemSubtotal,
+        promoCode: promo?.code || "",
+        promoDiscount,
+        salesTaxAmount,
+        shippingAmount,
+        shippingFreeThreshold: configuredFreeShippingThreshold(),
+        totalPrice,
+      };
+
+      await orderRef.set({
+        orderNumber,
+        customerUid: request.auth?.uid || admin.firestore.FieldValue.delete(),
+        itemSubtotal,
+        promoCode: promo?.code || "",
+        promoDiscount,
+        salesTaxAmount,
+        shippingAmount,
+        shippingFreeThreshold: configuredFreeShippingThreshold(),
+        totalPrice,
+        websiteValidatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      if (validated.paymentMethod === "pay_at_pickup") {
+        if (finalizedOrder.promoCode) {
+          await recordPromoRedemption(db, finalizedOrder, orderId);
+        }
+        await db.collection("order_locks").doc(validated.phoneDigits).set({
+          phoneDigits: validated.phoneDigits,
+          orderId,
+          status: "pending",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      }
+
+      await orderRef.set({
+        websiteFinalizationState: "complete",
+        websiteFinalizedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      return websiteOrderFinalizationResult(orderId, finalizedOrder, { noShow });
+    } catch (error) {
+      if (error?.code !== "already-exists") {
+        await orderRef.set({
+          websiteFinalizationState: "failed",
+          websiteFinalizationError: String(error?.code || "validation_failed").slice(0, 80),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true }).catch(() => {});
+      }
+      throw asHttpsError(error);
+    }
+  }
+);
+
 exports.createStripeCheckoutSession = onCall(
   callableOptions({
     secrets: [STRIPE_SECRET_KEY],
@@ -1312,6 +1573,20 @@ exports.createStripeCheckoutSession = onCall(
     }
 
     const order = orderSnap.data() || {};
+    if (order.websiteFinalizationState !== "complete" || !order.websiteValidatedAt) {
+      throw new HttpsError("failed-precondition", "Order must be validated before payment can start.");
+    }
+    await enforceCallableRateLimit(db, request, {
+      scope: "stripe-checkout-session",
+      limit: STRIPE_SESSION_RATE_LIMIT,
+      windowMs: STRIPE_SESSION_RATE_WINDOW_MS,
+    });
+    await enforceCallableRateLimit(db, request, {
+      scope: "stripe-checkout-order",
+      limit: 4,
+      windowMs: STRIPE_SESSION_RATE_WINDOW_MS,
+      subject: `order:${orderId}`,
+    });
     if (order.customerUid && order.customerUid !== request.auth?.uid) {
       throw new HttpsError("permission-denied", "You can only pay for your own order.");
     }
@@ -1346,6 +1621,18 @@ exports.createStripeCheckoutSession = onCall(
     const customerEmail = String(order.email || request.auth?.token?.email || "").trim().toLowerCase();
     try {
       const stripe = stripeClient();
+      const existingSessionId = String(order.stripeCheckoutSessionId || "").trim();
+      if (existingSessionId) {
+        const existingSession = await stripe.checkout.sessions.retrieve(existingSessionId).catch(() => null);
+        if (existingSession?.status === "open" && existingSession.url) {
+          return {
+            url: existingSession.url,
+            sessionId: existingSession.id,
+            orderNumber: order.orderNumber || "",
+            reused: true,
+          };
+        }
+      }
       const origin = allowedCheckoutOrigin(request.data?.origin);
       const orderNumber = await assignSequentialOrderNumber(orderRef, order.orderNumber);
       order.orderNumber = orderNumber;
@@ -1451,7 +1738,10 @@ exports.createStripeCheckoutSession = onCall(
         });
         sessionConfig.discounts = [{ coupon: coupon.id }];
       }
-      session = await stripe.checkout.sessions.create(sessionConfig);
+      session = await stripe.checkout.sessions.create(
+        sessionConfig,
+        { idempotencyKey: `shrish_checkout_${orderId}` }
+      );
       await orderRef.set({
         stripeCheckoutSessionId: session.id,
         stripeCustomerId: stripeCustomerId || "",
@@ -2516,7 +2806,9 @@ exports.sendOrderEmails = onDocumentCreated(
 
     const orderRef = snapshot.ref;
     const order = snapshot.data();
-    if (order?.source === "admin_manual" || order?.skipCustomerEmail) return;
+    // Website orders are untrusted Firestore creates until finalizeWebsiteOrder
+    // validates them, applies rate limits, and dispatches pickup confirmation.
+    if (order?.source === "website" || order?.source === "admin_manual" || order?.skipCustomerEmail) return;
     if (!order || !order.email) return;
 
     // Pickup orders redeem the promo at order time; online orders redeem on payment (webhook).
@@ -2525,5 +2817,31 @@ exports.sendOrderEmails = onDocumentCreated(
     }
 
     await sendOrderConfirmationEmails(orderRef, order, "order_created");
+  }
+);
+
+exports.sendFinalizedWebsiteOrderEmails = onDocumentUpdated(
+  {
+    document: "orders/{orderId}",
+    region: "us-central1",
+    secrets: [RESEND_API_KEY],
+  },
+  async (event) => {
+    const before = event.data?.before?.data() || {};
+    const afterSnapshot = event.data?.after;
+    const after = afterSnapshot?.data() || {};
+    if (!afterSnapshot) return;
+    if (
+      before.websiteFinalizationState === "complete"
+      || after.websiteFinalizationState !== "complete"
+      || after.source !== "website"
+      || after.paymentMethod === "stripe"
+      || after.skipCustomerEmail
+      || after.confirmationEmailSentAt
+    ) {
+      return;
+    }
+
+    await sendOrderConfirmationEmails(afterSnapshot.ref, after, "website_finalize");
   }
 );

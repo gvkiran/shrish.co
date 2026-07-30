@@ -22,6 +22,101 @@ service cloud.firestore {
         );
     }
 
+    function newWebsiteOrderIsValid() {
+      return request.resource.data.keys().hasAll([
+          'firstName',
+          'lastName',
+          'email',
+          'phoneDigits',
+          'fulfillmentType',
+          'paymentMethod',
+          'paymentStatus',
+          'status',
+          'items',
+          'source',
+          'websiteFinalizationState',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'orderNumber',
+          'firstName',
+          'lastName',
+          'fullName',
+          'phone',
+          'phoneDigits',
+          'email',
+          'fulfillmentType',
+          'fulfillmentLabel',
+          'location',
+          'locationLabel',
+          'pickupLocation',
+          'pickupLocationLabel',
+          'shippingAddress',
+          'referral',
+          'notes',
+          'items',
+          'totalBoxes',
+          'itemSubtotal',
+          'salesTaxState',
+          'salesTaxLabel',
+          'salesTaxRate',
+          'salesTaxAmount',
+          'shippingLabel',
+          'shippingAmount',
+          'shippingFreeThreshold',
+          'totalPrice',
+          'promoCode',
+          'promoType',
+          'promoDiscount',
+          'promoFreeShipping',
+          'payment',
+          'paymentMethod',
+          'paymentMethodLabel',
+          'paymentStatus',
+          'saveCardRequested',
+          'status',
+          'source',
+          'skipCustomerEmail',
+          'websiteFinalizationState',
+          'customerUid',
+          'customerEmail',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.source == 'website'
+        && request.resource.data.websiteFinalizationState == 'unverified'
+        && request.resource.data.orderNumber == ''
+        && request.resource.data.firstName is string
+        && request.resource.data.firstName.size() >= 1
+        && request.resource.data.firstName.size() <= 80
+        && request.resource.data.lastName is string
+        && request.resource.data.lastName.size() <= 80
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 254
+        && request.resource.data.phoneDigits is string
+        && request.resource.data.phoneDigits.matches('^[0-9]{10,11}$')
+        && request.resource.data.fulfillmentType in ['pickup', 'shipping']
+        && request.resource.data.items is list
+        && request.resource.data.items.size() >= 1
+        && request.resource.data.items.size() <= 40
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && (
+          (
+            request.resource.data.paymentMethod == 'stripe'
+            && request.resource.data.paymentStatus == 'awaiting_payment'
+            && request.resource.data.status == 'awaiting_payment'
+            && request.resource.data.skipCustomerEmail == true
+          )
+          || (
+            request.resource.data.paymentMethod == 'pay_at_pickup'
+            && request.resource.data.paymentStatus == 'pay_at_pickup'
+            && request.resource.data.status == 'pending'
+          )
+        );
+    }
+
     match /products/{productId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -37,7 +132,7 @@ service cloud.firestore {
     match /orders/{orderId} {
       allow create: if orderId.matches('^[A-Za-z0-9]{20}$')
         && newOrderCustomerIsValid()
-        && request.resource.data.status in ['pending', 'awaiting_payment'];
+        && newWebsiteOrderIsValid();
       allow get: if isAdmin()
         || (
           isSignedIn()
@@ -64,27 +159,19 @@ service cloud.firestore {
     }
 
     match /promo_codes/{code} {
-      allow get: if true;                             // customers validate a code at checkout
-      allow list: if isAdmin();
-      allow create, update, delete: if isAdmin();     // usedCount is bumped by Cloud Functions (admin SDK)
+      allow get, list, create, update, delete: if isAdmin();
     }
 
     match /promo_redemptions/{id} {
-      allow get: if true;                             // client can check "already used" for its own code+phone
-      allow list: if isAdmin();
-      allow create, update, delete: if isAdmin();     // written by Cloud Functions only
+      allow get, list, create, update, delete: if isAdmin();
     }
 
     match /order_locks/{phoneDigits} {
-      allow get: if true;
-      allow list: if false;
-      allow create: if true;
-      allow update: if isAdmin()
-        || (
-          request.resource.data.status == 'pending'
-          && request.resource.data.phoneDigits == phoneDigits
-        );
-      allow delete: if isAdmin();
+      allow get, list, create, update, delete: if isAdmin();
+    }
+
+    match /_security_rate_limits/{bucketId} {
+      allow get, list, create, update, delete: if isAdmin();
     }
 
     match /notify_requests/{docId} {

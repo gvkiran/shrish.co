@@ -1,23 +1,32 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const crypto = require('crypto');
 
 const DEFAULT_MODEL = 'gpt-5-mini';
 const MAX_HISTORY_MESSAGES = 8;
 const MAX_QUESTION_LENGTH = 500;
 const OPENAI_TIMEOUT_MS = 5000;
+const MAX_REQUEST_BODY_BYTES = 16_384;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_REQUESTS = 10;
 
 let cachedCatalog = null;
+const rateLimitBuckets = new Map();
 
 function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   res.end(JSON.stringify(payload));
 }
 
 function readRequestBody(req) {
   if (req.body) {
+    if (Buffer.byteLength(JSON.stringify(req.body), 'utf8') > MAX_REQUEST_BODY_BYTES) {
+      return Promise.reject(Object.assign(new Error('Request body too large'), { statusCode: 413 }));
+    }
     return Promise.resolve(typeof req.body === 'string' ? JSON.parse(req.body) : req.body);
   }
 
@@ -25,8 +34,8 @@ function readRequestBody(req) {
     let body = '';
     req.on('data', (chunk) => {
       body += chunk;
-      if (body.length > 16_384) {
-        reject(new Error('Request body too large'));
+      if (Buffer.byteLength(body, 'utf8') > MAX_REQUEST_BODY_BYTES) {
+        reject(Object.assign(new Error('Request body too large'), { statusCode: 413 }));
         req.destroy();
       }
     });
@@ -44,7 +53,7 @@ function readRequestBody(req) {
 function loadCatalog() {
   if (cachedCatalog) return cachedCatalog;
 
-  const dataPath = path.join(process.cwd(), 'data.js');
+  const dataPath = path.join(process.cwd(), 'assets', 'js', 'data.js');
   const code = fs.readFileSync(dataPath, 'utf8');
   const sandbox = { window: {} };
   vm.createContext(sandbox);
@@ -76,6 +85,44 @@ function loadCatalog() {
   };
 
   return cachedCatalog;
+}
+
+function clientRateLimitKey(req) {
+  const forwarded = String(req.headers?.['x-forwarded-for'] || '').split(',')[0].trim();
+  const address = forwarded || String(req.socket?.remoteAddress || req.connection?.remoteAddress || 'unknown');
+  return crypto.createHash('sha256').update(address).digest('hex').slice(0, 32);
+}
+
+function consumeRateLimit(req, now = Date.now()) {
+  const key = clientRateLimitKey(req);
+  const existing = rateLimitBuckets.get(key);
+  const bucket = !existing || existing.resetAt <= now
+    ? { count: 0, resetAt: now + RATE_LIMIT_WINDOW_MS }
+    : existing;
+  bucket.count += 1;
+  rateLimitBuckets.set(key, bucket);
+
+  if (rateLimitBuckets.size > 500) {
+    for (const [bucketKey, value] of rateLimitBuckets) {
+      if (value.resetAt <= now) rateLimitBuckets.delete(bucketKey);
+    }
+  }
+
+  return {
+    allowed: bucket.count <= RATE_LIMIT_REQUESTS,
+    retryAfterSeconds: Math.max(1, Math.ceil((bucket.resetAt - now) / 1000))
+  };
+}
+
+function requestOriginIsAllowed(req) {
+  const origin = String(req.headers?.origin || '').trim();
+  if (!origin) return true;
+  const requestHost = String(req.headers?.['x-forwarded-host'] || req.headers?.host || '').trim().toLowerCase();
+  try {
+    return Boolean(requestHost) && new URL(origin).host.toLowerCase() === requestHost;
+  } catch (error) {
+    return false;
+  }
 }
 
 function getProductCategory(product) {
@@ -179,7 +226,7 @@ function buildSafeResponse(modelPayload, catalog) {
   };
 }
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.statusCode = 204;
     res.end();
@@ -188,6 +235,24 @@ module.exports = async function handler(req, res) {
 
   if (req.method !== 'POST') {
     sendJson(res, 405, { error: 'Method not allowed' });
+    return;
+  }
+
+  if (!requestOriginIsAllowed(req)) {
+    sendJson(res, 403, { error: 'Origin not allowed' });
+    return;
+  }
+
+  const contentType = String(req.headers?.['content-type'] || '').toLowerCase();
+  if (!contentType.includes('application/json')) {
+    sendJson(res, 415, { error: 'Content-Type must be application/json' });
+    return;
+  }
+
+  const rateLimit = consumeRateLimit(req);
+  if (!rateLimit.allowed) {
+    res.setHeader('Retry-After', String(rateLimit.retryAfterSeconds));
+    sendJson(res, 429, { error: 'Too many requests. Please try again shortly.', fallback: true });
     return;
   }
 
@@ -261,6 +326,17 @@ module.exports = async function handler(req, res) {
 
     sendJson(res, 200, safeResponse);
   } catch (error) {
-    sendJson(res, 500, { error: 'Geet AI failed', fallback: true });
+    const statusCode = Number(error?.statusCode) || (error instanceof SyntaxError ? 400 : 500);
+    sendJson(res, statusCode, { error: statusCode === 400 ? 'Invalid JSON request' : 'Geet AI failed', fallback: true });
+  }
+}
+
+module.exports = handler;
+module.exports._test = {
+  consumeRateLimit,
+  loadCatalog,
+  requestOriginIsAllowed,
+  resetRateLimits() {
+    rateLimitBuckets.clear();
   }
 };

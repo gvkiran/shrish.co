@@ -33,7 +33,9 @@ const RECENT_ORDER_CLAIM_KEY = 'shrish_recent_order_claim';
 const CHECKOUT_ACCOUNT_PREFILL_KEY = 'shrish_checkout_account_prefill';
 const STRIPE_SUCCESS_SNAPSHOT_KEY = 'shrish_stripe_success_order';
 const CONFIRMATION_WAIT_MS = 30000;
+const finalizeWebsiteOrder = httpsCallable(cloudFunctions, 'finalizeWebsiteOrder');
 const createStripeCheckoutSession = httpsCallable(cloudFunctions, 'createStripeCheckoutSession');
+const validatePromoCodeCallable = httpsCallable(cloudFunctions, 'validatePromoCode');
 const getPublicConfigCallable = httpsCallable(cloudFunctions, 'getPublicConfig');
 const LOCATION_LABELS = {
   shortpump: 'Short Pump, VA',
@@ -557,20 +559,23 @@ async function applyPromoCode() {
   const code = (input?.value || '').trim().toUpperCase();
   if (!code) return setMsg('Enter a promo code.', false);
   try {
-    const snap = await getDoc(doc(db, 'promo_codes', code));
-    if (!snap.exists()) return setMsg('Invalid promo code.', false);
-    const p = snap.data() || {};
-    if (!p.active) return setMsg('This code is no longer active.', false);
-    if (p.expiresAt) { const exp = new Date(p.expiresAt.seconds ? p.expiresAt.seconds * 1000 : p.expiresAt); if (!isNaN(exp) && exp < new Date()) return setMsg('This code has expired.', false); }
-    if (p.maxUses && Number(p.usedCount || 0) >= Number(p.maxUses)) return setMsg('This code has reached its usage limit.', false);
     const subtotal = cartItemSubtotal();
-    if (p.minSubtotal && subtotal < Number(p.minSubtotal)) return setMsg(`Spend ${formatCurrency(p.minSubtotal)}+ to use this code.`, false);
-    appliedPromo = { code, type: p.type, value: Number(p.value) || 0, minSubtotal: Number(p.minSubtotal) || 0 };
-    try { trackCheckoutEvent('promo_applied', { code, type: p.type }); } catch (e) {}
+    const response = await validatePromoCodeCallable({
+      code,
+      itemSubtotal: subtotal
+    });
+    const promo = response?.data || {};
+    appliedPromo = {
+      code: String(promo.code || code),
+      type: String(promo.type || ''),
+      value: Number(promo.value) || 0,
+      minSubtotal: Number(promo.minSubtotal) || 0
+    };
+    try { trackCheckoutEvent('promo_applied', { code, type: appliedPromo.type }); } catch (e) {}
     renderCartReview();
     updatePaymentUi();
   } catch (e) {
-    setMsg('Could not apply this code. Please try again.', false);
+    setMsg(e?.message || 'Could not apply this code. Please try again.', false);
   }
 }
 
@@ -1109,10 +1114,6 @@ function validateField(id, condition, message) {
   return true;
 }
 
-function orderLockRef(phoneDigits) {
-  return doc(db, 'order_locks', phoneDigits);
-}
-
 function extractUsPhoneDigits(value) {
   const digits = normalizePhone(value);
   if (!digits) return '';
@@ -1131,65 +1132,6 @@ function formatUsPhoneDisplay(value) {
 function setErrorBannerTitle(text) {
   const title = document.querySelector('#errorBanner .error-banner-title');
   if (title) title.textContent = text;
-}
-
-function showDuplicateOrderMessage(phone, existingOrderId = '') {
-  const banner = document.getElementById('errorBanner');
-  const list = document.getElementById('errorList');
-  if (!banner || !list) return;
-
-  rememberExistingOrderForAccount(existingOrderId, existingOrderId);
-  banner.className = 'error-banner';
-  list.innerHTML = '';
-
-  document.getElementById('duplicateOrderModal')?.remove();
-  const accountHref = existingOrderId ? 'account.html?claim=recent&mode=signin' : 'account.html?mode=signin';
-  const primaryLabel = currentCustomer ? 'Open My Orders' : 'Login to Modify Order';
-
-  const modal = document.createElement('div');
-  modal.id = 'duplicateOrderModal';
-  modal.className = 'duplicate-order-modal';
-  modal.setAttribute('role', 'dialog');
-  modal.setAttribute('aria-modal', 'true');
-  modal.innerHTML = `
-    <div class="duplicate-order-card">
-      <button type="button" class="duplicate-order-close" aria-label="Close">&times;</button>
-      <h3>You already have a pending order</h3>
-      <p>You already have an active order for <strong>${escapeHtml(phone)}</strong>.</p>
-      <p>To change boxes, cancel, or view details, log in or create a Shrish account using the same email and phone from your order.</p>
-      <div class="duplicate-order-actions">
-        <a class="primary" href="${accountHref}">${primaryLabel}</a>
-        <a class="secondary" href="account.html?claim=recent&mode=signup">Create Account</a>
-        <a class="secondary" href="https://wa.me/17653255577" target="_blank" rel="noopener">WhatsApp Help</a>
-      </div>
-    </div>`;
-
-  document.body.appendChild(modal);
-  document.body.style.overflow = 'hidden';
-  modal.querySelector('.duplicate-order-close')?.addEventListener('click', () => {
-    modal.remove();
-    document.body.style.overflow = '';
-  });
-  modal.addEventListener('click', (event) => {
-    if (event.target === modal) {
-      modal.remove();
-      document.body.style.overflow = '';
-    }
-  });
-}
-
-async function isActivePendingLock(lockSnap) {
-  if (!lockSnap?.exists()) return false;
-  const lock = lockSnap.data() || {};
-  if ((lock.status || 'pending') !== 'pending') return false;
-  if (!lock.orderId) return false;
-
-  const orderSnap = await getDoc(doc(db, 'orders', lock.orderId)).catch((error) => {
-    if (error?.code === 'permission-denied' && currentCustomer) return null;
-    if (error?.code === 'permission-denied') return { exists: () => true, data: () => ({ status: 'pending' }) };
-    return null;
-  });
-  return orderSnap?.exists() && (orderSnap.data()?.status || 'pending') === 'pending';
 }
 
 function showNoShowNotice() {
@@ -2089,14 +2031,6 @@ async function submitOrder() {
       throw new Error('SHIPPING_ADDRESS_REQUIRED');
     }
 
-    const lockRef = orderLockRef(phoneDigits);
-    const lockSnap = await getDoc(lockRef);
-    const lockStatus = lockSnap.exists() ? (lockSnap.data()?.status || 'pending') : '';
-    // Duplicate-order block removed — customers may place multiple orders.
-    if (lockStatus === 'no_show') {
-      await showNoShowNotice();
-    }
-
     const shippingAddress = selectedFulfillmentType === 'shipping' ? getShippingAddress() : null;
     const locLabel = selectedFulfillmentType === 'shipping'
       ? `Shipping to ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.zip}`
@@ -2163,6 +2097,7 @@ async function submitOrder() {
       status: payOnline ? 'awaiting_payment' : 'pending',
       source: 'website',
       skipCustomerEmail: payOnline,
+      websiteFinalizationState: 'unverified',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
@@ -2173,17 +2108,18 @@ async function submitOrder() {
     }
 
     await runTransaction(db, async (transaction) => {
-      // Duplicate-order block removed — always create the order.
       transaction.set(orderRef, order);
-      if (!payOnline) {
-        transaction.set(lockRef, {
-          phoneDigits,
-          orderId: orderRef.id,
-          status: 'pending',
-          updatedAt: serverTimestamp()
-        });
-      }
     });
+
+    const finalizationResponse = await finalizeWebsiteOrder({ orderId: orderRef.id });
+    const finalized = finalizationResponse?.data || {};
+    const finalizedOrderNumber = String(finalized.orderNumber || '').trim();
+    if (!finalizedOrderNumber) throw new Error('ORDER_FINALIZATION_FAILED');
+    if (finalized.noShow) await showNoShowNotice();
+    ['itemSubtotal', 'promoDiscount', 'salesTaxAmount', 'shippingAmount', 'totalPrice'].forEach((field) => {
+      if (Number.isFinite(Number(finalized[field]))) order[field] = Number(finalized[field]);
+    });
+    order.orderNumber = finalizedOrderNumber;
 
     await saveCheckoutDetailsToProfile(order).catch((error) => {
       console.warn('Could not update customer profile from checkout', error);
@@ -2203,7 +2139,7 @@ async function submitOrder() {
       });
       const checkoutUrl = session?.data?.url;
       if (!checkoutUrl) throw new Error('STRIPE_CHECKOUT_URL_MISSING');
-      rememberRecentOrderForAccount(orderRef, order, session?.data?.orderNumber || orderRef.id);
+      rememberRecentOrderForAccount(orderRef, order, session?.data?.orderNumber || finalizedOrderNumber);
       rememberStripeSuccessSnapshot(orderRef.id, order);
       saveCheckoutFormState();
       window.location.href = checkoutUrl;
@@ -2227,8 +2163,8 @@ async function submitOrder() {
     document.getElementById('successScreen').style.display = 'block';
     document.getElementById('successOrderNum').textContent = 'Generating confirmation number...';
 
-    const confirmationNumber = currentCustomer ? await waitForOrderConfirmationNumber(orderRef) : '';
-    const displayNumber = confirmationNumber || '';
+    const confirmationNumber = finalizedOrderNumber;
+    const displayNumber = confirmationNumber;
     document.getElementById('successOrderNum').innerHTML = confirmationNumber
       ? `Order Confirmation No: ${orderNumberHighlight(confirmationNumber)}`
       : 'Order received - your SHR confirmation number will be sent by email.';
@@ -2307,9 +2243,7 @@ async function submitOrder() {
   } catch (error) {
     console.error('Order submit failed', error);
     trackCheckoutEvent('order_submit_failed', {
-      reason: error?.message === 'DUPLICATE_PENDING_ORDER'
-        ? 'duplicate_pending_order'
-        : error?.message === 'LIVE_PRODUCT_CHECK_FAILED'
+      reason: error?.message === 'LIVE_PRODUCT_CHECK_FAILED'
           ? 'live_product_check_failed'
           : (error?.code || 'submit_error'),
       attempt_cart_total_items: attemptCartAnalytics.cart_total_items || 0,
@@ -2324,22 +2258,15 @@ async function submitOrder() {
 
     const banner = document.getElementById('errorBanner');
     const list = document.getElementById('errorList');
-    if (
-      error?.message === 'DUPLICATE_PENDING_ORDER' ||
-      (!currentCustomer && error?.code === 'permission-denied')
-    ) {
-      const lockRef = orderLockRef(phoneDigits);
-      const existingLock = await getDoc(lockRef).catch(() => null);
-      if (await isActivePendingLock(existingLock)) {
-        showDuplicateOrderMessage(phone, existingLock.data()?.orderId || '');
-        return;
-      }
-
-      setErrorBannerTitle('You already have a pending order');
-      list.innerHTML = '<li>Please sign in to your Shrish account to modify your existing pending order, or contact us on WhatsApp if you need help.</li>';
-    } else if (currentCustomer && error?.code === 'permission-denied') {
+    if (error?.code === 'permission-denied') {
       setErrorBannerTitle('Could not verify this checkout');
-      list.innerHTML = '<li>Please refresh and try again. If this keeps happening, contact us on WhatsApp and we can help clean up the old order status.</li>';
+      list.innerHTML = '<li>Please refresh and try again. If this keeps happening, contact us on WhatsApp so we can help complete the order.</li>';
+    } else if (
+      error?.code === 'resource-exhausted' ||
+      error?.message === 'ORDER_FINALIZATION_FAILED'
+    ) {
+      setErrorBannerTitle('Please wait before trying again');
+      list.innerHTML = '<li>We could not safely confirm the order yet. Please wait one minute and try again, or contact us on WhatsApp for help.</li>';
     } else if (error?.message === 'LIVE_PRODUCT_CHECK_FAILED') {
       setErrorBannerTitle('Please refresh before placing your order');
       list.innerHTML = '<li>We could not verify live product availability right now. Please refresh and try again before placing the order.</li>';

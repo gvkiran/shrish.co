@@ -88,6 +88,158 @@ check(
     rulesSource.includes("request.resource.data.status == 'pending'"),
   'Anonymous refund creates must use Firebase auto IDs with pending status.'
 );
+check(
+  rulesSource.includes("request.resource.data.websiteFinalizationState == 'unverified'") &&
+    rulesSource.includes("request.resource.data.orderNumber == ''") &&
+    rulesSource.includes("allow update, delete: if isAdmin();"),
+  'Public order creation must be unverified and all later mutation must remain server/admin-only.'
+);
+check(
+  rulesSource.includes('request.resource.data.keys().hasOnly(['),
+  'Public order creates must reject unrecognized server-managed fields.'
+);
+['promo_codes', 'promo_redemptions', 'order_locks', '_security_rate_limits'].forEach((collectionName) => {
+  const match = rulesSource.match(
+    new RegExp(`match /${collectionName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^}]+\\{([\\s\\S]*?)\\n\\s*\\}`)
+  );
+  check(
+    Boolean(match) && match[1].includes('if isAdmin()'),
+    `${collectionName} must not expose customer or rate-limit metadata publicly.`
+  );
+});
+
+const {
+  rateLimitDocumentId,
+  validateWebsiteOrder
+} = require('../functions/security-guards.js');
+const legitimatePickupOrder = {
+  orderNumber: '',
+  firstName: 'Kiran',
+  lastName: '',
+  email: 'customer@example.com',
+  phoneDigits: '8045550100',
+  source: 'website',
+  websiteFinalizationState: 'unverified',
+  fulfillmentType: 'pickup',
+  pickupLocation: 'shortpump',
+  paymentMethod: 'pay_at_pickup',
+  status: 'pending',
+  items: [{ productId: 'mango-pickle', qty: 2 }]
+};
+check(
+  validateWebsiteOrder(legitimatePickupOrder).totalQuantity === 2,
+  'Legitimate guest pickup orders, including an optional last name, must remain valid.'
+);
+check(
+  validateWebsiteOrder({
+    ...legitimatePickupOrder,
+    customerUid: 'customer-1'
+  }, 'customer-1').totalQuantity === 2,
+  'Legitimate signed-in pickup orders must remain valid.'
+);
+check(
+  validateWebsiteOrder({
+    ...legitimatePickupOrder,
+    fulfillmentType: 'shipping',
+    paymentMethod: 'stripe',
+    status: 'awaiting_payment',
+    shippingAddress: {
+      addressLine1: '123 Main Street',
+      city: 'Richmond',
+      state: 'VA',
+      zip: '23220'
+    }
+  }).fulfillmentType === 'shipping',
+  'Legitimate guest shipping orders must remain valid.'
+);
+[
+  { ...legitimatePickupOrder, source: 'admin_manual' },
+  { ...legitimatePickupOrder, customerUid: 'other-customer' },
+  { ...legitimatePickupOrder, orderNumber: 'SHR-999999' },
+  { ...legitimatePickupOrder, stripeCheckoutSessionId: 'cs_test_attacker' },
+  { ...legitimatePickupOrder, items: Array.from({ length: 41 }, (_, index) => ({ productId: `p-${index}`, qty: 1 })) },
+  { ...legitimatePickupOrder, items: [{ productId: 'mango-pickle', qty: 51 }] }
+].forEach((candidate, index) => {
+  let rejected = false;
+  try {
+    validateWebsiteOrder(candidate);
+  } catch (error) {
+    rejected = true;
+  }
+  check(rejected, `Malicious website-order variant ${index + 1} must be rejected.`);
+});
+const firstRateBucket = rateLimitDocumentId('checkout', 'ip:127.0.0.1', 60_000, 120_000);
+check(
+  firstRateBucket.id === rateLimitDocumentId('checkout', 'ip:127.0.0.1', 60_000, 120_001).id,
+  'Rate-limit bucket IDs must be deterministic inside one window.'
+);
+check(
+  firstRateBucket.id !== rateLimitDocumentId('checkout', 'ip:127.0.0.2', 60_000, 120_000).id &&
+    firstRateBucket.id !== rateLimitDocumentId('checkout', 'ip:127.0.0.1', 60_000, 180_000).id,
+  'Rate-limit buckets must separate callers and windows.'
+);
+
+const functionsSource = read('functions/index.js');
+const orderSource = read('assets/js/order-firebase.js');
+check(
+  functionsSource.includes('exports.finalizeWebsiteOrder = onCall(') &&
+    functionsSource.includes('order.websiteFinalizationState !== "complete" || !order.websiteValidatedAt'),
+  'Stripe checkout must require a server-finalized website order.'
+);
+const publicPromoCallableSource = functionsSource.slice(
+  functionsSource.indexOf('exports.validatePromoCode = onCall('),
+  functionsSource.indexOf('// Atomically record one redemption per order')
+);
+check(
+  !publicPromoCallableSource.includes('promo_redemptions') &&
+    !publicPromoCallableSource.includes('phoneDigits'),
+  'Public promo validation must not expose phone-based redemption history.'
+);
+check(
+  functionsSource.includes('idempotencyKey: `shrish_checkout_${orderId}`') &&
+    functionsSource.includes('scope: "stripe-checkout-order"'),
+  'Stripe session creation must be idempotent and rate-limited per order.'
+);
+check(
+  functionsSource.includes('if (order?.source === "website"') &&
+    functionsSource.includes('exports.sendFinalizedWebsiteOrderEmails = onDocumentUpdated(') &&
+    functionsSource.includes('after.websiteFinalizationState !== "complete"'),
+  'Raw website document creates must not email until a server-finalization transition succeeds.'
+);
+check(
+  orderSource.includes("websiteFinalizationState: 'unverified'") &&
+    orderSource.includes('await finalizeWebsiteOrder({ orderId: orderRef.id })') &&
+    !orderSource.includes("collection(db, 'order_locks'") &&
+    !orderSource.includes("collection(db, 'promo_codes'"),
+  'Checkout must use the callable security boundary instead of public metadata reads.'
+);
+
+const geetHandler = require('../api/geet-chat.js');
+const geetCatalog = geetHandler._test.loadCatalog();
+check(
+  Array.isArray(geetCatalog.products) && geetCatalog.products.length > 0,
+  'Geet must load the real catalog from assets/js/data.js.'
+);
+geetHandler._test.resetRateLimits();
+const geetRequest = {
+  headers: {
+    host: 'shrish.co',
+    origin: 'https://shrish.co',
+    'x-forwarded-for': '203.0.113.10'
+  }
+};
+let geetAllowed = true;
+for (let index = 0; index < 11; index += 1) {
+  geetAllowed = geetHandler._test.consumeRateLimit(geetRequest, 120_000).allowed;
+}
+check(!geetAllowed, 'Geet must reject requests above the per-instance abuse limit.');
+check(
+  geetHandler._test.requestOriginIsAllowed(geetRequest) &&
+    !geetHandler._test.requestOriginIsAllowed({
+      headers: { host: 'shrish.co', origin: 'https://attacker.example' }
+    }),
+  'Geet must allow same-origin requests and reject cross-origin requests.'
+);
 
 const recipeSource = read('assets/js/luxe-recipes.js');
 check(
@@ -134,7 +286,9 @@ check(
 const userFacingScripts = [
   'assets/js/admin-firebase.js',
   'assets/js/firebase-app.js',
-  'assets/js/main.js'
+  'assets/js/main.js',
+  'assets/js/order-firebase.js',
+  'functions/index.js'
 ];
 const mojibakePattern = /(?:â€|âœ|â|Ã.|Â.|ð.)/;
 userFacingScripts.forEach((relativePath) => {
@@ -172,5 +326,5 @@ if (failures.length) {
 
 console.log(
   'Audit regression checks passed ' +
-  '(Meta, checkout, Firestore privacy, admin XSS, accessibility, encoding, product images).'
+  '(Meta, checkout finalization, Firestore privacy, Geet abuse controls, admin XSS, accessibility, encoding, product images).'
 );
