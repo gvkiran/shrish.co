@@ -12,7 +12,7 @@
 | Automated regression tests | PASS twice |
 | JavaScript syntax | PASS |
 | Root dependency audit | 0 vulnerabilities |
-| Functions dependency audit | 0 vulnerabilities |
+| Functions dependency audit | 9 moderate transitive advisories; no safe compatible fix |
 | Production browser smoke test | PASS |
 | Mobile shop and order layout | PASS; no horizontal overflow |
 | Product/cart/order flow | PASS; selected item and totals displayed correctly |
@@ -43,6 +43,8 @@
 | Site audit | 89 HTML pages, 71 products, 83 sitemap URLs, 177 local references |
 | Regression suite | PASS twice |
 | Repository JS parsing | PASS |
+| Functions module load | 18 exports loaded successfully |
+| Functions dependency audit | 9 moderate advisories; npm's proposed fix is a breaking Firebase Admin downgrade |
 | `git diff --check` | PASS |
 | Production home | Title, description, canonical, navigation, images PASS |
 | Production shop | 58 products, filters, variants, product images PASS |
