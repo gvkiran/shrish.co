@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Not Found | SHRISH</title>
+  <meta name="description" content="The requested Shrish page could not be found. Return home or browse Andhra pickles, podi, putharekulu, and sweets.">
+  <meta name="robots" content="noindex, follow">
+  <meta name="theme-color" content="#120b05">
+  <link rel="icon" href="/images/brand/logo-small.png" type="image/png">
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #120b05;
+      --panel: #211307;
+      --gold: #f0aa27;
+      --cream: #fff6e7;
+      --muted: #cebfa8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      background:
+        radial-gradient(circle at 80% 10%, rgba(240, 170, 39, .18), transparent 34%),
+        linear-gradient(145deg, #090603, var(--ink));
+      color: var(--cream);
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+    main {
+      width: min(680px, 100%);
+      padding: clamp(30px, 7vw, 62px);
+      text-align: center;
+      background: rgba(33, 19, 7, .88);
+      border: 1px solid rgba(240, 170, 39, .36);
+      border-radius: 28px;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, .38);
+    }
+    img { width: 112px; height: 112px; object-fit: contain; }
+    .code {
+      margin: 22px 0 4px;
+      color: var(--gold);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: .2em;
+    }
+    h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(38px, 8vw, 68px); }
+    p { max-width: 520px; margin: 14px auto 28px; color: var(--muted); font-size: 17px; line-height: 1.65; }
+    nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+    a {
+      min-width: 150px;
+      padding: 13px 20px;
+      border: 1px solid var(--gold);
+      border-radius: 999px;
+      color: var(--cream);
+      font-weight: 800;
+      text-decoration: none;
+    }
+    a:first-child { background: var(--gold); color: var(--ink); }
+    a:hover, a:focus-visible { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(240, 170, 39, .2); }
+    a:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <img src="/images/brand/logo-small.png" alt="Shrish">
+    <div class="code">ERROR 404</div>
+    <h1>That page is not here.</h1>
+    <p>The link may be old or the page may have moved. Continue to the Shrish homepage or browse our current products.</p>
+    <nav aria-label="Page not found actions">
+      <a href="/">Go to homepage</a>
+      <a href="/shop.html">Browse products</a>
+    </nav>
+  </main>
+</body>
+</html>

@@ -1,0 +1,5 @@
+Contact: mailto:contact@shrish.co
+Canonical: https://www.shrish.co/.well-known/security.txt
+Policy: https://www.shrish.co/privacy.html
+Preferred-Languages: en
+Expires: 2027-07-27T23:59:59Z

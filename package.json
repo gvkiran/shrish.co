@@ -1,4 +1,10 @@
 {
+  "scripts": {
+    "test": "npm run test:site && npm run test:functions && npm run test:audit",
+    "test:site": "node scripts/site-audit.js",
+    "test:functions": "node --check functions/index.js",
+    "test:audit": "node scripts/audit-regression-tests.js"
+  },
   "dependencies": {
     "@vercel/analytics": "^2.0.1"
   }

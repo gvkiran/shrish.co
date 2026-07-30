@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SHRISH Accounting Studio</title>
+  <meta name="description" content="Private local SHRISH accounting workspace for reviewing imported bank transactions and preparing CPA reports.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Local accounting workspace</p>
+      <h1>SHRISH Accounting Studio</h1>
+    </div>
+    <div class="header-actions">
+      <label class="import-button">
+        <input id="fileInput" type="file" accept=".csv,text/csv">
+        Import Chase CSV
+      </label>
+      <button id="exportExcel" type="button">Export Excel</button>
+      <button id="printReport" type="button">Print PDF</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="notice">
+      <strong>Private local app.</strong>
+      Your bank file is parsed in this browser only. No transaction data is sent to a server.
+    </section>
+
+    <section class="toolbar" aria-label="Report controls">
+      <label>
+        Period
+        <select id="yearFilter"></select>
+      </label>
+      <label>
+        View
+        <select id="reviewFilter">
+          <option value="all">All transactions</option>
+          <option value="review">Needs review</option>
+          <option value="business">Business only</option>
+        </select>
+      </label>
+      <label class="search-box">
+        Search
+        <input id="searchInput" type="search" placeholder="Description, category, payee">
+      </label>
+      <button id="clearData" class="secondary" type="button">Clear Local Data</button>
+    </section>
+
+    <section class="kpi-grid" aria-label="Financial summary">
+      <article>
+        <span>Total Income</span>
+        <strong id="kpiIncome">$0.00</strong>
+      </article>
+      <article>
+        <span>Total Expenses</span>
+        <strong id="kpiExpenses">$0.00</strong>
+      </article>
+      <article>
+        <span>Net Profit</span>
+        <strong id="kpiProfit">$0.00</strong>
+      </article>
+      <article>
+        <span>Needs Review</span>
+        <strong id="kpiReview">0</strong>
+      </article>
+    </section>
+
+    <section class="dashboard-grid">
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Profit &amp; Loss</h2>
+          <span id="reportPeriod">No file imported</span>
+        </div>
+        <div id="plReport" class="report-table"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Monthly Trend</h2>
+          <span>Income, expenses, net</span>
+        </div>
+        <div id="monthlyTrend" class="monthly-trend"></div>
+      </section>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Category Rules</h2>
+        <span>Auto-sort common patterns, then review exceptions</span>
+      </div>
+      <form id="ruleForm" class="rule-form">
+        <label>
+          Keyword
+          <input id="ruleKeyword" required placeholder="Example: JGJ">
+        </label>
+        <label>
+          Direction
+          <select id="ruleDirection">
+            <option value="any">Any</option>
+            <option value="in">Money in</option>
+            <option value="out">Money out</option>
+          </select>
+        </label>
+        <label>
+          Account
+          <select id="ruleAccount">
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+            <option value="asset">Asset / Transfer</option>
+            <option value="equity">Owner / Equity</option>
+          </select>
+        </label>
+        <label>
+          Category
+          <input id="ruleCategory" required placeholder="Vendor Payments - JGJ">
+        </label>
+        <button type="submit">Add Rule</button>
+      </form>
+      <div id="rulesList" class="rules-list"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Transactions</h2>
+        <span id="transactionCount">0 rows</span>
+      </div>
+      <div id="columnChooser" class="column-chooser" aria-label="Visible columns"></div>
+      <div class="table-wrap">
+        <table id="transactionsTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <template id="emptyState">
+    <div class="empty-state">
+      <h2>Import your Chase CSV to begin</h2>
+      <p>Use the button at the top right. The app will auto-detect dates, income, expenses, Zelle sales, and review items.</p>
+    </div>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
