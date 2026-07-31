@@ -1432,26 +1432,34 @@ function orderItemsTotal(items = []) {
 }
 
 function getOrdersForSheet(sheet = state.orderSheet) {
-  if (sheet === 'active') return state.orders.filter((order) => (order.status || 'pending') === 'pending');
+  // Only completed orders belong in the admin lists: pay-at-pickup (pay later) or
+  // online/shipping orders that were actually paid. Online checkouts that never
+  // completed payment (no confirmation email sent) are hidden everywhere.
+  const INCOMPLETE_ORDER_STATUSES = new Set(['awaiting_payment', 'payment_expired']);
+  const completedOrders = state.orders.filter(
+    (order) => !INCOMPLETE_ORDER_STATUSES.has(order.status || 'pending')
+  );
+
+  if (sheet === 'active') return completedOrders.filter((order) => (order.status || 'pending') === 'pending');
   if (sheet === 'specialty') {
-    return state.orders.filter((order) =>
+    return completedOrders.filter((order) =>
       (order.status || 'pending') === 'pending' && orderItemsForSheet(order, 'specialty').length > 0
     );
   }
   if (sheet === 'shipping') {
     // Every order being mailed, newest first. Cancelled orders are excluded but
     // fulfilled ones stay so a packing slip can be reprinted after shipping.
-    return state.orders
+    return completedOrders
       .filter((order) => isShippingOrder(order) && (order.status || 'pending') !== 'cancelled')
       .sort((a, b) => orderDateKey(b).localeCompare(orderDateKey(a)));
   }
   if (sheet === 'processed') {
-    return state.orders.filter((order) => {
+    return completedOrders.filter((order) => {
       const status = order.status || 'pending';
       return status === 'fulfilled' && !order.paymentCollected;
     });
   }
-  return [...state.orders];
+  return [...completedOrders];
 }
 
 function getFilteredOrders(sheet = state.orderSheet) {

@@ -684,7 +684,8 @@ select option { background: var(--obs-700); color: var(--text); }
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
   border-radius: var(--r-xl);
-  overflow: hidden;
+  overflow-x: auto;   /* wide tables scroll instead of clipping the last column */
+  overflow-y: hidden;
   box-shadow: var(--shadow-card);
 }
 
