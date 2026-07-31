@@ -165,8 +165,15 @@ const metaPurchaseOnPaid = onDocumentUpdated(
     const previousOrder = beforeSnapshot?.exists ? (beforeSnapshot.data() || {}) : {};
     const order = snapshot.data() || {};
     const orderId = String(event.params?.orderId || snapshot.id || "").trim();
-    const wasPaid = String(previousOrder.paymentStatus || previousOrder.payment || "").toLowerCase() === "paid";
-    const isPaid = String(order.paymentStatus || order.payment || "").toLowerCase() === "paid";
+    // Only report GENUINE ONLINE (Stripe) purchases to Meta. The Stripe webhook is
+    // the ONLY thing that sets paymentStatus:'paid' (together with paymentMethod:'stripe').
+    // Pay-at-pickup / manual collection sets the separate `payment` field instead and
+    // must NOT be sent to Meta as a website Purchase.
+    const paidOnline = (o) =>
+      String(o.paymentStatus || "").toLowerCase() === "paid" &&
+      String(o.paymentMethod || "").toLowerCase() === "stripe";
+    const wasPaid = paidOnline(previousOrder);
+    const isPaid = paidOnline(order);
     if (!orderId || !isPaid || wasPaid || order.metaPurchaseStatus === "sent") return;
 
     const paidAtMillis = typeof order.paidAt?.toMillis === "function"
