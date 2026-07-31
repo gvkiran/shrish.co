@@ -11,10 +11,11 @@
 // ===========================================================================
 
 import {
-  db, collection, getDocs, escapeHtml, formatCurrency
+  db, collection, getDocs, escapeHtml, formatCurrency, cloudFunctions, httpsCallable
 } from './firebase-app.js';
 
 const META_COLLECTION = 'ad_metrics_meta';
+const getOwnerAnalyticsCallable = httpsCallable(cloudFunctions, 'getOwnerAnalytics');
 
 // --- small helpers -------------------------------------------------------
 function num(v) { const n = Number(v); return Number.isFinite(n) ? n : 0; }
@@ -136,6 +137,7 @@ function setStatus(msg, isError) {
 async function loadMetaAds(force) {
   const rangeSel = el('metaAdsRange');
   const rangeDays = rangeSel ? num(rangeSel.value) || 30 : 30;
+  loadAdFunnel(rangeDays);
   try {
     setStatus('Loading Meta ad metrics…', false);
     if (force || !cachedRows || (Date.now() - cacheLoadedAt) > 5 * 60 * 1000) {
@@ -164,6 +166,48 @@ async function loadMetaAds(force) {
 }
 
 function refreshMetaAds() { loadMetaAds(true); }
+
+// --- Ad funnel (PostHog, filtered to visitors who arrived from the ad) --------
+function funnelStage(label, count, prevCount, sub) {
+  const pct = prevCount > 0 ? Math.round((count / prevCount) * 100) : null;
+  const arrow = pct !== null
+    ? `<div style="font-size:11px;color:var(--text-light);padding:3px 0 3px 2px">↓ ${pct}% continued</div>`
+    : '';
+  return `${arrow}<div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(200,121,26,0.14)">
+    <span>${escapeHtml(label)}${sub ? ` <span style="font-size:11px;color:var(--text-light)">${escapeHtml(sub)}</span>` : ''}</span>
+    <strong style="font-size:20px;color:var(--gold-200,#e0b64a)">${fmtInt(count)}</strong>
+  </div>`;
+}
+
+async function loadAdFunnel(rangeDays) {
+  const box = el('metaAdsFunnel');
+  if (!box) return;
+  box.innerHTML = '<p class="orders-help">Loading funnel from PostHog…</p>';
+  try {
+    const days = Math.max(7, rangeDays || 30); // getOwnerAnalytics supports 7–90 days
+    const res = await getOwnerAnalyticsCallable({ days });
+    const data = (res && res.data) || {};
+    if (!data.connected) {
+      box.innerHTML = '<p class="orders-help">Funnel needs PostHog connected (same key as the Growth Dashboard). Once it is, this fills in automatically.</p>';
+      return;
+    }
+    const f = data.adFunnel || {};
+    const visitors = num(f.visitors), clicks = num(f.productClicks), carts = num(f.cartAdds),
+      checkout = num(f.reachedCheckout), orders = num(f.orders);
+    if (!visitors && !clicks && !carts && !orders) {
+      box.innerHTML = `<p class="orders-help">No ad-attributed visitors in the last ${days} days yet. When your Meta ad drives clicks (they carry an fbclid), this funnel populates.</p>`;
+      return;
+    }
+    box.innerHTML =
+      funnelStage('Visitors from ad', visitors, 0, 'arrived via Meta') +
+      funnelStage('Clicked a product', clicks, visitors) +
+      funnelStage('Added to cart', carts, clicks) +
+      funnelStage('Reached checkout', checkout, carts) +
+      funnelStage('Completed order', orders, checkout);
+  } catch (e) {
+    box.innerHTML = `<p class="orders-help">Could not load funnel: ${escapeHtml(e && e.message ? e.message : String(e))}</p>`;
+  }
+}
 
 // expose for onclick / switchTab (matches the admin-firebase.js window pattern)
 window.loadMetaAds = loadMetaAds;

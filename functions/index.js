@@ -2609,7 +2609,7 @@ exports.getOwnerAnalytics = onCall(
     }
 
     try {
-      const [eventCounts, topPages, clickedProducts, addedProducts] = await Promise.all([
+      const [eventCounts, topPages, clickedProducts, addedProducts, adFunnel] = await Promise.all([
         runPostHogHogql(`
           SELECT event, count() AS total_events, uniq(distinct_id) AS unique_people
           FROM events
@@ -2665,6 +2665,26 @@ exports.getOwnerAnalytics = onCall(
           ORDER BY adds DESC
           LIMIT 12
         `, "owner dashboard added products"),
+        runPostHogHogql(`
+          WITH ad_people AS (
+            SELECT DISTINCT distinct_id
+            FROM events
+            WHERE ${sinceClause}
+              AND (
+                ifNull(toString(properties.fbclid), '') != ''
+                OR lower(ifNull(toString(properties.utm_source), '')) IN ('meta','facebook','fb','instagram','ig','an')
+              )
+          )
+          SELECT
+            uniqIf(distinct_id, event = 'page_viewed') AS visitors,
+            uniqIf(distinct_id, event = 'product_details_opened') AS product_clicks,
+            uniqIf(distinct_id, event = 'product_added_to_cart') AS cart_adds,
+            uniqIf(distinct_id, event IN ('checkout_started','checkout_viewed')) AS reached_checkout,
+            uniqIf(distinct_id, event IN ('order_submitted','order_confirmed')) AS orders
+          FROM events
+          WHERE ${sinceClause}
+            AND distinct_id IN (SELECT distinct_id FROM ad_people)
+        `, "owner dashboard ad funnel").catch((e) => { console.error("ad funnel query failed", e && e.message); return { rows: [] }; }),
       ]);
 
       return {
@@ -2677,6 +2697,7 @@ exports.getOwnerAnalytics = onCall(
         topPages: rowsToObjects(topPages.rows, ["page", "views", "visitors"]),
         clickedProducts: rowsToObjects(clickedProducts.rows, ["productTitle", "productId", "category", "filterGroup", "clicks", "people"]),
         addedProducts: rowsToObjects(addedProducts.rows, ["productTitle", "productId", "category", "filterGroup", "adds", "people"]),
+        adFunnel: rowsToObjects(adFunnel.rows, ["visitors", "productClicks", "cartAdds", "reachedCheckout", "orders"])[0] || {},
       };
     } catch (error) {
       console.error("Owner analytics query failed", error);
