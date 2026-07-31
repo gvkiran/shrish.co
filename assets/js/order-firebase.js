@@ -2096,6 +2096,7 @@ async function submitOrder() {
       saveCardRequested: saveCard,
       status: payOnline ? 'awaiting_payment' : 'pending',
       source: 'website',
+      attribution: (function () { try { return JSON.parse(window.localStorage.getItem('shrish_attribution') || '{}') || {}; } catch (e) { return {}; } })(),
       skipCustomerEmail: payOnline,
       websiteFinalizationState: 'unverified',
       createdAt: serverTimestamp(),
@@ -2141,6 +2142,9 @@ async function submitOrder() {
       if (!checkoutUrl) throw new Error('STRIPE_CHECKOUT_URL_MISSING');
       rememberRecentOrderForAccount(orderRef, order, session?.data?.orderNumber || finalizedOrderNumber);
       rememberStripeSuccessSnapshot(orderRef.id, order);
+      // Proof that THIS browser genuinely initiated the order — required before the
+      // Meta Pixel will count a Purchase on the payment=success return (anti-ghost-fire).
+      try { localStorage.setItem('shrish_meta_purchase_proof:' + orderRef.id, '1'); } catch {}
       saveCheckoutFormState();
       window.location.href = checkoutUrl;
       return;

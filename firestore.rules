@@ -54,6 +54,7 @@ service cloud.firestore {
           'pickupLocationLabel',
           'shippingAddress',
           'referral',
+          'attribution',
           'notes',
           'items',
           'totalBoxes',
@@ -84,6 +85,7 @@ service cloud.firestore {
           'createdAt',
           'updatedAt'
         ])
+        && (!request.resource.data.keys().hasAny(['attribution']) || request.resource.data.attribution is map)
         && request.resource.data.source == 'website'
         && request.resource.data.websiteFinalizationState == 'unverified'
         && request.resource.data.orderNumber == ''

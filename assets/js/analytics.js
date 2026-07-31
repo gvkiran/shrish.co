@@ -1,3 +1,28 @@
+// First-touch attribution capture: records how a visitor arrived (Meta ad clicks
+// carry utm_* params and/or fbclid) so real orders can be tagged with their source.
+// Stored once (first touch) and read at checkout. Best-effort; never blocks anything.
+(function captureShrishAttribution() {
+  'use strict';
+  try {
+    const KEY = 'shrish_attribution';
+    if (window.localStorage.getItem(KEY)) return; // keep the first touch only
+    const p = new URLSearchParams(window.location.search || '');
+    const val = (k) => (p.get(k) || '').slice(0, 120);
+    const attribution = {
+      utm_source: val('utm_source'),
+      utm_medium: val('utm_medium'),
+      utm_campaign: val('utm_campaign'),
+      utm_content: val('utm_content'),
+      fbclid: val('fbclid')
+    };
+    if (!Object.values(attribution).some(Boolean)) return; // only tagged/ad visits
+    attribution.landing_page = String(window.location.pathname || '').slice(0, 120);
+    attribution.referrer = String(document.referrer || '').slice(0, 200);
+    attribution.captured_at = new Date().toISOString();
+    window.localStorage.setItem(KEY, JSON.stringify(attribution));
+  } catch (e) { /* attribution is best-effort */ }
+})();
+
 // Meta Pixel tracking for Shrish website sales campaigns.
 // Sends PageView on all live pages and Purchase only after a confirmed Stripe return.
 (function () {
@@ -58,6 +83,15 @@
 
     const orderId = String(params.get('orderId') || '').trim();
     if (!orderId || purchaseWasTracked(orderId)) return null;
+
+    // Only count a Purchase if THIS browser actually placed the order.
+    // Bots, link scanners, prefetchers and crawlers that hit the success URL
+    // never set this proof key, so they can no longer fire ghost purchases.
+    try {
+      if (window.localStorage.getItem('shrish_meta_purchase_proof:' + orderId) !== '1') return null;
+    } catch {
+      return null;
+    }
 
     const successScreen = document.getElementById('successScreen');
     if (!successScreen || window.getComputedStyle(successScreen).display === 'none') return null;

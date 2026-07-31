@@ -2535,9 +2535,13 @@ function renderOrders() {
           <div class="payment-note">${escapeHtml(order.paymentCollectedAt ? formatDateTime(order.paymentCollectedAt) : '--')}</div>
         </div>`;
 
+    const _attr = order.attribution || null;
+    const attributionBadge = (_attr && (_attr.utm_source || _attr.fbclid))
+      ? `<div style="margin-top:3px;font-size:10px;font-weight:700;color:var(--gold-200,#e0b64a)" title="${escapeHtml(JSON.stringify(_attr))}">📣 ${escapeHtml(_attr.utm_source || 'meta/fb')}${_attr.utm_campaign ? ' · ' + escapeHtml(_attr.utm_campaign) : ''}</div>`
+      : '';
     return `<tr id="row-${safeDomId(order.id)}">
       <td class="order-select-col">${canSelect ? `<input type="checkbox" class="order-select-checkbox" ${checked} onchange="toggleReminderOrderSelection(${inlineJsArg(order.id)}, this.checked)">` : ''}</td>
-      <td><div class="order-id">${escapeHtml(order.orderNumber || order.id)}</div>${payBadgeHtml}</td>
+      <td><div class="order-id">${escapeHtml(order.orderNumber || order.id)}</div>${payBadgeHtml}${attributionBadge}</td>
       <td style="font-size:12px;color:var(--text-light)">${formatDate(order.createdAt)}</td>
       <td><div class="customer-name">${escapeHtml(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`.trim())}</div><div class="customer-phone">${escapeHtml(order.phone)}</div><div class="customer-email">${escapeHtml(order.email)}</div></td>
       <td>${itemsHtml}</td>
