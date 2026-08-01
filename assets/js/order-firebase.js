@@ -2126,6 +2126,36 @@ async function submitOrder() {
       console.warn('Could not update customer profile from checkout', error);
     });
 
+    const submittedOrderAnalytics = {
+      ...cartAnalyticsSummary(),
+      pickup_location: selectedLoc,
+      fulfillment_type: selectedFulfillmentType,
+      referral: referral || 'Not specified',
+      payment_method: selectedPaymentMethod
+    };
+    const submittedCartItems = cart.map((item) => ({ ...item }));
+    const trackSubmittedOrderEvents = () => {
+      trackCheckoutEvent('order_submitted', {
+        ...submittedOrderAnalytics
+      });
+      submittedCartItems.forEach((item) => {
+        const productId = cartItemProductId(item);
+        const product = productId ? window.SHRISH_DATA?.products?.find((entry) => entry.id === productId) : null;
+        trackCheckoutEvent('order_item_submitted', {
+          product_id: productId,
+          product_title: item.name || product?.name || '',
+          category: product?.category || '',
+          filter_group: product?.filterGroup || '',
+          quantity: Number(item.qty || 1),
+          line_total: Number((moneyValue(item.price) * (item.qty || 1)).toFixed(2)),
+          pickup_location: selectedLoc,
+          fulfillment_type: selectedFulfillmentType,
+          payment_method: selectedPaymentMethod,
+          ...submittedOrderAnalytics
+        });
+      });
+    };
+
     if (payOnline) {
       trackCheckoutEvent('stripe_checkout_redirect_started', {
         ...cartAnalyticsSummary(),
@@ -2146,18 +2176,10 @@ async function submitOrder() {
       // Meta Pixel will count a Purchase on the payment=success return (anti-ghost-fire).
       try { localStorage.setItem('shrish_meta_purchase_proof:' + orderRef.id, '1'); } catch {}
       saveCheckoutFormState();
+      trackSubmittedOrderEvents();
       window.location.href = checkoutUrl;
       return;
     }
-
-    const submittedOrderAnalytics = {
-      ...cartAnalyticsSummary(),
-      pickup_location: selectedLoc,
-      fulfillment_type: selectedFulfillmentType,
-      referral: referral || 'Not specified',
-      payment_method: selectedPaymentMethod
-    };
-    const submittedCartItems = cart.map((item) => ({ ...item }));
 
     sessionStorage.removeItem('shrish_cart');
     cart = [];
@@ -2223,25 +2245,7 @@ async function submitOrder() {
       phone
     );
 
-    trackCheckoutEvent('order_submitted', {
-      ...submittedOrderAnalytics
-    });
-    submittedCartItems.forEach((item) => {
-      const productId = cartItemProductId(item);
-      const product = productId ? window.SHRISH_DATA?.products?.find((entry) => entry.id === productId) : null;
-      trackCheckoutEvent('order_item_submitted', {
-        product_id: productId,
-        product_title: item.name || product?.name || '',
-        category: product?.category || '',
-        filter_group: product?.filterGroup || '',
-        quantity: Number(item.qty || 1),
-        line_total: Number((moneyValue(item.price) * (item.qty || 1)).toFixed(2)),
-        pickup_location: selectedLoc,
-        fulfillment_type: selectedFulfillmentType,
-        payment_method: selectedPaymentMethod,
-        ...submittedOrderAnalytics
-      });
-    });
+    trackSubmittedOrderEvents();
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (error) {

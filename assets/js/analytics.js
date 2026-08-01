@@ -296,7 +296,9 @@
       api_host: POSTHOG_HOST,
       defaults: POSTHOG_DEFAULTS,
       autocapture: false,
-      capture_pageview: false,
+      // Keep the custom `page_viewed` event for SHRISH funnels, and also emit
+      // PostHog's standard pageview so the built-in DAU/WAU/referrer cards work.
+      capture_pageview: true,
       capture_performance: false,
       disable_session_recording: true,
       disable_surveys: true,
