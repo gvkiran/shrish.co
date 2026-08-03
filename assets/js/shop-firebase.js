@@ -119,7 +119,8 @@ const PRODUCT_IMAGES = {
   sonpari_ghee: ['images/products/snacks/img_sonpari1.jpg'],
   mango_jelly_sugar: ['images/products/jellysnacks/mango-jelly-sugar-2026.webp'],
   mango_jelly_jaggery: ['images/products/jellysnacks/mango-jelly-jaggery-2026.webp'],
-  palm_jelly: ['images/products/jellysnacks/img_palm_jelly.webp', 'images/products/jellysnacks/img_palm_jelly_2.webp']
+  palm_jelly: ['images/products/jellysnacks/img_palm_jelly.webp', 'images/products/jellysnacks/img_palm_jelly_2.webp'],
+  'picklespodi-pandu-mirchi-pickle': ['images/products/pickles/pandu-mirchi-pickle-2026.webp']
 };
 
 const LOGO_PRODUCT_IMAGE = 'images/brand/logo-small.png';
@@ -131,7 +132,6 @@ const LOGO_ONLY_PRODUCT_IDS = [
   'picklespodi-karivepaku-pachadi-curry-leaf-pickle',
   'picklespodi-mango-avakai-pickle',
   'picklespodi-mango-thokku-magai-pickle',
-  'picklespodi-pandu-mirchi-pickle',
   'picklespodi-gongura-chicken-pickle',
   'picklespodi-gongura-mutton-pickle',
   'picklespodi-gongura-prawn-pickle',
