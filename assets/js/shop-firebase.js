@@ -333,7 +333,11 @@ function trackShopViewedOnce() {
 
 applyInitialShopFiltersFromUrl();
 
-const FORCE_BASE_PRODUCT_OVERRIDES = {};
+const FORCE_BASE_PRODUCT_OVERRIDES = Object.fromEntries(
+  baseProducts
+    .filter((product) => product.filterGroup === 'Veg Pickles' || product.filterGroup === 'Non-Veg Pickles')
+    .map((product) => [product.id, ['ingredientsText']])
+);
 const FORCE_CATALOG_FIELD_OVERRIDE_IDS = new Set([
   'picklespodi-drumstick-leaf-podi-munagaku-podi'
 ]);
