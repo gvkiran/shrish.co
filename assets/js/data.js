@@ -348,7 +348,7 @@ const SHRISH_DATA = {
       origin: "Atreyapuram, Andhra Pradesh",
       price: "$7.49", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Best Seller",
-      image: "images/products/jellysnacks/img_mango_jelly.webp",
+      image: "images/products/jellysnacks/mango-jelly-sugar-2026.webp",
       description: "A year-round bestseller made from ripe mango pulp slowly dried into soft fruit leather sheets. This classic Mamidi Thandra has a bright mango flavour, chewy bite, and balanced sweetness that makes it an easy favourite for both gifting and snacking.",
       details: "Ingredients: Mango pulp and sugar. Store sealed in a cool dry place. Best enjoyed fresh after opening.",
       badges: ["Best Seller", "Year Round"],
@@ -1463,6 +1463,7 @@ const SHRISH_VERIFIED_PRODUCT_IMAGE_IDS = new Set([
   "snacks-ragi-murukulu",
   "puth_jaggery_kaju_pista",
   "puth_samosa_jaggery_dryfruit",
+  "mango_jelly_sugar",
   "mango_jelly_jaggery"
 ]);
 
