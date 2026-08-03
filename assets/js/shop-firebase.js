@@ -117,6 +117,7 @@ const PRODUCT_IMAGES = {
   puth_organic_palm_kaju_badam_pista: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg'],
   sonpari: ['images/products/snacks/img_sonpari.jpg'],
   sonpari_ghee: ['images/products/snacks/img_sonpari1.jpg'],
+  'sweets-sunnundalu': ['images/products/sweets/sunnundalu-2026.webp'],
   mango_jelly_sugar: ['images/products/jellysnacks/mango-jelly-sugar-2026.webp'],
   mango_jelly_jaggery: ['images/products/jellysnacks/mango-jelly-jaggery-2026.webp'],
   palm_jelly: ['images/products/jellysnacks/img_palm_jelly.webp', 'images/products/jellysnacks/img_palm_jelly_2.webp'],
