@@ -118,7 +118,7 @@ const PRODUCT_IMAGES = {
   sonpari: ['images/products/snacks/img_sonpari.jpg'],
   sonpari_ghee: ['images/products/snacks/img_sonpari1.jpg'],
   mango_jelly_sugar: ['images/products/jellysnacks/img_mango_jelly.webp'],
-  mango_jelly_jaggery: ['images/products/jellysnacks/img_mango_jelly.webp'],
+  mango_jelly_jaggery: ['images/products/jellysnacks/mango-jelly-jaggery-2026.webp'],
   palm_jelly: ['images/products/jellysnacks/img_palm_jelly.webp', 'images/products/jellysnacks/img_palm_jelly_2.webp']
 };
 

@@ -363,7 +363,7 @@ const SHRISH_DATA = {
       origin: "Atreyapuram, Andhra Pradesh",
       price: "$7.99", unit: "250g or 500g",
       available: true, displayOnly: false, tag: "Seasonal - Limited",
-      image: "images/products/jellysnacks/img_mango_jelly.webp",
+      image: "images/products/jellysnacks/mango-jelly-jaggery-2026.webp",
       description: "A seasonal jaggery-based Mamidi Thandra with a deeper colour and warmer sweetness than the sugar version. It keeps the same chewy mango-fruit texture while adding a richer, more traditional finish that serious mango-jelly lovers usually look for first.",
       details: "Ingredients: Mango pulp and jaggery. Seasonal and limited compared with the regular sugar variety.",
       badges: ["Seasonal", "Very Limited", "Most Requested"],
@@ -1462,7 +1462,8 @@ const SHRISH_VERIFIED_PRODUCT_IMAGE_IDS = new Set([
   "sweets-ragi-laddu",
   "snacks-ragi-murukulu",
   "puth_jaggery_kaju_pista",
-  "puth_samosa_jaggery_dryfruit"
+  "puth_samosa_jaggery_dryfruit",
+  "mango_jelly_jaggery"
 ]);
 
 const SHRISH_VERIFIED_PRODUCT_IMAGE_OVERRIDES = Object.fromEntries(
