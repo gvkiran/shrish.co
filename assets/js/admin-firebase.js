@@ -973,7 +973,7 @@ function orderLocationCellHtml(order = {}) {
     const lines = shippingAddressLines(address)
       .map((line) => `<div>${escapeHtml(line)}</div>`)
       .join('');
-    return `<div class="ship-to" style="line-height:1.35">
+    return `<div class="ship-to" style="line-height:1.35;white-space:nowrap">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-light);margin-bottom:2px">Shipping to</div>
         ${name ? `<div style="font-weight:600">${escapeHtml(name)}</div>` : ''}
         ${lines}
