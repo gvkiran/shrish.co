@@ -1039,8 +1039,10 @@ function orderTrackingCellHtml(order = {}) {
     ? `<a href="${escapeHtml(trackingUrl)}" target="_blank" rel="noopener noreferrer" style="color:#C8791A">${escapeHtml(trackingNumber)}</a>`
     : escapeHtml(trackingNumber);
   const emailed = order.shipmentEmailSentAt
-    ? `<div style="color:#22C55E">✓ Customer emailed <button type="button" onclick="resendShipmentEmail(${inlineJsArg(order.id)})" style="background:none;border:none;color:var(--text-light);text-decoration:underline;cursor:pointer;font-size:11px;padding:0 0 0 4px">resend</button></div>`
-    : `<div style="opacity:.7">Email not sent <button type="button" onclick="resendShipmentEmail(${inlineJsArg(order.id)})" style="background:none;border:none;color:#E8A83C;text-decoration:underline;cursor:pointer;font-size:11px;padding:0 0 0 4px">send now</button></div>`;
+    ? `<div style="margin-top:3px"><span style="color:#22C55E">✓ Customer emailed</span>
+        <button class="tracking-mail-btn" type="button" onclick="resendShipmentEmail(${inlineJsArg(order.id)})">Resend</button></div>`
+    : `<div style="margin-top:3px"><span style="color:#E8A83C">✉ Email not sent</span>
+        <button class="tracking-mail-btn is-urgent" type="button" onclick="resendShipmentEmail(${inlineJsArg(order.id)})">Send now</button></div>`;
   return `<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(200,121,26,.2);font-size:11px;line-height:1.4;white-space:normal">
       <div style="text-transform:uppercase;letter-spacing:.04em;color:var(--text-light)">${escapeHtml(carrierLabel || 'Tracking')}</div>
       <div>${numberHtml}</div>

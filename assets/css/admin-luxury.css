@@ -550,6 +550,38 @@ body > * { position: relative; z-index: 1; }
 .s-value.green { color: var(--green); }
 .s-value.amber { color: var(--amber); }
 
+/* Resend / send-now control in the shipping tracking cell. Needs to read as a
+   real button in a dense, low-contrast cell. */
+.tracking-mail-btn {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border-bright);
+  background: rgba(200,121,26,0.14);
+  color: var(--gold-200);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--t-fast, .15s) ease, color var(--t-fast, .15s) ease;
+}
+.tracking-mail-btn:hover {
+  background: var(--gold-500);
+  border-color: var(--gold-500);
+  color: #1A1208;
+}
+.tracking-mail-btn.is-urgent {
+  background: var(--gold-500);
+  border-color: var(--gold-400);
+  color: #1A1208;
+}
+.tracking-mail-btn.is-urgent:hover {
+  background: var(--gold-400);
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    MAIN CONTENT AREA
    ═══════════════════════════════════════════════════════════════════ */
