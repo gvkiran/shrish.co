@@ -316,6 +316,9 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600
 
 .crm-filterbar-note { font-size: 12px; color: var(--text-faint); margin-left: auto; }
 .crm-filterbar .crm-seg.active::before { content: '✓ '; }
+.crm-filterbar-label { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-faint); }
+.crm-filterbar-divider { width: 1px; height: 22px; background: var(--glass-border); }
+.crm-pill.season { background: rgba(200,121,26,0.16); color: var(--gold-300); }
 
 /* ── Tags and notes ──────────────────────────────────── */
 

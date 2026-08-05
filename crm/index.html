@@ -58,7 +58,11 @@
       </nav>
 
       <section class="crm-filterbar">
-        <button class="crm-seg active" type="button" id="crmExcludeMango" aria-pressed="true">Hide mango-only</button>
+        <span class="crm-filterbar-label">Show</span>
+        <button class="crm-seg" type="button" id="crmGroup-mango" data-group="mango" aria-pressed="false">Mango only</button>
+        <button class="crm-seg active" type="button" id="crmGroup-both" data-group="both" aria-pressed="true">Mango + other</button>
+        <button class="crm-seg active" type="button" id="crmGroup-nonmango" data-group="nonmango" aria-pressed="true">Non-mango only</button>
+        <span class="crm-filterbar-divider"></span>
         <button class="crm-seg active" type="button" id="crmExcludeOwner" aria-pressed="true">Hide my account</button>
         <button class="crm-seg" type="button" id="crmShowTest" aria-pressed="false">Show test orders</button>
         <span class="crm-filterbar-note" id="crmFilterNote"></span>

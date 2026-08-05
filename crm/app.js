@@ -163,7 +163,7 @@ const state = {
   search: '',
   sort: 'ltv',
   view: 'overview',
-  excludeMango: true,
+  groups: { mango: false, both: true, nonmango: true },   // true = shown
   excludeOwner: true,
   showTest: false,
   rawOrders: [],
@@ -232,6 +232,8 @@ function buildCustomers(orders, profiles) {
         products: new Map(),
         firstOrderAt: null,
         lastOrderAt: null,
+        firstNonMangoAt: null,
+        lastNonMangoAt: null,
         sources: new Set(),
         hasProfile: false,
         mangoQty: 0,
@@ -264,8 +266,18 @@ function buildCustomers(orders, profiles) {
       if (!itemName) continue;
       const qty = Math.max(1, Number(item.qty || 1));
       customer.products.set(itemName, (customer.products.get(itemName) || 0) + qty);
-      if (isMangoItem(item)) customer.mangoQty += qty;
-      else customer.otherQty += qty;
+      if (isMangoItem(item)) {
+        customer.mangoQty += qty;
+      } else {
+        customer.otherQty += qty;
+        // Recency is tracked separately for non-mango, because fresh mango is
+        // seasonal: a mango order in June says nothing about whether someone
+        // is still an active pickle customer in November.
+        if (created) {
+          if (!customer.firstNonMangoAt || created < customer.firstNonMangoAt) customer.firstNonMangoAt = created;
+          if (!customer.lastNonMangoAt || created > customer.lastNonMangoAt) customer.lastNonMangoAt = created;
+        }
+      }
     }
   }
 
@@ -306,11 +318,22 @@ function buildCustomers(orders, profiles) {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 4);
     customer.isOffline = !customer.sources.has('website');
-    // Bought fresh mangoes and nothing else — a seasonal buyer whose silence
-    // says nothing about churn.
-    customer.isMangoOnly = customer.mangoQty > 0 && customer.otherQty === 0;
 
-    const days = customer.daysSince;
+    // Three mutually exclusive groups by what they have ever bought:
+    //   mango    — fresh fruit only, purely seasonal
+    //   both     — fresh fruit and year-round lines, the crossover group
+    //   nonmango — year-round only, never bought fresh fruit
+    customer.group = customer.otherQty === 0
+      ? 'mango'
+      : (customer.mangoQty === 0 ? 'nonmango' : 'both');
+    customer.isMangoOnly = customer.group === 'mango';
+
+    // Recency and "due" judgements deliberately ignore mango orders. A mango
+    // buy is a seasonal event, not evidence of an ongoing relationship, so
+    // counting it would make seasonal customers look permanently healthy.
+    customer.daysSinceNonMango = daysBetween(customer.lastNonMangoAt);
+    const days = customer.daysSinceNonMango;
+
     customer.isNew = customer.daysSinceFirst !== null && customer.daysSinceFirst <= NEW_DAYS;
     customer.isRepeat = customer.paidOrderCount >= 2;
     customer.isVip = customer.isRepeat && customer.ltv >= vipCutoff && customer.ltv > 0;
@@ -377,8 +400,11 @@ function renderChart() {
     { label: '180+', min: 180, max: Infinity }
   ];
 
+  // Measured on non-mango recency, so a seasonal mango purchase does not make
+  // a lapsed year-round customer look active.
   const counts = buckets.map((bucket) =>
-    state.customers.filter((c) => c.daysSince !== null && c.daysSince >= bucket.min && c.daysSince <= bucket.max).length
+    state.customers.filter((c) => c.daysSinceNonMango !== null
+      && c.daysSinceNonMango >= bucket.min && c.daysSinceNonMango <= bucket.max).length
   );
 
   const colors = buckets.map((bucket) => (bucket.min >= DUE_DAYS ? '#E8A83C' : '#6BA8E0'));
@@ -451,19 +477,29 @@ function visibleCustomers() {
 }
 
 function statusPill(customer) {
+  // Mango-only buyers have no year-round cycle to be due against. Calling them
+  // overdue would be meaningless — they are simply seasonal.
+  if (customer.group === 'mango') {
+    return `<span class="crm-pill season">Seasonal ${customer.daysSince}d</span>`;
+  }
+  // Someone who ordered in the last fortnight is active, whatever a single
+  // product's cycle says. Recency wins over prediction for the headline.
+  if (customer.daysSinceNonMango !== null && customer.daysSinceNonMango <= 14) {
+    return `<span class="crm-pill ok">Active ${customer.daysSinceNonMango}d</span>`;
+  }
   // A measured prediction beats a generic day count, so it wins when present.
   if (customer.predictedOver !== null && customer.predictedOver >= -3) {
     const label = customer.predictedOver > 0
       ? `${customer.predictedOver}d past due`
       : 'Due now';
     const cls = customer.predictedOver > 21 ? 'over' : 'due';
-    return `<span class="crm-pill ${cls}" title="${escapeHtml(customer.predictedProduct)} typically lasts these customers a set time; this one is past it">${label}</span>`;
+    return `<span class="crm-pill ${cls}" title="${escapeHtml(customer.predictedProduct)} should have run out by now and has not been reordered">${label}</span>`;
   }
   if (customer.isOverdue) return `<span class="crm-pill over">Quiet ${customer.daysSince}d</span>`;
   if (customer.isDue) return `<span class="crm-pill due">Quiet ${customer.daysSince}d</span>`;
   if (customer.isNew) return '<span class="crm-pill new">New</span>';
-  if (customer.daysSince === null) return '<span class="crm-pill muted">No date</span>';
-  return `<span class="crm-pill ok">Active ${customer.daysSince}d</span>`;
+  if (customer.daysSinceNonMango === null) return '<span class="crm-pill muted">No date</span>';
+  return `<span class="crm-pill ok">Active ${customer.daysSinceNonMango}d</span>`;
 }
 
 function renderList() {
@@ -494,18 +530,17 @@ function renderList() {
     `${list.length} customer${list.length === 1 ? '' : 's'} · ${money(value)} lifetime value in this view`;
 }
 
+const GROUP_LABELS = {
+  mango: 'Mango only',
+  both: 'Mango + other',
+  nonmango: 'Non-mango only'
+};
+
 function applyFilters() {
   const ownerKey = normalizeDigits(window.SHRISH_APP_CONFIG?.supportPhone || '');
 
-  let list = state.allCustomers;
-  let mangoRemoved = 0;
+  let list = state.allCustomers.filter((customer) => state.groups[customer.group]);
   let ownerRemoved = 0;
-
-  if (state.excludeMango) {
-    const before = list.length;
-    list = list.filter((customer) => !customer.isMangoOnly);
-    mangoRemoved = before - list.length;
-  }
 
   if (state.excludeOwner) {
     const before = list.length;
@@ -517,11 +552,24 @@ function applyFilters() {
 
   state.customers = list;
 
-  const notes = [];
-  if (mangoRemoved) notes.push(`${mangoRemoved} mango-only hidden`);
-  if (ownerRemoved) notes.push(`${ownerRemoved} own account hidden`);
+  // Live counts on the group buttons, so the split is visible without clicking.
+  const counts = { mango: 0, both: 0, nonmango: 0 };
+  for (const customer of state.allCustomers) counts[customer.group] += 1;
+  for (const group of Object.keys(GROUP_LABELS)) {
+    const button = document.getElementById(`crmGroup-${group}`);
+    if (!button) continue;
+    button.classList.toggle('active', state.groups[group]);
+    button.setAttribute('aria-pressed', String(state.groups[group]));
+    button.innerHTML = `${escapeHtml(GROUP_LABELS[group])}<span class="crm-seg-count">${counts[group]}</span>`;
+  }
+
+  const hidden = state.allCustomers.length - state.customers.length;
   const note = document.getElementById('crmFilterNote');
-  if (note) note.textContent = notes.length ? notes.join(' · ') : '';
+  if (note) {
+    note.textContent = hidden
+      ? `${hidden} hidden · showing ${state.customers.length} of ${state.allCustomers.length}`
+      : `showing all ${state.allCustomers.length}`;
+  }
 }
 
 /* ── reorder prediction ───────────────────────────────── */
@@ -579,9 +627,15 @@ function buildReorderModel(customers) {
 }
 
 // Per customer: for each product they have bought, when should it run out?
-// Returns the most overdue item first, which is the one worth mentioning.
+//
+// Crucially, a product is only "due" if the customer has NOT ordered since its
+// due date passed. If they have, they stood at your checkout and chose
+// something else — that is a preference, not an impending stock-out, and
+// flagging it would send you chasing an active customer. Those products are
+// returned separately as `declined`, which is useful in its own right.
 function predictReorders(customer, model) {
-  const predictions = [];
+  const due = [];
+  const declined = [];
   const lastByProduct = new Map();
 
   for (const order of customer.orders) {
@@ -594,20 +648,29 @@ function predictReorders(customer, model) {
     }
   }
 
+  const lastOrderAt = customer.lastOrderAt ? customer.lastOrderAt.getTime() : 0;
+
   for (const [name, last] of lastByProduct) {
     const entry = model.get(name);
     if (!entry) continue;
-    const due = new Date(last.getTime() + entry.days * 86400000);
-    predictions.push({
+    const dueAt = new Date(last.getTime() + entry.days * 86400000);
+    const record = {
       product: name,
-      dueAt: due,
-      daysOver: Math.floor((Date.now() - due.getTime()) / 86400000),
+      dueAt,
+      daysOver: Math.floor((Date.now() - dueAt.getTime()) / 86400000),
       interval: entry.days,
       sample: entry.sample
-    });
+    };
+
+    // Ordered after this fell due, and did not take it.
+    if (lastOrderAt > dueAt.getTime()) declined.push(record);
+    else due.push(record);
   }
 
-  return predictions.sort((a, b) => b.daysOver - a.daysOver);
+  due.sort((a, b) => b.daysOver - a.daysOver);
+  declined.sort((a, b) => b.daysOver - a.daysOver);
+  due.declined = declined;
+  return due;
 }
 
 /* ── affinity, geography, acquisition, discounts ──────── */
@@ -1287,6 +1350,24 @@ function renderSeason() {
       </div>
     </div>
 
+    ${(() => {
+      const curve = buildSeasonCurve(state.rawOrders, season.year);
+      if (curve.length < 2) return '';
+      const peak = curve.reduce((best, week) => (week.boxes > best.boxes ? week : best), curve[0]);
+      const max = peak.boxes || 1;
+      return `<div class="crm-detail-section-title">Weekly demand — plan next year's stock from this</div>
+        ${curve.map((week) => `
+          <div class="crm-variety-row">
+            <span class="crm-variety-name">${escapeHtml(shortDate(week.start))}</span>
+            <span class="crm-variety-bar-wrap"><span class="crm-variety-bar" style="width:${Math.round((week.boxes / max) * 100)}%;${week === peak ? 'background:var(--green)' : ''}"></span></span>
+            <span class="crm-variety-qty">${week.boxes}</span>
+          </div>`).join('')}
+        <div class="crm-season-note">
+          Peak week began <strong>${escapeHtml(shortDate(peak.start))}</strong> at ${peak.boxes} boxes.
+          Stock has to be on hand before that week, not during it.
+        </div>`;
+    })()}
+
     <div class="crm-detail-section-title">Boxes by variety</div>
     ${varieties.map(([name, qty]) => `
       <div class="crm-variety-row">
@@ -1538,6 +1619,22 @@ function openDetail(key) {
       <span class="crm-notes-status" id="crmNotesStatus"></span>
     </div>`;
 
+  const dueList = (customer.predictions || []).filter((entry) => entry.daysOver >= -14);
+  const declinedList = (customer.declined || []).filter((entry) => entry.daysOver > 0);
+
+  const predictionHtml = (dueList.length || declinedList.length)
+    ? `<div class="crm-detail-section-title">Reorder timing</div>
+       ${dueList.length ? dueList.slice(0, 5).map((entry) => `
+         <div class="crm-order-row">
+           <div>
+             <div>${escapeHtml(entry.product)}</div>
+             <div class="crm-order-meta">Lasts about ${entry.interval} days, measured from ${entry.sample} repeat purchase${entry.sample === 1 ? '' : 's'}</div>
+           </div>
+           <div class="crm-num"><span class="crm-pill ${entry.daysOver > 21 ? 'over' : entry.daysOver > 0 ? 'due' : 'ok'}">${entry.daysOver > 0 ? `${entry.daysOver}d over` : `in ${Math.abs(entry.daysOver)}d`}</span></div>
+         </div>`).join('') : ''}
+       ${declinedList.length ? `<div class="crm-order-meta" style="margin-top:10px">Bought before but not taken since it fell due — they have ordered since and chose otherwise: ${escapeHtml(declinedList.slice(0, 4).map((entry) => entry.product).join(', '))}</div>` : ''}`
+    : '';
+
   const reviews = state.feedback.get(key) || [];
   const feedbackHtml = reviews.length
     ? `<div class="crm-detail-section-title">Feedback given</div>
@@ -1573,6 +1670,7 @@ function openDetail(key) {
       </div>`).join('')}
     </div>
     ${favourites}
+    ${predictionHtml}
     ${tagsHtml}
     ${feedbackHtml}
     <div class="crm-detail-section-title">Order history</div>
@@ -1706,6 +1804,7 @@ function rebuild() {
   for (const customer of state.allCustomers) {
     const predictions = state.reorderModel.size ? predictReorders(customer, state.reorderModel) : [];
     customer.predictions = predictions;
+    customer.declined = predictions.declined || [];
     customer.predictedOver = predictions.length ? predictions[0].daysOver : null;
     customer.predictedProduct = predictions.length ? predictions[0].product : '';
   }
@@ -1847,7 +1946,16 @@ function wire() {
 
   document.getElementById('crmSeasonExport').addEventListener('click', exportSeasonCsv);
 
-  bindToggle('crmExcludeMango', 'excludeMango');
+  document.querySelectorAll('[data-group]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const group = button.dataset.group;
+      const shown = Object.values(state.groups).filter(Boolean).length;
+      if (state.groups[group] && shown === 1) return;   // never hide everything
+      state.groups[group] = !state.groups[group];
+      renderAll();
+    });
+  });
+
   bindToggle('crmExcludeOwner', 'excludeOwner');
   bindToggle('crmShowTest', 'showTest', rebuild);
 
