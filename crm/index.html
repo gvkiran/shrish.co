@@ -31,7 +31,7 @@
     <div class="crm-header-left">
       <img src="../images/brand/logo-small.png" alt="" class="crm-header-logo" />
       <div>
-        <div class="crm-header-title">Customers</div>
+        <div class="crm-header-title">Shrish CRM</div>
         <div class="crm-header-sub" id="crmDataNote">Loading…</div>
       </div>
     </div>
@@ -48,6 +48,14 @@
 
     <div id="crmContent" style="display:none">
 
+      <nav class="crm-nav" id="crmNav">
+        <button class="crm-nav-btn active" type="button" data-view="overview">Overview</button>
+        <button class="crm-nav-btn" type="button" data-view="customers">Customers</button>
+        <button class="crm-nav-btn" type="button" data-view="seasons">Seasons</button>
+        <button class="crm-nav-btn" type="button" data-view="convert">Convert</button>
+        <button class="crm-nav-btn" type="button" data-view="unpaid">Unpaid<span class="crm-nav-badge" id="crmUnpaidBadge" style="display:none">0</span></button>
+      </nav>
+
       <section class="crm-filterbar">
         <button class="crm-seg active" type="button" id="crmExcludeMango" aria-pressed="true">Hide mango-only</button>
         <button class="crm-seg active" type="button" id="crmExcludeOwner" aria-pressed="true">Hide my account</button>
@@ -55,83 +63,97 @@
         <span class="crm-filterbar-note" id="crmFilterNote"></span>
       </section>
 
-      <section class="crm-metrics" id="crmMetrics"></section>
-
-      <section class="crm-panel crm-panel-alert" id="crmUnpaidPanel" style="display:none">
-        <div class="crm-panel-head">
-          <h2>Unpaid checkouts</h2>
-          <span class="crm-panel-note">Reached payment, never completed. Nothing was charged.</span>
-        </div>
-        <div id="crmUnpaidRows"></div>
-      </section>
-
-      <section class="crm-panel crm-panel-season" id="crmInsightsPanel" style="display:none">
-        <div class="crm-panel-head">
-          <h2>What converts</h2>
-          <span class="crm-panel-note">Turning seasonal mango buyers into year-round customers</span>
-        </div>
-        <div id="crmInsightsBody"></div>
-      </section>
-
-      <section class="crm-panel crm-panel-season" id="crmSeasonPanel" style="display:none">
-        <div class="crm-panel-head">
-          <h2>Mango season</h2>
-          <div class="crm-list-tools">
-            <select id="crmSeasonSelect" aria-label="Season"></select>
-            <button class="crm-ghost-btn" type="button" id="crmSeasonExport">Export campaign list</button>
+      <!-- Overview -->
+      <div class="crm-view active" id="view-overview">
+        <section class="crm-metrics" id="crmMetrics"></section>
+        <section class="crm-panel">
+          <div class="crm-panel-head">
+            <h2>Reorder clock</h2>
+            <span class="crm-panel-note">Customers grouped by days since their last order</span>
           </div>
-        </div>
-        <div id="crmSeasonBody"></div>
-      </section>
+          <div class="crm-chart-legend" id="crmChartLegend"></div>
+          <div class="crm-chart-wrap"><canvas id="crmReorderChart" role="img" aria-label="Bar chart of customers grouped by days since last order"></canvas></div>
+        </section>
+      </div>
 
-      <section class="crm-panel">
-        <div class="crm-panel-head">
-          <h2>Reorder clock</h2>
-          <span class="crm-panel-note">Customers grouped by days since their last order</span>
-        </div>
-        <div class="crm-chart-legend" id="crmChartLegend"></div>
-        <div class="crm-chart-wrap"><canvas id="crmReorderChart" role="img" aria-label="Bar chart of customers grouped by days since last order"></canvas></div>
-      </section>
-
-      <section class="crm-panel">
-        <div class="crm-panel-head">
-          <h2>Segments</h2>
-          <span class="crm-panel-note">Tap to filter the list below</span>
-        </div>
-        <div class="crm-segments" id="crmSegments"></div>
-      </section>
-
-      <section class="crm-panel">
-        <div class="crm-panel-head">
-          <h2 id="crmListTitle">All customers</h2>
-          <div class="crm-list-tools">
-            <input type="search" id="crmSearch" placeholder="Search name, phone, email" autocomplete="off" />
-            <select id="crmSort" aria-label="Sort customers">
-              <option value="ltv">Sort: lifetime value</option>
-              <option value="recent">Sort: most recent order</option>
-              <option value="stale">Sort: longest since order</option>
-              <option value="orders">Sort: order count</option>
-              <option value="name">Sort: name</option>
-            </select>
-            <button class="crm-ghost-btn" type="button" id="crmExportBtn">Export CSV</button>
+      <!-- Customers -->
+      <div class="crm-view" id="view-customers">
+        <section class="crm-panel">
+          <div class="crm-panel-head">
+            <h2>Segments</h2>
+            <span class="crm-panel-note">Tap to filter the list below</span>
           </div>
-        </div>
-        <div class="crm-table-wrap">
-          <table class="crm-table">
-            <thead>
-              <tr>
-                <th>Customer</th>
-                <th>Orders</th>
-                <th>Lifetime</th>
-                <th>Last order</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="crmCustomerRows"></tbody>
-          </table>
-        </div>
-        <div class="crm-list-footer" id="crmListFooter"></div>
-      </section>
+          <div class="crm-segments" id="crmSegments"></div>
+        </section>
+
+        <section class="crm-panel">
+          <div class="crm-panel-head">
+            <h2 id="crmListTitle">All customers</h2>
+            <div class="crm-list-tools">
+              <input type="search" id="crmSearch" placeholder="Search name, phone, email" autocomplete="off" />
+              <select id="crmSort" aria-label="Sort customers">
+                <option value="ltv">Sort: lifetime value</option>
+                <option value="recent">Sort: most recent order</option>
+                <option value="stale">Sort: longest since order</option>
+                <option value="orders">Sort: order count</option>
+                <option value="name">Sort: name</option>
+              </select>
+              <button class="crm-ghost-btn" type="button" id="crmExportBtn">Export CSV</button>
+            </div>
+          </div>
+          <div class="crm-table-wrap">
+            <table class="crm-table">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Orders</th>
+                  <th>Lifetime</th>
+                  <th>Last order</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="crmCustomerRows"></tbody>
+            </table>
+          </div>
+          <div class="crm-list-footer" id="crmListFooter"></div>
+        </section>
+      </div>
+
+      <!-- Seasons -->
+      <div class="crm-view" id="view-seasons">
+        <section class="crm-panel crm-panel-season" id="crmSeasonPanel" style="display:none">
+          <div class="crm-panel-head">
+            <h2>Mango season</h2>
+            <div class="crm-list-tools">
+              <select id="crmSeasonSelect" aria-label="Season"></select>
+              <button class="crm-ghost-btn" type="button" id="crmSeasonExport">Export campaign list</button>
+            </div>
+          </div>
+          <div id="crmSeasonBody"></div>
+        </section>
+      </div>
+
+      <!-- Convert -->
+      <div class="crm-view" id="view-convert">
+        <section class="crm-panel crm-panel-season" id="crmInsightsPanel" style="display:none">
+          <div class="crm-panel-head">
+            <h2>What converts</h2>
+            <span class="crm-panel-note">Turning seasonal mango buyers into year-round customers</span>
+          </div>
+          <div id="crmInsightsBody"></div>
+        </section>
+      </div>
+
+      <!-- Unpaid -->
+      <div class="crm-view" id="view-unpaid">
+        <section class="crm-panel crm-panel-alert" id="crmUnpaidPanel" style="display:none">
+          <div class="crm-panel-head">
+            <h2>Unpaid checkouts</h2>
+            <span class="crm-panel-note">Reached payment, never completed. Nothing was charged.</span>
+          </div>
+          <div id="crmUnpaidRows"></div>
+        </section>
+      </div>
 
     </div>
   </main>

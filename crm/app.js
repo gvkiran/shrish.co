@@ -161,6 +161,7 @@ const state = {
   segment: 'all',
   search: '',
   sort: 'ltv',
+  view: 'overview',
   excludeMango: true,
   excludeOwner: true,
   showTest: false,
@@ -769,7 +770,17 @@ function renderUnpaid() {
   const rows = document.getElementById('crmUnpaidRows');
   if (!panel || !rows) return;
 
-  if (!state.unpaid.length) { panel.style.display = 'none'; return; }
+  const badge = document.getElementById('crmUnpaidBadge');
+  if (badge) {
+    badge.textContent = String(state.unpaid.length);
+    badge.style.display = state.unpaid.length ? 'inline-block' : 'none';
+  }
+
+  if (!state.unpaid.length) {
+    panel.style.display = 'block';
+    rows.innerHTML = '<div class="crm-empty">No unpaid checkouts. Everyone who reached payment finished it.</div>';
+    return;
+  }
   panel.style.display = 'block';
 
   const total = state.unpaid.reduce((sum, order) => sum + moneyNumber(order.totalPrice), 0);
@@ -865,6 +876,8 @@ async function sendRetryLink(orderId, button) {
   }
 }
 
+// Views share one data load and one render pass; switching is instant because
+// nothing is refetched. Only the chart needs special handling — see setView.
 function renderAll() {
   applyFilters();
   renderInsights();
@@ -876,11 +889,35 @@ function renderAll() {
   renderUnpaid();
 }
 
+function setView(view) {
+  state.view = view;
+
+  document.querySelectorAll('.crm-nav-btn').forEach((button) => {
+    const active = button.dataset.view === view;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-current', active ? 'page' : 'false');
+  });
+
+  document.querySelectorAll('.crm-view').forEach((node) => {
+    node.classList.toggle('active', node.id === `view-${view}`);
+  });
+
+  // Chart.js measures its canvas at construction time. Built inside a
+  // display:none container it computes a zero size and stays collapsed, so the
+  // chart is rebuilt whenever Overview becomes visible.
+  if (view === 'overview') renderChart();
+
+  try { localStorage.setItem('shrish_crm_view', view); } catch (error) { /* private mode */ }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function setSegment(id) {
   state.segment = id;
   renderSegments();
   renderList();
-  document.getElementById('crmListTitle')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Segment chips live on Customers, but the chart on Overview also drills in.
+  if (state.view !== 'customers') setView('customers');
+  else document.getElementById('crmListTitle')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /* ── detail ───────────────────────────────────────────────────────── */
@@ -987,6 +1024,10 @@ async function loadData() {
   document.getElementById('crmLoading').style.display = 'none';
   document.getElementById('crmContent').style.display = 'block';
   rebuild();
+
+  let saved = 'overview';
+  try { saved = localStorage.getItem('shrish_crm_view') || 'overview'; } catch (error) { /* private mode */ }
+  setView(document.getElementById(`view-${saved}`) ? saved : 'overview');
 }
 
 // Recomputes everything from the raw order list. Called on load and whenever a
@@ -1093,6 +1134,11 @@ function wire() {
       (onChange || renderAll)();
     });
   };
+
+  document.getElementById('crmNav').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-view]');
+    if (button) setView(button.dataset.view);
+  });
 
   document.getElementById('crmSeasonSelect').addEventListener('change', (event) => {
     state.season = Number(event.target.value);
