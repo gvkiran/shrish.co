@@ -360,7 +360,10 @@ body > * { position: relative; z-index: 1; }
 
 .admin-layout {
   display: grid;
-  grid-template-columns: 240px minmax(0,1fr) 300px;
+  /* Stats moved into the left sidebar, so the main column gets the 300px the
+     old right rail was taking. That rail was squeezing the orders table and
+     clipping the Actions buttons. */
+  grid-template-columns: 240px minmax(0,1fr);
   gap: 20px;
   align-items: start;
 }
@@ -478,7 +481,8 @@ body > * { position: relative; z-index: 1; }
   top: 74px;
 }
 
-.admin-stats { display: flex; flex-direction: column; gap: 12px; }
+/* Compact now that these sit in the 240px sidebar rather than a 300px rail. */
+.admin-stats { display: flex; flex-direction: column; gap: 8px; }
 
 .stat-card {
   background: var(--glass-light);
@@ -486,7 +490,7 @@ body > * { position: relative; z-index: 1; }
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
   border-radius: var(--r-lg);
-  padding: 18px 20px;
+  padding: 10px 13px;
   position: relative;
   overflow: hidden;
   transition: all var(--t-mid) var(--ease-out-expo);
@@ -524,6 +528,27 @@ body > * { position: relative; z-index: 1; }
 .stat-value.green { color: var(--green); }
 .stat-value.amber { color: var(--amber); }
 .stat-sub { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+
+/* renderStats() emits .s-label / .s-value, but only .stat-label / .stat-value
+   were ever defined, so these cards rendered unstyled. */
+.s-label {
+  font-size: 10px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--obs-300);
+  line-height: 1.2;
+}
+.s-value {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.15;
+  margin-top: 3px;
+  color: var(--gold-200);
+  font-variant-numeric: tabular-nums;
+}
+.s-value.gold  { color: var(--gold-300); }
+.s-value.green { color: var(--green); }
+.s-value.amber { color: var(--amber); }
 
 /* ═══════════════════════════════════════════════════════════════════
    MAIN CONTENT AREA

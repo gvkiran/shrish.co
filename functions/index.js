@@ -3164,12 +3164,16 @@ exports.sendOrderEmails = onDocumentCreated(
   }
 );
 
-// Fires once, when a tracking number first appears on a shipping order.
+// Emails the customer their tracking details.
 //
-// Guards are deliberately narrow. Editing an existing tracking number will NOT
-// resend (before and after are both non-empty), which trades "corrections are
-// not announced" for "customers never get duplicate shipping emails". The
-// shipmentEmailSentAt stamp is the backstop against retries.
+// Fires when the tracking number CHANGES and no email has gone out yet, or when
+// shipmentEmailSentAt is explicitly cleared (the admin "Resend" action).
+//
+// An earlier version also refused to fire whenever the order already had any
+// tracking number. That was wrong: if the first save happened before this
+// function was deployed, or the send failed, the order became permanently
+// unemailable and re-saving the tracking number did nothing. shipmentEmailSentAt
+// alone is sufficient to prevent duplicates.
 exports.sendShipmentEmail = onDocumentUpdated(
   {
     document: "orders/{orderId}",
@@ -3186,8 +3190,15 @@ exports.sendShipmentEmail = onDocumentUpdated(
     const afterTracking = String(after.trackingNumber || "").trim();
 
     if (!afterTracking) return;              // nothing to announce
-    if (beforeTracking) return;              // already had one: an edit, not a new shipment
-    if (after.shipmentEmailSentAt) return;   // idempotency backstop
+    if (after.shipmentEmailSentAt) return;   // already told them; the one real duplicate guard
+
+    // Two ways to trigger: the tracking number changed, or the admin pressed
+    // "send now" / "resend", which writes a new shipmentEmailRequestedAt.
+    const trackingChanged = afterTracking !== beforeTracking;
+    const resendRequested =
+      String(after.shipmentEmailRequestedAt || "") !== String(before.shipmentEmailRequestedAt || "");
+    if (!trackingChanged && !resendRequested) return;
+
     if (after.isTestOrder) return;           // never email a test order
     if (String(after.fulfillmentType || "pickup") !== "shipping") return;
     if (["cancelled", "no_show"].includes(String(after.status || ""))) return;

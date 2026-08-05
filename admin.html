@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css" />
-  <link rel="stylesheet" href="assets/css/admin-luxury.css?v=ship-modal-fix-20260805">
+  <link rel="stylesheet" href="assets/css/admin-luxury.css?v=stats-sidebar-20260805">
 </head>
 <body>
 
@@ -65,6 +65,9 @@
           <button class="admin-tab" onclick="switchTab('promos',this)">🎟️ Promo Codes</button>
           <button class="admin-tab" onclick="switchTab('pickup-tally',this)">🧾 Pickup Tally</button>
         </div>
+
+        <div class="sidebar-title" style="margin-top:22px">At a glance</div>
+        <div class="admin-stats" id="adminStats"></div>
       </aside>
 
       <main class="admin-main">
@@ -882,9 +885,6 @@
         </section>
       </main>
 
-        <aside class="admin-stats-rail">
-        <div class="admin-stats" id="adminStats"></div>
-      </aside>
     </div>
   </div>
 </div>
