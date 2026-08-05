@@ -962,10 +962,89 @@ function isShippingOrder(order = {}) {
   return order.fulfillmentType === 'shipping' || order.location === 'shipping';
 }
 
+// Carrier tracking URL formats verified against the carriers' live sites.
+// `restDays` are JS getDay() values skipped when estimating delivery:
+// USPS delivers Mon-Sat (skip Sunday), UPS ground is Mon-Fri (skip Sat+Sun).
+const SHIPPING_CARRIERS = {
+  usps: {
+    label: 'USPS',
+    minDays: 2,
+    maxDays: 3,
+    restDays: [0],
+    trackingUrl: (num) => `https://tools.usps.com/go/TrackConfirmAction?qtc_tLabels1=${encodeURIComponent(num)}`
+  },
+  ups: {
+    label: 'UPS',
+    minDays: 3,
+    maxDays: 5,
+    restDays: [0, 6],
+    trackingUrl: (num) => `https://www.ups.com/track?loc=en_US&requester=ST&tracknum=${encodeURIComponent(num)}`
+  },
+  other: {
+    label: 'Other',
+    minDays: 3,
+    maxDays: 7,
+    restDays: [0],
+    trackingUrl: () => ''
+  }
+};
+
+function shippingCarrierConfig(key) {
+  return SHIPPING_CARRIERS[key] || SHIPPING_CARRIERS.other;
+}
+
+// Parses YYYY-MM-DD manually. `new Date('2026-08-05')` parses as UTC midnight,
+// which shifts the date backwards in US timezones.
+function addDeliveryDays(startValue, days, restDays = [0]) {
+  const parts = String(startValue || '').split('-').map((part) => parseInt(part, 10));
+  if (parts.length !== 3 || parts.some((part) => Number.isNaN(part))) return '';
+  const date = new Date(parts[0], parts[1] - 1, parts[2]);
+  let added = 0;
+  let guard = 0;
+  while (added < days && guard < 60) {
+    date.setDate(date.getDate() + 1);
+    guard += 1;
+    if (!restDays.includes(date.getDay())) added += 1;
+  }
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function formatDeliveryWindow(from, to) {
+  if (!from && !to) return '';
+  const pretty = (value) => {
+    const parts = String(value || '').split('-').map((part) => parseInt(part, 10));
+    if (parts.length !== 3 || parts.some((part) => Number.isNaN(part))) return '';
+    return new Date(parts[0], parts[1] - 1, parts[2])
+      .toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+  const start = pretty(from);
+  const end = pretty(to);
+  if (start && end && start !== end) return `${start} – ${end}`;
+  return start || end;
+}
+
 // Active Orders location cell: show the full destination address for shipping
 // orders. The stored `locationLabel` is intentionally coarse (city/state/zip)
 // because it also drives location grouping and pickup tallies, so the full
 // street address is read from the saved `shippingAddress` object instead.
+function orderTrackingCellHtml(order = {}) {
+  const trackingNumber = String(order.trackingNumber || '').trim();
+  if (!trackingNumber) return '';
+  const carrierLabel = String(order.carrierLabel || '').trim();
+  const trackingUrl = String(order.trackingUrl || '').trim();
+  const deliveryWindow = formatDeliveryWindow(order.estimatedDeliveryFrom, order.estimatedDeliveryTo);
+  const numberHtml = trackingUrl
+    ? `<a href="${escapeHtml(trackingUrl)}" target="_blank" rel="noopener noreferrer" style="color:#C8791A">${escapeHtml(trackingNumber)}</a>`
+    : escapeHtml(trackingNumber);
+  return `<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(200,121,26,.2);font-size:11px;line-height:1.4;white-space:normal">
+      <div style="text-transform:uppercase;letter-spacing:.04em;color:var(--text-light)">${escapeHtml(carrierLabel || 'Tracking')}</div>
+      <div>${numberHtml}</div>
+      ${deliveryWindow ? `<div style="opacity:.75">Expected ${escapeHtml(deliveryWindow)}</div>` : ''}
+    </div>`;
+}
+
 function orderLocationCellHtml(order = {}) {
   const address = order.shippingAddress || null;
   if (isShippingOrder(order) && address && (address.addressLine1 || address.city)) {
@@ -977,6 +1056,7 @@ function orderLocationCellHtml(order = {}) {
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-light);margin-bottom:2px">Shipping to</div>
         ${name ? `<div style="font-weight:600">${escapeHtml(name)}</div>` : ''}
         ${lines}
+        ${orderTrackingCellHtml(order)}
       </div>`;
   }
   return escapeHtml(order.locationLabel || order.location || '—');
@@ -4546,6 +4626,141 @@ ${printable.map(buildShippingLabelHtml).join('')}
 }
 
 // Bulk-close orders once they are packed and handed to the carrier.
+let shipTrackingTargetIds = [];
+
+function openShipTrackingModal() {
+  const selected = selectedOrdersOnSheet('shipping');
+  if (!selected.length) {
+    showToast('Tick the orders you have shipped first.');
+    return;
+  }
+
+  shipTrackingTargetIds = selected.map((order) => order.id);
+
+  const summary = document.getElementById('shipTrackingSummary');
+  if (summary) {
+    summary.textContent = `${selected.length} order${selected.length === 1 ? '' : 's'} selected. Leave a tracking number blank to mark that order shipped without one.`;
+  }
+
+  const carrierInput = document.getElementById('shipCarrierInput');
+  if (carrierInput) carrierInput.value = 'usps';
+  const dateInput = document.getElementById('shipDateInput');
+  if (dateInput) dateInput.value = todayDateInputValue();
+  recomputeShipEstimate();
+
+  const rows = document.getElementById('shipTrackingRows');
+  if (rows) {
+    rows.innerHTML = selected.map((order) => {
+      const name = String(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`).trim();
+      return `<div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-top:1px solid rgba(200,121,26,.18)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700">${escapeHtml(order.orderNumber || order.id)}</div>
+          <div style="font-size:12px;opacity:.72">${escapeHtml(name || 'No name saved')}</div>
+        </div>
+        <input class="ship-tracking-input" data-order-id="${escapeHtml(order.id)}" type="text" maxlength="60" placeholder="Tracking number" autocomplete="off" style="flex:1.25;padding:9px 11px;border-radius:10px;border:1px solid rgba(200,121,26,.4);background:#120c05;color:#EFE4CE;font-size:14px">
+      </div>`;
+    }).join('');
+  }
+
+  const msg = document.getElementById('shipTrackingMsg');
+  if (msg) msg.textContent = '';
+  const btn = document.getElementById('shipTrackingSaveBtn');
+  if (btn) { btn.disabled = false; btn.textContent = 'Save & Mark Shipped'; }
+
+  document.getElementById('shipTrackingModal')?.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeShipTrackingModal() {
+  shipTrackingTargetIds = [];
+  document.getElementById('shipTrackingModal')?.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function handleShipTrackingOverlayClick(event) {
+  if (event.target?.id === 'shipTrackingModal') closeShipTrackingModal();
+}
+
+function recomputeShipEstimate() {
+  const carrier = shippingCarrierConfig(document.getElementById('shipCarrierInput')?.value);
+  const shipDate = document.getElementById('shipDateInput')?.value || todayDateInputValue();
+  const from = document.getElementById('shipEtaFromInput');
+  const to = document.getElementById('shipEtaToInput');
+  if (from) from.value = addDeliveryDays(shipDate, carrier.minDays, carrier.restDays);
+  if (to) to.value = addDeliveryDays(shipDate, carrier.maxDays, carrier.restDays);
+}
+
+// Phase 1: records shipment details only. No customer email is sent yet —
+// that arrives with the sendShipmentEmail Cloud Function in Phase 2.
+async function submitShipTracking() {
+  const msg = document.getElementById('shipTrackingMsg');
+  const btn = document.getElementById('shipTrackingSaveBtn');
+  const showMsg = (text, color) => { if (msg) { msg.style.color = color; msg.textContent = text; } };
+
+  const carrierKey = document.getElementById('shipCarrierInput')?.value || 'usps';
+  const carrier = shippingCarrierConfig(carrierKey);
+  const shipDate = document.getElementById('shipDateInput')?.value || todayDateInputValue();
+  const etaFrom = document.getElementById('shipEtaFromInput')?.value || '';
+  const etaTo = document.getElementById('shipEtaToInput')?.value || '';
+
+  if (etaFrom && etaTo && etaTo < etaFrom) {
+    showMsg('The delivery window ends before it starts.', '#e0736b');
+    return;
+  }
+
+  const entries = Array.from(document.querySelectorAll('.ship-tracking-input'))
+    .map((input) => ({
+      id: input.dataset.orderId || '',
+      trackingNumber: String(input.value || '').trim()
+    }))
+    .filter((entry) => entry.id && shipTrackingTargetIds.includes(entry.id));
+
+  if (!entries.length) { closeShipTrackingModal(); return; }
+
+  const tracked = entries.filter((entry) => entry.trackingNumber).length;
+  const confirmText = tracked === entries.length
+    ? `Mark ${entries.length} order${entries.length === 1 ? '' : 's'} as shipped with tracking?`
+    : `Mark ${entries.length} order${entries.length === 1 ? '' : 's'} as shipped? ${tracked} will carry a tracking number, ${entries.length - tracked} will not.`;
+  if (!window.confirm(confirmText)) return;
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+  showMsg('Saving shipment details...', '#B3A287');
+
+  const nowIso = new Date().toISOString();
+  let saved = 0;
+
+  try {
+    for (const entry of entries) {
+      // Reuses the existing status path so order_locks cleanup stays identical.
+      await applyOrderStatus(entry.id, 'fulfilled', true);
+      const hasTracking = Boolean(entry.trackingNumber);
+      await updateDoc(doc(db, 'orders', entry.id), {
+        shippedAt: nowIso,
+        shipDate,
+        carrier: hasTracking ? carrierKey : '',
+        carrierLabel: hasTracking ? carrier.label : '',
+        trackingNumber: entry.trackingNumber,
+        trackingUrl: hasTracking ? carrier.trackingUrl(entry.trackingNumber) : '',
+        estimatedDeliveryFrom: hasTracking ? etaFrom : '',
+        estimatedDeliveryTo: hasTracking ? etaTo : '',
+        updatedAt: nowIso
+      });
+      saved += 1;
+    }
+  } catch (error) {
+    console.error('Could not save shipment details', error);
+    if (btn) { btn.disabled = false; btn.textContent = 'Save & Mark Shipped'; }
+    showMsg(`Saved ${saved} of ${entries.length}. Check the console and retry the rest.`, '#e0736b');
+    renderOrders();
+    return;
+  }
+
+  closeShipTrackingModal();
+  state.selectedReminderOrderIds.clear();
+  renderOrders();
+  showToast(`${saved} order${saved === 1 ? '' : 's'} marked shipped.`);
+}
+
 async function markSelectedShippingFulfilled() {
   const selected = selectedOrdersOnSheet('shipping');
   if (!selected.length) {
@@ -5377,6 +5592,11 @@ window.printActiveOrders = printActiveOrders;
 window.printShippingOrders = printShippingOrders;
 window.printShippingLabels = printShippingLabels;
 window.markSelectedShippingFulfilled = markSelectedShippingFulfilled;
+window.openShipTrackingModal = openShipTrackingModal;
+window.closeShipTrackingModal = closeShipTrackingModal;
+window.handleShipTrackingOverlayClick = handleShipTrackingOverlayClick;
+window.recomputeShipEstimate = recomputeShipEstimate;
+window.submitShipTracking = submitShipTracking;
 window.exportCSV = exportCSV;
 window.renderCustomers = renderCustomers;
 window.exportCustomersCSV = exportCustomersCSV;

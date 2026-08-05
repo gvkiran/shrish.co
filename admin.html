@@ -96,7 +96,7 @@
               <button class="toolbar-btn print-btn" id="printChecklistBtn" onclick="printActiveOrders()" title="Print pickup checklist for today">🖨️ Print Checklist</button>
               <button class="toolbar-btn print-btn" id="printShippingBtn" type="button" onclick="printShippingOrders()" style="display:none;" title="Print packing slips for the selected shipping orders (or all filtered if none selected)">📦 Print Packing Slips</button>
               <button class="toolbar-btn print-btn" id="printLabelsBtn" type="button" onclick="printShippingLabels()" style="display:none;" title="Print 4x6 thermal shipping labels (Rollo / DYMO) for the selected orders">🏷️ 4×6 Labels</button>
-              <button class="toolbar-btn" id="markShippedBtn" type="button" onclick="markSelectedShippingFulfilled()" style="display:none;" title="Mark the selected shipping orders as fulfilled">✓ Mark Selected Shipped</button>
+              <button class="toolbar-btn" id="markShippedBtn" type="button" onclick="openShipTrackingModal()" style="display:none;" title="Add tracking numbers and mark the selected shipping orders as shipped">✓ Mark Selected Shipped</button>
               <button class="toolbar-btn" onclick="exportCSV()">⬇ Export CSV</button>
             </div>
           </div>
@@ -223,6 +223,49 @@
               <div class="order-editor-actions">
                 <button class="toolbar-btn" type="button" onclick="closeRefundModal()">Cancel</button>
                 <button class="toolbar-btn btn-refund-issue" id="refundIssueBtn" type="button" onclick="submitOrderRefund()">Issue Refund</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-editor-modal" id="shipTrackingModal" onclick="handleShipTrackingOverlayClick(event)">
+          <div class="order-editor-card reminder-editor-card" role="dialog" aria-modal="true" aria-labelledby="shipTrackingTitle">
+            <div class="order-editor-head">
+              <div>
+                <h3 id="shipTrackingTitle">Mark Shipped &amp; Add Tracking</h3>
+                <p id="shipTrackingSummary">Add tracking numbers before marking these orders shipped.</p>
+              </div>
+              <button class="order-editor-close" type="button" onclick="closeShipTrackingModal()" aria-label="Close">&times;</button>
+            </div>
+            <div class="order-editor-body" style="padding:12px 6px">
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <div style="flex:1;min-width:150px">
+                  <label for="shipCarrierInput" style="display:block;margin:0 0 4px;font-size:13px;font-weight:700">Carrier</label>
+                  <select id="shipCarrierInput" onchange="recomputeShipEstimate()" style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid rgba(200,121,26,.4);background:#120c05;color:#EFE4CE;font-size:15px">
+                    <option value="usps">USPS</option>
+                    <option value="ups">UPS</option>
+                    <option value="other">Other (no tracking link)</option>
+                  </select>
+                </div>
+                <div style="flex:1;min-width:150px">
+                  <label for="shipDateInput" style="display:block;margin:0 0 4px;font-size:13px;font-weight:700">Ship date</label>
+                  <input id="shipDateInput" type="date" onchange="recomputeShipEstimate()" style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid rgba(200,121,26,.4);background:#120c05;color:#EFE4CE;font-size:15px">
+                </div>
+              </div>
+
+              <label style="display:block;margin:14px 0 4px;font-size:13px;font-weight:700">Expected delivery window</label>
+              <div style="display:flex;gap:10px;align-items:center">
+                <input id="shipEtaFromInput" type="date" aria-label="Expected delivery from" style="flex:1;padding:11px 13px;border-radius:10px;border:1px solid rgba(200,121,26,.4);background:#120c05;color:#EFE4CE;font-size:15px">
+                <span style="font-size:13px;opacity:.75">to</span>
+                <input id="shipEtaToInput" type="date" aria-label="Expected delivery to" style="flex:1;padding:11px 13px;border-radius:10px;border:1px solid rgba(200,121,26,.4);background:#120c05;color:#EFE4CE;font-size:15px">
+              </div>
+              <div style="margin-top:6px;font-size:12px;opacity:.7">Auto-filled from the carrier and ship date. Edit if you know better.</div>
+
+              <div id="shipTrackingRows" style="margin-top:16px"></div>
+              <div id="shipTrackingMsg" style="min-height:18px;margin-top:10px;font-size:13px;font-weight:600"></div>
+              <div class="order-editor-actions">
+                <button class="toolbar-btn" type="button" onclick="closeShipTrackingModal()">Cancel</button>
+                <button class="toolbar-btn btn-refund-issue" id="shipTrackingSaveBtn" type="button" onclick="submitShipTracking()">Save &amp; Mark Shipped</button>
               </div>
             </div>
           </div>
