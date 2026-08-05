@@ -131,10 +131,34 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Offline sales: booth, WhatsApp, phone, and the admin manual order form.
+    // These live in `orders` alongside website sales so revenue, lifetime value
+    // and CRM segments stay correct without unioning two schemas. `source` is
+    // the discriminator, so they remain trivially filterable and auditable.
+    //
+    // This is not a privilege escalation: isAdmin() already permits unrestricted
+    // update and delete on every order below. Create was the only missing verb,
+    // which is why the existing "+ Manual Order" form silently failed.
+    function newAdminOfflineOrderIsValid() {
+      return isAdmin()
+        && request.resource.data.source in ['booth', 'whatsapp', 'phone', 'market', 'referral', 'admin_manual']
+        && request.resource.data.phoneDigits is string
+        && request.resource.data.phoneDigits.size() <= 15
+        && request.resource.data.items is list
+        && request.resource.data.items.size() >= 1
+        && request.resource.data.items.size() <= 60
+        && request.resource.data.totalPrice is number
+        && request.resource.data.totalPrice >= 0
+        && request.resource.data.totalPrice <= 100000
+        && request.resource.data.skipCustomerEmail == true;
+    }
+
     match /orders/{orderId} {
-      allow create: if orderId.matches('^[A-Za-z0-9]{20}$')
-        && newOrderCustomerIsValid()
-        && newWebsiteOrderIsValid();
+      allow create: if (
+          orderId.matches('^[A-Za-z0-9]{20}$')
+          && newOrderCustomerIsValid()
+          && newWebsiteOrderIsValid()
+        ) || newAdminOfflineOrderIsValid();
       allow get: if isAdmin()
         || (
           isSignedIn()

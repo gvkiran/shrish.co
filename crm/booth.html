@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Shrish Booth Entry</title>
+  <link rel="icon" href="../images/brand/logo-small.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=booth-20260805" />
+  <link rel="stylesheet" href="booth.css?v=booth-20260805" />
+  <script src="../assets/js/firebase-config.js"></script>
+  <script src="../assets/js/data.js"></script>
+</head>
+<body>
+
+<div id="loginScreen" class="crm-login-wrap">
+  <div class="crm-login-card">
+    <img src="../images/brand/logo-small.png" alt="Shrish" class="crm-login-logo" />
+    <h1>Booth Entry</h1>
+    <p class="crm-login-sub">Owner access only.</p>
+    <input type="email" id="crmEmail" placeholder="Admin email" autocomplete="username" />
+    <input type="password" id="crmPassword" placeholder="Password" autocomplete="current-password" />
+    <button type="button" id="crmLoginBtn">Sign in</button>
+    <p class="crm-login-error" id="crmLoginErr"></p>
+    <a class="crm-login-back" href="index.html">Back to CRM</a>
+  </div>
+</div>
+
+<div id="boothApp" style="display:none">
+
+  <header class="booth-header">
+    <div>
+      <div class="booth-title">Booth entry</div>
+      <div class="booth-tally" id="boothTally">No sales yet this session</div>
+    </div>
+    <div class="booth-header-right">
+      <select id="boothLocation" aria-label="Booth location">
+        <option value="booth">Booth / market</option>
+        <option value="chesterfield">Chesterfield</option>
+        <option value="shortpump">Short Pump</option>
+        <option value="mechanicsville">Mechanicsville</option>
+      </select>
+      <a class="crm-ghost-btn" href="index.html">CRM</a>
+    </div>
+  </header>
+
+  <main class="booth-main">
+
+    <section class="booth-card">
+      <label class="booth-label" for="boothPhone">Phone number</label>
+      <input class="booth-phone" id="boothPhone" type="tel" inputmode="numeric" autocomplete="off"
+             placeholder="10 digits" maxlength="14" />
+      <div class="booth-lookup" id="boothLookup">Enter a phone number to check for a returning customer.</div>
+      <div class="booth-name-row">
+        <input class="booth-input" id="boothName" type="text" placeholder="Name (optional)" autocomplete="off" />
+        <input class="booth-input" id="boothEmail" type="email" placeholder="Email (optional)" autocomplete="off" />
+      </div>
+    </section>
+
+    <section class="booth-card">
+      <div class="booth-card-head">
+        <span class="booth-label">Products</span>
+        <input class="booth-search" id="boothSearch" type="search" placeholder="Filter" autocomplete="off" />
+      </div>
+      <div class="booth-cats" id="boothCats"></div>
+      <div class="booth-grid" id="boothGrid"></div>
+    </section>
+
+    <section class="booth-card" id="boothCartCard" style="display:none">
+      <div class="booth-label">This sale</div>
+      <div id="boothCart"></div>
+    </section>
+
+  </main>
+
+  <div class="booth-bar">
+    <div class="booth-bar-total">
+      <span class="booth-bar-label">Total</span>
+      <span class="booth-bar-value" id="boothTotal">$0.00</span>
+    </div>
+    <select id="boothPayment" aria-label="Payment method">
+      <option value="cash">Cash</option>
+      <option value="zelle">Zelle</option>
+      <option value="card">Card</option>
+      <option value="unpaid">Unpaid</option>
+    </select>
+    <button class="booth-clear" type="button" id="boothClear">Clear</button>
+    <button class="booth-save" type="button" id="boothSave" disabled>Save sale</button>
+  </div>
+
+</div>
+
+<div class="booth-toast" id="boothToast"></div>
+
+<script type="module" src="booth.js?v=booth-20260805"></script>
+</body>
+</html>
