@@ -509,6 +509,140 @@ function applyFilters() {
   if (note) note.textContent = notes.length ? notes.join(' · ') : '';
 }
 
+/* ── what converts ────────────────────────────────────── */
+
+// Below this many customers a percentage is noise, not a signal. Products with
+// smaller samples are still listed but shown as counts without a rate.
+const MIN_SAMPLE = 5;
+
+// Answers the question the two halves of the business raise: mango buyers are
+// seasonal and numerous, year-round customers are few. What do the few have in
+// common, and which non-mango product do mango buyers actually reach for?
+function buildProductInsights(customers) {
+  const mangoBuyers = customers.filter((customer) => customer.mangoQty > 0);
+  const crossedOver = mangoBuyers.filter((customer) => customer.otherQty > 0);
+
+  // Non-mango products bought by people who also bought mangoes, ranked by how
+  // many distinct customers bought them — not by units, which one bulk order
+  // could distort.
+  const bridge = new Map();
+  for (const customer of crossedOver) {
+    for (const order of customer.orders) {
+      for (const item of Array.isArray(order.items) ? order.items : []) {
+        if (isMangoItem(item)) continue;
+        const name = String(item.name || '').trim();
+        if (!name) continue;
+        if (!bridge.has(name)) bridge.set(name, new Set());
+        bridge.get(name).add(customer.key);
+      }
+    }
+  }
+
+  // Conversion by first-order product: of everyone whose first order contained
+  // product X, how many ever ordered again?
+  const firstProduct = new Map();
+  for (const customer of customers) {
+    const first = customer.orders[customer.orders.length - 1];
+    if (!first) continue;
+    const returned = customer.paidOrderCount >= 2;
+    const names = new Set(
+      (Array.isArray(first.items) ? first.items : [])
+        .map((item) => String(item.name || '').trim())
+        .filter(Boolean)
+    );
+    for (const name of names) {
+      if (!firstProduct.has(name)) firstProduct.set(name, { name, total: 0, returned: 0 });
+      const entry = firstProduct.get(name);
+      entry.total += 1;
+      if (returned) entry.returned += 1;
+    }
+  }
+
+  const conversion = [...firstProduct.values()]
+    .map((entry) => ({ ...entry, rate: entry.total ? entry.returned / entry.total : 0 }))
+    .sort((a, b) => {
+      const aOk = a.total >= MIN_SAMPLE;
+      const bOk = b.total >= MIN_SAMPLE;
+      if (aOk !== bOk) return aOk ? -1 : 1;   // usable samples first
+      if (aOk) return b.rate - a.rate;
+      return b.total - a.total;
+    });
+
+  return {
+    mangoBuyers: mangoBuyers.length,
+    crossedOver: crossedOver.length,
+    crossoverRate: mangoBuyers.length ? crossedOver.length / mangoBuyers.length : 0,
+    bridge: [...bridge.entries()]
+      .map(([name, buyers]) => ({ name, buyers: buyers.size }))
+      .sort((a, b) => b.buyers - a.buyers),
+    conversion
+  };
+}
+
+function renderInsights() {
+  const panel = document.getElementById('crmInsightsPanel');
+  // Always computed on the unfiltered population: this question is about the
+  // whole business, not the currently filtered view.
+  const data = buildProductInsights(state.allCustomers);
+
+  if (!data.mangoBuyers) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+
+  const bridgeRows = data.bridge.slice(0, 10);
+  const maxBuyers = bridgeRows.length ? bridgeRows[0].buyers : 1;
+
+  const usable = data.conversion.filter((entry) => entry.total >= MIN_SAMPLE).slice(0, 10);
+
+  document.getElementById('crmInsightsBody').innerHTML = `
+    <div class="crm-metrics" style="margin-bottom:16px">
+      <div class="crm-metric">
+        <div class="crm-metric-label">Mango buyers</div>
+        <div class="crm-metric-value">${data.mangoBuyers}</div>
+        <div class="crm-metric-note">bought fresh mangoes at least once</div>
+      </div>
+      <div class="crm-metric ${data.crossoverRate >= 0.15 ? 'is-good' : 'is-warn'}">
+        <div class="crm-metric-label">Crossed over</div>
+        <div class="crm-metric-value">${data.crossedOver}</div>
+        <div class="crm-metric-note">${Math.round(data.crossoverRate * 100)}% also bought something else</div>
+      </div>
+      <div class="crm-metric">
+        <div class="crm-metric-label">Still mango only</div>
+        <div class="crm-metric-value">${data.mangoBuyers - data.crossedOver}</div>
+        <div class="crm-metric-note">the conversion opportunity</div>
+      </div>
+    </div>
+
+    <div class="crm-detail-section-title">What mango buyers also buy</div>
+    ${bridgeRows.length
+      ? bridgeRows.map((row) => `
+        <div class="crm-variety-row">
+          <span class="crm-variety-name">${escapeHtml(row.name)}</span>
+          <span class="crm-variety-bar-wrap"><span class="crm-variety-bar" style="width:${Math.round((row.buyers / maxBuyers) * 100)}%"></span></span>
+          <span class="crm-variety-qty">${row.buyers}</span>
+        </div>`).join('')
+      : '<div class="crm-empty">No mango buyer has bought anything else yet.</div>'}
+
+    <div class="crm-detail-section-title">Repeat rate by first product bought</div>
+    ${usable.length
+      ? `<table class="crm-table"><thead><tr>
+          <th>First product</th><th>Customers</th><th>Came back</th><th>Rate</th>
+        </tr></thead><tbody>
+        ${usable.map((entry) => `<tr>
+          <td>${escapeHtml(entry.name)}</td>
+          <td class="crm-num">${entry.total}</td>
+          <td class="crm-num">${entry.returned}</td>
+          <td class="crm-num">${Math.round(entry.rate * 100)}%</td>
+        </tr>`).join('')}
+        </tbody></table>`
+      : `<div class="crm-empty">No product has been the first purchase for ${MIN_SAMPLE}+ customers yet.</div>`}
+
+    <div class="crm-season-note">
+      Rates are only shown for products bought first by ${MIN_SAMPLE} or more customers. Below that a percentage
+      swings wildly on one person and would mislead. Bridge products are ranked by number of distinct
+      customers, not units, so a single bulk order cannot distort the order.
+    </div>`;
+}
+
 /* ── mango season ─────────────────────────────────────── */
 
 function currentSeason() {
@@ -733,6 +867,7 @@ async function sendRetryLink(orderId, button) {
 
 function renderAll() {
   applyFilters();
+  renderInsights();
   renderSeason();
   renderMetrics();
   renderChart();
