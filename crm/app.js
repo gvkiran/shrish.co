@@ -67,8 +67,95 @@ function isMangoItem(item = {}) {
   return MANGO_VARIETIES.some((variety) => name.includes(variety) || id === variety);
 }
 
+// A mango "season" is keyed by calendar year. Fresh mango sells roughly
+// April-July in one hemisphere-summer block, so it never straddles a year
+// boundary and the year alone is an unambiguous season key.
+function seasonKey(date) {
+  return date ? date.getFullYear() : null;
+}
+
+function itemLineTotal(item = {}) {
+  const qty = Math.max(1, Number(item.qty || 1));
+  const line = moneyNumber(item.lineTotal);
+  return line > 0 ? line : moneyNumber(item.price) * qty;
+}
+
+// Builds one record per mango season. Deliberately separate from the customer
+// rollup: seasons answer "who bought mangoes and what did they buy", which is a
+// different question from "who is my customer".
+function buildSeasons(orders) {
+  const seasons = new Map();
+
+  for (const order of orders) {
+    if (order.isTestOrder) continue;
+    if (INCOMPLETE_STATUSES.has(order.status || 'pending')) continue;
+    if (NON_REVENUE_STATUSES.has(order.status || 'pending')) continue;
+
+    const created = toDate(order.createdAt);
+    const key = seasonKey(created);
+    if (!key) continue;
+
+    const mangoItems = (Array.isArray(order.items) ? order.items : []).filter(isMangoItem);
+    if (!mangoItems.length) continue;
+
+    if (!seasons.has(key)) {
+      seasons.set(key, {
+        year: key,
+        customers: new Map(),
+        varieties: new Map(),
+        boxes: 0,
+        revenue: 0,
+        orders: 0,
+        firstOrderAt: null,
+        lastOrderAt: null
+      });
+    }
+
+    const season = seasons.get(key);
+    season.orders += 1;
+    if (!season.firstOrderAt || created < season.firstOrderAt) season.firstOrderAt = created;
+    if (!season.lastOrderAt || created > season.lastOrderAt) season.lastOrderAt = created;
+
+    const phone = normalizeDigits(order.phoneDigits || order.phone);
+    if (!season.customers.has(phone)) {
+      season.customers.set(phone, {
+        key: phone,
+        name: String(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`).trim(),
+        email: String(order.email || '').trim(),
+        phone: String(order.phone || '').trim(),
+        boxes: 0,
+        spend: 0,
+        orders: 0,
+        varieties: new Map()
+      });
+    }
+    const buyer = season.customers.get(phone);
+    buyer.orders += 1;
+    if (!buyer.name) buyer.name = String(order.fullName || '').trim();
+    if (!buyer.email) buyer.email = String(order.email || '').trim();
+
+    for (const item of mangoItems) {
+      const qty = Math.max(1, Number(item.qty || 1));
+      const value = itemLineTotal(item);
+      const name = String(item.name || 'Unknown').trim();
+
+      season.boxes += qty;
+      season.revenue += value;
+      season.varieties.set(name, (season.varieties.get(name) || 0) + qty);
+
+      buyer.boxes += qty;
+      buyer.spend += value;
+      buyer.varieties.set(name, (buyer.varieties.get(name) || 0) + qty);
+    }
+  }
+
+  return [...seasons.values()].sort((a, b) => b.year - a.year);
+}
+
 const state = {
   allCustomers: [],
+  seasons: [],
+  season: null,
   customers: [],
   unpaid: [],
   segment: 'all',
@@ -422,6 +509,125 @@ function applyFilters() {
   if (note) note.textContent = notes.length ? notes.join(' · ') : '';
 }
 
+/* ── mango season ─────────────────────────────────────── */
+
+function currentSeason() {
+  return state.seasons.find((season) => season.year === state.season) || state.seasons[0] || null;
+}
+
+function renderSeason() {
+  const panel = document.getElementById('crmSeasonPanel');
+  if (!state.seasons.length) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+
+  const select = document.getElementById('crmSeasonSelect');
+  select.innerHTML = state.seasons
+    .map((season) => `<option value="${season.year}" ${season.year === state.season ? 'selected' : ''}>${season.year} season</option>`)
+    .join('');
+
+  const season = currentSeason();
+  if (!season) return;
+
+  const buyers = [...season.customers.values()].sort((a, b) => b.spend - a.spend);
+  const repeat = buyers.filter((buyer) => buyer.orders >= 2).length;
+  const avgBoxes = buyers.length ? season.boxes / buyers.length : 0;
+
+  const varieties = [...season.varieties.entries()].sort((a, b) => b[1] - a[1]);
+  const maxQty = varieties.length ? varieties[0][1] : 1;
+
+  // Cross-season retention needs a prior season to compare against. Say so
+  // rather than showing a zero that looks like a finding.
+  const prior = state.seasons.find((entry) => entry.year === season.year - 1);
+  let retentionHtml;
+  if (prior) {
+    const returned = [...season.customers.keys()].filter((key) => prior.customers.has(key)).length;
+    const rate = prior.customers.size ? Math.round((returned / prior.customers.size) * 100) : 0;
+    retentionHtml = `<div class="crm-season-note">
+      <strong>${returned}</strong> of ${prior.customers.size} ${prior.year} buyers came back in ${season.year} — ${rate}% season-over-season retention.
+    </div>`;
+  } else {
+    retentionHtml = `<div class="crm-season-note">
+      Season-over-season retention needs a second season to compare against. After next season this will show how many ${season.year} buyers returned.
+    </div>`;
+  }
+
+  document.getElementById('crmSeasonBody').innerHTML = `
+    <div class="crm-metrics" style="margin-bottom:16px">
+      <div class="crm-metric">
+        <div class="crm-metric-label">Mango buyers</div>
+        <div class="crm-metric-value">${buyers.length}</div>
+        <div class="crm-metric-note">${repeat} ordered more than once</div>
+      </div>
+      <div class="crm-metric">
+        <div class="crm-metric-label">Boxes sold</div>
+        <div class="crm-metric-value">${season.boxes}</div>
+        <div class="crm-metric-note">${avgBoxes.toFixed(1)} per buyer</div>
+      </div>
+      <div class="crm-metric">
+        <div class="crm-metric-label">Mango revenue</div>
+        <div class="crm-metric-value">${escapeHtml(money(season.revenue))}</div>
+        <div class="crm-metric-note">${season.orders} orders</div>
+      </div>
+      <div class="crm-metric">
+        <div class="crm-metric-label">Season ran</div>
+        <div class="crm-metric-value" style="font-size:17px">${escapeHtml(shortDate(season.firstOrderAt))}</div>
+        <div class="crm-metric-note">to ${escapeHtml(shortDate(season.lastOrderAt))}</div>
+      </div>
+    </div>
+
+    <div class="crm-detail-section-title">Boxes by variety</div>
+    ${varieties.map(([name, qty]) => `
+      <div class="crm-variety-row">
+        <span class="crm-variety-name">${escapeHtml(name)}</span>
+        <span class="crm-variety-bar-wrap"><span class="crm-variety-bar" style="width:${Math.round((qty / maxQty) * 100)}%"></span></span>
+        <span class="crm-variety-qty">${qty}</span>
+      </div>`).join('')}
+
+    <div class="crm-detail-section-title">Top buyers</div>
+    ${buyers.slice(0, 10).map((buyer) => `
+      <div class="crm-order-row">
+        <div>
+          <div>${escapeHtml(buyer.name || 'No name saved')}</div>
+          <div class="crm-order-meta">${escapeHtml(buyer.phone || buyer.key)} · ${buyer.boxes} box${buyer.boxes === 1 ? '' : 'es'} · ${escapeHtml([...buyer.varieties.keys()].slice(0, 2).join(', '))}</div>
+        </div>
+        <div class="crm-num">${escapeHtml(money(buyer.spend))}</div>
+      </div>`).join('')}
+
+    ${retentionHtml}`;
+}
+
+// Export aimed at a pre-season announcement: who to contact, and what they
+// bought last time so the message can name their varieties.
+function exportSeasonCsv() {
+  const season = currentSeason();
+  if (!season) return;
+
+  const buyers = [...season.customers.values()].sort((a, b) => b.spend - a.spend);
+  const cell = (value) => `"${String(value === null || value === undefined ? '' : value).replace(/"/g, '""')}"`;
+  const header = ['Name', 'Phone', 'Email', 'Orders', 'Boxes', 'Spend', 'Varieties bought', 'Top variety'];
+
+  const rows = buyers.map((buyer) => {
+    const sorted = [...buyer.varieties.entries()].sort((a, b) => b[1] - a[1]);
+    return [
+      buyer.name,
+      buyer.phone || buyer.key,
+      buyer.email,
+      buyer.orders,
+      buyer.boxes,
+      buyer.spend.toFixed(2),
+      sorted.map(([name, qty]) => `${name} x${qty}`).join('; '),
+      sorted[0]?.[0] || ''
+    ].map(cell).join(',');
+  });
+
+  const blob = new Blob([[header.map(cell).join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `shrish_mango_${season.year}_campaign_list.csv`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
 /* ── unpaid checkouts ─────────────────────────────────── */
 
 function renderUnpaid() {
@@ -527,6 +733,7 @@ async function sendRetryLink(orderId, button) {
 
 function renderAll() {
   applyFilters();
+  renderSeason();
   renderMetrics();
   renderChart();
   renderSegments();
@@ -653,6 +860,10 @@ function rebuild() {
   const orders = state.rawOrders;
 
   state.allCustomers = buildCustomers(orders, state.rawProfiles);
+  state.seasons = buildSeasons(orders);
+  if (!state.seasons.some((season) => season.year === state.season)) {
+    state.season = state.seasons[0]?.year ?? null;
+  }
 
   // Recoverable unpaid checkouts: reached Stripe, never completed, still open.
   state.unpaid = orders
@@ -747,6 +958,13 @@ function wire() {
       (onChange || renderAll)();
     });
   };
+
+  document.getElementById('crmSeasonSelect').addEventListener('change', (event) => {
+    state.season = Number(event.target.value);
+    renderSeason();
+  });
+
+  document.getElementById('crmSeasonExport').addEventListener('click', exportSeasonCsv);
 
   bindToggle('crmExcludeMango', 'excludeMango');
   bindToggle('crmExcludeOwner', 'excludeOwner');
