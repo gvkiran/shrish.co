@@ -254,6 +254,58 @@ This is the cheapest available way to de-risk a first-time CRM build. Do not ski
 
 Chart rendering: Chart.js via CDN, matching the approach already used in `admin/shrish_growth_dashboard.html`.
 
+## 9.1 Abandoned payment recovery (added after a live incident, Aug 2026)
+
+**Trigger:** a customer reached Stripe checkout, the order document was created, payment never completed. Working as designed — not a bug — but currently invisible and unrecoverable.
+
+### Why it is invisible today
+
+| Barrier | Location |
+|---|---|
+| `awaiting_payment` and `payment_expired` are filtered out of **every** admin sheet | `admin-firebase.js`, `getOrdersForSheet` |
+| `sendOrderReminderEmails` rejects any order whose status isn't `pending` (`reason: "not_active"`) | `functions/index.js:1160+` |
+| `skipCustomerEmail: true` is forced on Stripe orders at create time | `firestore.rules`, `newWebsiteOrderIsValid()` |
+| The original Stripe checkout URL expires and cannot be resent | Stripe session lifecycle |
+
+Net effect: these customers are silently lost. Nobody sees them, nobody can contact them, and the payment link is dead.
+
+### Proposed feature — "Unpaid checkouts" screen
+
+New CRM segment, deliberately **outside** the main customer list because these are not yet customers:
+
+- Lists orders with `status` in `['awaiting_payment', 'payment_expired']`, newest first
+- Shows name, phone, email, cart contents, value, and how long ago
+- Per-row actions: **call**, **WhatsApp**, **send retry email**
+
+### The retry email is not a simple resend
+
+It requires a new Cloud Function, because the old checkout session is gone:
+
+1. `resendPaymentLink` (admin-only `onCall`) re-invokes the existing `createStripeCheckoutSession` logic for that order
+2. Generates a **fresh** session URL
+3. Sends a short email via Resend — cart contents, total, one clear "Complete your payment" button
+4. Stamps `paymentRetryEmailSentAt` on the order
+
+### Guardrails — this email must be gentle
+
+Some customers abandon deliberately. Pushing hard on them is worse than losing the order.
+
+- **One retry email per order, ever.** Enforced by `paymentRetryEmailSentAt`, not by discipline.
+- Send no earlier than ~1 hour after abandonment — many people are simply mid-checkout.
+- Tone is a helpful nudge ("your cart is still here"), never a demand for money.
+- Respect `doNotContact` on the linked `crm_customers` record.
+- Never auto-send. It stays a one-click manual action.
+
+### Value
+
+Abandoned-checkout recovery is consistently among the highest-ROI emails in ecommerce, because the customer already chose the products and reached the payment step. Given that these orders are currently invisible, the baseline recovery rate is exactly zero.
+
+### Placement in the roadmap
+
+Belongs in **Phase 2** (the first phase that writes anything), and arguably should lead it — it addresses a live, recurring revenue leak rather than a latent one. The `resendPaymentLink` function is the only genuinely new backend work; the screen itself is a filtered list over data already in `orders`.
+
+---
+
 ## 10. Remaining open questions
 
 1. **Wholesale reality check** — do you have live B2B accounts today, or is Phase 4 aspirational?
