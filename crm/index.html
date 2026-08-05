@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Shrish CRM</title>
+  <link rel="icon" href="../images/brand/logo-small.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=crm-p1-20260805" />
+  <script src="../assets/js/firebase-config.js"></script>
+</head>
+<body>
+
+<div id="loginScreen" class="crm-login-wrap">
+  <div class="crm-login-card">
+    <img src="../images/brand/logo-small.png" alt="Shrish" class="crm-login-logo" />
+    <h1>Shrish CRM</h1>
+    <p class="crm-login-sub">Customer intelligence. Owner access only.</p>
+    <input type="email" id="crmEmail" placeholder="Admin email" autocomplete="username" />
+    <input type="password" id="crmPassword" placeholder="Password" autocomplete="current-password" />
+    <button type="button" id="crmLoginBtn">Sign in</button>
+    <p class="crm-login-error" id="crmLoginErr"></p>
+    <a class="crm-login-back" href="../admin.html">Back to admin</a>
+  </div>
+</div>
+
+<div id="crmApp" style="display:none">
+
+  <header class="crm-header">
+    <div class="crm-header-left">
+      <img src="../images/brand/logo-small.png" alt="" class="crm-header-logo" />
+      <div>
+        <div class="crm-header-title">Customers</div>
+        <div class="crm-header-sub" id="crmDataNote">Loading…</div>
+      </div>
+    </div>
+    <div class="crm-header-right">
+      <a class="crm-ghost-btn" href="../admin.html">Admin</a>
+      <button class="crm-ghost-btn" type="button" id="crmLogoutBtn">Sign out</button>
+    </div>
+  </header>
+
+  <main class="crm-main">
+
+    <div id="crmLoading" class="crm-loading">Reading your order history…</div>
+
+    <div id="crmContent" style="display:none">
+
+      <section class="crm-metrics" id="crmMetrics"></section>
+
+      <section class="crm-panel">
+        <div class="crm-panel-head">
+          <h2>Reorder clock</h2>
+          <span class="crm-panel-note">Customers grouped by days since their last order</span>
+        </div>
+        <div class="crm-chart-legend" id="crmChartLegend"></div>
+        <div class="crm-chart-wrap"><canvas id="crmReorderChart" role="img" aria-label="Bar chart of customers grouped by days since last order"></canvas></div>
+      </section>
+
+      <section class="crm-panel">
+        <div class="crm-panel-head">
+          <h2>Segments</h2>
+          <span class="crm-panel-note">Tap to filter the list below</span>
+        </div>
+        <div class="crm-segments" id="crmSegments"></div>
+      </section>
+
+      <section class="crm-panel">
+        <div class="crm-panel-head">
+          <h2 id="crmListTitle">All customers</h2>
+          <div class="crm-list-tools">
+            <input type="search" id="crmSearch" placeholder="Search name, phone, email" autocomplete="off" />
+            <select id="crmSort" aria-label="Sort customers">
+              <option value="ltv">Sort: lifetime value</option>
+              <option value="recent">Sort: most recent order</option>
+              <option value="stale">Sort: longest since order</option>
+              <option value="orders">Sort: order count</option>
+              <option value="name">Sort: name</option>
+            </select>
+            <button class="crm-ghost-btn" type="button" id="crmExportBtn">Export CSV</button>
+          </div>
+        </div>
+        <div class="crm-table-wrap">
+          <table class="crm-table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Orders</th>
+                <th>Lifetime</th>
+                <th>Last order</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="crmCustomerRows"></tbody>
+          </table>
+        </div>
+        <div class="crm-list-footer" id="crmListFooter"></div>
+      </section>
+
+    </div>
+  </main>
+
+  <div class="crm-modal" id="crmDetailModal">
+    <div class="crm-modal-card" role="dialog" aria-modal="true" aria-labelledby="crmDetailName">
+      <div class="crm-modal-head">
+        <div>
+          <h3 id="crmDetailName">Customer</h3>
+          <p id="crmDetailContact"></p>
+        </div>
+        <button class="crm-modal-close" type="button" id="crmDetailClose" aria-label="Close">&times;</button>
+      </div>
+      <div class="crm-modal-body" id="crmDetailBody"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script type="module" src="app.js?v=crm-p1-20260805"></script>
+</body>
+</html>
