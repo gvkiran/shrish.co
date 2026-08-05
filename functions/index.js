@@ -2706,6 +2706,114 @@ exports.getOwnerAnalytics = onCall(
   }
 );
 
+function formatDeliveryWindowLabel(from, to) {
+  const pretty = (value) => {
+    const parts = String(value || "").split("-").map((part) => parseInt(part, 10));
+    if (parts.length !== 3 || parts.some((part) => Number.isNaN(part))) return "";
+    return new Date(parts[0], parts[1] - 1, parts[2])
+      .toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  };
+  const start = pretty(from);
+  const end = pretty(to);
+  if (start && end && start !== end) return `${start} – ${end}`;
+  return start || end || "";
+}
+
+function buildShipmentEmail(order) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  const firstName = escapeHtml(order.firstName || "there");
+  const orderNumber = escapeHtml(order.orderNumber || "");
+  const carrierLabel = escapeHtml(order.carrierLabel || order.carrier || "Carrier");
+  const trackingNumber = escapeHtml(order.trackingNumber || "");
+  const trackingUrl = String(order.trackingUrl || "").trim();
+  const deliveryWindow = escapeHtml(formatDeliveryWindowLabel(order.estimatedDeliveryFrom, order.estimatedDeliveryTo));
+
+  const address = order.shippingAddress || {};
+  const addressLines = [
+    order.fullName || `${order.firstName || ""} ${order.lastName || ""}`.trim(),
+    address.addressLine1,
+    address.addressLine2,
+    [address.city, address.state, address.zip].filter(Boolean).join(", "),
+  ].filter((line) => String(line || "").trim()).map((line) => escapeHtml(String(line).trim()));
+
+  const { totalBoxes, estimatedTotal } = getOrderTotals(order);
+  const itemRows = buildItemsRows(items);
+
+  return `
+  <html>
+    <body style="margin:0; padding:0; background:#ece7df; font-family: Arial, Helvetica, sans-serif; color:#2b2218;">
+      <div style="padding:32px 12px;">
+        <div style="max-width:680px; margin:0 auto; background:#ffffff; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.08);">
+
+          <div style="background:#b87512; padding:28px 24px 24px; text-align:center;">
+            <img src="${SHRISH_LOGO_URL}" alt="Shrish" style="display:block; width:120px; height:120px; object-fit:contain; margin:0 auto 16px auto;" />
+            <div style="font-size:12px; letter-spacing:1.6px; font-weight:700; color:#f8ebd4; text-transform:uppercase;">SHRISH LLC</div>
+            <div style="margin-top:10px; font-size:20px; line-height:1.3; font-weight:700; color:#ffffff;">
+              Your order is on its way
+            </div>
+            <div style="margin-top:10px; font-size:14px; line-height:1.6; color:#fff3df; max-width:520px; margin-left:auto; margin-right:auto;">
+              Order ${orderNumber} has shipped${deliveryWindow ? ` and should reach you ${deliveryWindow}` : ""}.
+            </div>
+          </div>
+
+          <div style="padding:24px;">
+            <p style="margin:0 0 18px; font-size:15px; line-height:1.6;">Hi ${firstName},</p>
+            <p style="margin:0 0 22px; font-size:15px; line-height:1.7;">
+              Your Shrish order is packed and handed to ${carrierLabel}. You can follow it with the tracking number below.
+            </p>
+
+            <div style="background:#f6f1e8; border-radius:14px; padding:18px; margin-bottom:22px; text-align:center;">
+              <div style="font-size:12px; letter-spacing:1px; text-transform:uppercase; color:#7a6853;">${carrierLabel} tracking</div>
+              <div style="font-size:18px; font-weight:700; margin:6px 0 4px; color:#2b2218; word-break:break-all;">${trackingNumber}</div>
+              ${deliveryWindow ? `<div style="font-size:13px; color:#6b5842; margin-bottom:14px;">Expected ${deliveryWindow}</div>` : '<div style="margin-bottom:14px;"></div>'}
+              ${trackingUrl ? `<a href="${trackingUrl}" style="display:inline-block; background:#b87512; color:#ffffff; text-decoration:none; font-weight:700; font-size:14px; padding:12px 28px; border-radius:50px;">Track your package</a>` : ""}
+            </div>
+
+            ${addressLines.length ? `<div style="background:#ffffff; border:1px solid #ecd9b6; border-radius:14px; padding:16px 18px; margin-bottom:22px;">
+              <div style="font-size:13px; font-weight:700; margin-bottom:8px; color:#2b2218;">Shipping to</div>
+              <div style="font-size:14px; line-height:1.7; color:#3d3225;">${addressLines.join("<br />")}</div>
+              <div style="font-size:12px; color:#7a6853; margin-top:10px;">If anything here is wrong, reply to this email straight away.</div>
+            </div>` : ""}
+
+            <table style="width:100%; border-collapse:collapse; margin:0 0 24px;">
+              <thead>
+                <tr style="background:#efe8dd;">
+                  <th style="text-align:left; padding:10px 12px; font-size:13px; color:#4d3c22;">Item</th>
+                  <th style="text-align:center; padding:10px 12px; font-size:13px; color:#4d3c22;">Qty</th>
+                  <th style="text-align:right; padding:10px 12px; font-size:13px; color:#4d3c22;">Price</th>
+                </tr>
+              </thead>
+              <tbody>${itemRows}</tbody>
+              <tfoot>
+                <tr>
+                  <td style="padding-top:16px; font-size:14px; font-weight:700; color:#2b2218;">Total</td>
+                  <td style="padding-top:16px; text-align:center; font-size:14px; font-weight:700; color:#2b2218;">${totalBoxes}</td>
+                  <td style="padding-top:16px; text-align:right; font-size:14px; font-weight:700; color:#2b2218;">${currency(estimatedTotal)}</td>
+                </tr>
+              </tfoot>
+            </table>
+
+            <div style="background:#f6f1e8; border-radius:14px; padding:16px 18px; margin-bottom:18px;">
+              <div style="font-size:13px; font-weight:700; margin-bottom:8px; color:#2b2218;">When it arrives</div>
+              <div style="font-size:14px; line-height:1.7; color:#3d3225;">
+                Unpack your order soon after delivery. Pickles keep best in a cool, dry place and stay good for months —
+                always use a clean, dry spoon. Sweets and snacks are freshest in the first couple of weeks; keep them in an
+                airtight container. Anything you will not finish quickly can go in the fridge.
+              </div>
+            </div>
+
+            <div style="font-size:14px; line-height:1.8; color:#2b2218;">
+              <div><strong>Phone:</strong> ${escapeHtml(SHRISH_SUPPORT_PHONE)}</div>
+              <div><strong>WhatsApp:</strong> <a href="${SHRISH_WHATSAPP_URL}" style="color:#1e63c6; text-decoration:none;">${SHRISH_WHATSAPP_URL}</a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+  </html>
+  `;
+}
+
 function buildPaymentRetryEmail(order, payUrl) {
   const items = Array.isArray(order.items) ? order.items : [];
   const firstName = escapeHtml(order.firstName || "there");
@@ -3053,6 +3161,61 @@ exports.sendOrderEmails = onDocumentCreated(
     }
 
     await sendOrderConfirmationEmails(orderRef, order, "order_created");
+  }
+);
+
+// Fires once, when a tracking number first appears on a shipping order.
+//
+// Guards are deliberately narrow. Editing an existing tracking number will NOT
+// resend (before and after are both non-empty), which trades "corrections are
+// not announced" for "customers never get duplicate shipping emails". The
+// shipmentEmailSentAt stamp is the backstop against retries.
+exports.sendShipmentEmail = onDocumentUpdated(
+  {
+    document: "orders/{orderId}",
+    region: "us-central1",
+    secrets: [RESEND_API_KEY],
+  },
+  async (event) => {
+    const before = event.data?.before?.data() || {};
+    const afterSnapshot = event.data?.after;
+    const after = afterSnapshot?.data() || {};
+    if (!afterSnapshot) return;
+
+    const beforeTracking = String(before.trackingNumber || "").trim();
+    const afterTracking = String(after.trackingNumber || "").trim();
+
+    if (!afterTracking) return;              // nothing to announce
+    if (beforeTracking) return;              // already had one: an edit, not a new shipment
+    if (after.shipmentEmailSentAt) return;   // idempotency backstop
+    if (after.isTestOrder) return;           // never email a test order
+    if (String(after.fulfillmentType || "pickup") !== "shipping") return;
+    if (["cancelled", "no_show"].includes(String(after.status || ""))) return;
+    if (String(after.paymentStatus || "") === "awaiting_payment") return;
+
+    const email = String(after.email || "").trim();
+    if (!email) return;
+
+    try {
+      const resend = new Resend(RESEND_API_KEY.value());
+      await resend.emails.send({
+        from: SHRISH_FROM_EMAIL,
+        to: [email],
+        subject: `Your Shrish order is on its way — ${after.orderNumber || "shipped"}`,
+        html: buildShipmentEmail(after),
+      });
+    } catch (error) {
+      console.error("Shipment email send failed", {
+        orderId: event.params?.orderId,
+        message: error?.message,
+      });
+      return; // leave unstamped so a corrected retry can still send
+    }
+
+    await afterSnapshot.ref.set({
+      shipmentEmailSentAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
   }
 );
 

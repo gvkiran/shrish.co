@@ -1038,10 +1038,14 @@ function orderTrackingCellHtml(order = {}) {
   const numberHtml = trackingUrl
     ? `<a href="${escapeHtml(trackingUrl)}" target="_blank" rel="noopener noreferrer" style="color:#C8791A">${escapeHtml(trackingNumber)}</a>`
     : escapeHtml(trackingNumber);
+  const emailed = order.shipmentEmailSentAt
+    ? '<div style="color:#22C55E">✓ Customer emailed</div>'
+    : '<div style="opacity:.6">Email pending…</div>';
   return `<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(200,121,26,.2);font-size:11px;line-height:1.4;white-space:normal">
       <div style="text-transform:uppercase;letter-spacing:.04em;color:var(--text-light)">${escapeHtml(carrierLabel || 'Tracking')}</div>
       <div>${numberHtml}</div>
       ${deliveryWindow ? `<div style="opacity:.75">Expected ${escapeHtml(deliveryWindow)}</div>` : ''}
+      ${emailed}
     </div>`;
 }
 
@@ -4719,8 +4723,8 @@ async function submitShipTracking() {
 
   const tracked = entries.filter((entry) => entry.trackingNumber).length;
   const confirmText = tracked === entries.length
-    ? `Mark ${entries.length} order${entries.length === 1 ? '' : 's'} as shipped with tracking?`
-    : `Mark ${entries.length} order${entries.length === 1 ? '' : 's'} as shipped? ${tracked} will carry a tracking number, ${entries.length - tracked} will not.`;
+    ? `Mark ${entries.length} order${entries.length === 1 ? '' : 's'} as shipped?\n\n${tracked} customer${tracked === 1 ? '' : 's'} will be emailed their tracking link now.`
+    : `Mark ${entries.length} order${entries.length === 1 ? '' : 's'} as shipped?\n\n${tracked} customer${tracked === 1 ? '' : 's'} will be emailed a tracking link. ${entries.length - tracked} have no tracking number and will not be emailed.`;
   if (!window.confirm(confirmText)) return;
 
   if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
