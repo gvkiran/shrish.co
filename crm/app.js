@@ -1,9 +1,13 @@
 // Shrish CRM — Phase 1 (read-only).
 //
-// This file NEVER writes to Firestore. It reads `orders` and `user_profiles`,
-// derives one record per customer, and renders. Customer records are computed
-// in the browser rather than stored, so `orders` stays the single source of
-// truth and there is nothing to keep in sync.
+// This file has exactly ONE write path: toggling the `isTestOrder` flag on an
+// order, which is reversible and destroys nothing. Everything else reads
+// `orders` and `user_profiles` and derives one record per customer in the
+// browser, so `orders` stays the single source of truth with nothing to sync.
+//
+// There is deliberately no delete. Removing an order document would also
+// remove it from admin and from accounting history, and a mis-click could
+// destroy a real customer's record with no way back.
 //
 // Customer identity is keyed on phoneDigits: it is present and format-validated
 // on every order, survives guest checkout, and is already used as a person key
@@ -13,7 +17,9 @@ import {
   db,
   auth,
   collection,
+  doc,
   getDocs,
+  updateDoc,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
@@ -70,6 +76,9 @@ const state = {
   sort: 'ltv',
   excludeMango: true,
   excludeOwner: true,
+  showTest: false,
+  rawOrders: [],
+  rawProfiles: [],
   chart: null
 };
 
@@ -112,6 +121,7 @@ function buildCustomers(orders, profiles) {
 
   for (const order of orders) {
     if (INCOMPLETE_STATUSES.has(order.status || 'pending')) continue;
+    if (order.isTestOrder) continue;
 
     const key = normalizeDigits(order.phoneDigits || order.phone);
     if (!key) continue;
@@ -435,11 +445,12 @@ function renderUnpaid() {
       + (items.length > 3 ? ` +${items.length - 3} more` : '');
     const phone = String(order.phone || '').replace(/\D/g, '');
     const sent = order.paymentRetryEmailSentAt;
-    const canEmail = Boolean(String(order.email || '').trim()) && !sent;
+    const isTest = Boolean(order.isTestOrder);
+    const canEmail = Boolean(String(order.email || '').trim()) && !sent && !isTest;
 
-    return `<div class="crm-unpaid-row">
+    return `<div class="crm-unpaid-row ${isTest ? 'is-test' : ''}">
       <div class="crm-unpaid-main">
-        <div class="crm-unpaid-name">${escapeHtml(name)}</div>
+        <div class="crm-unpaid-name">${escapeHtml(name)}${isTest ? '<span class="crm-test-badge">Test</span>' : ''}</div>
         <div class="crm-unpaid-meta">${escapeHtml(order.phone || '—')}${order.email ? ` · ${escapeHtml(order.email)}` : ' · no email'}</div>
         <div class="crm-unpaid-meta">${escapeHtml(summary || 'No items')} · ${age === null ? 'unknown age' : `${age}d ago`} · ${escapeHtml(String(order.status || '').replace(/_/g, ' '))}</div>
       </div>
@@ -449,10 +460,39 @@ function renderUnpaid() {
         <a class="crm-action-btn" href="https://wa.me/1${escapeHtml(phone)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ''}
         ${sent
           ? '<span class="crm-unpaid-sent">Retry email sent</span>'
-          : `<button class="crm-action-btn primary" type="button" data-retry="${escapeHtml(order.id)}" ${canEmail ? '' : 'disabled title="No email address on this order"'}>Send payment link</button>`}
+          : `<button class="crm-action-btn primary" type="button" data-retry="${escapeHtml(order.id)}" ${canEmail ? '' : 'disabled title="Marked as test, already sent, or no email on this order"'}>Send payment link</button>`}
+        <button class="crm-action-btn" type="button" data-test="${escapeHtml(order.id)}">${isTest ? 'Unmark test' : 'Mark as test'}</button>
       </div>
     </div>`;
   }).join('');
+}
+
+// The only write in this app. Reversible, and it deletes nothing.
+async function toggleTestOrder(orderId) {
+  const order = state.rawOrders.find((entry) => entry.id === orderId);
+  if (!order) return;
+
+  const next = !order.isTestOrder;
+  const name = String(order.fullName || order.firstName || 'this order').trim();
+
+  if (next && !window.confirm(
+    `Mark ${name}'s order as a test?\n\n`
+    + 'It will be hidden from the CRM. Nothing is deleted, and you can undo this '
+    + 'any time with the "Show test orders" filter.'
+  )) return;
+
+  try {
+    await updateDoc(doc(db, 'orders', orderId), {
+      isTestOrder: next,
+      testMarkedAt: next ? new Date().toISOString() : '',
+      testMarkedBy: next ? ADMIN_EMAIL : ''
+    });
+    order.isTestOrder = next;
+    rebuild();
+  } catch (error) {
+    console.error('Could not update test flag', error);
+    window.alert('Could not update this order. Check the console.');
+  }
 }
 
 // The only action in this app that changes anything. Never automatic, always
@@ -599,22 +639,37 @@ async function loadData() {
   const orders = orderSnap.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
   const profiles = profileSnap.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
 
-  state.allCustomers = buildCustomers(orders, profiles);
+  state.rawOrders = orders;
+  state.rawProfiles = profiles;
+
+  document.getElementById('crmLoading').style.display = 'none';
+  document.getElementById('crmContent').style.display = 'block';
+  rebuild();
+}
+
+// Recomputes everything from the raw order list. Called on load and whenever a
+// test flag changes, so no refresh is needed.
+function rebuild() {
+  const orders = state.rawOrders;
+
+  state.allCustomers = buildCustomers(orders, state.rawProfiles);
 
   // Recoverable unpaid checkouts: reached Stripe, never completed, still open.
   state.unpaid = orders
     .filter((order) => INCOMPLETE_STATUSES.has(order.status || 'pending')
       || String(order.paymentStatus || '') === 'retry_link_sent')
     .filter((order) => String(order.paymentStatus || '') !== 'paid')
+    .filter((order) => state.showTest || !order.isTestOrder)
     .map((order) => ({ ...order, _createdAt: toDate(order.createdAt) }))
     .sort((a, b) => (b._createdAt?.getTime() || 0) - (a._createdAt?.getTime() || 0));
 
+  const testCount = orders.filter((order) => order.isTestOrder).length;
+
   document.getElementById('crmDataNote').textContent =
     `${state.allCustomers.length} customers from ${orders.length} orders`
-    + (state.unpaid.length ? ` · ${state.unpaid.length} unpaid checkout${state.unpaid.length === 1 ? '' : 's'}` : '');
+    + (state.unpaid.length ? ` · ${state.unpaid.length} unpaid checkout${state.unpaid.length === 1 ? '' : 's'}` : '')
+    + (testCount ? ` · ${testCount} marked test` : '');
 
-  document.getElementById('crmLoading').style.display = 'none';
-  document.getElementById('crmContent').style.display = 'block';
   renderAll();
 }
 
@@ -683,19 +738,25 @@ function wire() {
     renderList();
   });
 
-  document.getElementById('crmExcludeMango').addEventListener('change', (event) => {
-    state.excludeMango = event.target.checked;
-    renderAll();
-  });
+  const bindToggle = (id, key, onChange) => {
+    const button = document.getElementById(id);
+    button.addEventListener('click', () => {
+      state[key] = !state[key];
+      button.classList.toggle('active', state[key]);
+      button.setAttribute('aria-pressed', String(state[key]));
+      (onChange || renderAll)();
+    });
+  };
 
-  document.getElementById('crmExcludeOwner').addEventListener('change', (event) => {
-    state.excludeOwner = event.target.checked;
-    renderAll();
-  });
+  bindToggle('crmExcludeMango', 'excludeMango');
+  bindToggle('crmExcludeOwner', 'excludeOwner');
+  bindToggle('crmShowTest', 'showTest', rebuild);
 
   document.getElementById('crmUnpaidRows').addEventListener('click', (event) => {
-    const button = event.target.closest('[data-retry]');
-    if (button) sendRetryLink(button.dataset.retry, button);
+    const retry = event.target.closest('[data-retry]');
+    if (retry) { sendRetryLink(retry.dataset.retry, retry); return; }
+    const test = event.target.closest('[data-test]');
+    if (test) toggleTestOrder(test.dataset.test);
   });
 }
 

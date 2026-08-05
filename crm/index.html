@@ -48,14 +48,9 @@
     <div id="crmContent" style="display:none">
 
       <section class="crm-filterbar">
-        <label class="crm-toggle">
-          <input type="checkbox" id="crmExcludeMango" checked />
-          <span>Exclude mango-only customers</span>
-        </label>
-        <label class="crm-toggle">
-          <input type="checkbox" id="crmExcludeOwner" checked />
-          <span>Exclude my own account</span>
-        </label>
+        <button class="crm-seg active" type="button" id="crmExcludeMango" aria-pressed="true">Hide mango-only</button>
+        <button class="crm-seg active" type="button" id="crmExcludeOwner" aria-pressed="true">Hide my account</button>
+        <button class="crm-seg" type="button" id="crmShowTest" aria-pressed="false">Show test orders</button>
         <span class="crm-filterbar-note" id="crmFilterNote"></span>
       </section>
 

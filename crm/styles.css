@@ -172,10 +172,8 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600
   border-radius: 12px;
 }
 
-.crm-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); cursor: pointer; }
-.crm-toggle input { width: 16px; height: 16px; accent-color: var(--gold-500); cursor: pointer; }
-.crm-toggle:hover { color: var(--gold-200); }
 .crm-filterbar-note { font-size: 12px; color: var(--text-faint); margin-left: auto; }
+.crm-filterbar .crm-seg.active::before { content: '✓ '; }
 
 /* ── Unpaid checkouts ────────────────────────────────── */
 
@@ -216,6 +214,17 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600
 .crm-action-btn.primary { background: var(--gold-500); border-color: var(--gold-500); color: #1A1208; font-weight: 600; }
 .crm-action-btn.primary:hover:not(:disabled) { background: var(--gold-400); color: #1A1208; }
 .crm-unpaid-sent { font-size: 12px; color: var(--green); white-space: nowrap; }
+.crm-unpaid-row.is-test { opacity: .55; }
+.crm-test-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  margin-left: 6px;
+  border-radius: 12px;
+  background: rgba(239,228,206,0.10);
+  color: var(--text-faint);
+  font-size: 11px;
+  font-weight: 600;
+}
 
 /* ── Metric cards ────────────────────────────────────── */
 
