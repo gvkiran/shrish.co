@@ -168,6 +168,7 @@ const state = {
   showTest: false,
   rawOrders: [],
   rawProfiles: [],
+  reorderModel: new Map(),
   overlays: new Map(),    // phoneDigits -> { tags: [], notes: '' }
   feedback: new Map(),    // phoneDigits -> [ feedback ]
   detailKey: '',
@@ -333,7 +334,8 @@ const SEGMENTS = [
   { id: 'vip',     label: 'Top spenders',   test: (c) => c.isVip },
   { id: 'new',     label: 'New this month', test: (c) => c.isNew },
   { id: 'offline', label: 'Offline only',   test: (c) => c.isOffline },
-  { id: 'once',    label: 'One order only', test: (c) => c.paidOrderCount === 1 }
+  { id: 'once',    label: 'One order only', test: (c) => c.paidOrderCount === 1 },
+  { id: 'predicted', label: 'Running out now', test: (c) => c.predictedOver !== null && c.predictedOver >= -3 && c.predictedOver <= 45 }
 ];
 
 /* ── rendering ────────────────────────────────────────────────────── */
@@ -449,8 +451,16 @@ function visibleCustomers() {
 }
 
 function statusPill(customer) {
-  if (customer.isOverdue) return `<span class="crm-pill over">Overdue ${customer.daysSince}d</span>`;
-  if (customer.isDue) return `<span class="crm-pill due">Due ${customer.daysSince}d</span>`;
+  // A measured prediction beats a generic day count, so it wins when present.
+  if (customer.predictedOver !== null && customer.predictedOver >= -3) {
+    const label = customer.predictedOver > 0
+      ? `${customer.predictedOver}d past due`
+      : 'Due now';
+    const cls = customer.predictedOver > 21 ? 'over' : 'due';
+    return `<span class="crm-pill ${cls}" title="${escapeHtml(customer.predictedProduct)} typically lasts these customers a set time; this one is past it">${label}</span>`;
+  }
+  if (customer.isOverdue) return `<span class="crm-pill over">Quiet ${customer.daysSince}d</span>`;
+  if (customer.isDue) return `<span class="crm-pill due">Quiet ${customer.daysSince}d</span>`;
   if (customer.isNew) return '<span class="crm-pill new">New</span>';
   if (customer.daysSince === null) return '<span class="crm-pill muted">No date</span>';
   return `<span class="crm-pill ok">Active ${customer.daysSince}d</span>`;
@@ -512,6 +522,288 @@ function applyFilters() {
   if (ownerRemoved) notes.push(`${ownerRemoved} own account hidden`);
   const note = document.getElementById('crmFilterNote');
   if (note) note.textContent = notes.length ? notes.join(' · ') : '';
+}
+
+/* ── reorder prediction ───────────────────────────────── */
+//
+// Most CRMs ask "how many days since their last order" and pick a threshold by
+// gut. That is wrong here: a jar of pickle and a box of mangoes empty at
+// completely different rates, so one global number is wrong for both.
+//
+// Instead the interval is MEASURED. For every product, look at customers who
+// bought it more than once and take the median gap between their purchases.
+// That is the product's real depletion time, in your customers' actual hands.
+// Products without enough repeat history are left unpredicted rather than
+// guessed at.
+
+const MIN_INTERVAL_SAMPLE = 3;
+const MIN_GAP_DAYS = 3;      // below this is a split order, not a repurchase
+const MAX_GAP_DAYS = 400;    // above this is a returning customer, not a cycle
+
+function buildReorderModel(customers) {
+  const gaps = new Map();
+
+  for (const customer of customers) {
+    const datesByProduct = new Map();
+    for (const order of customer.orders) {
+      if (!order._createdAt) continue;
+      for (const item of Array.isArray(order.items) ? order.items : []) {
+        const name = String(item.name || '').trim();
+        if (!name) continue;
+        if (!datesByProduct.has(name)) datesByProduct.set(name, []);
+        datesByProduct.get(name).push(order._createdAt);
+      }
+    }
+
+    for (const [name, dates] of datesByProduct) {
+      if (dates.length < 2) continue;
+      const sorted = [...dates].sort((a, b) => a - b);
+      for (let i = 1; i < sorted.length; i += 1) {
+        const days = Math.round((sorted[i] - sorted[i - 1]) / 86400000);
+        if (days < MIN_GAP_DAYS || days > MAX_GAP_DAYS) continue;
+        if (!gaps.has(name)) gaps.set(name, []);
+        gaps.get(name).push(days);
+      }
+    }
+  }
+
+  const model = new Map();
+  for (const [name, list] of gaps) {
+    if (list.length < MIN_INTERVAL_SAMPLE) continue;
+    const sorted = [...list].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+    model.set(name, { days: median, sample: list.length });
+  }
+  return model;
+}
+
+// Per customer: for each product they have bought, when should it run out?
+// Returns the most overdue item first, which is the one worth mentioning.
+function predictReorders(customer, model) {
+  const predictions = [];
+  const lastByProduct = new Map();
+
+  for (const order of customer.orders) {
+    if (!order._createdAt) continue;
+    for (const item of Array.isArray(order.items) ? order.items : []) {
+      const name = String(item.name || '').trim();
+      if (!name) continue;
+      const prior = lastByProduct.get(name);
+      if (!prior || order._createdAt > prior) lastByProduct.set(name, order._createdAt);
+    }
+  }
+
+  for (const [name, last] of lastByProduct) {
+    const entry = model.get(name);
+    if (!entry) continue;
+    const due = new Date(last.getTime() + entry.days * 86400000);
+    predictions.push({
+      product: name,
+      dueAt: due,
+      daysOver: Math.floor((Date.now() - due.getTime()) / 86400000),
+      interval: entry.days,
+      sample: entry.sample
+    });
+  }
+
+  return predictions.sort((a, b) => b.daysOver - a.daysOver);
+}
+
+/* ── affinity, geography, acquisition, discounts ──────── */
+
+// Lift, not raw co-occurrence. Two popular products appear together often just
+// by being popular; lift divides that out and shows genuine attraction.
+// lift > 1 means buying A makes B more likely than chance.
+function buildAffinity(customers) {
+  // Support must be measured across ALL customers, not just multi-product ones.
+  // Restricting the population first inflates every base rate — a product in
+  // every multi-product basket looks universal and its lift collapses to 1.0,
+  // hiding genuine pairs.
+  const sets = customers.map((customer) => new Set(
+    customer.orders.flatMap((order) =>
+      (Array.isArray(order.items) ? order.items : []).map((item) => String(item.name || '').trim()).filter(Boolean))
+  )).filter((set) => set.size >= 1);
+
+  const total = sets.length;
+  if (total < 8) return { pairs: [], total };
+
+  const single = new Map();
+  const pair = new Map();
+
+  for (const set of sets) {
+    const list = [...set].sort();
+    for (const name of list) single.set(name, (single.get(name) || 0) + 1);
+    for (let i = 0; i < list.length; i += 1) {
+      for (let j = i + 1; j < list.length; j += 1) {
+        const key = `${list[i]}||${list[j]}`;
+        pair.set(key, (pair.get(key) || 0) + 1);
+      }
+    }
+  }
+
+  const pairs = [];
+  for (const [key, both] of pair) {
+    if (both < 3) continue;
+    const [a, b] = key.split('||');
+    const pa = single.get(a) / total;
+    const pb = single.get(b) / total;
+    const lift = (both / total) / (pa * pb);
+    if (lift <= 1.2) continue;
+    pairs.push({ a, b, both, lift, confidence: both / single.get(a) });
+  }
+
+  return { pairs: pairs.sort((x, y) => y.lift - x.lift).slice(0, 12), total };
+}
+
+// Where demand actually is, versus where you can currently serve it.
+function buildGeography(orders) {
+  const zips = new Map();
+  const pickups = new Map();
+
+  for (const order of orders) {
+    if (order.isTestOrder) continue;
+    if (INCOMPLETE_STATUSES.has(order.status || 'pending')) continue;
+    if (NON_REVENUE_STATUSES.has(order.status || 'pending')) continue;
+
+    const value = moneyNumber(order.totalPrice);
+    const phone = normalizeDigits(order.phoneDigits || order.phone);
+
+    const zip = String(order.shippingAddress?.zip || '').trim().slice(0, 5);
+    if (zip) {
+      if (!zips.has(zip)) zips.set(zip, { zip, orders: 0, revenue: 0, customers: new Set(), city: '', state: '' });
+      const entry = zips.get(zip);
+      entry.orders += 1;
+      entry.revenue += value;
+      if (phone) entry.customers.add(phone);
+      if (!entry.city) entry.city = String(order.shippingAddress?.city || '').trim();
+      if (!entry.state) entry.state = String(order.shippingAddress?.state || '').trim();
+    }
+
+    const label = String(order.locationLabel || order.pickupLocationLabel || order.location || '').trim();
+    if (label && String(order.fulfillmentType || 'pickup') !== 'shipping') {
+      if (!pickups.has(label)) pickups.set(label, { label, orders: 0, revenue: 0, customers: new Set() });
+      const entry = pickups.get(label);
+      entry.orders += 1;
+      entry.revenue += value;
+      if (phone) entry.customers.add(phone);
+    }
+  }
+
+  const shape = (map) => [...map.values()]
+    .map((entry) => ({ ...entry, customers: entry.customers.size }))
+    .sort((a, b) => b.revenue - a.revenue);
+
+  return { zips: shape(zips), pickups: shape(pickups) };
+}
+
+// Which channels actually bring customers who spend, not just customers.
+function buildAcquisition(orders) {
+  const REFERRAL_LABELS = {
+    friend: 'Friend / family',
+    instagram: 'Instagram',
+    whatsapp: 'WhatsApp group',
+    google: 'Google search',
+    community: 'Community group',
+    other: 'Other',
+    '': 'Not specified'
+  };
+
+  const sources = new Map();
+  const seen = new Map();   // phone -> first source, so a customer counts once
+
+  const sorted = [...orders]
+    .filter((order) => !order.isTestOrder
+      && !INCOMPLETE_STATUSES.has(order.status || 'pending')
+      && !NON_REVENUE_STATUSES.has(order.status || 'pending'))
+    .sort((a, b) => (toDate(a.createdAt)?.getTime() || 0) - (toDate(b.createdAt)?.getTime() || 0));
+
+  for (const order of sorted) {
+    const phone = normalizeDigits(order.phoneDigits || order.phone);
+    if (!phone) continue;
+    const raw = String(order.referral || '').trim().toLowerCase();
+    const key = raw === 'not specified' || !raw ? '' : raw;
+    if (!seen.has(phone)) seen.set(phone, key);
+  }
+
+  for (const order of sorted) {
+    const phone = normalizeDigits(order.phoneDigits || order.phone);
+    if (!phone) continue;
+    const key = seen.get(phone) ?? '';
+    const label = REFERRAL_LABELS[key] || key || 'Not specified';
+    if (!sources.has(label)) sources.set(label, { label, customers: new Set(), revenue: 0, orders: 0 });
+    const entry = sources.get(label);
+    entry.customers.add(phone);
+    entry.revenue += moneyNumber(order.totalPrice);
+    entry.orders += 1;
+  }
+
+  return [...sources.values()]
+    .map((entry) => ({
+      ...entry,
+      customers: entry.customers.size,
+      valuePerCustomer: entry.customers.size ? entry.revenue / entry.customers.size : 0
+    }))
+    .sort((a, b) => b.revenue - a.revenue);
+}
+
+// Who only ever buys on a discount. Worth knowing before sending another one:
+// a full-price customer given a code is margin you gave away for nothing.
+function buildDiscountProfile(customers) {
+  const rows = customers.map((customer) => {
+    const paid = customer.orders.filter((order) => order._revenue > 0);
+    const discounted = paid.filter((order) => String(order.promoCode || '').trim());
+    return {
+      key: customer.key,
+      name: customer.name,
+      orders: paid.length,
+      discounted: discounted.length,
+      share: paid.length ? discounted.length / paid.length : 0,
+      saved: discounted.reduce((sum, order) => sum + moneyNumber(order.promoDiscount), 0),
+      ltv: customer.ltv
+    };
+  }).filter((row) => row.orders >= 2);
+
+  const dependent = rows.filter((row) => row.share >= 0.8).sort((a, b) => b.saved - a.saved);
+  const fullPrice = rows.filter((row) => row.share === 0).sort((a, b) => b.ltv - a.ltv);
+  const totalGiven = rows.reduce((sum, row) => sum + row.saved, 0);
+
+  return { dependent, fullPrice, totalGiven, analysed: rows.length };
+}
+
+// Weekly mango volume through a season, so next year's stock ordering is
+// driven by last year's actual shape rather than memory. The peak week is the
+// number that matters: it is when you must already have boxes on hand.
+function buildSeasonCurve(orders, year) {
+  const weeks = new Map();
+
+  for (const order of orders) {
+    if (order.isTestOrder) continue;
+    if (INCOMPLETE_STATUSES.has(order.status || 'pending')) continue;
+    if (NON_REVENUE_STATUSES.has(order.status || 'pending')) continue;
+
+    const created = toDate(order.createdAt);
+    if (!created || created.getFullYear() !== year) continue;
+
+    const mangoItems = (Array.isArray(order.items) ? order.items : []).filter(isMangoItem);
+    if (!mangoItems.length) continue;
+
+    // Monday-anchored week start, so bars line up with how a week is planned.
+    const start = new Date(created);
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+    const key = start.toISOString().slice(0, 10);
+
+    if (!weeks.has(key)) weeks.set(key, { key, start, boxes: 0, revenue: 0, orders: 0 });
+    const week = weeks.get(key);
+    week.orders += 1;
+    for (const item of mangoItems) {
+      week.boxes += Math.max(1, Number(item.qty || 1));
+      week.revenue += itemLineTotal(item);
+    }
+  }
+
+  return [...weeks.values()].sort((a, b) => a.start - b.start);
 }
 
 /* ── what converts ────────────────────────────────────── */
@@ -650,6 +942,283 @@ function renderInsights() {
       swings wildly on one person and would mislead. Bridge products are ranked by number of distinct
       customers, not units, so a single bulk order cannot distort the order.
     </div>`;
+
+  renderExtraInsights();
+}
+
+// Affinity, geography, acquisition and discount reliance. Each answers a
+// decision you actually face: what to bundle, where to hold a booth, which
+// channel to spend on, and who not to send another discount to.
+function renderExtraInsights() {
+  const wrap = document.getElementById('crmExtraInsights');
+  if (!wrap) return;
+
+  const affinity = buildAffinity(state.allCustomers);
+  const geo = buildGeography(state.rawOrders);
+  const acquisition = buildAcquisition(state.rawOrders);
+  const discounts = buildDiscountProfile(state.allCustomers);
+
+  const affinityHtml = affinity.pairs.length
+    ? affinity.pairs.map((pair) => `
+      <div class="crm-order-row">
+        <div>
+          <div>${escapeHtml(pair.a)} <span class="crm-order-meta">+</span> ${escapeHtml(pair.b)}</div>
+          <div class="crm-order-meta">${pair.both} customers bought both · ${Math.round(pair.confidence * 100)}% of ${escapeHtml(pair.a)} buyers also took ${escapeHtml(pair.b)}</div>
+        </div>
+        <div class="crm-num"><span class="crm-lift">${pair.lift.toFixed(1)}×</span></div>
+      </div>`).join('')
+    : `<div class="crm-empty">Not enough multi-product customers yet to find reliable pairs${affinity.total ? ` (${affinity.total} so far)` : ''}.</div>`;
+
+  const maxZip = geo.zips.length ? geo.zips[0].revenue : 1;
+  const geoHtml = geo.zips.length
+    ? geo.zips.slice(0, 10).map((entry) => `
+      <div class="crm-variety-row">
+        <span class="crm-variety-name">${escapeHtml(entry.zip)}${entry.city ? ` · ${escapeHtml(entry.city)}` : ''}</span>
+        <span class="crm-variety-bar-wrap"><span class="crm-variety-bar" style="width:${Math.round((entry.revenue / maxZip) * 100)}%"></span></span>
+        <span class="crm-variety-qty">${escapeHtml(money(entry.revenue))}</span>
+      </div>`).join('')
+    : '<div class="crm-empty">No shipping addresses recorded yet.</div>';
+
+  const pickupHtml = geo.pickups.length
+    ? geo.pickups.map((entry) => `
+      <div class="crm-order-row">
+        <div>
+          <div>${escapeHtml(entry.label)}</div>
+          <div class="crm-order-meta">${entry.customers} customer${entry.customers === 1 ? '' : 's'} · ${entry.orders} orders</div>
+        </div>
+        <div class="crm-num">${escapeHtml(money(entry.revenue))}</div>
+      </div>`).join('')
+    : '';
+
+  const acqHtml = acquisition.length
+    ? `<table class="crm-table"><thead><tr>
+        <th>How they found you</th><th>Customers</th><th>Revenue</th><th>Per customer</th>
+      </tr></thead><tbody>
+      ${acquisition.map((entry) => `<tr>
+        <td>${escapeHtml(entry.label)}</td>
+        <td class="crm-num">${entry.customers}</td>
+        <td class="crm-num">${escapeHtml(money(entry.revenue))}</td>
+        <td class="crm-num">${escapeHtml(money(entry.valuePerCustomer))}</td>
+      </tr>`).join('')}
+      </tbody></table>`
+    : '<div class="crm-empty">No referral source recorded yet.</div>';
+
+  const discountHtml = discounts.analysed
+    ? `<div class="crm-metrics" style="margin-bottom:12px">
+        <div class="crm-metric">
+          <div class="crm-metric-label">Given away in discounts</div>
+          <div class="crm-metric-value">${escapeHtml(money(discounts.totalGiven))}</div>
+          <div class="crm-metric-note">across ${discounts.analysed} repeat customers</div>
+        </div>
+        <div class="crm-metric ${discounts.dependent.length ? 'is-warn' : ''}">
+          <div class="crm-metric-label">Only buy on discount</div>
+          <div class="crm-metric-value">${discounts.dependent.length}</div>
+          <div class="crm-metric-note">80%+ of their orders used a code</div>
+        </div>
+        <div class="crm-metric is-good">
+          <div class="crm-metric-label">Never used a code</div>
+          <div class="crm-metric-value">${discounts.fullPrice.length}</div>
+          <div class="crm-metric-note">stop discounting these</div>
+        </div>
+      </div>
+      ${discounts.fullPrice.length ? `<div class="crm-detail-section-title">Highest value, never discounted</div>
+      ${discounts.fullPrice.slice(0, 5).map((row) => `
+        <div class="crm-order-row">
+          <div><div>${escapeHtml(row.name || row.key)}</div>
+          <div class="crm-order-meta">${row.orders} orders, always full price</div></div>
+          <div class="crm-num">${escapeHtml(money(row.ltv))}</div>
+        </div>`).join('')}` : ''}`
+    : '<div class="crm-empty">Not enough repeat customers yet to judge discount reliance.</div>';
+
+  wrap.innerHTML = `
+    <section class="crm-panel">
+      <div class="crm-panel-head">
+        <h2>Bought together</h2>
+        <span class="crm-panel-note">What to bundle. Lift shows attraction beyond chance — 2× means twice as likely as coincidence.</span>
+      </div>
+      ${affinityHtml}
+    </section>
+
+    <section class="crm-panel">
+      <div class="crm-panel-head">
+        <h2>Where your demand is</h2>
+        <span class="crm-panel-note">Shipping ZIPs by revenue. Clusters far from a pickup point are booth or pickup-location candidates.</span>
+      </div>
+      ${geoHtml}
+      ${pickupHtml ? `<div class="crm-detail-section-title">Pickup locations</div>${pickupHtml}` : ''}
+    </section>
+
+    <section class="crm-panel">
+      <div class="crm-panel-head">
+        <h2>How customers find you</h2>
+        <span class="crm-panel-note">Counted once per customer, from their first order. Revenue per customer matters more than headcount.</span>
+      </div>
+      ${acqHtml}
+    </section>
+
+    <section class="crm-panel">
+      <div class="crm-panel-head">
+        <h2>Discount reliance</h2>
+        <span class="crm-panel-note">A code given to someone who would have paid full price is margin gone for nothing.</span>
+      </div>
+      ${discountHtml}
+    </section>`;
+}
+
+/* ── today ────────────────────────────────────────────── */
+//
+// One screen answering "what should I do right now", ordered by money at stake
+// rather than by category. Everything here is an action, not a statistic — if
+// there is nothing to do, it says so plainly instead of showing empty widgets.
+
+function buildTodayActions() {
+  const actions = [];
+  const model = state.reorderModel;
+
+  // 1. Money already earned but not collected.
+  const unpaidValue = state.unpaid.reduce((sum, order) => sum + moneyNumber(order.totalPrice), 0);
+  if (state.unpaid.length) {
+    const chaseable = state.unpaid.filter((order) => !order.paymentRetryEmailSentAt && String(order.email || '').trim()).length;
+    actions.push({
+      level: 'danger',
+      title: `${state.unpaid.length} unpaid checkout${state.unpaid.length === 1 ? '' : 's'}`,
+      value: money(unpaidValue),
+      body: chaseable
+        ? `${chaseable} can be sent a payment link right now. Nothing was charged, so these are real orders that simply did not finish.`
+        : 'All have been contacted already, or have no email on file. Worth a phone call.',
+      cta: 'Open unpaid',
+      view: 'unpaid'
+    });
+  }
+
+  // 2. Shipped but the customer was never told.
+  const silentShipments = state.rawOrders.filter((order) =>
+    !order.isTestOrder
+    && String(order.trackingNumber || '').trim()
+    && !order.shipmentEmailSentAt);
+  if (silentShipments.length) {
+    actions.push({
+      level: 'danger',
+      title: `${silentShipments.length} shipment${silentShipments.length === 1 ? '' : 's'} with no tracking email`,
+      value: '',
+      body: 'These have a tracking number but the customer was never notified. Send it from the admin shipping sheet.',
+      cta: 'Open admin',
+      href: '../admin.html'
+    });
+  }
+
+  // 3. Unhappy customers, which decay fast if left.
+  const lowRatings = [];
+  for (const [key, entries] of state.feedback) {
+    for (const entry of entries) {
+      const rating = Number(entry.responses?.overallRating || 0);
+      if (rating && rating <= 3) lowRatings.push({ key, rating, entry });
+    }
+  }
+  if (lowRatings.length) {
+    actions.push({
+      level: 'danger',
+      title: `${lowRatings.length} customer${lowRatings.length === 1 ? '' : 's'} rated you 3 or below`,
+      value: '',
+      body: 'Low ratings age badly. A reply within a few days usually turns one around; a month later it rarely does.',
+      cta: 'See customers',
+      view: 'customers'
+    });
+  }
+
+  // 4. Predicted to be running out, from measured intervals.
+  const dueSoon = state.customers
+    .map((customer) => {
+      const predictions = model.size ? predictReorders(customer, model) : [];
+      const top = predictions[0];
+      if (!top) return null;
+      if (top.daysOver < -3 || top.daysOver > 45) return null;
+      return { customer, top };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.customer.ltv - a.customer.ltv);
+
+  if (dueSoon.length) {
+    const value = dueSoon.reduce((sum, entry) => sum + entry.customer.avgOrder, 0);
+    actions.push({
+      level: 'warn',
+      title: `${dueSoon.length} customer${dueSoon.length === 1 ? '' : 's'} due to run out`,
+      value: `${money(value)} typical`,
+      body: `Based on how long each product actually lasts your customers, not a fixed rule. Top: ${dueSoon.slice(0, 3).map((entry) => escapeHtml(entry.customer.name || entry.customer.key)).join(', ')}.`,
+      cta: 'See who',
+      view: 'customers',
+      segment: 'predicted'
+    });
+  }
+
+  // 5. New customers worth a personal note while it still feels personal.
+  const newThisWeek = state.customers.filter((customer) =>
+    customer.daysSinceFirst !== null && customer.daysSinceFirst <= 7);
+  if (newThisWeek.length) {
+    actions.push({
+      level: 'good',
+      title: `${newThisWeek.length} new customer${newThisWeek.length === 1 ? '' : 's'} this week`,
+      value: money(newThisWeek.reduce((sum, customer) => sum + customer.ltv, 0)),
+      body: 'A short thank-you now is the cheapest thing you can do to earn a second order.',
+      cta: 'See them',
+      view: 'customers',
+      segment: 'new'
+    });
+  }
+
+  return actions;
+}
+
+function renderToday() {
+  const wrap = document.getElementById('crmTodayBody');
+  if (!wrap) return;
+
+  const actions = buildTodayActions();
+  const revenue = state.customers.reduce((sum, customer) => sum + customer.ltv, 0);
+
+  const week = state.rawOrders.filter((order) => {
+    const created = toDate(order.createdAt);
+    return created && !order.isTestOrder
+      && !INCOMPLETE_STATUSES.has(order.status || 'pending')
+      && !NON_REVENUE_STATUSES.has(order.status || 'pending')
+      && (Date.now() - created.getTime()) <= 7 * 86400000;
+  });
+  const weekRevenue = week.reduce((sum, order) => sum + moneyNumber(order.totalPrice), 0);
+
+  const actionsHtml = actions.length
+    ? actions.map((action) => `
+      <div class="crm-action crm-action-${action.level}">
+        <div class="crm-action-main">
+          <div class="crm-action-title">${escapeHtml(action.title)}${action.value ? `<span class="crm-action-value">${escapeHtml(action.value)}</span>` : ''}</div>
+          <div class="crm-action-body">${action.body}</div>
+        </div>
+        ${action.href
+          ? `<a class="crm-action-cta" href="${escapeHtml(action.href)}">${escapeHtml(action.cta)}</a>`
+          : `<button class="crm-action-cta" type="button" data-goto="${escapeHtml(action.view)}" ${action.segment ? `data-seg="${escapeHtml(action.segment)}"` : ''}>${escapeHtml(action.cta)}</button>`}
+      </div>`).join('')
+    : `<div class="crm-allclear">
+        <div class="crm-allclear-title">Nothing needs you right now</div>
+        <div class="crm-allclear-body">No unpaid checkouts, no silent shipments, no unhappy customers, nobody predicted to be running out. Have a look at Insights instead.</div>
+      </div>`;
+
+  document.getElementById('crmTodayHeadline').innerHTML = `
+    <div class="crm-headline-item">
+      <span class="crm-headline-label">Last 7 days</span>
+      <span class="crm-headline-value">${escapeHtml(money(weekRevenue))}</span>
+      <span class="crm-headline-note">${week.length} order${week.length === 1 ? '' : 's'}</span>
+    </div>
+    <div class="crm-headline-item">
+      <span class="crm-headline-label">Customers</span>
+      <span class="crm-headline-value">${state.customers.length}</span>
+      <span class="crm-headline-note">${escapeHtml(money(revenue))} lifetime</span>
+    </div>
+    <div class="crm-headline-item">
+      <span class="crm-headline-label">Needs attention</span>
+      <span class="crm-headline-value ${actions.some((a) => a.level === 'danger') ? 'is-danger' : actions.length ? 'is-warn' : 'is-good'}">${actions.length}</span>
+      <span class="crm-headline-note">${actions.length ? 'items below' : 'all clear'}</span>
+    </div>`;
+
+  wrap.innerHTML = actionsHtml;
 }
 
 /* ── mango season ─────────────────────────────────────── */
@@ -888,6 +1457,7 @@ async function sendRetryLink(orderId, button) {
 // nothing is refetched. Only the chart needs special handling — see setView.
 function renderAll() {
   applyFilters();
+  renderToday();
   renderInsights();
   renderSeason();
   renderMetrics();
@@ -1130,6 +1700,16 @@ function rebuild() {
   const orders = state.rawOrders;
 
   state.allCustomers = buildCustomers(orders, state.rawProfiles);
+
+  // Intervals are measured across everyone, then applied back to each person.
+  state.reorderModel = buildReorderModel(state.allCustomers);
+  for (const customer of state.allCustomers) {
+    const predictions = state.reorderModel.size ? predictReorders(customer, state.reorderModel) : [];
+    customer.predictions = predictions;
+    customer.predictedOver = predictions.length ? predictions[0].daysOver : null;
+    customer.predictedProduct = predictions.length ? predictions[0].product : '';
+  }
+
   state.seasons = buildSeasons(orders);
   if (!state.seasons.some((season) => season.year === state.season)) {
     state.season = state.seasons[0]?.year ?? null;
@@ -1251,6 +1831,13 @@ function wire() {
   document.getElementById('crmNav').addEventListener('click', (event) => {
     const button = event.target.closest('[data-view]');
     if (button) setView(button.dataset.view);
+  });
+
+  document.getElementById('crmTodayBody').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-goto]');
+    if (!button) return;
+    if (button.dataset.seg) { state.segment = button.dataset.seg; renderSegments(); renderList(); }
+    setView(button.dataset.goto);
   });
 
   document.getElementById('crmSeasonSelect').addEventListener('change', (event) => {

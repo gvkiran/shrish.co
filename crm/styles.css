@@ -158,6 +158,97 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600
 .crm-panel-head h2 { font-size: 20px; color: var(--gold-200); }
 .crm-panel-note { font-size: 12px; color: var(--text-faint); }
 
+/* ── Today command centre ────────────────────────────────
+   Colour carries one meaning throughout, so it can be read at a glance:
+     red   = money or goodwill leaving right now
+     amber = will cost you if ignored this week
+     green = an opportunity, nothing broken
+   Nothing decorative is coloured, so colour always means something.        */
+
+.crm-headline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.crm-headline-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 15px 17px;
+  background: var(--obs-700);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+}
+
+.crm-headline-label { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--text-faint); }
+.crm-headline-value { font-size: 28px; font-weight: 700; line-height: 1.1; color: var(--gold-200); font-variant-numeric: tabular-nums; }
+.crm-headline-value.is-danger { color: var(--red); }
+.crm-headline-value.is-warn { color: var(--amber); }
+.crm-headline-value.is-good { color: var(--green); }
+.crm-headline-note { font-size: 12px; color: var(--text-faint); }
+
+.crm-action {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  background: var(--obs-800);
+  border: 1px solid var(--glass-border);
+  border-left: 4px solid var(--text-faint);
+  border-radius: 14px;
+}
+
+.crm-action-danger { border-left-color: var(--red);   background: linear-gradient(90deg, rgba(224,115,107,.09), transparent 55%), var(--obs-800); }
+.crm-action-warn   { border-left-color: var(--amber); background: linear-gradient(90deg, rgba(232,168,60,.09), transparent 55%), var(--obs-800); }
+.crm-action-good   { border-left-color: var(--green); background: linear-gradient(90deg, rgba(34,197,94,.08), transparent 55%), var(--obs-800); }
+
+.crm-action-main { flex: 1; min-width: 220px; }
+.crm-action-title { font-size: 17px; font-weight: 600; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.crm-action-value { font-size: 15px; font-weight: 700; color: var(--gold-300); font-variant-numeric: tabular-nums; }
+.crm-action-body { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-top: 4px; }
+
+.crm-action-cta {
+  padding: 11px 18px;
+  border-radius: 10px;
+  border: none;
+  background: var(--gold-500);
+  color: #1A1208;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.crm-action-cta:hover { background: var(--gold-400); }
+
+.crm-allclear {
+  padding: 40px 22px;
+  text-align: center;
+  background: var(--obs-800);
+  border: 1px solid rgba(34,197,94,0.28);
+  border-radius: 16px;
+}
+
+.crm-allclear-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; color: var(--green); }
+.crm-allclear-body { font-size: 14px; color: var(--text-dim); margin-top: 6px; line-height: 1.6; }
+
+.crm-lift {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 12px;
+  background: rgba(200,121,26,0.18);
+  color: var(--gold-300);
+  font-weight: 700;
+  font-size: 13px;
+}
+
 /* ── View navigation ─────────────────────────────────── */
 
 .crm-nav {
