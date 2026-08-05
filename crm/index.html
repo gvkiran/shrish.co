@@ -47,7 +47,27 @@
 
     <div id="crmContent" style="display:none">
 
+      <section class="crm-filterbar">
+        <label class="crm-toggle">
+          <input type="checkbox" id="crmExcludeMango" checked />
+          <span>Exclude mango-only customers</span>
+        </label>
+        <label class="crm-toggle">
+          <input type="checkbox" id="crmExcludeOwner" checked />
+          <span>Exclude my own account</span>
+        </label>
+        <span class="crm-filterbar-note" id="crmFilterNote"></span>
+      </section>
+
       <section class="crm-metrics" id="crmMetrics"></section>
+
+      <section class="crm-panel crm-panel-alert" id="crmUnpaidPanel" style="display:none">
+        <div class="crm-panel-head">
+          <h2>Unpaid checkouts</h2>
+          <span class="crm-panel-note">Reached payment, never completed. Nothing was charged.</span>
+        </div>
+        <div id="crmUnpaidRows"></div>
+      </section>
 
       <section class="crm-panel">
         <div class="crm-panel-head">

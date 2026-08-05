@@ -2706,6 +2706,221 @@ exports.getOwnerAnalytics = onCall(
   }
 );
 
+function buildPaymentRetryEmail(order, payUrl) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  const firstName = escapeHtml(order.firstName || "there");
+  const total = parseMoney(order.totalPrice) || getOrderTotals(order).estimatedTotal;
+
+  return `<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#F7F1E6;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#2B1B0E">
+  <div style="max-width:600px;margin:0 auto;padding:24px">
+    <div style="text-align:center;padding-bottom:16px">
+      <img src="${SHRISH_LOGO_URL}" alt="Shrish" width="72" style="display:block;margin:0 auto" />
+    </div>
+    <div style="background:#FFFFFF;border-radius:14px;padding:26px">
+      <h1 style="margin:0 0 12px;font-size:21px;color:#8A5A12">Your Shrish cart is still waiting</h1>
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.6">
+        Hi ${firstName}, it looks like your order did not finish going through. Nothing has been charged.
+      </p>
+      <p style="margin:0 0 20px;font-size:15px;line-height:1.6">
+        If you would still like it, you can complete the payment below. If you have changed your mind, no action is needed and you can ignore this email.
+      </p>
+
+      <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:8px">
+        ${buildItemsRows(items)}
+      </table>
+      <p style="margin:6px 0 22px;font-size:16px;font-weight:700;text-align:right">
+        Total: $${total.toFixed(2)}
+      </p>
+
+      <div style="text-align:center;margin:0 0 8px">
+        <a href="${payUrl}" style="display:inline-block;background:#C8791A;color:#FFFFFF;text-decoration:none;padding:14px 30px;border-radius:10px;font-size:16px;font-weight:700">
+          Complete your payment
+        </a>
+      </div>
+      <p style="margin:14px 0 0;font-size:12px;color:#7A6A58;text-align:center">
+        This payment link is valid for 24 hours.
+      </p>
+    </div>
+    <p style="margin:18px 0 0;font-size:12px;color:#7A6A58;text-align:center;line-height:1.6">
+      Questions? Reply to this email or call ${escapeHtml(SHRISH_SUPPORT_PHONE)}.<br />
+      Shrish LLC
+    </p>
+  </div>
+</body></html>`;
+}
+
+// Abandoned checkout recovery. Admin-only, manual, one email per order ever.
+//
+// Deliberately separate from createStripeCheckoutSession rather than refactoring
+// it: that function is the live customer payment path and carries an ownership
+// check (customerUid must match the caller) that an admin can never satisfy.
+// The pricing helpers are shared, so prices stay server-authoritative here too.
+exports.resendPaymentLink = onCall(
+  callableOptions({
+    secrets: [STRIPE_SECRET_KEY, RESEND_API_KEY],
+  }),
+  async (request) => {
+    if (!isAdminRequest(request)) {
+      throw new HttpsError("permission-denied", "Admin access is required.");
+    }
+    if (!STRIPE_PAYMENTS_ENABLED) {
+      throw new HttpsError("failed-precondition", "Online card payments are currently disabled.");
+    }
+
+    const orderId = String(request.data?.orderId || "").trim();
+    if (!orderId) throw new HttpsError("invalid-argument", "Order ID is required.");
+
+    const db = admin.firestore();
+    const orderRef = db.collection("orders").doc(orderId);
+    const orderSnap = await orderRef.get();
+    if (!orderSnap.exists) throw new HttpsError("not-found", "Order not found.");
+
+    const order = orderSnap.data() || {};
+
+    // Never touch an order that has been paid, refunded or closed out.
+    if (String(order.paymentStatus || "") === "paid") {
+      throw new HttpsError("failed-precondition", "This order is already paid.");
+    }
+    if (["fulfilled", "cancelled", "no_show"].includes(String(order.status || ""))) {
+      throw new HttpsError("failed-precondition", "This order is already closed.");
+    }
+    if (String(order.paymentMethod || "") !== "stripe") {
+      throw new HttpsError("failed-precondition", "This order was not set up for online payment.");
+    }
+    if (!Array.isArray(order.items) || !order.items.length) {
+      throw new HttpsError("failed-precondition", "This order has no items.");
+    }
+    if (!String(order.email || "").trim()) {
+      throw new HttpsError("failed-precondition", "This order has no email address. Call them instead.");
+    }
+    // One recovery email per order, ever. Enforced here, not by memory.
+    if (order.paymentRetryEmailSentAt) {
+      throw new HttpsError("already-exists", "A payment retry email was already sent for this order.");
+    }
+
+    let payUrl = "";
+    try {
+      const stripe = stripeClient();
+      const origin = allowedCheckoutOrigin(request.data?.origin);
+      const orderNumber = await assignSequentialOrderNumber(orderRef, order.orderNumber);
+      order.orderNumber = orderNumber;
+
+      const { lineItems, itemSubtotal } = await buildServerPricedCheckout(db, order);
+      const promo = await validateAndApplyPromo(db, order, itemSubtotal);
+      const promoDiscount = promo?.discount || 0;
+      const discountedSubtotal = roundCurrency(Math.max(0, itemSubtotal - promoDiscount));
+      const salesTaxAmount = orderSalesTaxAmount(order, discountedSubtotal);
+      let shippingAmount = orderShippingAmount(order, itemSubtotal);
+      if (promo?.freeShipping && String(order.fulfillmentType || "pickup") === "shipping") shippingAmount = 0;
+      const totalPrice = roundCurrency(discountedSubtotal + salesTaxAmount + shippingAmount);
+
+      if (salesTaxAmount > 0) {
+        lineItems.push({
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            unit_amount: toStripeAmount(salesTaxAmount),
+            product_data: { name: String(order.salesTaxLabel || "Virginia sales tax").slice(0, 180) },
+          },
+        });
+      }
+      if (shippingAmount > 0) {
+        lineItems.push({
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            unit_amount: toStripeAmount(shippingAmount),
+            product_data: { name: String(order.shippingLabel || "Standard shipping").slice(0, 180) },
+          },
+        });
+      }
+
+      const metadata = {
+        orderId,
+        orderNumber,
+        customerUid: order.customerUid || "",
+        source: "shrish_payment_retry",
+        salesTaxAmount: String(salesTaxAmount),
+        shippingAmount: String(shippingAmount),
+        promoCode: promo?.code || "",
+        promoDiscount: String(promoDiscount),
+      };
+
+      const sessionConfig = {
+        mode: "payment",
+        payment_method_types: ["card"],
+        line_items: lineItems,
+        // 24 hours, so the link in the email cannot outlive its own promise.
+        expires_at: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
+        success_url: `${origin}/order.html?payment=success&orderId=${encodeURIComponent(orderId)}&orderNumber=${encodeURIComponent(orderNumber)}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/order.html?payment=cancelled&orderId=${encodeURIComponent(orderId)}`,
+        customer_email: String(order.email).trim().toLowerCase(),
+        metadata,
+        payment_intent_data: { metadata },
+      };
+
+      if (promoDiscount > 0) {
+        const coupon = await stripe.coupons.create({
+          amount_off: toStripeAmount(promoDiscount),
+          currency: "usd",
+          duration: "once",
+          name: `Promo ${promo.code}`.slice(0, 40),
+        });
+        sessionConfig.discounts = [{ coupon: coupon.id }];
+      }
+
+      // Distinct idempotency key: the original checkout used shrish_checkout_<id>
+      // with different parameters, and reusing it would make Stripe error.
+      const session = await stripe.checkout.sessions.create(
+        sessionConfig,
+        { idempotencyKey: `shrish_retry_${orderId}` }
+      );
+
+      payUrl = session.url;
+      order.totalPrice = totalPrice;
+
+      await orderRef.set({
+        stripeCheckoutSessionId: session.id,
+        itemSubtotal,
+        salesTaxAmount,
+        shippingAmount,
+        promoCode: promo?.code || "",
+        promoDiscount,
+        totalPrice,
+        paymentStatus: "retry_link_sent",
+        status: "awaiting_payment",
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    } catch (error) {
+      console.error("Payment retry link creation failed", { orderId, message: error?.message });
+      throw asHttpsError(error);
+    }
+
+    try {
+      const resend = new Resend(RESEND_API_KEY.value());
+      await resend.emails.send({
+        from: SHRISH_FROM_EMAIL,
+        to: [String(order.email).trim()],
+        subject: "Your Shrish cart is still waiting",
+        html: buildPaymentRetryEmail(order, payUrl),
+      });
+    } catch (error) {
+      console.error("Payment retry email send failed", { orderId, message: error?.message });
+      throw new HttpsError("internal", "The payment link was created but the email could not be sent.");
+    }
+
+    // Stamped only after a successful send, so a failed send can be retried.
+    await orderRef.set({
+      paymentRetryEmailSentAt: admin.firestore.FieldValue.serverTimestamp(),
+      paymentRetryEmailSentBy: request.auth?.token?.email || "admin",
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    return { ok: true, orderNumber: order.orderNumber || "", email: order.email };
+  }
+);
+
 exports.stripeWebhook = onRequest(
   {
     region: "us-central1",

@@ -18,7 +18,9 @@ import {
   signInWithEmailAndPassword,
   signOut,
   escapeHtml,
-  moneyNumber
+  moneyNumber,
+  cloudFunctions,
+  httpsCallable
 } from '../assets/js/firebase-app.js';
 
 const ADMIN_EMAIL = String(window.SHRISH_APP_CONFIG?.adminEmailHint || 'contact@shrish.co').trim().toLowerCase();
@@ -35,11 +37,39 @@ const NON_REVENUE_STATUSES = new Set(['cancelled', 'no_show']);
 // entirely — these people never actually bought anything.
 const INCOMPLETE_STATUSES = new Set(['awaiting_payment', 'payment_expired']);
 
+// Fresh mango varieties from data.js. Matching on these names rather than the
+// word "mango" is deliberate: Avakaya mango pickle, mango ginger pickle and
+// mango jelly are year-round products, not seasonal fruit, and a naive
+// substring match on "mango" would wrongly sweep them in.
+const MANGO_VARIETIES = [
+  'alphonso', 'hapus', 'kesar', 'banganapalli', 'safeda', 'langra', 'rasalu',
+  'himayat', 'imam pasand', 'payari', 'paheri', 'dasheri', 'malgova', 'neelam'
+];
+
+function isMangoItem(item = {}) {
+  const category = String(item.category || '').trim().toLowerCase();
+  if (category) return category === 'mangoes';
+
+  const name = String(item.name || '').trim().toLowerCase();
+  const id = String(item.productId || item.id || '').trim().toLowerCase();
+  if (!name && !id) return false;
+
+  // Anything explicitly a pickle, podi, jelly or sweet is never fresh fruit.
+  if (/pickle|podi|powder|jelly|laddu|kaja|putharekulu|gavvalu|sunnundalu|murukulu|pakodi|chekkalu|pusa|kayalu/.test(name)) return false;
+  if (id.startsWith('puth_') || id.startsWith('picklespodi-') || id.startsWith('sweets-') || id.startsWith('snacks-')) return false;
+
+  return MANGO_VARIETIES.some((variety) => name.includes(variety) || id === variety);
+}
+
 const state = {
+  allCustomers: [],
   customers: [],
+  unpaid: [],
   segment: 'all',
   search: '',
   sort: 'ltv',
+  excludeMango: true,
+  excludeOwner: true,
   chart: null
 };
 
@@ -100,7 +130,9 @@ function buildCustomers(orders, profiles) {
         firstOrderAt: null,
         lastOrderAt: null,
         sources: new Set(),
-        hasProfile: false
+        hasProfile: false,
+        mangoQty: 0,
+        otherQty: 0
       });
     }
 
@@ -129,6 +161,8 @@ function buildCustomers(orders, profiles) {
       if (!itemName) continue;
       const qty = Math.max(1, Number(item.qty || 1));
       customer.products.set(itemName, (customer.products.get(itemName) || 0) + qty);
+      if (isMangoItem(item)) customer.mangoQty += qty;
+      else customer.otherQty += qty;
     }
   }
 
@@ -169,6 +203,9 @@ function buildCustomers(orders, profiles) {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 4);
     customer.isOffline = !customer.sources.has('website');
+    // Bought fresh mangoes and nothing else — a seasonal buyer whose silence
+    // says nothing about churn.
+    customer.isMangoOnly = customer.mangoQty > 0 && customer.otherQty === 0;
 
     const days = customer.daysSince;
     customer.isNew = customer.daysSinceFirst !== null && customer.daysSinceFirst <= NEW_DAYS;
@@ -345,11 +382,116 @@ function renderList() {
     `${list.length} customer${list.length === 1 ? '' : 's'} · ${money(value)} lifetime value in this view`;
 }
 
+function applyFilters() {
+  const ownerKey = normalizeDigits(window.SHRISH_APP_CONFIG?.supportPhone || '');
+
+  let list = state.allCustomers;
+  let mangoRemoved = 0;
+  let ownerRemoved = 0;
+
+  if (state.excludeMango) {
+    const before = list.length;
+    list = list.filter((customer) => !customer.isMangoOnly);
+    mangoRemoved = before - list.length;
+  }
+
+  if (state.excludeOwner) {
+    const before = list.length;
+    list = list.filter((customer) =>
+      customer.key !== ownerKey
+      && String(customer.email || '').trim().toLowerCase() !== ADMIN_EMAIL);
+    ownerRemoved = before - list.length;
+  }
+
+  state.customers = list;
+
+  const notes = [];
+  if (mangoRemoved) notes.push(`${mangoRemoved} mango-only hidden`);
+  if (ownerRemoved) notes.push(`${ownerRemoved} own account hidden`);
+  const note = document.getElementById('crmFilterNote');
+  if (note) note.textContent = notes.length ? notes.join(' · ') : '';
+}
+
+/* ── unpaid checkouts ─────────────────────────────────── */
+
+function renderUnpaid() {
+  const panel = document.getElementById('crmUnpaidPanel');
+  const rows = document.getElementById('crmUnpaidRows');
+  if (!panel || !rows) return;
+
+  if (!state.unpaid.length) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+
+  const total = state.unpaid.reduce((sum, order) => sum + moneyNumber(order.totalPrice), 0);
+
+  rows.innerHTML = `<div class="crm-metric-note" style="margin-bottom:6px">
+      ${state.unpaid.length} order${state.unpaid.length === 1 ? '' : 's'} · ${escapeHtml(money(total))} not collected
+    </div>` + state.unpaid.map((order) => {
+    const name = String(order.fullName || `${order.firstName || ''} ${order.lastName || ''}`).trim() || 'No name';
+    const created = toDate(order.createdAt);
+    const age = daysBetween(created);
+    const items = Array.isArray(order.items) ? order.items : [];
+    const summary = items.slice(0, 3).map((item) => item.name).filter(Boolean).join(', ')
+      + (items.length > 3 ? ` +${items.length - 3} more` : '');
+    const phone = String(order.phone || '').replace(/\D/g, '');
+    const sent = order.paymentRetryEmailSentAt;
+    const canEmail = Boolean(String(order.email || '').trim()) && !sent;
+
+    return `<div class="crm-unpaid-row">
+      <div class="crm-unpaid-main">
+        <div class="crm-unpaid-name">${escapeHtml(name)}</div>
+        <div class="crm-unpaid-meta">${escapeHtml(order.phone || '—')}${order.email ? ` · ${escapeHtml(order.email)}` : ' · no email'}</div>
+        <div class="crm-unpaid-meta">${escapeHtml(summary || 'No items')} · ${age === null ? 'unknown age' : `${age}d ago`} · ${escapeHtml(String(order.status || '').replace(/_/g, ' '))}</div>
+      </div>
+      <div class="crm-unpaid-value">${escapeHtml(money(moneyNumber(order.totalPrice)))}</div>
+      <div class="crm-unpaid-actions">
+        ${phone ? `<a class="crm-action-btn" href="tel:+1${escapeHtml(phone)}">Call</a>
+        <a class="crm-action-btn" href="https://wa.me/1${escapeHtml(phone)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ''}
+        ${sent
+          ? '<span class="crm-unpaid-sent">Retry email sent</span>'
+          : `<button class="crm-action-btn primary" type="button" data-retry="${escapeHtml(order.id)}" ${canEmail ? '' : 'disabled title="No email address on this order"'}>Send payment link</button>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// The only action in this app that changes anything. Never automatic, always
+// one explicit click plus a confirm, and the function refuses a second send.
+async function sendRetryLink(orderId, button) {
+  const order = state.unpaid.find((entry) => entry.id === orderId);
+  if (!order) return;
+
+  const name = String(order.fullName || order.firstName || 'this customer').trim();
+  const confirmed = window.confirm(
+    `Send a payment link to ${name} (${order.email})?\n\n`
+    + `This creates a fresh Stripe checkout valid for 24 hours and emails it once. `
+    + `It cannot be sent again for this order.`
+  );
+  if (!confirmed) return;
+
+  button.disabled = true;
+  button.textContent = 'Sending...';
+
+  try {
+    const callable = httpsCallable(cloudFunctions, 'resendPaymentLink');
+    await callable({ orderId, origin: window.location.origin });
+    order.paymentRetryEmailSentAt = new Date().toISOString();
+    renderUnpaid();
+  } catch (error) {
+    console.error('Payment retry failed', error);
+    button.disabled = false;
+    button.textContent = 'Send payment link';
+    window.alert(error?.message || 'Could not send the payment link. Check the console.');
+  }
+}
+
 function renderAll() {
+  applyFilters();
   renderMetrics();
   renderChart();
   renderSegments();
   renderList();
+  renderUnpaid();
 }
 
 function setSegment(id) {
@@ -457,12 +599,19 @@ async function loadData() {
   const orders = orderSnap.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
   const profiles = profileSnap.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
 
-  state.customers = buildCustomers(orders, profiles);
+  state.allCustomers = buildCustomers(orders, profiles);
 
-  const excluded = orders.filter((order) => INCOMPLETE_STATUSES.has(order.status || 'pending')).length;
+  // Recoverable unpaid checkouts: reached Stripe, never completed, still open.
+  state.unpaid = orders
+    .filter((order) => INCOMPLETE_STATUSES.has(order.status || 'pending')
+      || String(order.paymentStatus || '') === 'retry_link_sent')
+    .filter((order) => String(order.paymentStatus || '') !== 'paid')
+    .map((order) => ({ ...order, _createdAt: toDate(order.createdAt) }))
+    .sort((a, b) => (b._createdAt?.getTime() || 0) - (a._createdAt?.getTime() || 0));
+
   document.getElementById('crmDataNote').textContent =
-    `${state.customers.length} customers from ${orders.length} orders`
-    + (excluded ? ` · ${excluded} unpaid checkout${excluded === 1 ? '' : 's'} excluded` : '');
+    `${state.allCustomers.length} customers from ${orders.length} orders`
+    + (state.unpaid.length ? ` · ${state.unpaid.length} unpaid checkout${state.unpaid.length === 1 ? '' : 's'}` : '');
 
   document.getElementById('crmLoading').style.display = 'none';
   document.getElementById('crmContent').style.display = 'block';
@@ -532,6 +681,21 @@ function wire() {
   document.getElementById('crmSort').addEventListener('change', (event) => {
     state.sort = event.target.value;
     renderList();
+  });
+
+  document.getElementById('crmExcludeMango').addEventListener('change', (event) => {
+    state.excludeMango = event.target.checked;
+    renderAll();
+  });
+
+  document.getElementById('crmExcludeOwner').addEventListener('change', (event) => {
+    state.excludeOwner = event.target.checked;
+    renderAll();
+  });
+
+  document.getElementById('crmUnpaidRows').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-retry]');
+    if (button) sendRetryLink(button.dataset.retry, button);
   });
 }
 

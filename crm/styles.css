@@ -158,6 +158,65 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600
 .crm-panel-head h2 { font-size: 20px; color: var(--gold-200); }
 .crm-panel-note { font-size: 12px; color: var(--text-faint); }
 
+/* ── Filter bar ──────────────────────────────────────── */
+
+.crm-filterbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  background: var(--obs-800);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+}
+
+.crm-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); cursor: pointer; }
+.crm-toggle input { width: 16px; height: 16px; accent-color: var(--gold-500); cursor: pointer; }
+.crm-toggle:hover { color: var(--gold-200); }
+.crm-filterbar-note { font-size: 12px; color: var(--text-faint); margin-left: auto; }
+
+/* ── Unpaid checkouts ────────────────────────────────── */
+
+.crm-panel-alert { border-color: rgba(232,168,60,0.42); }
+
+.crm-unpaid-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+  border-top: 1px solid rgba(200,121,26,0.14);
+}
+
+.crm-unpaid-main { flex: 1; min-width: 190px; }
+.crm-unpaid-name { font-weight: 600; }
+.crm-unpaid-meta { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+.crm-unpaid-value { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.crm-unpaid-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.crm-action-btn {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.crm-action-btn:hover:not(:disabled) { border-color: var(--glass-border-bright); color: var(--gold-300); }
+.crm-action-btn:disabled { opacity: .45; cursor: not-allowed; }
+.crm-action-btn.primary { background: var(--gold-500); border-color: var(--gold-500); color: #1A1208; font-weight: 600; }
+.crm-action-btn.primary:hover:not(:disabled) { background: var(--gold-400); color: #1A1208; }
+.crm-unpaid-sent { font-size: 12px; color: var(--green); white-space: nowrap; }
+
 /* ── Metric cards ────────────────────────────────────── */
 
 .crm-metrics {
