@@ -1029,6 +1029,51 @@ function formatDeliveryWindow(from, to) {
 // orders. The stored `locationLabel` is intentionally coarse (city/state/zip)
 // because it also drives location grouping and pickup tallies, so the full
 // street address is read from the saved `shippingAddress` object instead.
+// Payment state is three independent facts, and the old badge collapsed them
+// into one: `payment === 'paid'` was rendered as "Paid online", so every cash
+// and Zelle sale claimed to be a card payment.
+//
+//   source          where the order came from  (website / booth / admin_manual)
+//   paymentMethod   how they paid              (stripe / cash / zelle / card)
+//   collected       whether you have the money (paymentCollected / paymentStatus)
+//
+// Only `paymentMethod === 'stripe'` is genuinely an online payment.
+const PAYMENT_METHOD_LABELS = {
+  cash: 'Cash',
+  zelle: 'Zelle',
+  card: 'Card',
+  check: 'Check',
+  venmo: 'Venmo',
+  pay_at_pickup: 'Cash'
+};
+
+function paymentBadgeHtml(order = {}) {
+  const method = String(order.paymentMethod || '').trim().toLowerCase();
+  const isCollected = order.paymentStatus === 'paid'
+    || order.payment === 'paid'
+    || Boolean(order.paymentCollected);
+
+  const pill = (text, color, bg, border) =>
+    `<div style="margin-top:4px;display:inline-block;font-size:11px;font-weight:700;color:${color};background:${bg};border:1px solid ${border};border-radius:10px;padding:1px 8px;">${text}</div>`;
+
+  const green = ['#1E7B34', '#E7F5EC', '#9FD8B0'];
+  const amber = ['#B54708', '#FFF3E0', '#F0C68A'];
+  const muted = ['#8a6d3b', '#fbf3e2', '#e6d3a8'];
+
+  if (method === 'stripe') {
+    return isCollected
+      ? pill('💳 Paid online', ...green)
+      : pill('Online — awaiting payment', ...amber);
+  }
+
+  if (isCollected) {
+    const label = PAYMENT_METHOD_LABELS[method] || '';
+    return pill(`✓ Paid${label ? ` · ${label}` : ''}`, ...green);
+  }
+
+  return pill(isShippingOrder(order) ? 'Unpaid' : 'Pay at pickup', ...muted);
+}
+
 function orderTrackingCellHtml(order = {}) {
   const trackingNumber = String(order.trackingNumber || '').trim();
   if (!trackingNumber) return '';
@@ -2584,13 +2629,8 @@ function renderOrders() {
     const statusLabel = orderStatusLabel(status);
     const paymentMethod = order.paymentMethod || '';
     const paymentCollected = Boolean(order.paymentCollected);
-    const isPaidOnline = order.paymentStatus === 'paid' || order.payment === 'paid';
     const isStripeOrder = String(order.paymentMethod || '') === 'stripe';
-    const payBadgeHtml = isPaidOnline
-      ? '<div style="margin-top:4px;display:inline-block;font-size:11px;font-weight:700;color:#1E7B34;background:#E7F5EC;border:1px solid #9FD8B0;border-radius:10px;padding:1px 8px;">💳 Paid online</div>'
-      : isStripeOrder
-      ? '<div style="margin-top:4px;display:inline-block;font-size:11px;font-weight:700;color:#B54708;background:#FFF3E0;border:1px solid #F0C68A;border-radius:10px;padding:1px 8px;">Online — awaiting payment</div>'
-      : '<div style="margin-top:4px;display:inline-block;font-size:11px;font-weight:600;color:#8a6d3b;background:#fbf3e2;border:1px solid #e6d3a8;border-radius:10px;padding:1px 8px;">Pay at pickup</div>';
+    const payBadgeHtml = paymentBadgeHtml(order);
     const fallbackBatch = batchNameFromDate(todayDateInputValue());
     const canSelect = (isActiveSheet && status === 'pending') || isShippingSheet;
     const checked = state.selectedReminderOrderIds.has(order.id) ? 'checked' : '';
