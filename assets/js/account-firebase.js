@@ -1235,6 +1235,37 @@ function printOrderSummary(order = {}) {
   win.print();
 }
 
+// Shows shipping progress on the customer's own order card. Reads only fields
+// the owner already set from admin — this never contacts a carrier.
+function orderTrackingHtml(order = {}) {
+  const trackingNumber = String(order.trackingNumber || '').trim();
+  if (!trackingNumber) return '';
+
+  const carrier = String(order.carrierLabel || order.carrier || 'Carrier').trim();
+  const url = String(order.trackingUrl || '').trim();
+
+  const pretty = (value) => {
+    const parts = String(value || '').split('-').map((part) => parseInt(part, 10));
+    if (parts.length !== 3 || parts.some((part) => Number.isNaN(part))) return '';
+    return new Date(parts[0], parts[1] - 1, parts[2])
+      .toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+  const from = pretty(order.estimatedDeliveryFrom);
+  const to = pretty(order.estimatedDeliveryTo);
+  const window_ = from && to && from !== to ? `${from} – ${to}` : (from || to || '');
+
+  return `
+    <div class="order-history-tracking">
+      <div class="order-history-tracking-head">${escapeHtml(carrier)} tracking</div>
+      <div class="order-history-tracking-num">${
+        url
+          ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(trackingNumber)}</a>`
+          : escapeHtml(trackingNumber)
+      }</div>
+      ${window_ ? `<div class="order-history-tracking-eta">Expected ${escapeHtml(window_)}</div>` : ''}
+    </div>`;
+}
+
 function renderOrders(orders = []) {
   const list = el('ordersList');
   if (!list) return;
@@ -1269,6 +1300,7 @@ function renderOrders(orders = []) {
           <span class="order-history-status">${escapeHtml(status)}</span>
         </div>
         <div class="order-history-items">${escapeHtml(orderItemsText(order.items))}</div>
+        ${orderTrackingHtml(order)}
         <div class="order-history-meta">
           <span>${escapeHtml(location)}</span>
           <span>${escapeHtml(formatCurrency(total))}</span>

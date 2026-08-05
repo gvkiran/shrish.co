@@ -172,6 +172,14 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // CRM overlay keyed on phoneDigits. Holds only annotations the owner adds
+    // by hand — tags and notes. Order data itself is never copied here, so
+    // `orders` stays the single source of truth with nothing to keep in sync.
+    // Owner-only in both directions; no customer ever reads or writes this.
+    match /crm_customers/{customerKey} {
+      allow read, write: if isAdmin();
+    }
+
     match /order_feedback/{feedbackId} {
       allow get, list: if isAdmin();
       allow create, update, delete: if false;

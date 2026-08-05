@@ -19,6 +19,7 @@ import {
   collection,
   doc,
   getDocs,
+  setDoc,
   updateDoc,
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -167,6 +168,9 @@ const state = {
   showTest: false,
   rawOrders: [],
   rawProfiles: [],
+  overlays: new Map(),    // phoneDigits -> { tags: [], notes: '' }
+  feedback: new Map(),    // phoneDigits -> [ feedback ]
+  detailKey: '',
   chart: null
 };
 
@@ -515,6 +519,10 @@ function applyFilters() {
 // Below this many customers a percentage is noise, not a signal. Products with
 // smaller samples are still listed but shown as counts without a rate.
 const MIN_SAMPLE = 5;
+
+// Fixed tag vocabulary. Free-text tags drift into synonyms ("vip", "VIP",
+// "v.i.p") and stop being filterable, which defeats the point.
+const CRM_TAGS = ['VIP', 'Wholesale', 'Festival buyer', 'Mild spice', 'Bulk', 'Referrer', 'Do not contact'];
 
 // Answers the question the two halves of the business raise: mango buyers are
 // seasonal and numerous, year-round customers are few. What do the few have in
@@ -945,6 +953,37 @@ function openDetail(key) {
          `<span class="crm-fav-item">${escapeHtml(name)} × ${qty}</span>`).join('')}</div>`
     : '';
 
+  state.detailKey = key;
+  const overlay = state.overlays.get(key) || { tags: [], notes: '' };
+
+  const tagsHtml = `
+    <div class="crm-detail-section-title">Tags</div>
+    <div class="crm-tag-row">
+      ${CRM_TAGS.map((tag) => `<button class="crm-tag ${overlay.tags.includes(tag) ? 'on' : ''}" type="button" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`).join('')}
+    </div>
+    <div class="crm-detail-section-title">Notes</div>
+    <textarea class="crm-notes" id="crmNotes" rows="3" maxlength="2000" placeholder="Anything worth remembering — spice preference, delivery quirks, who referred them.">${escapeHtml(overlay.notes || '')}</textarea>
+    <div class="crm-notes-row">
+      <button class="crm-action-btn primary" type="button" id="crmSaveNotes">Save notes</button>
+      <span class="crm-notes-status" id="crmNotesStatus"></span>
+    </div>`;
+
+  const reviews = state.feedback.get(key) || [];
+  const feedbackHtml = reviews.length
+    ? `<div class="crm-detail-section-title">Feedback given</div>
+       ${reviews.map((entry) => {
+         const rating = Number(entry.responses?.overallRating || 0);
+         const stars = rating ? '★'.repeat(Math.min(5, rating)) + '☆'.repeat(Math.max(0, 5 - rating)) : '';
+         const comment = String(entry.responses?.comments || entry.responses?.comment || '').trim();
+         return `<div class="crm-order-row">
+           <div>
+             <div>${escapeHtml(stars || 'No rating')} ${rating ? `<span class="crm-order-meta">${rating}/5</span>` : ''}</div>
+             <div class="crm-order-meta">${escapeHtml(entry.orderNumber || '')}${comment ? ` · “${escapeHtml(comment)}”` : ''}</div>
+           </div>
+         </div>`;
+       }).join('')}`
+    : '';
+
   const orders = customer.orders.map((order) => {
     const items = Array.isArray(order.items) ? order.items.length : 0;
     return `<div class="crm-order-row">
@@ -964,6 +1003,8 @@ function openDetail(key) {
       </div>`).join('')}
     </div>
     ${favourites}
+    ${tagsHtml}
+    ${feedbackHtml}
     <div class="crm-detail-section-title">Order history</div>
     ${orders || '<div class="crm-empty">No orders found.</div>'}`;
 
@@ -972,8 +1013,36 @@ function openDetail(key) {
 }
 
 function closeDetail() {
+  state.detailKey = '';
   document.getElementById('crmDetailModal').classList.remove('open');
   document.body.style.overflow = '';
+}
+
+// Writes only tags and notes. Order data is never written back from here.
+async function saveOverlay(key, patch, statusNode) {
+  const current = state.overlays.get(key) || { tags: [], notes: '' };
+  const next = { ...current, ...patch };
+  state.overlays.set(key, next);
+
+  try {
+    await setDoc(doc(db, 'crm_customers', key), {
+      tags: next.tags,
+      notes: next.notes,
+      updatedAt: new Date().toISOString(),
+      updatedBy: ADMIN_EMAIL
+    }, { merge: true });
+    if (statusNode) {
+      statusNode.textContent = 'Saved';
+      statusNode.style.color = '#7EE2A8';
+      setTimeout(() => { statusNode.textContent = ''; }, 2200);
+    }
+  } catch (error) {
+    console.error('Could not save customer overlay', error);
+    if (statusNode) {
+      statusNode.textContent = 'Could not save';
+      statusNode.style.color = '#E0736B';
+    }
+  }
 }
 
 /* ── export ───────────────────────────────────────────────────────── */
@@ -1010,13 +1079,38 @@ function exportCsv() {
 /* ── data load ────────────────────────────────────────────────────── */
 
 async function loadData() {
-  const [orderSnap, profileSnap] = await Promise.all([
+  const [orderSnap, profileSnap, overlaySnap, feedbackSnap] = await Promise.all([
     getDocs(collection(db, 'orders')),
-    getDocs(collection(db, 'user_profiles')).catch(() => ({ docs: [] }))
+    getDocs(collection(db, 'user_profiles')).catch(() => ({ docs: [] })),
+    getDocs(collection(db, 'crm_customers')).catch(() => ({ docs: [] })),
+    getDocs(collection(db, 'order_feedback')).catch(() => ({ docs: [] }))
   ]);
 
   const orders = orderSnap.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
   const profiles = profileSnap.docs.map((snap) => ({ id: snap.id, ...snap.data() }));
+
+  state.overlays = new Map(overlaySnap.docs.map((snap) => {
+    const data = snap.data() || {};
+    return [snap.id, { tags: Array.isArray(data.tags) ? data.tags : [], notes: String(data.notes || '') }];
+  }));
+
+  // Feedback is keyed on customerUid, so it is matched back to a phone number
+  // through the orders it belongs to.
+  const phoneByOrderId = new Map(orders.map((order) => [order.id, normalizeDigits(order.phoneDigits || order.phone)]));
+  const phoneByUid = new Map();
+  for (const order of orders) {
+    const phone = normalizeDigits(order.phoneDigits || order.phone);
+    if (order.customerUid && phone) phoneByUid.set(order.customerUid, phone);
+  }
+
+  state.feedback = new Map();
+  for (const snap of feedbackSnap.docs) {
+    const entry = { id: snap.id, ...snap.data() };
+    const phone = phoneByOrderId.get(entry.orderId) || phoneByUid.get(entry.customerUid) || '';
+    if (!phone) continue;
+    if (!state.feedback.has(phone)) state.feedback.set(phone, []);
+    state.feedback.get(phone).push(entry);
+  }
 
   state.rawOrders = orders;
   state.rawProfiles = profiles;
@@ -1096,6 +1190,25 @@ function wire() {
   document.getElementById('crmLogoutBtn').addEventListener('click', () => signOut(auth));
   document.getElementById('crmExportBtn').addEventListener('click', exportCsv);
   document.getElementById('crmDetailClose').addEventListener('click', closeDetail);
+
+  document.getElementById('crmDetailBody').addEventListener('click', (event) => {
+    const tagBtn = event.target.closest('[data-tag]');
+    if (tagBtn && state.detailKey) {
+      const overlay = state.overlays.get(state.detailKey) || { tags: [], notes: '' };
+      const tag = tagBtn.dataset.tag;
+      const tags = overlay.tags.includes(tag)
+        ? overlay.tags.filter((entry) => entry !== tag)
+        : [...overlay.tags, tag];
+      tagBtn.classList.toggle('on');
+      saveOverlay(state.detailKey, { tags }, document.getElementById('crmNotesStatus'));
+      return;
+    }
+
+    if (event.target.closest('#crmSaveNotes') && state.detailKey) {
+      const notes = String(document.getElementById('crmNotes')?.value || '').trim();
+      saveOverlay(state.detailKey, { notes }, document.getElementById('crmNotesStatus'));
+    }
+  });
 
   document.getElementById('crmDetailModal').addEventListener('click', (event) => {
     if (event.target?.id === 'crmDetailModal') closeDetail();

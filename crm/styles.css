@@ -226,6 +226,42 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600
 .crm-filterbar-note { font-size: 12px; color: var(--text-faint); margin-left: auto; }
 .crm-filterbar .crm-seg.active::before { content: '✓ '; }
 
+/* ── Tags and notes ──────────────────────────────────── */
+
+.crm-tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.crm-tag {
+  padding: 6px 12px;
+  border-radius: 18px;
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.crm-tag:hover { border-color: var(--glass-border-bright); color: var(--gold-200); }
+.crm-tag.on { background: var(--gold-500); border-color: var(--gold-500); color: #1A1208; font-weight: 600; }
+
+.crm-notes {
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: var(--obs-900);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.crm-notes:focus { outline: none; border-color: var(--glass-border-bright); }
+.crm-notes-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.crm-notes-status { font-size: 12px; }
+
 /* ── Season cohort ───────────────────────────────────── */
 
 .crm-panel-season { border-color: rgba(232,168,60,0.34); }
