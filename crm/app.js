@@ -168,7 +168,7 @@ const state = {
   showTest: false,
   rawOrders: [],
   rawProfiles: [],
-  campaign: { template: 'checkin', audience: 'due30', fields: {} },
+  campaign: { template: 'checkin', audience: 'due30', esp: 'brevo', fields: {} },
   reorderModel: new Map(),
   overlays: new Map(),    // phoneDigits -> { tags: [], notes: '' }
   feedback: new Map(),    // phoneDigits -> [ feedback ]
@@ -1211,7 +1211,7 @@ function renderCampaign() {
     ? `<strong>${recipients.length}</strong> will receive this${noEmail ? ` · ${noEmail} in this group have no email address` : ''}${recipients.length > 120 ? ' · <span style="color:var(--amber)">over the 120 limit, send in batches</span>' : ''}`
     : 'Nobody in this group has an email address.';
 
-  document.getElementById('crmCampSend').disabled = !recipients.length;
+  document.getElementById('crmCampCsv').disabled = !recipients.length;
 }
 
 function readCampaignFields() {
@@ -1223,61 +1223,130 @@ function readCampaignFields() {
   return fields;
 }
 
-async function sendCampaign(testOnly) {
-  const status = document.getElementById('crmCampStatus');
-  const subject = String(document.getElementById('crmCampSubject').value || '').trim();
-  if (!subject) { status.textContent = 'A subject line is required.'; status.style.color = '#E0736B'; return; }
+/* Email HTML built here rather than server-side, because sending now happens in
+   Brevo or Mailchimp. Merge tags differ per provider, so the same template is
+   emitted in whichever dialect the chosen tool expects. */
 
-  const fields = readCampaignFields();
-  const recipients = testOnly
-    ? [{ email: ADMIN_EMAIL, firstName: 'Kiran', lastProduct: 'Avakaya' }]
-    : campaignRecipients().slice(0, 120);
+const MERGE_TAGS = {
+  brevo:     { first: '{{contact.FIRSTNAME}}', product: '{{contact.LASTPRODUCT}}', unsub: '{{ unsubscribe }}' },
+  mailchimp: { first: '*|FNAME|*',             product: '*|LASTPRODUCT|*',        unsub: '*|UNSUB|*' },
+  plain:     { first: 'there',                 product: 'your order',             unsub: '#' }
+};
 
-  if (!testOnly && !window.confirm(
-    `Send "${subject}" to ${recipients.length} customer${recipients.length === 1 ? '' : 's'}?\n\n`
-    + 'Anyone who has unsubscribed is removed automatically. This cannot be undone once sent.'
-  )) return;
+const SHRISH_LOGO_ABS = 'https://www.shrish.co/images/brand/logo-small.png';
+const SHRISH_REVIEW_ABS = 'https://g.page/r/shrish/review';
+const POSTAL_ADDRESS = 'Shrish LLC, Chesterfield, VA, USA';
 
-  status.style.color = 'var(--text-dim)';
-  status.textContent = testOnly ? 'Sending test…' : `Sending to ${recipients.length}…`;
+function campaignHtml() {
+  const tags = MERGE_TAGS[state.campaign.esp] || MERGE_TAGS.plain;
+  const f = state.campaign.fields;
+  const sign = '<p style="margin:18px 0 0;font-size:15px;line-height:1.7;">— Kiran, Shrish</p>';
+  const cta = (url, label) =>
+    `<div style="text-align:center;margin:0 0 22px;"><a href="${url}" style="display:inline-block;background:#b87512;color:#fff;text-decoration:none;font-weight:700;font-size:15px;padding:13px 34px;border-radius:50px;">${label}</a></div>`;
 
-  try {
-    const callable = httpsCallable(cloudFunctions, 'sendCampaign');
-    const result = await callable({ template: state.campaign.template, subject, fields, recipients });
-    const data = result?.data || {};
-    status.style.color = '#7EE2A8';
-    status.textContent = testOnly
-      ? 'Test sent — check your inbox before sending for real.'
-      : `Sent ${data.sent}. ${data.skipped ? `${data.skipped} skipped (unsubscribed). ` : ''}${data.failed ? `${data.failed} failed.` : ''}`;
-    if (!testOnly) loadCampaignHistory();
-  } catch (error) {
-    console.error('Campaign send failed', error);
-    status.style.color = '#E0736B';
-    status.textContent = error?.message || 'Could not send.';
+  let headline = '';
+  let body = '';
+
+  if (state.campaign.template === 'checkin') {
+    headline = 'We hope you enjoyed it';
+    body = `<p style="margin:0 0 16px;font-size:15px;line-height:1.7;">Hi ${tags.first},</p>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.7;">
+        It has been a little while since your last order, so we wanted to check in.
+        We hope the ${tags.product} was everything you hoped for.
+      </p>
+      <p style="margin:0 0 20px;font-size:15px;line-height:1.7;">
+        We are a small family kitchen, and honest feedback is how we get better. If something was not
+        right — the taste, the packing, the delivery — please just reply to this email and tell us.
+        We would rather hear it from you than not know.
+      </p>
+      <div style="background:#fff8ec;border:1px solid #ecd9b6;border-radius:14px;padding:20px 18px;text-align:center;margin-bottom:20px;">
+        <div style="font-size:15px;font-weight:700;">Would you leave us a review?</div>
+        <div style="font-size:13px;line-height:1.65;color:#6b5842;margin:8px auto 15px;max-width:420px;">
+          It takes about thirty seconds and it genuinely helps other families find us.
+          Whatever your experience has been, we would like to hear it.
+        </div>
+        <a href="${SHRISH_REVIEW_ABS}" style="display:inline-block;background:#b87512;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 28px;border-radius:50px;">Leave a review</a>
+      </div>
+      <p style="margin:0;font-size:15px;line-height:1.7;">
+        And if you are running low, everything is at
+        <a href="https://www.shrish.co/shop.html" style="color:#b87512;">shrish.co</a> whenever you need it.
+      </p>${sign}`;
+  } else if (state.campaign.template === 'promo') {
+    headline = f.headline || 'A little something off your next order';
+    body = `<p style="margin:0 0 16px;font-size:15px;line-height:1.7;">Hi ${tags.first},</p>
+      <p style="margin:0 0 20px;font-size:15px;line-height:1.7;">${escapeHtml(f.intro || '')}</p>
+      <div style="background:#fff8ec;border:2px dashed #d9a441;border-radius:14px;padding:22px 18px;text-align:center;margin-bottom:20px;">
+        <div style="font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:#8a6d3b;">Use code</div>
+        <div style="font-size:30px;font-weight:800;letter-spacing:2px;color:#8a5a12;margin:6px 0 4px;">${escapeHtml(f.promoCode || '')}</div>
+        <div style="font-size:13px;color:#6b5842;">${escapeHtml(f.offerLine || '')}</div>
+      </div>
+      ${cta('https://www.shrish.co/shop.html', 'Shop now')}
+      <p style="margin:0;font-size:13px;line-height:1.7;color:#6b5842;">${escapeHtml(f.terms || '')}</p>${sign}`;
+  } else {
+    headline = f.headline || 'Something new at Shrish';
+    body = `<p style="margin:0 0 16px;font-size:15px;line-height:1.7;">Hi ${tags.first},</p>
+      <p style="margin:0 0 20px;font-size:15px;line-height:1.7;">${escapeHtml(f.intro || '')}</p>
+      <div style="border:1px solid #ecd9b6;border-radius:14px;overflow:hidden;margin-bottom:20px;">
+        ${f.imageUrl ? `<img src="${escapeHtml(f.imageUrl)}" alt="${escapeHtml(f.productName || '')}" style="display:block;width:100%;height:auto;" />` : ''}
+        <div style="padding:18px;">
+          <div style="font-size:17px;font-weight:700;">${escapeHtml(f.productName || '')}</div>
+          <div style="font-size:14px;line-height:1.7;color:#3d3225;margin-top:6px;">${escapeHtml(f.productDescription || '')}</div>
+          ${f.price ? `<div style="font-size:18px;font-weight:700;color:#8a5a12;margin-top:10px;">${escapeHtml(f.price)}</div>` : ''}
+        </div>
+      </div>
+      ${cta(escapeHtml(f.productUrl || 'https://www.shrish.co/shop.html'), 'Have a look')}
+      <p style="margin:0;font-size:14px;line-height:1.7;color:#6b5842;">${escapeHtml(f.closing || '')}</p>${sign}`;
   }
+
+  return `<html><body style="margin:0;padding:0;background:#ece7df;font-family:Arial,Helvetica,sans-serif;color:#2b2218;">
+  <div style="padding:28px 12px;">
+    <div style="max-width:640px;margin:0 auto;background:#fff;border-radius:18px;overflow:hidden;">
+      <div style="background:#b87512;padding:26px 24px;text-align:center;">
+        <img src="${SHRISH_LOGO_ABS}" alt="Shrish" width="96" style="display:block;margin:0 auto 12px;" />
+        <div style="font-size:11px;letter-spacing:1.6px;font-weight:700;color:#f8ebd4;">SHRISH LLC</div>
+        <div style="margin-top:8px;font-size:19px;font-weight:700;color:#ffffff;">${escapeHtml(headline)}</div>
+      </div>
+      <div style="padding:24px;">${body}</div>
+      <div style="background:#f6f1e8;padding:16px 24px;font-size:11px;color:#7a6853;line-height:1.7;text-align:center;">
+        You are receiving this because you ordered from Shrish.<br />
+        <a href="${tags.unsub}" style="color:#7a6853;">Unsubscribe</a> &nbsp;·&nbsp; ${POSTAL_ADDRESS}
+      </div>
+    </div>
+  </div>
+</body></html>`;
 }
 
-async function loadCampaignHistory() {
-  const wrap = document.getElementById('crmCampHistory');
-  if (!wrap) return;
-  try {
-    const snap = await getDocs(collection(db, 'crm_campaigns'));
-    const rows = snap.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() }))
-      .sort((a, b) => (toDate(b.sentAt)?.getTime() || 0) - (toDate(a.sentAt)?.getTime() || 0));
+function exportCampaignCsv() {
+  const recipients = campaignRecipients();
+  if (!recipients.length) return;
+  const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const rows = recipients.map((r) => [r.email, r.firstName, r.lastProduct].map(cell).join(','));
+  const csv = [['EMAIL', 'FIRSTNAME', 'LASTPRODUCT'].map(cell).join(','), ...rows].join('\n');
 
-    wrap.innerHTML = rows.length
-      ? rows.slice(0, 15).map((row) => `
-        <div class="crm-order-row">
-          <div>
-            <div>${escapeHtml(row.subject || '(no subject)')}</div>
-            <div class="crm-order-meta">${escapeHtml(shortDate(toDate(row.sentAt)))} · ${escapeHtml(row.template || '')}${row.skippedOptOut ? ` · ${row.skippedOptOut} unsubscribed` : ''}${row.failed ? ` · ${row.failed} failed` : ''}</div>
-          </div>
-          <div class="crm-num">${row.sent || 0} sent</div>
-        </div>`).join('')
-      : '<div class="crm-empty">No campaigns sent yet.</div>';
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `shrish_${state.campaign.audience}_${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+function downloadCampaignHtml() {
+  const blob = new Blob([campaignHtml()], { type: 'text/html;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `shrish_${state.campaign.template}_${state.campaign.esp}.html`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+async function copyCampaignHtml(button) {
+  try {
+    await navigator.clipboard.writeText(campaignHtml());
+    button.textContent = 'Copied';
+    setTimeout(() => { button.textContent = 'Copy HTML'; }, 2000);
   } catch (error) {
-    wrap.innerHTML = '<div class="crm-empty">Could not load campaign history.</div>';
+    downloadCampaignHtml();
   }
 }
 
@@ -1719,7 +1788,6 @@ function setView(view) {
   // display:none container it computes a zero size and stays collapsed, so the
   // chart is rebuilt whenever Overview becomes visible.
   if (view === 'overview') renderChart();
-  if (view === 'campaigns') loadCampaignHistory();
 
   try { localStorage.setItem('shrish_crm_view', view); } catch (error) { /* private mode */ }
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2114,8 +2182,33 @@ function wire() {
     renderCampaign();
   });
 
-  document.getElementById('crmCampTest').addEventListener('click', () => sendCampaign(true));
-  document.getElementById('crmCampSend').addEventListener('click', () => sendCampaign(false));
+  document.getElementById('crmCampEsp').addEventListener('change', (event) => {
+    state.campaign.esp = event.target.value;
+  });
+
+  document.getElementById('crmCampCsv').addEventListener('click', () => {
+    readCampaignFields();
+    exportCampaignCsv();
+    const status = document.getElementById('crmCampStatus');
+    status.style.color = '#7EE2A8';
+    status.textContent = 'CSV downloaded. Import it as a list, then paste the HTML into a new campaign.';
+  });
+
+  document.getElementById('crmCampCopy').addEventListener('click', (event) => {
+    readCampaignFields();
+    copyCampaignHtml(event.target);
+  });
+
+  document.getElementById('crmCampHtml').addEventListener('click', () => {
+    readCampaignFields();
+    downloadCampaignHtml();
+  });
+
+  document.getElementById('crmCampPreview').addEventListener('click', () => {
+    readCampaignFields();
+    const win = window.open('', '_blank');
+    if (win) { win.document.write(campaignHtml()); win.document.close(); }
+  });
 
   document.querySelectorAll('[data-group]').forEach((button) => {
     button.addEventListener('click', () => {

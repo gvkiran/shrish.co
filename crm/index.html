@@ -181,25 +181,27 @@
           <select class="crm-field" id="crmCampAudience"></select>
           <div class="crm-camp-count" id="crmCampCount"></div>
 
+          <label class="crm-field-label" for="crmCampEsp">4 · Which tool you'll send from</label>
+          <select class="crm-field" id="crmCampEsp">
+            <option value="brevo">Brevo</option>
+            <option value="mailchimp">Mailchimp</option>
+            <option value="plain">Neither — plain HTML, no personalisation</option>
+          </select>
+
           <div class="crm-camp-actions">
-            <button class="crm-action-btn" type="button" id="crmCampTest">Send test to me</button>
-            <button class="crm-action-btn primary" type="button" id="crmCampSend">Send campaign</button>
+            <button class="crm-action-btn primary" type="button" id="crmCampCsv">Download recipients CSV</button>
+            <button class="crm-action-btn" type="button" id="crmCampCopy">Copy HTML</button>
+            <button class="crm-action-btn" type="button" id="crmCampHtml">Download HTML</button>
+            <button class="crm-action-btn" type="button" id="crmCampPreview">Preview</button>
           </div>
           <div class="crm-camp-status" id="crmCampStatus"></div>
 
           <div class="crm-season-note">
-            Anyone who has unsubscribed is removed automatically on the server, so they cannot be
-            emailed by mistake. Every message carries a working unsubscribe link and your postal
-            address, both required by law. Maximum 120 recipients per send.
+            <strong>How to send:</strong> download the CSV, import it into Brevo or Mailchimp as a list,
+            then paste the HTML into a new campaign. Your tool adds the unsubscribe link and handles
+            opt-outs, bounces and complaints for you. Keeping marketing off <code>shrish.co</code> means a
+            bad campaign can never affect whether your order confirmations arrive.
           </div>
-        </section>
-
-        <section class="crm-panel">
-          <div class="crm-panel-head">
-            <h2>Sent already</h2>
-            <span class="crm-panel-note">So nobody gets the same thing twice</span>
-          </div>
-          <div id="crmCampHistory"></div>
         </section>
       </div>
 
