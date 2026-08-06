@@ -5,25 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="robots" content="noindex,nofollow" />
   <title>Shrish Booth Entry</title>
-  <link rel="icon" href="../images/brand/logo-small.png" />
+  <link rel="icon" href="/images/brand/logo-small.png" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=booth-20260805" />
-  <link rel="stylesheet" href="booth.css?v=booth-20260805" />
-  <script src="../assets/js/firebase-config.js"></script>
-  <script src="../assets/js/data.js"></script>
+  <link rel="stylesheet" href="/crm/styles.css?v=booth-20260805" />
+  <link rel="stylesheet" href="/crm/booth.css?v=booth-20260805" />
+  <script src="/assets/js/firebase-config.js"></script>
+  <script src="/assets/js/data.js"></script>
 </head>
 <body>
 
 <div id="loginScreen" class="crm-login-wrap">
   <div class="crm-login-card">
-    <img src="../images/brand/logo-small.png" alt="Shrish" class="crm-login-logo" />
+    <img src="/images/brand/logo-small.png" alt="Shrish" class="crm-login-logo" />
     <h1>Booth Entry</h1>
     <p class="crm-login-sub">Owner access only.</p>
     <input type="email" id="crmEmail" placeholder="Admin email" autocomplete="username" />
     <input type="password" id="crmPassword" placeholder="Password" autocomplete="current-password" />
     <button type="button" id="crmLoginBtn">Sign in</button>
     <p class="crm-login-error" id="crmLoginErr"></p>
-    <a class="crm-login-back" href="index.html">Back to CRM</a>
+    <a class="crm-login-back" href="/crm/">Back to CRM</a>
   </div>
 </div>
 
@@ -41,7 +41,7 @@
         <option value="shortpump">Short Pump</option>
         <option value="mechanicsville">Mechanicsville</option>
       </select>
-      <a class="crm-ghost-btn" href="index.html">CRM</a>
+      <a class="crm-ghost-btn" href="/crm/">CRM</a>
     </div>
   </header>
 
@@ -58,6 +58,11 @@
       </div>
     </section>
 
+    <section class="booth-card booth-cart-card" id="boothCartCard" style="display:none">
+      <div class="booth-label">This sale — tap − or + to adjust</div>
+      <div id="boothCart"></div>
+    </section>
+
     <section class="booth-card">
       <div class="booth-card-head">
         <span class="booth-label">Products</span>
@@ -65,11 +70,6 @@
       </div>
       <div class="booth-cats" id="boothCats"></div>
       <div class="booth-grid" id="boothGrid"></div>
-    </section>
-
-    <section class="booth-card" id="boothCartCard" style="display:none">
-      <div class="booth-label">This sale</div>
-      <div id="boothCart"></div>
     </section>
 
   </main>
@@ -93,6 +93,6 @@
 
 <div class="booth-toast" id="boothToast"></div>
 
-<script type="module" src="booth.js?v=booth-20260805"></script>
+<script type="module" src="/crm/booth.js?v=booth-20260805"></script>
 </body>
 </html>

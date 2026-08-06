@@ -17,7 +17,7 @@ import {
   signOut,
   serverTimestamp,
   escapeHtml
-} from '../assets/js/firebase-app.js';
+} from '/assets/js/firebase-app.js';
 
 const ADMIN_EMAIL = String(window.SHRISH_APP_CONFIG?.adminEmailHint || 'contact@shrish.co').trim().toLowerCase();
 

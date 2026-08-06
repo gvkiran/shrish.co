@@ -28,7 +28,7 @@ import {
   moneyNumber,
   cloudFunctions,
   httpsCallable
-} from '../assets/js/firebase-app.js';
+} from '/assets/js/firebase-app.js';
 
 const ADMIN_EMAIL = String(window.SHRISH_APP_CONFIG?.adminEmailHint || 'contact@shrish.co').trim().toLowerCase();
 
@@ -458,10 +458,14 @@ function visibleCustomers() {
   let list = state.customers.filter(segment.test);
 
   if (term) {
+    // Only test the phone when the term actually contains digits.
+    // `'8045551234'.includes('')` is true, so a plain text search previously
+    // matched every row through this branch and search appeared dead.
+    const termDigits = term.replace(/\D/g, '');
     list = list.filter((customer) =>
       customer.name.toLowerCase().includes(term)
       || customer.email.toLowerCase().includes(term)
-      || customer.key.includes(term.replace(/\D/g, ''))
+      || (termDigits.length >= 3 && customer.key.includes(termDigits))
     );
   }
 

@@ -5,23 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex,nofollow" />
   <title>Shrish CRM</title>
-  <link rel="icon" href="../images/brand/logo-small.png" />
+  <link rel="icon" href="/images/brand/logo-small.png" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=crm-p1-20260805" />
-  <script src="../assets/js/firebase-config.js"></script>
+  <link rel="stylesheet" href="/crm/styles.css?v=crm-p1-20260805" />
+  <script src="/assets/js/firebase-config.js"></script>
 </head>
 <body>
 
 <div id="loginScreen" class="crm-login-wrap">
   <div class="crm-login-card">
-    <img src="../images/brand/logo-small.png" alt="Shrish" class="crm-login-logo" />
+    <img src="/images/brand/logo-small.png" alt="Shrish" class="crm-login-logo" />
     <h1>Shrish CRM</h1>
     <p class="crm-login-sub">Customer intelligence. Owner access only.</p>
     <input type="email" id="crmEmail" placeholder="Admin email" autocomplete="username" />
     <input type="password" id="crmPassword" placeholder="Password" autocomplete="current-password" />
     <button type="button" id="crmLoginBtn">Sign in</button>
     <p class="crm-login-error" id="crmLoginErr"></p>
-    <a class="crm-login-back" href="../admin.html">Back to admin</a>
+    <a class="crm-login-back" href="/admin.html">Back to admin</a>
   </div>
 </div>
 
@@ -29,15 +29,15 @@
 
   <header class="crm-header">
     <div class="crm-header-left">
-      <img src="../images/brand/logo-small.png" alt="" class="crm-header-logo" />
+      <img src="/images/brand/logo-small.png" alt="" class="crm-header-logo" />
       <div>
         <div class="crm-header-title">Shrish CRM</div>
         <div class="crm-header-sub" id="crmDataNote">Loading…</div>
       </div>
     </div>
     <div class="crm-header-right">
-      <a class="crm-ghost-btn" href="booth.html">Booth entry</a>
-      <a class="crm-ghost-btn" href="../admin.html">Admin</a>
+      <a class="crm-ghost-btn" href="/crm/booth.html">Booth entry</a>
+      <a class="crm-ghost-btn" href="/admin.html">Admin</a>
       <button class="crm-ghost-btn" type="button" id="crmLogoutBtn">Sign out</button>
     </div>
   </header>
@@ -186,6 +186,6 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script type="module" src="app.js?v=crm-p1-20260805"></script>
+<script type="module" src="/crm/app.js?v=crm-p1-20260805"></script>
 </body>
 </html>

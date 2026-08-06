@@ -369,8 +369,10 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600
 }
 
 .crm-variety-name { flex: 0 0 150px; color: var(--text-dim); }
-.crm-variety-bar-wrap { flex: 1; height: 16px; background: rgba(239,228,206,0.06); border-radius: 8px; overflow: hidden; }
-.crm-variety-bar { height: 100%; background: var(--gold-500); border-radius: 8px; }
+/* These must be block: width and height do not apply to inline elements, so
+   as spans the bars rendered with zero height and never appeared. */
+.crm-variety-bar-wrap { display: block; flex: 1; min-width: 40px; height: 16px; background: rgba(239,228,206,0.06); border-radius: 8px; overflow: hidden; }
+.crm-variety-bar { display: block; height: 100%; min-width: 3px; background: var(--gold-500); border-radius: 8px; }
 .crm-variety-qty { flex: 0 0 62px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text); }
 
 .crm-season-note {

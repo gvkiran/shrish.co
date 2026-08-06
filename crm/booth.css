@@ -141,6 +141,17 @@
   justify-content: center;
 }
 
+/* Sits above the product grid and sticks below the header, so the quantity
+   controls are always reachable however far you scroll through products. */
+.booth-cart-card {
+  position: sticky;
+  top: 66px;
+  z-index: 30;
+  border-color: var(--glass-border-bright);
+  max-height: 42vh;
+  overflow-y: auto;
+}
+
 .booth-cart-row {
   display: flex;
   align-items: center;
