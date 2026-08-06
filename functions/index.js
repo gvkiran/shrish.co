@@ -2095,6 +2095,65 @@ function cleanFeedbackRating(value) {
   return Math.min(Math.max(rating, 1), 5);
 }
 
+// Links a signed-in customer to their own past orders that carry no
+// customerUid — guest checkouts, and orders the owner entered by hand.
+//
+// Without this, those orders are invisible on account.html (the read rule
+// requires customerUid to match) so customers cannot see their own tracking.
+//
+// Ownership proof is deliberately the same as the existing single-order
+// claim: the order's email must match the authenticated email AND the phone
+// must match. Email alone would let anyone who knows an address claim orders.
+exports.claimMyOrders = onCall(
+  callableOptions(),
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign in to link your orders.");
+    }
+
+    const uid = request.auth.uid;
+    const authEmail = String(request.auth.token?.email || "").trim().toLowerCase();
+    if (!authEmail) {
+      throw new HttpsError("failed-precondition", "This account has no email address.");
+    }
+
+    const db = admin.firestore();
+    const profileSnap = await db.collection("user_profiles").doc(uid).get();
+    const phone = normalizeOrderPhone(
+      request.data?.phone || profileSnap.data()?.phone || ""
+    );
+    if (!phone || phone.length < 10) {
+      return { claimed: 0, reason: "no_phone" };
+    }
+
+    // Query on phoneDigits: it is stored normalised, whereas email casing
+    // varies with however the customer typed it.
+    const snapshot = await db.collection("orders").where("phoneDigits", "==", phone).get();
+
+    const batch = db.batch();
+    let claimed = 0;
+
+    for (const docSnap of snapshot.docs) {
+      const order = docSnap.data() || {};
+      if (order.customerUid) continue;
+      const orderEmail = String(order.email || order.customerEmail || "").trim().toLowerCase();
+      if (!orderEmail || orderEmail !== authEmail) continue;
+
+      batch.set(docSnap.ref, {
+        customerUid: uid,
+        customerEmail: authEmail,
+        claimedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      claimed += 1;
+      if (claimed >= 400) break;   // batch limit headroom
+    }
+
+    if (claimed) await batch.commit();
+    return { claimed };
+  }
+);
+
 exports.submitOrderFeedback = onCall(
   callableOptions(),
   async (request) => {

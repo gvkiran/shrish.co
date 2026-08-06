@@ -36,6 +36,7 @@ let currentOrders = [];
 let latestProfileSnapshot = null;
 const updateCustomerPendingOrder = httpsCallable(cloudFunctions, 'updateCustomerPendingOrder');
 const claimCustomerOrder = httpsCallable(cloudFunctions, 'claimCustomerOrder');
+const claimMyOrders = httpsCallable(cloudFunctions, 'claimMyOrders');
 const submitOrderFeedback = httpsCallable(cloudFunctions, 'submitOrderFeedback');
 const sendCustomerPasswordReset = httpsCallable(cloudFunctions, 'sendCustomerPasswordReset');
 const requestAccountDeletion = httpsCallable(cloudFunctions, 'requestAccountDeletion');
@@ -1658,6 +1659,18 @@ function init() {
     await loadProfile(user);
     setProfileEditing(false);
     await claimRecentOrderForUser(user);
+
+    // Adopt any past orders placed as a guest, or entered by hand, that match
+    // this account's email and phone. Without this they never appear here.
+    try {
+      const result = await claimMyOrders({});
+      if (result?.data?.claimed) {
+        console.info(`Linked ${result.data.claimed} earlier order(s) to this account.`);
+      }
+    } catch (error) {
+      console.warn('Could not link earlier orders', error);
+    }
+
     if (returnToCheckoutIfRequested()) return;
     subscribeOrders(user);
   });
