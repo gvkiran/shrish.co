@@ -1467,6 +1467,7 @@ const SHRISH_VERIFIED_PRODUCT_IMAGE_IDS = new Set([
   "sweets-ragi-laddu",
   "sweets-sunnundalu",
   "snacks-ragi-murukulu",
+  "puth_plain_sugar",
   "puth_jaggery_kaju_pista",
   "puth_samosa_jaggery_dryfruit",
   "mango_jelly_sugar",

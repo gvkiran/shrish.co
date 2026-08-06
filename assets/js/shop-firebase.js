@@ -3,7 +3,7 @@ import { db, collection, doc, onSnapshot, setDoc, serverTimestamp, escapeHtml } 
 'use strict';
 
 let cart = JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
-let activeFilter = 'all';
+let activeFilter = 'sweets';
 let baseProducts = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || []));
 let modalQty = 1;
 let modalProductId = null;
@@ -97,8 +97,8 @@ const PRODUCT_IMAGES = {
   malgova: ['images/products/mangoes/img_malgova.jpg', 'images/products/mangoes/img_malgova1.jpg'],
   neelam: ['images/products/mangoes/img_neelam.jpg', 'images/products/mangoes/img_neelam1.jpg'],
   rajapuri: ['images/products/mangoes/img_banganapalli.jpg'],
-  puth_plain: ['images/products/putharekulu/img_puth_sugar_kaju.jpg'],
-  puth_plain_sugar: ['images/products/putharekulu/img_puth_sugar_kaju.jpg'],
+  puth_plain: ['images/products/putharekulu/putharekulu-plain-sugar-2026-1.jpg'],
+  puth_plain_sugar: ['images/products/putharekulu/putharekulu-plain-sugar-2026-1.jpg'],
   puth_plain_jaggery: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg'],
   puth_sugar_kaju: ['images/products/putharekulu/img_puth_sugar_kaju.jpg'],
   puth_sugar_kaju_pista: [
@@ -231,7 +231,10 @@ function filterFromCurrentLocation() {
   const queryFilter = params.get('category') || params.get('filter');
   if (queryFilter === 'picklespodi') return params.get('type') === 'podi' ? 'podi' : 'pickles';
   if (queryFilter && SHOP_FILTERS.some((filter) => filter.id === queryFilter)) return queryFilter;
-  if (window.location.pathname.endsWith('/shop.html')) return 'all';
+  if (
+    window.location.pathname.endsWith('/shop.html')
+    && (params.get('search') || params.get('q'))
+  ) return 'all';
   return null;
 }
 

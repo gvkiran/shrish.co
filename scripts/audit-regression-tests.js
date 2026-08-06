@@ -62,6 +62,29 @@ check(
 
 const homeSource = read('assets/js/home-firebase.js');
 const shopSource = read('assets/js/shop-firebase.js');
+const catalogSource = read('assets/js/data.js');
+const indexSource = read('index.html');
+const verifiedProductImageIdsSource = catalogSource.slice(
+  catalogSource.indexOf('const SHRISH_VERIFIED_PRODUCT_IMAGE_IDS'),
+  catalogSource.indexOf('const SHRISH_VERIFIED_PRODUCT_IMAGE_OVERRIDES')
+);
+check(
+  shopSource.includes("let activeFilter = 'sweets';") &&
+    shopSource.includes("window.location.pathname.endsWith('/shop.html')") &&
+    shopSource.includes("params.get('search') || params.get('q')"),
+  'The bare shop page must start with Sweets while product searches continue across all categories.'
+);
+check(
+  shopSource.includes("puth_plain_sugar: ['images/products/putharekulu/putharekulu-plain-sugar-2026-1.jpg']") &&
+    verifiedProductImageIdsSource.includes('"puth_plain_sugar"'),
+  'Classic Plain Sugar Putharekulu must use its verified product image in the live shop.'
+);
+check(
+  indexSource.includes('id="heroImg" src="images/products/sweets/kajji-kayalu-2026.webp"') &&
+    indexSource.includes("word: 'KAJJI'") &&
+    indexSource.includes('product=sweets-kajji-kayalu'),
+  'The homepage must start with the Kajji Kayalu feature and link to its product.'
+);
 check(
   homeSource.includes("doc(collection(db, 'email_subscribers'))") &&
     !homeSource.includes("doc(db, 'email_subscribers', email)"),
