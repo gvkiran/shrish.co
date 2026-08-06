@@ -74,13 +74,15 @@ check(
 );
 
 const rulesSource = read('firestore.rules');
+const normalizedRulesSource = rulesSource.replace(/\s+/g, ' ');
 check(
   rulesSource.includes("allow get, list: if isAdmin();") &&
     rulesSource.includes("allow create: if emailId.matches('^[A-Za-z0-9]{20}$');"),
   'Subscriber reads must be admin-only and creates must use random IDs.'
 );
 check(
-  rulesSource.includes("allow create: if orderId.matches('^[A-Za-z0-9]{20}$')"),
+  normalizedRulesSource.includes("allow create: if orderId.matches('^[A-Za-z0-9]{20}$')") ||
+    normalizedRulesSource.includes("allow create: if ( orderId.matches('^[A-Za-z0-9]{20}$')"),
   'Anonymous order creates must use Firebase auto IDs.'
 );
 check(
