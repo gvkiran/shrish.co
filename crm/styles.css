@@ -320,6 +320,28 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600
 .crm-filterbar-divider { width: 1px; height: 22px; background: var(--glass-border); }
 .crm-pill.season { background: rgba(200,121,26,0.16); color: var(--gold-300); }
 
+/* ── Campaign composer ───────────────────────────────── */
+
+.crm-field-label { display: block; margin: 16px 0 6px; font-size: 13px; font-weight: 600; color: var(--text-dim); }
+
+.crm-field {
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: var(--obs-900);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.crm-field:focus { outline: none; border-color: var(--glass-border-bright); }
+.crm-camp-count { margin-top: 8px; font-size: 13px; color: var(--text-dim); }
+.crm-camp-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.crm-camp-status { min-height: 20px; margin-top: 10px; font-size: 13px; font-weight: 600; }
+
 /* ── Tags and notes ──────────────────────────────────── */
 
 .crm-tag-row { display: flex; flex-wrap: wrap; gap: 6px; }

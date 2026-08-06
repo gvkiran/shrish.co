@@ -168,6 +168,7 @@ const state = {
   showTest: false,
   rawOrders: [],
   rawProfiles: [],
+  campaign: { template: 'checkin', audience: 'due30', fields: {} },
   reorderModel: new Map(),
   overlays: new Map(),    // phoneDigits -> { tags: [], notes: '' }
   feedback: new Map(),    // phoneDigits -> [ feedback ]
@@ -1132,6 +1133,154 @@ function renderExtraInsights() {
     </section>`;
 }
 
+/* ── campaigns ────────────────────────────────────────── */
+
+const CAMPAIGN_AUDIENCES = [
+  { id: 'due30',   label: 'Quiet 30+ days', pick: (c) => c.daysSinceNonMango !== null && c.daysSinceNonMango >= 30 },
+  { id: 'due60',   label: 'Quiet 60+ days', pick: (c) => c.daysSinceNonMango !== null && c.daysSinceNonMango >= 60 },
+  { id: 'running', label: 'Predicted running out', pick: (c) => c.predictedOver !== null && c.predictedOver >= -3 && c.predictedOver <= 45 },
+  { id: 'repeat',  label: 'Repeat customers', pick: (c) => c.isRepeat },
+  { id: 'vip',     label: 'Top spenders', pick: (c) => c.isVip },
+  { id: 'new30',   label: 'New in last 30 days', pick: (c) => c.isNew },
+  { id: 'mango',   label: 'Mango buyers', pick: (c) => c.mangoQty > 0 },
+  { id: 'all',     label: 'Everyone shown by the current filters', pick: () => true }
+];
+
+const CAMPAIGN_FIELDS = {
+  checkin: [],
+  promo: [
+    ['headline', 'Headline', '10% off orders over $70'],
+    ['intro', 'Opening line', 'A small thank-you for ordering from us. Until 31 August, take 10% off any order over $70.'],
+    ['promoCode', 'Promo code', 'THANKYOU10'],
+    ['offerLine', 'Offer summary', '10% off orders over $70 · valid until 31 August'],
+    ['terms', 'Terms', 'One use per customer. Applies to the item total before tax and shipping. Cannot be combined with another offer.']
+  ],
+  announce: [
+    ['headline', 'Headline', 'Our Diwali combo is here'],
+    ['intro', 'Opening line', 'We have put together something for the festival season.'],
+    ['productName', 'Product name', 'Diwali Sweets Combo'],
+    ['productDescription', 'Description', 'Sunnundalu, Rava Laddu and Madatha Kaja together in one box.'],
+    ['price', 'Price', '$44.99'],
+    ['imageUrl', 'Image URL (optional)', 'https://www.shrish.co/images/products/...'],
+    ['productUrl', 'Link', 'https://www.shrish.co/shop.html'],
+    ['closing', 'Closing line', 'Made fresh to order, so please allow a few days.']
+  ]
+};
+
+function campaignRecipients() {
+  const audience = CAMPAIGN_AUDIENCES.find((a) => a.id === state.campaign.audience) || CAMPAIGN_AUDIENCES[0];
+  return state.customers
+    .filter(audience.pick)
+    .filter((customer) => String(customer.email || '').includes('@'))
+    .map((customer) => ({
+      email: String(customer.email).trim(),
+      firstName: (customer.name || '').split(/\s+/)[0] || '',
+      lastProduct: customer.favourites[0]?.[0] || ''
+    }));
+}
+
+function renderCampaign() {
+  const picker = document.getElementById('crmTplPicker');
+  if (!picker) return;
+
+  picker.querySelectorAll('[data-tpl]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.tpl === state.campaign.template);
+  });
+
+  const fields = CAMPAIGN_FIELDS[state.campaign.template] || [];
+  document.getElementById('crmCampFields').innerHTML = fields.length
+    ? fields.map(([key, label, placeholder]) => `
+        <label class="crm-field-label" for="camp-${key}">${escapeHtml(label)}</label>
+        ${key === 'intro' || key === 'terms' || key === 'productDescription' || key === 'closing'
+          ? `<textarea class="crm-field" id="camp-${key}" rows="2" placeholder="${escapeHtml(placeholder)}">${escapeHtml(state.campaign.fields[key] || '')}</textarea>`
+          : `<input class="crm-field" id="camp-${key}" type="text" placeholder="${escapeHtml(placeholder)}" value="${escapeHtml(state.campaign.fields[key] || '')}" />`}`).join('')
+    : '<div class="crm-season-note">This template writes itself from each customer\'s own history. Nothing to fill in.</div>';
+
+  const select = document.getElementById('crmCampAudience');
+  if (select.options.length !== CAMPAIGN_AUDIENCES.length) {
+    select.innerHTML = CAMPAIGN_AUDIENCES.map((a) => `<option value="${a.id}">${escapeHtml(a.label)}</option>`).join('');
+  }
+  select.value = state.campaign.audience;
+
+  const recipients = campaignRecipients();
+  const audience = CAMPAIGN_AUDIENCES.find((a) => a.id === state.campaign.audience);
+  const inSegment = state.customers.filter(audience.pick).length;
+  const noEmail = inSegment - recipients.length;
+
+  document.getElementById('crmCampCount').innerHTML = recipients.length
+    ? `<strong>${recipients.length}</strong> will receive this${noEmail ? ` · ${noEmail} in this group have no email address` : ''}${recipients.length > 120 ? ' · <span style="color:var(--amber)">over the 120 limit, send in batches</span>' : ''}`
+    : 'Nobody in this group has an email address.';
+
+  document.getElementById('crmCampSend').disabled = !recipients.length;
+}
+
+function readCampaignFields() {
+  const fields = {};
+  for (const [key] of CAMPAIGN_FIELDS[state.campaign.template] || []) {
+    fields[key] = String(document.getElementById(`camp-${key}`)?.value || '').trim();
+  }
+  state.campaign.fields = { ...state.campaign.fields, ...fields };
+  return fields;
+}
+
+async function sendCampaign(testOnly) {
+  const status = document.getElementById('crmCampStatus');
+  const subject = String(document.getElementById('crmCampSubject').value || '').trim();
+  if (!subject) { status.textContent = 'A subject line is required.'; status.style.color = '#E0736B'; return; }
+
+  const fields = readCampaignFields();
+  const recipients = testOnly
+    ? [{ email: ADMIN_EMAIL, firstName: 'Kiran', lastProduct: 'Avakaya' }]
+    : campaignRecipients().slice(0, 120);
+
+  if (!testOnly && !window.confirm(
+    `Send "${subject}" to ${recipients.length} customer${recipients.length === 1 ? '' : 's'}?\n\n`
+    + 'Anyone who has unsubscribed is removed automatically. This cannot be undone once sent.'
+  )) return;
+
+  status.style.color = 'var(--text-dim)';
+  status.textContent = testOnly ? 'Sending test…' : `Sending to ${recipients.length}…`;
+
+  try {
+    const callable = httpsCallable(cloudFunctions, 'sendCampaign');
+    const result = await callable({ template: state.campaign.template, subject, fields, recipients });
+    const data = result?.data || {};
+    status.style.color = '#7EE2A8';
+    status.textContent = testOnly
+      ? 'Test sent — check your inbox before sending for real.'
+      : `Sent ${data.sent}. ${data.skipped ? `${data.skipped} skipped (unsubscribed). ` : ''}${data.failed ? `${data.failed} failed.` : ''}`;
+    if (!testOnly) loadCampaignHistory();
+  } catch (error) {
+    console.error('Campaign send failed', error);
+    status.style.color = '#E0736B';
+    status.textContent = error?.message || 'Could not send.';
+  }
+}
+
+async function loadCampaignHistory() {
+  const wrap = document.getElementById('crmCampHistory');
+  if (!wrap) return;
+  try {
+    const snap = await getDocs(collection(db, 'crm_campaigns'));
+    const rows = snap.docs
+      .map((doc) => ({ id: doc.id, ...doc.data() }))
+      .sort((a, b) => (toDate(b.sentAt)?.getTime() || 0) - (toDate(a.sentAt)?.getTime() || 0));
+
+    wrap.innerHTML = rows.length
+      ? rows.slice(0, 15).map((row) => `
+        <div class="crm-order-row">
+          <div>
+            <div>${escapeHtml(row.subject || '(no subject)')}</div>
+            <div class="crm-order-meta">${escapeHtml(shortDate(toDate(row.sentAt)))} · ${escapeHtml(row.template || '')}${row.skippedOptOut ? ` · ${row.skippedOptOut} unsubscribed` : ''}${row.failed ? ` · ${row.failed} failed` : ''}</div>
+          </div>
+          <div class="crm-num">${row.sent || 0} sent</div>
+        </div>`).join('')
+      : '<div class="crm-empty">No campaigns sent yet.</div>';
+  } catch (error) {
+    wrap.innerHTML = '<div class="crm-empty">Could not load campaign history.</div>';
+  }
+}
+
 /* ── today ────────────────────────────────────────────── */
 //
 // One screen answering "what should I do right now", ordered by money at stake
@@ -1550,6 +1699,7 @@ function renderAll() {
   renderSegments();
   renderList();
   renderUnpaid();
+  renderCampaign();
 }
 
 function setView(view) {
@@ -1569,6 +1719,7 @@ function setView(view) {
   // display:none container it computes a zero size and stays collapsed, so the
   // chart is rebuilt whenever Overview becomes visible.
   if (view === 'overview') renderChart();
+  if (view === 'campaigns') loadCampaignHistory();
 
   try { localStorage.setItem('shrish_crm_view', view); } catch (error) { /* private mode */ }
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1949,6 +2100,22 @@ function wire() {
   });
 
   document.getElementById('crmSeasonExport').addEventListener('click', exportSeasonCsv);
+
+  document.getElementById('crmTplPicker').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-tpl]');
+    if (!button) return;
+    readCampaignFields();
+    state.campaign.template = button.dataset.tpl;
+    renderCampaign();
+  });
+
+  document.getElementById('crmCampAudience').addEventListener('change', (event) => {
+    state.campaign.audience = event.target.value;
+    renderCampaign();
+  });
+
+  document.getElementById('crmCampTest').addEventListener('click', () => sendCampaign(true));
+  document.getElementById('crmCampSend').addEventListener('click', () => sendCampaign(false));
 
   document.querySelectorAll('[data-group]').forEach((button) => {
     button.addEventListener('click', () => {

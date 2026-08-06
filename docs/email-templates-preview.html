@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Shrish — marketing email drafts for review</title>
+<style>
+  body { margin:0; background:#e6e1d8; font-family: Arial, Helvetica, sans-serif; color:#2b2218; }
+  .page { max-width: 760px; margin: 0 auto; padding: 28px 14px 60px; }
+  .note { background:#fff; border-left:4px solid #b87512; padding:14px 18px; margin:0 0 26px; font-size:14px; line-height:1.65; border-radius:0 10px 10px 0; }
+  .note strong { color:#8a5a12; }
+  .label { font-size:12px; letter-spacing:1.4px; text-transform:uppercase; color:#7a6853; margin:34px 0 6px; font-weight:700; }
+  .subject { background:#fff8ec; border:1px solid #ecd9b6; border-radius:10px; padding:11px 15px; margin:0 0 14px; font-size:14px; }
+  .subject b { color:#8a5a12; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="note">
+  <strong>Three drafts for you to correct.</strong> Read them as your customer would.
+  Things worth checking: does it sound like you, is the offer stated correctly, and is
+  anything promised that you cannot deliver. The unsubscribe line and postal address at the
+  bottom of each are legally required in the US — they are not optional decoration.
+</div>
+
+<!-- ═══════════════ 1. CHECK-IN + REVIEW ═══════════════ -->
+<div class="label">Template 1 — check-in, 30+ days after their order</div>
+<div class="subject"><b>Subject:</b> How has your Shrish order been?</div>
+
+<div style="background:#ece7df; padding:24px 12px;">
+  <div style="max-width:640px; margin:0 auto; background:#fff; border-radius:18px; overflow:hidden;">
+    <div style="background:#b87512; padding:26px 24px; text-align:center;">
+      <img src="https://gvkiran.github.io/shrish.co/images/brand/logo-small.png" alt="Shrish" width="96" style="display:block; margin:0 auto 12px;" />
+      <div style="font-size:11px; letter-spacing:1.6px; font-weight:700; color:#f8ebd4;">SHRISH LLC</div>
+      <div style="margin-top:8px; font-size:19px; font-weight:700; color:#fff;">We hope you enjoyed it</div>
+    </div>
+
+    <div style="padding:24px;">
+      <p style="margin:0 0 16px; font-size:15px; line-height:1.7;">Hi {{firstName}},</p>
+
+      <p style="margin:0 0 16px; font-size:15px; line-height:1.7;">
+        It has been about a month since your last order, so we wanted to check in. We hope the
+        {{lastProduct}} was everything you hoped for.
+      </p>
+
+      <p style="margin:0 0 20px; font-size:15px; line-height:1.7;">
+        We are a small family kitchen, and honest feedback is how we get better. If something
+        was not right — the taste, the packing, the delivery — please just reply to this email
+        and tell us. We would rather hear it from you than not know.
+      </p>
+
+      <div style="background:#fff8ec; border:1px solid #ecd9b6; border-radius:14px; padding:20px 18px; text-align:center; margin-bottom:20px;">
+        <div style="font-size:15px; font-weight:700;">Would you leave us a review?</div>
+        <div style="font-size:13px; line-height:1.65; color:#6b5842; margin:8px auto 15px; max-width:420px;">
+          It takes about thirty seconds and it genuinely helps other families find us.
+          Whatever your experience has been, we would like to hear it.
+        </div>
+        <a href="{{reviewUrl}}" style="display:inline-block; background:#b87512; color:#fff; text-decoration:none; font-weight:700; font-size:14px; padding:12px 28px; border-radius:50px;">Leave a review</a>
+      </div>
+
+      <p style="margin:0 0 6px; font-size:15px; line-height:1.7;">
+        And if you are running low, everything is at
+        <a href="https://www.shrish.co/shop.html" style="color:#b87512;">shrish.co</a> whenever you need it.
+      </p>
+
+      <p style="margin:18px 0 0; font-size:15px; line-height:1.7;">— Kiran, Shrish</p>
+    </div>
+
+    <div style="background:#f6f1e8; padding:16px 24px; font-size:11px; color:#7a6853; line-height:1.7; text-align:center;">
+      You are receiving this because you ordered from Shrish.<br />
+      <a href="{{unsubscribeUrl}}" style="color:#7a6853;">Unsubscribe from occasional emails</a> ·
+      Shrish LLC, {{postalAddress}}
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ 2. PROMOTION ═══════════════ -->
+<div class="label">Template 2 — promotion</div>
+<div class="subject"><b>Subject:</b> 10% off your next order over $70</div>
+
+<div style="background:#ece7df; padding:24px 12px;">
+  <div style="max-width:640px; margin:0 auto; background:#fff; border-radius:18px; overflow:hidden;">
+    <div style="background:#b87512; padding:26px 24px; text-align:center;">
+      <img src="https://gvkiran.github.io/shrish.co/images/brand/logo-small.png" alt="Shrish" width="96" style="display:block; margin:0 auto 12px;" />
+      <div style="font-size:11px; letter-spacing:1.6px; font-weight:700; color:#f8ebd4;">SHRISH LLC</div>
+      <div style="margin-top:8px; font-size:19px; font-weight:700; color:#fff;">10% off orders over $70</div>
+    </div>
+
+    <div style="padding:24px;">
+      <p style="margin:0 0 16px; font-size:15px; line-height:1.7;">Hi {{firstName}},</p>
+
+      <p style="margin:0 0 20px; font-size:15px; line-height:1.7;">
+        A small thank-you for ordering from us. Until {{endDate}}, take 10% off any order
+        over $70 — enough for a few jars, or a mix of pickles and sweets to keep the house stocked.
+      </p>
+
+      <div style="background:#fff8ec; border:2px dashed #d9a441; border-radius:14px; padding:22px 18px; text-align:center; margin-bottom:20px;">
+        <div style="font-size:12px; letter-spacing:1.4px; text-transform:uppercase; color:#8a6d3b;">Use code</div>
+        <div style="font-size:30px; font-weight:800; letter-spacing:2px; color:#8a5a12; margin:6px 0 4px;">{{promoCode}}</div>
+        <div style="font-size:13px; color:#6b5842;">10% off orders over $70 · valid until {{endDate}}</div>
+      </div>
+
+      <div style="text-align:center; margin-bottom:22px;">
+        <a href="https://www.shrish.co/shop.html" style="display:inline-block; background:#b87512; color:#fff; text-decoration:none; font-weight:700; font-size:15px; padding:13px 34px; border-radius:50px;">Shop now</a>
+      </div>
+
+      <p style="margin:0; font-size:13px; line-height:1.7; color:#6b5842;">
+        One use per customer. Applies to the item total before tax and shipping. Cannot be
+        combined with another offer.
+      </p>
+
+      <p style="margin:18px 0 0; font-size:15px; line-height:1.7;">— Kiran, Shrish</p>
+    </div>
+
+    <div style="background:#f6f1e8; padding:16px 24px; font-size:11px; color:#7a6853; line-height:1.7; text-align:center;">
+      You are receiving this because you ordered from Shrish.<br />
+      <a href="{{unsubscribeUrl}}" style="color:#7a6853;">Unsubscribe from occasional emails</a> ·
+      Shrish LLC, {{postalAddress}}
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ 3. NEW PRODUCT / COMBO / FESTIVAL ═══════════════ -->
+<div class="label">Template 3 — new product, combo pack, or festival offer</div>
+<div class="subject"><b>Subject:</b> {{headline}} — now at Shrish</div>
+
+<div style="background:#ece7df; padding:24px 12px;">
+  <div style="max-width:640px; margin:0 auto; background:#fff; border-radius:18px; overflow:hidden;">
+    <div style="background:#b87512; padding:26px 24px; text-align:center;">
+      <img src="https://gvkiran.github.io/shrish.co/images/brand/logo-small.png" alt="Shrish" width="96" style="display:block; margin:0 auto 12px;" />
+      <div style="font-size:11px; letter-spacing:1.6px; font-weight:700; color:#f8ebd4;">SHRISH LLC</div>
+      <div style="margin-top:8px; font-size:19px; font-weight:700; color:#fff;">{{headline}}</div>
+    </div>
+
+    <div style="padding:24px;">
+      <p style="margin:0 0 16px; font-size:15px; line-height:1.7;">Hi {{firstName}},</p>
+
+      <p style="margin:0 0 20px; font-size:15px; line-height:1.7;">{{intro}}</p>
+
+      <div style="border:1px solid #ecd9b6; border-radius:14px; overflow:hidden; margin-bottom:20px;">
+        <img src="{{productImage}}" alt="{{productName}}" style="display:block; width:100%; height:auto;" />
+        <div style="padding:18px;">
+          <div style="font-size:17px; font-weight:700;">{{productName}}</div>
+          <div style="font-size:14px; line-height:1.7; color:#3d3225; margin-top:6px;">{{productDescription}}</div>
+          <div style="font-size:18px; font-weight:700; color:#8a5a12; margin-top:10px;">
+            {{price}} <span style="font-size:13px; font-weight:400; color:#7a6853;">{{unit}}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-bottom:20px;">
+        <a href="{{productUrl}}" style="display:inline-block; background:#b87512; color:#fff; text-decoration:none; font-weight:700; font-size:15px; padding:13px 34px; border-radius:50px;">Have a look</a>
+      </div>
+
+      <p style="margin:0; font-size:14px; line-height:1.7; color:#6b5842;">{{closing}}</p>
+
+      <p style="margin:18px 0 0; font-size:15px; line-height:1.7;">— Kiran, Shrish</p>
+    </div>
+
+    <div style="background:#f6f1e8; padding:16px 24px; font-size:11px; color:#7a6853; line-height:1.7; text-align:center;">
+      You are receiving this because you ordered from Shrish.<br />
+      <a href="{{unsubscribeUrl}}" style="color:#7a6853;">Unsubscribe from occasional emails</a> ·
+      Shrish LLC, {{postalAddress}}
+    </div>
+  </div>
+</div>
+
+<div class="note" style="margin-top:34px;">
+  <strong>Fields the CRM would fill automatically:</strong> firstName, lastProduct (their most-bought item),
+  unsubscribeUrl (unique per person), postalAddress. Everything in {{curly braces}} on template 3 you would
+  type once per campaign.
+</div>
+
+</div>
+</body>
+</html>

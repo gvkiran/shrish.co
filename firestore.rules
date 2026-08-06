@@ -180,6 +180,19 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // Marketing suppression list and campaign log. Opt-outs are written only by
+    // the unsubscribeEmail function using the Admin SDK, which bypasses these
+    // rules, so no client path can add or remove a suppression.
+    match /email_optouts/{optOutId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /crm_campaigns/{campaignId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     match /order_feedback/{feedbackId} {
       allow get, list: if isAdmin();
       allow create, update, delete: if false;

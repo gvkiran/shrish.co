@@ -55,6 +55,7 @@
         <button class="crm-nav-btn" type="button" data-view="seasons">Seasons</button>
         <button class="crm-nav-btn" type="button" data-view="convert">Convert</button>
         <button class="crm-nav-btn" type="button" data-view="unpaid">Unpaid<span class="crm-nav-badge" id="crmUnpaidBadge" style="display:none">0</span></button>
+        <button class="crm-nav-btn" type="button" data-view="campaigns">Email</button>
       </nav>
 
       <section class="crm-filterbar">
@@ -154,6 +155,52 @@
           <div id="crmInsightsBody"></div>
         </section>
         <div id="crmExtraInsights"></div>
+      </div>
+
+      <!-- Campaigns -->
+      <div class="crm-view" id="view-campaigns">
+        <section class="crm-panel">
+          <div class="crm-panel-head">
+            <h2>Send an email</h2>
+            <span class="crm-panel-note">Sent from news.shrish.co so a bad campaign cannot harm your order emails</span>
+          </div>
+
+          <label class="crm-field-label">1 · What kind of email</label>
+          <div class="crm-segments" id="crmTplPicker">
+            <button class="crm-seg active" type="button" data-tpl="checkin">Check-in &amp; review</button>
+            <button class="crm-seg" type="button" data-tpl="promo">Promotion</button>
+            <button class="crm-seg" type="button" data-tpl="announce">New product / festival</button>
+          </div>
+
+          <label class="crm-field-label" for="crmCampSubject">2 · Subject line</label>
+          <input class="crm-field" id="crmCampSubject" type="text" maxlength="160" />
+
+          <div id="crmCampFields"></div>
+
+          <label class="crm-field-label" for="crmCampAudience">3 · Who receives it</label>
+          <select class="crm-field" id="crmCampAudience"></select>
+          <div class="crm-camp-count" id="crmCampCount"></div>
+
+          <div class="crm-camp-actions">
+            <button class="crm-action-btn" type="button" id="crmCampTest">Send test to me</button>
+            <button class="crm-action-btn primary" type="button" id="crmCampSend">Send campaign</button>
+          </div>
+          <div class="crm-camp-status" id="crmCampStatus"></div>
+
+          <div class="crm-season-note">
+            Anyone who has unsubscribed is removed automatically on the server, so they cannot be
+            emailed by mistake. Every message carries a working unsubscribe link and your postal
+            address, both required by law. Maximum 120 recipients per send.
+          </div>
+        </section>
+
+        <section class="crm-panel">
+          <div class="crm-panel-head">
+            <h2>Sent already</h2>
+            <span class="crm-panel-note">So nobody gets the same thing twice</span>
+          </div>
+          <div id="crmCampHistory"></div>
+        </section>
       </div>
 
       <!-- Unpaid -->
