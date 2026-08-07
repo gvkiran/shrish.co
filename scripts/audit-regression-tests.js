@@ -68,6 +68,23 @@ const verifiedProductImageIdsSource = catalogSource.slice(
   catalogSource.indexOf('const SHRISH_VERIFIED_PRODUCT_IMAGE_IDS'),
   catalogSource.indexOf('const SHRISH_VERIFIED_PRODUCT_IMAGE_OVERRIDES')
 );
+const catalogFieldOverridesSource = catalogSource.slice(
+  catalogSource.indexOf('const SHRISH_CATALOG_FIELD_OVERRIDES'),
+  catalogSource.indexOf('const SHRISH_VERIFIED_PRODUCT_IMAGE_IDS')
+);
+const forcedCatalogOverridesSource = shopSource.slice(
+  shopSource.indexOf('const FORCE_CATALOG_FIELD_OVERRIDE_IDS'),
+  shopSource.indexOf('const SWEET_CATALOG_OVERRIDE_CATEGORIES')
+);
+const approximateCountProductIds = [
+  'sweets-flaxseed-laddu',
+  'sweets-kajji-kayalu',
+  'sweets-madatha-kaja',
+  'sweets-ragi-laddu',
+  'sweets-rava-laddu',
+  'sweets-sunnundalu',
+  'sweets-tokkudu-laddu'
+];
 check(
   shopSource.includes("let activeFilter = 'sweets';") &&
     shopSource.includes("window.location.pathname.endsWith('/shop.html')") &&
@@ -85,6 +102,30 @@ check(
     indexSource.includes('product=sweets-kajji-kayalu'),
   'The homepage must start with the Kajji Kayalu feature and link to its product.'
 );
+check(
+  catalogFieldOverridesSource.includes('tag: product.tag') &&
+    catalogFieldOverridesSource.includes('badges: [...(product.badges || [])]') &&
+    catalogFieldOverridesSource.includes('recommendationTags: [...(product.recommendationTags || [])]'),
+  'Putharekulu catalog overrides must preserve their source-controlled tags and badges.'
+);
+check(
+  shopSource.includes("puth_plain: 'puth_plain_sugar'") &&
+    shopSource.includes('PRODUCT_CATALOG_OVERRIDE_ALIASES[product.id] || product.id'),
+  'The legacy plain-sugar Putharekulu record must inherit current tags and catalog fields.'
+);
+approximateCountProductIds.forEach((productId) => {
+  const productStart = catalogSource.indexOf(`id: "${productId}"`);
+  const productEnd = catalogSource.indexOf('\n    {', productStart + 1);
+  const productSource = catalogSource.slice(productStart, productEnd === -1 ? undefined : productEnd);
+  check(
+    productStart !== -1 &&
+      productSource.includes('unit: "250g (~5 count) or 500g (~10 count)"') &&
+      productSource.includes('label: "250g (~5 count)"') &&
+      productSource.includes('label: "500g (~10 count)"') &&
+      forcedCatalogOverridesSource.includes(`'${productId}'`),
+    `${productId} must display and enforce approximate counts for both weight options.`
+  );
+});
 check(
   homeSource.includes("doc(collection(db, 'email_subscribers'))") &&
     !homeSource.includes("doc(db, 'email_subscribers', email)"),

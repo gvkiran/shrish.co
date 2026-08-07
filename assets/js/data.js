@@ -395,7 +395,7 @@ const SHRISH_DATA = {
       id: "sweets-madatha-kaja", category: "sweets",
       name: "Madatha Kaja", localName: "",
       origin: "Tapeswaram, Godavari - Andhra Pradesh",
-      price: "$10.99", unit: "250g or 500g",
+      price: "$10.99", unit: "250g (~5 count) or 500g (~10 count)",
       available: true, displayOnly: false, tag: "Godavari Special",
       image: "images/products/sweets/madatha-kaja-2026-1.jpg",
       gallery: ["images/products/sweets/madatha-kaja-2026-1.jpg"],
@@ -403,8 +403,8 @@ const SHRISH_DATA = {
       details: "Ingredients: Maida (refined wheat flour), sugar, ghee, cardamom and a pinch of baking soda. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Godavari Special", "Tapeswaram Classic", "Festive Sweet"],
       variants: [
-        { id: "opt1", label: "250g", price: "$10.99", sku: "SW-MADKAJA-250" },
-        { id: "opt2", label: "500g", price: "$19.99", sku: "SW-MADKAJA-500" }
+        { id: "opt1", label: "250g (~5 count)", price: "$10.99", sku: "SW-MADKAJA-250" },
+        { id: "opt2", label: "500g (~10 count)", price: "$19.99", sku: "SW-MADKAJA-500" }
       ]
     },
     {
@@ -443,7 +443,7 @@ const SHRISH_DATA = {
       id: "sweets-rava-laddu", category: "sweets",
       name: "Rava Laddu", localName: "",
       origin: "Andhra Pradesh",
-      price: "$10.99", unit: "250g or 500g",
+      price: "$10.99", unit: "250g (~5 count) or 500g (~10 count)",
       available: true, displayOnly: false, tag: "Everyday Favourite",
       image: "images/products/sweets/rava-laddu-2026.webp",
       gallery: ["images/products/sweets/rava-laddu-2026.webp"],
@@ -451,30 +451,30 @@ const SHRISH_DATA = {
       details: "Ingredients: Rava (semolina), sugar, ghee, cashews and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Everyday Favourite", "Ghee Roasted", "Festive Sweet"],
       variants: [
-        { id: "opt1", label: "250g", price: "$10.99", sku: "SW-RAVALAD-250" },
-        { id: "opt2", label: "500g", price: "$19.99", sku: "SW-RAVALAD-500" }
+        { id: "opt1", label: "250g (~5 count)", price: "$10.99", sku: "SW-RAVALAD-250" },
+        { id: "opt2", label: "500g (~10 count)", price: "$19.99", sku: "SW-RAVALAD-500" }
       ]
     },
     {
       id: "sweets-sunnundalu", category: "sweets",
       name: "Sunnundalu (Urad Dal Laddu)", localName: "",
       origin: "Andhra Pradesh",
-      price: "$9.99", unit: "250g or 500g",
+      price: "$9.99", unit: "250g (~5 count) or 500g (~10 count)",
       available: true, displayOnly: false, tag: "Protein Rich",
       image: "images/products/sweets/sunnundalu-2026.webp",
       description: "A wholesome traditional Andhra laddu made from roasted urad dal ground fine and bound with ghee and jaggery or sugar. Nutty, protein-rich, and deeply comforting - a homestyle sweet often made for new mothers and festivals.",
       details: "Ingredients: Roasted urad dal (minapa pappu), jaggery or sugar, ghee and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Protein Rich", "Traditional", "Ghee Roasted"],
       variants: [
-        { id: "opt1", label: "250g", price: "$9.99", sku: "SW-SUNNUND-250" },
-        { id: "opt2", label: "500g", price: "$18.99", sku: "SW-SUNNUND-500" }
+        { id: "opt1", label: "250g (~5 count)", price: "$9.99", sku: "SW-SUNNUND-250" },
+        { id: "opt2", label: "500g (~10 count)", price: "$18.99", sku: "SW-SUNNUND-500" }
       ]
     },
     {
       id: "sweets-tokkudu-laddu", category: "sweets",
       name: "Tokkudu Laddu (Bandar Laddu)", localName: "",
       origin: "Machilipatnam (Bandar), Andhra Pradesh",
-      price: "$12.99", unit: "250g or 500g",
+      price: "$12.99", unit: "250g (~5 count) or 500g (~10 count)",
       available: true, displayOnly: false, tag: "Regional Special",
       image: "images/products/sweets/tokkudu-laddu-2026-1.jpg",
       gallery: ["images/products/sweets/tokkudu-laddu-2026-1.jpg"],
@@ -482,15 +482,15 @@ const SHRISH_DATA = {
       details: "Ingredients: Besan (gram flour), sugar, ghee, cashews and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Regional Special", "Melt In Mouth", "Festive Sweet"],
       variants: [
-        { id: "opt1", label: "250g", price: "$12.99", sku: "SW-TOKKUDU-250" },
-        { id: "opt2", label: "500g", price: "$23.99", sku: "SW-TOKKUDU-500" }
+        { id: "opt1", label: "250g (~5 count)", price: "$12.99", sku: "SW-TOKKUDU-250" },
+        { id: "opt2", label: "500g (~10 count)", price: "$23.99", sku: "SW-TOKKUDU-500" }
       ]
     },
     {
       id: "sweets-flaxseed-laddu", category: "sweets",
       name: "Flaxseed Laddu (Avise Laddu)", localName: "",
       origin: "Andhra Pradesh",
-      price: "$11.99", unit: "250g or 500g",
+      price: "$11.99", unit: "250g (~5 count) or 500g (~10 count)",
       available: true, displayOnly: false, tag: "Healthy Choice",
       image: "images/products/sweets/flaxseed-laddu-2026.webp",
       gallery: ["images/products/sweets/flaxseed-laddu-2026.webp"],
@@ -498,15 +498,15 @@ const SHRISH_DATA = {
       details: "Ingredients: Roasted flaxseeds (avise ginjalu), jaggery, ghee and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Healthy Choice", "Fibre Rich", "Jaggery Sweetened"],
       variants: [
-        { id: "opt1", label: "250g", price: "$11.99", sku: "SW-FLAXLAD-250" },
-        { id: "opt2", label: "500g", price: "$21.99", sku: "SW-FLAXLAD-500" }
+        { id: "opt1", label: "250g (~5 count)", price: "$11.99", sku: "SW-FLAXLAD-250" },
+        { id: "opt2", label: "500g (~10 count)", price: "$21.99", sku: "SW-FLAXLAD-500" }
       ]
     },
     {
       id: "sweets-ragi-laddu", category: "sweets",
       name: "Ragi Laddu (Finger Millet Laddu)", localName: "",
       origin: "Andhra Pradesh",
-      price: "$11.99", unit: "250g or 500g",
+      price: "$11.99", unit: "250g (~5 count) or 500g (~10 count)",
       available: true, displayOnly: false, tag: "Healthy Choice",
       image: "images/products/sweets/ragi-laddu-2026.webp",
       gallery: ["images/products/sweets/ragi-laddu-2026.webp"],
@@ -514,15 +514,15 @@ const SHRISH_DATA = {
       details: "Ingredients: Ragi (finger millet) flour, jaggery, ghee, cashews and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Healthy Choice", "Millet Based", "Jaggery Sweetened"],
       variants: [
-        { id: "opt1", label: "250g", price: "$11.99", sku: "SW-RAGILAD-250" },
-        { id: "opt2", label: "500g", price: "$21.99", sku: "SW-RAGILAD-500" }
+        { id: "opt1", label: "250g (~5 count)", price: "$11.99", sku: "SW-RAGILAD-250" },
+        { id: "opt2", label: "500g (~10 count)", price: "$21.99", sku: "SW-RAGILAD-500" }
       ]
     },
     {
       id: "sweets-kajji-kayalu", category: "sweets",
       name: "Kajji Kayalu (Kobbari)", localName: "",
       origin: "Andhra Pradesh",
-      price: "$10.99", unit: "250g or 500g",
+      price: "$10.99", unit: "250g (~5 count) or 500g (~10 count)",
       available: true, displayOnly: false, tag: "Traditional",
       image: "images/products/sweets/kajji-kayalu-2026.webp",
       gallery: ["images/products/sweets/kajji-kayalu-2026.webp"],
@@ -530,8 +530,8 @@ const SHRISH_DATA = {
       details: "Ingredients: Maida (refined wheat flour), dry coconut, sugar, roasted gram, ghee and cardamom. Store sealed in a cool dry place and enjoy fresh.",
       badges: ["Traditional", "Coconut Filled", "Festive Sweet"],
       variants: [
-        { id: "opt1", label: "250g", price: "$10.99", sku: "SW-KAJJIK-250" },
-        { id: "opt2", label: "500g", price: "$19.99", sku: "SW-KAJJIK-500" }
+        { id: "opt1", label: "250g (~5 count)", price: "$10.99", sku: "SW-KAJJIK-250" },
+        { id: "opt2", label: "500g (~10 count)", price: "$19.99", sku: "SW-KAJJIK-500" }
       ]
     },
 
@@ -1415,9 +1415,22 @@ SHRISH_DATA.products.forEach((product) => {
   ].filter(Boolean)));
 });
 
+const SHRISH_APPROX_COUNT_PRODUCT_IDS = new Set([
+  "sweets-flaxseed-laddu",
+  "sweets-kajji-kayalu",
+  "sweets-madatha-kaja",
+  "sweets-ragi-laddu",
+  "sweets-rava-laddu",
+  "sweets-sunnundalu",
+  "sweets-tokkudu-laddu"
+]);
+
 const SHRISH_CATALOG_FIELD_OVERRIDE_IDS = new Set(
   SHRISH_DATA.products
-    .filter((product) => ["picklespodi", "putharekulu", "jellysnacks"].includes(product.category))
+    .filter((product) =>
+      ["picklespodi", "putharekulu", "jellysnacks"].includes(product.category)
+      || SHRISH_APPROX_COUNT_PRODUCT_IDS.has(product.id)
+    )
     .map((product) => product.id)
 );
 
@@ -1430,6 +1443,9 @@ const SHRISH_CATALOG_FIELD_OVERRIDES = Object.fromEntries(
       localName: product.localName,
       price: product.price,
       unit: product.unit,
+      tag: product.tag,
+      badges: [...(product.badges || [])],
+      recommendationTags: [...(product.recommendationTags || [])],
       ingredientsText: product.ingredientsText,
       storageNote: product.storageNote,
       shelfLifeDisplay: product.shelfLifeDisplay,

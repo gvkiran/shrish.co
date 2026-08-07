@@ -342,18 +342,29 @@ const FORCE_BASE_PRODUCT_OVERRIDES = Object.fromEntries(
     .map((product) => [product.id, ['ingredientsText']])
 );
 const FORCE_CATALOG_FIELD_OVERRIDE_IDS = new Set([
-  'picklespodi-drumstick-leaf-podi-munagaku-podi'
+  'picklespodi-drumstick-leaf-podi-munagaku-podi',
+  'sweets-flaxseed-laddu',
+  'sweets-kajji-kayalu',
+  'sweets-madatha-kaja',
+  'sweets-ragi-laddu',
+  'sweets-rava-laddu',
+  'sweets-sunnundalu',
+  'sweets-tokkudu-laddu'
 ]);
 const SWEET_CATALOG_OVERRIDE_CATEGORIES = new Set(['putharekulu', 'jellysnacks']);
 const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
 const VERIFIED_PRODUCT_IMAGE_OVERRIDES = window.SHRISH_VERIFIED_PRODUCT_IMAGE_OVERRIDES || {};
+const PRODUCT_CATALOG_OVERRIDE_ALIASES = {
+  puth_plain: 'puth_plain_sugar'
+};
 
 function hasAdminManagedCatalogFields(product = {}) {
   return Boolean(product.catalogManagedAt);
 }
 
 function applyCatalogFieldOverrides(product = {}) {
-  const override = CATALOG_FIELD_OVERRIDES[product.id];
+  const overrideId = PRODUCT_CATALOG_OVERRIDE_ALIASES[product.id] || product.id;
+  const override = CATALOG_FIELD_OVERRIDES[overrideId];
   const shouldForce = FORCE_CATALOG_FIELD_OVERRIDE_IDS.has(product.id)
     || SWEET_CATALOG_OVERRIDE_CATEGORIES.has(override?.category);
   if (!override || (hasAdminManagedCatalogFields(product) && !shouldForce)) return product;
