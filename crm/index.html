@@ -189,6 +189,10 @@
             <option value="plain">Neither — plain HTML, no personalisation</option>
           </select>
 
+          <label class="crm-field-label" for="crmCampPostalAddress">5 · Business postal address</label>
+          <input class="crm-field" id="crmCampPostalAddress" type="text" autocomplete="street-address" placeholder="Street address, city, state ZIP" />
+          <div class="crm-season-note">Required in every commercial campaign. Include the street or PO Box, city, state and ZIP code.</div>
+
           <div class="crm-camp-actions">
             <button class="crm-action-btn primary" type="button" id="crmCampCsv">Download recipients CSV</button>
             <button class="crm-action-btn" type="button" id="crmCampCopy">Copy HTML</button>
@@ -265,7 +269,8 @@
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script type="module" src="/crm/app.js?v=crm-p1-20260805"></script>
+<script src="/crm/safety.js"></script>
+<script src="/assets/vendor/chart.umd-4.4.1.js"></script>
+<script type="module" src="/crm/app.js?v=crm-p2-20260807"></script>
 </body>
 </html>

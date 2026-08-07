@@ -10,7 +10,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 import {
   getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
-  signInWithEmailAndPassword, sendPasswordResetEmail, signOut,
+  signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signOut,
   EmailAuthProvider, reauthenticateWithCredential, updateEmail,
   verifyPasswordResetCode, confirmPasswordReset
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
@@ -83,7 +83,7 @@ export {
   query, where, orderBy, onSnapshot, limit,
   runTransaction,
   onAuthStateChanged, createUserWithEmailAndPassword,
-  signInWithEmailAndPassword, sendPasswordResetEmail, signOut,
+  signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signOut,
   EmailAuthProvider, reauthenticateWithCredential, updateEmail,
   verifyPasswordResetCode, confirmPasswordReset,
   serverTimestamp, Timestamp,

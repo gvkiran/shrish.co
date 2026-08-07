@@ -23,6 +23,34 @@ function normalizedPhoneDigits(value) {
   return digits;
 }
 
+function authenticatedEmailIsVerified(auth = {}) {
+  const email = String(auth?.token?.email || "").trim();
+  return Boolean(email) && auth?.token?.email_verified === true;
+}
+
+function contactSuppressionReason(order = {}, profile = {}, overlay = {}) {
+  if (
+    String(profile.status || "").trim().toLowerCase() === "deletion_requested"
+    || profile.deletionRequestedAt
+  ) {
+    return "deletion_requested";
+  }
+  const tags = Array.isArray(overlay.tags) ? overlay.tags : [];
+  if (tags.some((tag) => String(tag).trim().toLowerCase() === "do not contact")) {
+    return "do_not_contact";
+  }
+  if (String(order.contactStatus || "").trim().toLowerCase() === "do_not_contact") {
+    return "do_not_contact";
+  }
+  return "";
+}
+
+function checkoutSessionMatchesOrder(order = {}, session = {}) {
+  const activeSessionId = String(order.stripeCheckoutSessionId || "").trim();
+  const eventSessionId = String(session.id || "").trim();
+  return Boolean(activeSessionId) && activeSessionId === eventSessionId;
+}
+
 function requestClientAddress(request = {}) {
   const forwarded = String(
     request.rawRequest?.headers?.["x-forwarded-for"]
@@ -163,6 +191,9 @@ function validateWebsiteOrder(order = {}, authUid = "") {
 module.exports = {
   MAX_ORDER_ITEMS,
   SecurityGuardError,
+  authenticatedEmailIsVerified,
+  checkoutSessionMatchesOrder,
+  contactSuppressionReason,
   hashIdentifier,
   normalizedPhoneDigits,
   rateLimitDocumentId,

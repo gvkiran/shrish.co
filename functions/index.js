@@ -10,6 +10,9 @@ const { PostHog } = require("posthog-node");
 const Stripe = require("stripe");
 const {
   SecurityGuardError,
+  authenticatedEmailIsVerified,
+  checkoutSessionMatchesOrder,
+  contactSuppressionReason,
   hashIdentifier,
   rateLimitDocumentId,
   requestRateLimitSubject,
@@ -59,6 +62,8 @@ const STRIPE_SESSION_RATE_LIMIT = 10;
 const STRIPE_SESSION_RATE_WINDOW_MS = 10 * 60 * 1000;
 const PROMO_CHECK_RATE_LIMIT = 30;
 const PROMO_CHECK_RATE_WINDOW_MS = 10 * 60 * 1000;
+const ORDER_CLAIM_RATE_LIMIT = 5;
+const ORDER_CLAIM_RATE_WINDOW_MS = 60 * 60 * 1000;
 
 function isAdminRequest(request) {
   return String(request.auth?.token?.email || "").trim().toLowerCase() === SHRISH_ADMIN_EMAIL;
@@ -763,6 +768,8 @@ async function sendOrderConfirmationEmails(orderRef, order, source = "order_crea
     to: [finalOrder.email],
     subject: customerSubject,
     html: buildCustomerEmail(finalOrder),
+  }, {
+    idempotencyKey: `order-confirmation-customer-${orderRef.id}`,
   });
 
   await resend.emails.send({
@@ -770,6 +777,8 @@ async function sendOrderConfirmationEmails(orderRef, order, source = "order_crea
     to: [SHRISH_ADMIN_EMAIL],
     subject: adminSubject,
     html: buildAdminEmail(finalOrder),
+  }, {
+    idempotencyKey: `order-confirmation-admin-${orderRef.id}`,
   });
 
   await orderRef.set({
@@ -2027,6 +2036,12 @@ exports.claimCustomerOrder = onCall(
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Sign in to link this order.");
     }
+    if (!authenticatedEmailIsVerified(request.auth)) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Verify your email address before linking this order."
+      );
+    }
 
     const uid = request.auth.uid;
     const authEmail = String(request.auth.token?.email || "").trim().toLowerCase();
@@ -2037,6 +2052,12 @@ exports.claimCustomerOrder = onCall(
     }
 
     const db = admin.firestore();
+    await enforceCallableRateLimit(db, request, {
+      scope: "claim-order",
+      subject: `uid:${uid}`,
+      limit: ORDER_CLAIM_RATE_LIMIT,
+      windowMs: ORDER_CLAIM_RATE_WINDOW_MS,
+    });
     const orderRef = db.collection("orders").doc(orderId);
 
     const result = await db.runTransaction(async (tx) => {
@@ -2116,6 +2137,12 @@ exports.claimMyOrders = onCall(
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Sign in to link your orders.");
     }
+    if (!authenticatedEmailIsVerified(request.auth)) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Verify your email address before linking historical orders."
+      );
+    }
 
     const uid = request.auth.uid;
     const authEmail = String(request.auth.token?.email || "").trim().toLowerCase();
@@ -2124,6 +2151,12 @@ exports.claimMyOrders = onCall(
     }
 
     const db = admin.firestore();
+    await enforceCallableRateLimit(db, request, {
+      scope: "claim-orders",
+      subject: `uid:${uid}`,
+      limit: ORDER_CLAIM_RATE_LIMIT,
+      windowMs: ORDER_CLAIM_RATE_WINDOW_MS,
+    });
     const profileSnap = await db.collection("user_profiles").doc(uid).get();
     const phone = normalizeOrderPhone(
       request.data?.phone || profileSnap.data()?.phone || ""
@@ -2134,7 +2167,7 @@ exports.claimMyOrders = onCall(
 
     // Query on phoneDigits: it is stored normalised, whereas email casing
     // varies with however the customer typed it.
-    const snapshot = await db.collection("orders").where("phoneDigits", "==", phone).get();
+    const snapshot = await db.collection("orders").where("phoneDigits", "==", phone).limit(500).get();
 
     const batch = db.batch();
     let claimed = 0;
@@ -2923,6 +2956,45 @@ function buildPaymentRetryEmail(order, payUrl) {
 </body></html>`;
 }
 
+async function paymentRecoverySuppressionReason(db, order = {}) {
+  const customerUid = String(order.customerUid || "").trim();
+  const phone = normalizeOrderPhone(order.phoneDigits || order.phone || "");
+  const [profileResult, overlaySnap] = await Promise.all([
+    customerUid
+      ? db.collection("user_profiles").doc(customerUid).get()
+      : phone
+        ? db.collection("user_profiles").where("phoneDigits", "==", phone).limit(10).get()
+        : Promise.resolve(null),
+    phone
+      ? db.collection("crm_customers").doc(phone).get()
+      : Promise.resolve(null),
+  ]);
+  const profiles = customerUid
+    ? (profileResult?.exists ? [profileResult.data() || {}] : [])
+    : (profileResult?.docs || []).map((snapshot) => snapshot.data() || {});
+  const overlay = overlaySnap?.exists ? overlaySnap.data() || {} : {};
+  return profiles.reduce(
+    (reason, profile) => reason || contactSuppressionReason(order, profile, overlay),
+    contactSuppressionReason(order, {}, overlay)
+  );
+}
+
+async function expireOpenCheckoutSession(stripe, sessionId) {
+  const id = String(sessionId || "").trim();
+  if (!id) return;
+
+  const session = await stripe.checkout.sessions.retrieve(id);
+  if (session.payment_status === "paid" || session.status === "complete") {
+    throw new HttpsError(
+      "failed-precondition",
+      "The existing checkout completed. Wait for Stripe to update the order before creating another link."
+    );
+  }
+  if (session.status === "open") {
+    await stripe.checkout.sessions.expire(id);
+  }
+}
+
 // Abandoned checkout recovery. Admin-only, manual, one email per order ever.
 //
 // Deliberately separate from createStripeCheckoutSession rather than refactoring
@@ -2967,6 +3039,13 @@ exports.resendPaymentLink = onCall(
     if (!String(order.email || "").trim()) {
       throw new HttpsError("failed-precondition", "This order has no email address. Call them instead.");
     }
+    const suppressionReason = await paymentRecoverySuppressionReason(db, order);
+    if (suppressionReason) {
+      throw new HttpsError(
+        "failed-precondition",
+        "This customer is suppressed from CRM outreach. Review their privacy status before contacting them."
+      );
+    }
     // One recovery email per order, ever. Enforced here, not by memory.
     if (order.paymentRetryEmailSentAt) {
       throw new HttpsError("already-exists", "A payment retry email was already sent for this order.");
@@ -2975,6 +3054,8 @@ exports.resendPaymentLink = onCall(
     let payUrl = "";
     try {
       const stripe = stripeClient();
+      const priorSessionId = String(order.stripeCheckoutSessionId || "").trim();
+      await expireOpenCheckoutSession(stripe, priorSessionId);
       const origin = allowedCheckoutOrigin(request.data?.origin);
       const orderNumber = await assignSequentialOrderNumber(orderRef, order.orderNumber);
       order.orderNumber = orderNumber;
@@ -3024,14 +3105,13 @@ exports.resendPaymentLink = onCall(
         mode: "payment",
         payment_method_types: ["card"],
         line_items: lineItems,
-        // 24 hours, so the link in the email cannot outlive its own promise.
-        expires_at: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
         success_url: `${origin}/order.html?payment=success&orderId=${encodeURIComponent(orderId)}&orderNumber=${encodeURIComponent(orderNumber)}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/order.html?payment=cancelled&orderId=${encodeURIComponent(orderId)}`,
         customer_email: String(order.email).trim().toLowerCase(),
         metadata,
         payment_intent_data: { metadata },
       };
+      const retryAttemptId = hashIdentifier(priorSessionId || "initial").slice(0, 24);
 
       if (promoDiscount > 0) {
         const coupon = await stripe.coupons.create({
@@ -3039,7 +3119,7 @@ exports.resendPaymentLink = onCall(
           currency: "usd",
           duration: "once",
           name: `Promo ${promo.code}`.slice(0, 40),
-        });
+        }, { idempotencyKey: `shrish_retry_coupon_${orderId}_${retryAttemptId}` });
         sessionConfig.discounts = [{ coupon: coupon.id }];
       }
 
@@ -3047,7 +3127,9 @@ exports.resendPaymentLink = onCall(
       // with different parameters, and reusing it would make Stripe error.
       const session = await stripe.checkout.sessions.create(
         sessionConfig,
-        { idempotencyKey: `shrish_retry_${orderId}` }
+        {
+          idempotencyKey: `shrish_retry_${orderId}_${retryAttemptId}`,
+        }
       );
 
       payUrl = session.url;
@@ -3077,6 +3159,8 @@ exports.resendPaymentLink = onCall(
         to: [String(order.email).trim()],
         subject: "Your Shrish cart is still waiting",
         html: buildPaymentRetryEmail(order, payUrl),
+      }, {
+        idempotencyKey: `payment-retry-${orderId}`,
       });
     } catch (error) {
       console.error("Payment retry email send failed", { orderId, message: error?.message });
@@ -3143,6 +3227,10 @@ exports.stripeWebhook = onRequest(
         }
 
         const order = orderSnap.data() || {};
+        if (!checkoutSessionMatchesOrder(order, session)) {
+          response.json({ received: true, skipped: "stale_checkout_session" });
+          return;
+        }
         await orderRef.set({
           payment: "paid",
           paymentMethod: "stripe",
@@ -3183,7 +3271,14 @@ exports.stripeWebhook = onRequest(
         const session = event.data.object;
         const orderId = String(session.metadata?.orderId || "").trim();
         if (orderId) {
-          await db.collection("orders").doc(orderId).set({
+          const orderRef = db.collection("orders").doc(orderId);
+          const orderSnap = await orderRef.get();
+          const order = orderSnap.exists ? orderSnap.data() || {} : {};
+          if (!orderSnap.exists || !checkoutSessionMatchesOrder(order, session)) {
+            response.json({ received: true, skipped: "stale_checkout_session" });
+            return;
+          }
+          await orderRef.set({
             paymentStatus: "expired",
             status: "payment_expired",
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -3279,6 +3374,8 @@ exports.sendShipmentEmail = onDocumentUpdated(
         to: [email],
         subject: `Your Shrish order is on its way — ${after.orderNumber || "shipped"}`,
         html: buildShipmentEmail(after),
+      }, {
+        idempotencyKey: `shipment-${event.id}`,
       });
     } catch (error) {
       console.error("Shipment email send failed", {

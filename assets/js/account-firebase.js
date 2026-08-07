@@ -12,6 +12,7 @@ import {
   onSnapshot,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendEmailVerification,
   signOut,
   EmailAuthProvider,
   reauthenticateWithCredential,
@@ -45,6 +46,7 @@ const CHECKOUT_ACCOUNT_PREFILL_KEY = 'shrish_checkout_account_prefill';
 const RECENT_ORDER_CLAIM_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const CHECKOUT_ACCOUNT_PREFILL_MAX_AGE_MS = 60 * 60 * 1000;
 const FIREBASE_OPERATION_TIMEOUT_MS = 20000;
+const VERIFICATION_SENT_KEY_PREFIX = 'shrish_verification_sent_';
 
 function customerAccountsEnabled() {
   return window.SHRISH_APP_CONFIG?.customerAccountsEnabled === true;
@@ -128,6 +130,16 @@ function withTimeout(promise, message = 'Request timed out') {
     timeoutId = window.setTimeout(() => reject(new Error(message)), FIREBASE_OPERATION_TIMEOUT_MS);
   });
   return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timeoutId));
+}
+
+async function ensureVerificationEmail(user) {
+  if (!user || user.emailVerified) return false;
+  const storageKey = `${VERIFICATION_SENT_KEY_PREFIX}${user.uid}_${normalizeEmail(user.email || '')}`;
+  if (sessionStorage.getItem(storageKey)) return false;
+
+  await withTimeout(sendEmailVerification(user), 'Verification email request timed out');
+  sessionStorage.setItem(storageKey, '1');
+  return true;
 }
 
 function phoneDigits(value) {
@@ -516,6 +528,7 @@ async function updateProfileEmailIfNeeded(user, button) {
   const credential = EmailAuthProvider.credential(currentEmail, password);
   await reauthenticateWithCredential(user, credential);
   await updateEmail(user, newEmail);
+  await ensureVerificationEmail(user);
   return newEmail;
 }
 
@@ -1437,7 +1450,8 @@ function bindForms() {
         setDoc(profileRef(credential.user.uid), profilePayloadFromSignup(credential.user), { merge: true }),
         'Profile save timed out'
       );
-      showMessage('profileMessage', 'ok', 'Account created. Your checkout details are saved.');
+      await ensureVerificationEmail(credential.user);
+      showMessage('profileMessage', 'ok', 'Account created. Check your email to verify it, then reload this page to link earlier orders.');
       trackAccountEvent('customer_account_created');
     } catch (error) {
       console.error('Customer account signup failed', error);
@@ -1514,6 +1528,7 @@ function bindForms() {
     const button = event.submitter || event.currentTarget?.querySelector('button[type="submit"]');
     try {
       setButtonBusy(button, true, 'Saving...');
+      const previousEmail = normalizeEmail(user.email || '');
       const savedEmail = await updateProfileEmailIfNeeded(user, button);
       await setDoc(profileRef(user.uid), profilePayloadFromForm(user), { merge: true });
       const savedProfile = profilePayloadFromForm(user);
@@ -1522,7 +1537,13 @@ function bindForms() {
       el('profileEmail').textContent = savedEmail;
       renderProfileView(savedProfile);
       setProfileEditing(false);
-      showMessage('profileMessage', 'ok', 'Profile changes saved.');
+      showMessage(
+        'profileMessage',
+        'ok',
+        savedEmail !== previousEmail
+          ? 'Profile changes saved. Verify your new email address using the message we sent.'
+          : 'Profile changes saved.'
+      );
       trackAccountEvent('customer_profile_saved');
     } catch (error) {
       console.error('Profile save failed', error);
@@ -1658,6 +1679,26 @@ function init() {
     setAuthedUi(user);
     await loadProfile(user);
     setProfileEditing(false);
+
+    if (!user.emailVerified) {
+      try {
+        const sent = await ensureVerificationEmail(user);
+        showMessage(
+          'profileMessage',
+          'info',
+          sent
+            ? 'We sent a verification email. Verify your address, then reload this page to link earlier orders.'
+            : 'Verify your email address, then reload this page to link earlier orders.'
+        );
+      } catch (error) {
+        console.warn('Could not send verification email', error);
+        showMessage('profileMessage', 'info', 'Verify your email address, then reload this page to link earlier orders.');
+      }
+      if (returnToCheckoutIfRequested()) return;
+      subscribeOrders(user);
+      return;
+    }
+
     await claimRecentOrderForUser(user);
 
     // Adopt any past orders placed as a guest, or entered by hand, that match

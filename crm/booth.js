@@ -253,7 +253,7 @@ async function saveSale() {
       paymentStatus: paid ? 'paid' : 'pending',
       paymentCollected: paid,
       paymentCollectedAt: paid ? new Date().toISOString() : null,
-      status: 'fulfilled',
+      status: paid ? 'fulfilled' : 'pending',
       source: 'booth',
       skipCustomerEmail: true,
       referral: 'Booth sale',
@@ -263,7 +263,7 @@ async function saveSale() {
 
     // Fold into the in-memory index so the next sale to the same phone shows
     // them as returning without a refetch.
-    if (phoneDigits) {
+    if (phoneDigits && paid) {
       const prior = state.customers.get(phoneDigits) || { name: '', email: '', orders: 0, spend: 0 };
       state.customers.set(phoneDigits, {
         name: rawName || prior.name,
@@ -274,7 +274,7 @@ async function saveSale() {
     }
 
     state.session.count += 1;
-    state.session.total += totalPrice;
+    state.session.total += paid ? totalPrice : 0;
     clearForm();
     toast(`Saved ${money(totalPrice)}`);
   } catch (error) {
@@ -320,6 +320,7 @@ async function loadData() {
   for (const snap of orderSnap.docs) {
     const order = snap.data();
     if (['cancelled', 'no_show', 'awaiting_payment', 'payment_expired'].includes(order.status)) continue;
+    if (order.source === 'booth' && !order.paymentCollected && order.paymentStatus !== 'paid') continue;
     if (order.isTestOrder) continue;
     const key = digits(order.phoneDigits || order.phone).slice(-10);
     if (key.length !== 10) continue;

@@ -922,7 +922,9 @@ function moneyValue(value) {
 }
 
 function orderRevenueValue(order = {}) {
-  return NON_REVENUE_ORDER_STATUSES.includes(order.status || 'pending') ? 0 : moneyValue(order.totalPrice);
+  if (NON_REVENUE_ORDER_STATUSES.includes(order.status || 'pending')) return 0;
+  if (order.source === 'booth' && !order.paymentCollected && order.paymentStatus !== 'paid') return 0;
+  return moneyValue(order.totalPrice);
 }
 
 function orderStatusLabel(status = 'pending') {
@@ -3858,10 +3860,11 @@ async function toggleProductHidden(id, hidden) {
   showToast(`${product.name} ${hidden ? 'hidden from shop' : 'visible in shop'}`);
 }
 
-async function applyOrderStatus(id, status, silent = false) {
+async function applyOrderStatus(id, status, silent = false, additionalPayload = {}) {
   const order = state.orders.find((item) => item.id === id);
   const nowIso = new Date().toISOString();
   const payload = {
+    ...additionalPayload,
     status,
     updatedAt: nowIso
   };
@@ -4808,9 +4811,8 @@ async function submitShipTracking() {
   try {
     for (const entry of entries) {
       // Reuses the existing status path so order_locks cleanup stays identical.
-      await applyOrderStatus(entry.id, 'fulfilled', true);
       const hasTracking = Boolean(entry.trackingNumber);
-      await updateDoc(doc(db, 'orders', entry.id), {
+      await applyOrderStatus(entry.id, 'fulfilled', true, {
         shippedAt: nowIso,
         shipDate,
         carrier: hasTracking ? carrierKey : '',
@@ -4818,8 +4820,7 @@ async function submitShipTracking() {
         trackingNumber: entry.trackingNumber,
         trackingUrl: hasTracking ? carrier.trackingUrl(entry.trackingNumber) : '',
         estimatedDeliveryFrom: hasTracking ? etaFrom : '',
-        estimatedDeliveryTo: hasTracking ? etaTo : '',
-        updatedAt: nowIso
+        estimatedDeliveryTo: hasTracking ? etaTo : ''
       });
       saved += 1;
     }

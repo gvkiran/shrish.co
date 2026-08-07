@@ -32,6 +32,12 @@ import {
 } from '/assets/js/firebase-app.js';
 
 const ADMIN_EMAIL = String(window.SHRISH_APP_CONFIG?.adminEmailHint || 'contact@shrish.co').trim().toLowerCase();
+const {
+  contactSuppressionReason,
+  csvCell,
+  isCompletePostalAddress,
+  normalizeUsPhone
+} = window.SHRISH_CRM_SAFETY;
 
 // Reorder cycle for pickles and sweets is 1-2 months, so a customer is "due"
 // at 60 days and "overdue" at 90. Change here, not in six other places.
@@ -169,7 +175,7 @@ const state = {
   showTest: false,
   rawOrders: [],
   rawProfiles: [],
-  campaign: { template: 'checkin', audience: 'due30', esp: 'brevo', fields: {} },
+  campaign: { template: 'checkin', audience: 'due30', esp: 'brevo', fields: {}, postalAddress: '' },
   tasks: [],
   planSeeded: false,
   reorderModel: new Map(),
@@ -178,6 +184,10 @@ const state = {
   detailKey: '',
   chart: null
 };
+
+try {
+  state.campaign.postalAddress = localStorage.getItem('shrish_crm_postal_address') || '';
+} catch (error) { /* private mode */ }
 
 /* ── helpers ──────────────────────────────────────────────────────── */
 
@@ -208,6 +218,7 @@ function shortDate(date) {
 
 function orderRevenue(order) {
   if (NON_REVENUE_STATUSES.has(order.status || 'pending')) return 0;
+  if (order.source === 'booth' && !order.paymentCollected && order.paymentStatus !== 'paid') return 0;
   return moneyNumber(order.totalPrice);
 }
 
@@ -241,7 +252,9 @@ function buildCustomers(orders, profiles) {
         sources: new Set(),
         hasProfile: false,
         mangoQty: 0,
-        otherQty: 0
+        otherQty: 0,
+        profileStatus: '',
+        deletionRequestedAt: null
       });
     }
 
@@ -288,15 +301,19 @@ function buildCustomers(orders, profiles) {
   // Overlay profile details. Profiles never create a customer on their own —
   // someone who registered but never ordered is not yet a customer.
   const profileByPhone = new Map();
+  const profileByUid = new Map();
   for (const profile of profiles) {
     const key = normalizeDigits(profile.phone);
     if (key) profileByPhone.set(key, profile);
+    if (profile.id) profileByUid.set(profile.id, profile);
   }
 
   for (const customer of byKey.values()) {
-    const profile = profileByPhone.get(customer.key);
+    const profile = profileByUid.get(customer.uid) || profileByPhone.get(customer.key);
     if (!profile) continue;
     customer.hasProfile = true;
+    customer.profileStatus = String(profile.status || '');
+    customer.deletionRequestedAt = profile.deletionRequestedAt || null;
     if (!customer.email && profile.email) customer.email = String(profile.email).trim();
     if (!customer.name) {
       const profileName = String(profile.fullName || `${profile.firstName || ''} ${profile.lastName || ''}`).trim();
@@ -351,6 +368,24 @@ function buildCustomers(orders, profiles) {
   }
 
   return list;
+}
+
+function customerSuppressionReason(customer = {}) {
+  const overlay = state.overlays.get(customer.key) || { tags: [] };
+  const profile = {
+    status: customer.profileStatus || '',
+    deletionRequestedAt: customer.deletionRequestedAt || null
+  };
+  return contactSuppressionReason(overlay, profile);
+}
+
+function orderSuppressionReason(order = {}) {
+  const key = normalizeDigits(order.phoneDigits || order.phone);
+  const overlay = state.overlays.get(key) || { tags: [] };
+  const profile = state.rawProfiles.find((entry) =>
+    (entry.id && entry.id === order.customerUid)
+    || (key && normalizeDigits(entry.phoneDigits || entry.phone) === key)) || {};
+  return contactSuppressionReason(overlay, profile);
 }
 
 const SEGMENTS = [
@@ -1317,6 +1352,7 @@ function campaignRecipients() {
   const audience = CAMPAIGN_AUDIENCES.find((a) => a.id === state.campaign.audience) || CAMPAIGN_AUDIENCES[0];
   return state.customers
     .filter(audience.pick)
+    .filter((customer) => !customerSuppressionReason(customer))
     .filter((customer) => String(customer.email || '').includes('@'))
     .map((customer) => ({
       email: String(customer.email).trim(),
@@ -1350,14 +1386,35 @@ function renderCampaign() {
 
   const recipients = campaignRecipients();
   const audience = CAMPAIGN_AUDIENCES.find((a) => a.id === state.campaign.audience);
-  const inSegment = state.customers.filter(audience.pick).length;
-  const noEmail = inSegment - recipients.length;
+  const segmentCustomers = state.customers.filter(audience.pick);
+  const suppressed = segmentCustomers.filter((customer) => customerSuppressionReason(customer)).length;
+  const noEmail = segmentCustomers.filter((customer) =>
+    !customerSuppressionReason(customer) && !String(customer.email || '').includes('@')).length;
 
   document.getElementById('crmCampCount').innerHTML = recipients.length
     ? `<strong>${recipients.length}</strong> will receive this${noEmail ? ` · ${noEmail} in this group have no email address` : ''}${recipients.length > 120 ? ' · <span style="color:var(--amber)">over the 120 limit, send in batches</span>' : ''}`
     : 'Nobody in this group has an email address.';
 
   document.getElementById('crmCampCsv').disabled = !recipients.length;
+  if (suppressed) {
+    document.getElementById('crmCampCount').insertAdjacentHTML(
+      'beforeend',
+      ` &middot; ${suppressed} suppressed by privacy settings`
+    );
+  }
+
+  const addressReady = isCompletePostalAddress(state.campaign.postalAddress);
+  ['crmCampCopy', 'crmCampHtml', 'crmCampPreview'].forEach((id) => {
+    document.getElementById(id).disabled = !addressReady;
+  });
+  if (!addressReady) {
+    const status = document.getElementById('crmCampStatus');
+    status.style.color = '#E8A83C';
+    status.textContent = 'Enter the complete business postal address, including street and ZIP code, before generating campaign HTML.';
+  } else {
+    const status = document.getElementById('crmCampStatus');
+    if (status.textContent.startsWith('Enter the complete business postal address')) status.textContent = '';
+  }
 }
 
 function readCampaignFields() {
@@ -1381,9 +1438,10 @@ const MERGE_TAGS = {
 
 const SHRISH_LOGO_ABS = 'https://www.shrish.co/images/brand/logo-small.png';
 const SHRISH_REVIEW_ABS = 'https://g.page/r/shrish/review';
-const POSTAL_ADDRESS = 'Shrish LLC, Chesterfield, VA, USA';
-
 function campaignHtml() {
+  if (!isCompletePostalAddress(state.campaign.postalAddress)) {
+    throw new Error('A complete business postal address is required.');
+  }
   const tags = MERGE_TAGS[state.campaign.esp] || MERGE_TAGS.plain;
   const f = state.campaign.fields;
   const sign = '<p style="margin:18px 0 0;font-size:15px;line-height:1.7;">— Kiran, Shrish</p>';
@@ -1455,7 +1513,7 @@ function campaignHtml() {
       <div style="padding:24px;">${body}</div>
       <div style="background:#f6f1e8;padding:16px 24px;font-size:11px;color:#7a6853;line-height:1.7;text-align:center;">
         You are receiving this because you ordered from Shrish.<br />
-        <a href="${tags.unsub}" style="color:#7a6853;">Unsubscribe</a> &nbsp;·&nbsp; ${POSTAL_ADDRESS}
+        <a href="${tags.unsub}" style="color:#7a6853;">Unsubscribe</a> &nbsp;·&nbsp; ${escapeHtml(state.campaign.postalAddress)}
       </div>
     </div>
   </div>
@@ -1465,9 +1523,8 @@ function campaignHtml() {
 function exportCampaignCsv() {
   const recipients = campaignRecipients();
   if (!recipients.length) return;
-  const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const rows = recipients.map((r) => [r.email, r.firstName, r.lastProduct].map(cell).join(','));
-  const csv = [['EMAIL', 'FIRSTNAME', 'LASTPRODUCT'].map(cell).join(','), ...rows].join('\n');
+  const rows = recipients.map((r) => [r.email, r.firstName, r.lastProduct].map(csvCell).join(','));
+  const csv = [['EMAIL', 'FIRSTNAME', 'LASTPRODUCT'].map(csvCell).join(','), ...rows].join('\n');
 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
@@ -1764,7 +1821,6 @@ function exportSeasonCsv() {
   if (!season) return;
 
   const buyers = [...season.customers.values()].sort((a, b) => b.spend - a.spend);
-  const cell = (value) => `"${String(value === null || value === undefined ? '' : value).replace(/"/g, '""')}"`;
   const header = ['Name', 'Phone', 'Email', 'Orders', 'Boxes', 'Spend', 'Varieties bought', 'Top variety'];
 
   const rows = buyers.map((buyer) => {
@@ -1778,10 +1834,10 @@ function exportSeasonCsv() {
       buyer.spend.toFixed(2),
       sorted.map(([name, qty]) => `${name} x${qty}`).join('; '),
       sorted[0]?.[0] || ''
-    ].map(cell).join(',');
+    ].map(csvCell).join(',');
   });
 
-  const blob = new Blob([[header.map(cell).join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([[header.map(csvCell).join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = `shrish_mango_${season.year}_campaign_list.csv`;
@@ -1820,10 +1876,11 @@ function renderUnpaid() {
     const items = Array.isArray(order.items) ? order.items : [];
     const summary = items.slice(0, 3).map((item) => item.name).filter(Boolean).join(', ')
       + (items.length > 3 ? ` +${items.length - 3} more` : '');
-    const phone = String(order.phone || '').replace(/\D/g, '');
+    const phone = normalizeUsPhone(order.phoneDigits || order.phone);
     const sent = order.paymentRetryEmailSentAt;
     const isTest = Boolean(order.isTestOrder);
-    const canEmail = Boolean(String(order.email || '').trim()) && !sent && !isTest;
+    const suppressionReason = orderSuppressionReason(order);
+    const canEmail = Boolean(String(order.email || '').trim()) && !sent && !isTest && !suppressionReason;
 
     return `<div class="crm-unpaid-row ${isTest ? 'is-test' : ''}">
       <div class="crm-unpaid-main">
@@ -1835,6 +1892,7 @@ function renderUnpaid() {
       <div class="crm-unpaid-actions">
         ${phone ? `<a class="crm-action-btn" href="tel:+1${escapeHtml(phone)}">Call</a>
         <a class="crm-action-btn" href="https://wa.me/1${escapeHtml(phone)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ''}
+        ${suppressionReason ? '<span class="crm-unpaid-sent">Outreach suppressed</span>' : ''}
         ${sent
           ? '<span class="crm-unpaid-sent">Retry email sent</span>'
           : `<button class="crm-action-btn primary" type="button" data-retry="${escapeHtml(order.id)}" ${canEmail ? '' : 'disabled title="Marked as test, already sent, or no email on this order"'}>Send payment link</button>`}
@@ -1877,6 +1935,10 @@ async function toggleTestOrder(orderId) {
 async function sendRetryLink(orderId, button) {
   const order = state.unpaid.find((entry) => entry.id === orderId);
   if (!order) return;
+  if (orderSuppressionReason(order)) {
+    window.alert('This customer is marked do not contact or has requested account deletion.');
+    return;
+  }
 
   const name = String(order.fullName || order.firstName || 'this customer').trim();
   const confirmed = window.confirm(
@@ -2090,7 +2152,6 @@ function exportCsv() {
   if (!list.length) return;
 
   const header = ['Name', 'Phone', 'Email', 'Orders', 'Lifetime value', 'Avg order', 'First order', 'Last order', 'Days since', 'Status', 'Top product'];
-  const cell = (value) => `"${String(value === null || value === undefined ? '' : value).replace(/"/g, '""')}"`;
 
   const rows = list.map((customer) => [
     customer.name,
@@ -2104,9 +2165,9 @@ function exportCsv() {
     customer.daysSince === null ? '' : customer.daysSince,
     customer.statusKey,
     customer.favourites[0]?.[0] || ''
-  ].map(cell).join(','));
+  ].map(csvCell).join(','));
 
-  const blob = new Blob([[header.map(cell).join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([[header.map(csvCell).join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = `shrish_customers_${state.segment}_${new Date().toISOString().slice(0, 10)}.csv`;
@@ -2350,6 +2411,14 @@ function wire() {
 
   document.getElementById('crmCampEsp').addEventListener('change', (event) => {
     state.campaign.esp = event.target.value;
+  });
+
+  const postalInput = document.getElementById('crmCampPostalAddress');
+  postalInput.value = state.campaign.postalAddress;
+  postalInput.addEventListener('input', (event) => {
+    state.campaign.postalAddress = String(event.target.value || '').trim();
+    try { localStorage.setItem('shrish_crm_postal_address', state.campaign.postalAddress); } catch (error) { /* private mode */ }
+    renderCampaign();
   });
 
   document.getElementById('crmCampCsv').addEventListener('click', () => {
