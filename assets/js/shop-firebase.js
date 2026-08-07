@@ -357,9 +357,10 @@ const VERIFIED_PRODUCT_IMAGE_OVERRIDES = window.SHRISH_VERIFIED_PRODUCT_IMAGE_OV
 const PRODUCT_CATALOG_OVERRIDE_ALIASES = {
   puth_plain: 'puth_plain_sugar'
 };
+const ADMIN_CATALOG_COMMERCE_FIELDS = ['price', 'unit', 'available', 'displayOnly', 'hidden'];
 
 function hasAdminManagedCatalogFields(product = {}) {
-  return Boolean(product.catalogManagedAt);
+  return Boolean(product.catalogManagedAt || product.id === 'puth_plain');
 }
 
 function applyCatalogFieldOverrides(product = {}) {
@@ -368,13 +369,22 @@ function applyCatalogFieldOverrides(product = {}) {
   const shouldForce = FORCE_CATALOG_FIELD_OVERRIDE_IDS.has(product.id)
     || SWEET_CATALOG_OVERRIDE_CATEGORIES.has(override?.category);
   if (!override || (hasAdminManagedCatalogFields(product) && !shouldForce)) return product;
-  return {
+  const merged = {
     ...product,
     ...override,
     variants: Array.isArray(override.variants)
       ? override.variants.map((variant) => ({ ...variant }))
       : product.variants
   };
+  if (!hasAdminManagedCatalogFields(product)) return merged;
+
+  ADMIN_CATALOG_COMMERCE_FIELDS.forEach((field) => {
+    if (Object.prototype.hasOwnProperty.call(product, field)) merged[field] = product[field];
+  });
+  if (Array.isArray(product.variants)) {
+    merged.variants = product.variants.map((variant) => ({ ...variant }));
+  }
+  return merged;
 }
 
 function applyVerifiedProductImageOverride(product = {}) {
