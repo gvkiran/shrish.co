@@ -56,6 +56,7 @@
         <button class="crm-nav-btn" type="button" data-view="convert">Convert</button>
         <button class="crm-nav-btn" type="button" data-view="unpaid">Unpaid<span class="crm-nav-badge" id="crmUnpaidBadge" style="display:none">0</span></button>
         <button class="crm-nav-btn" type="button" data-view="campaigns">Email</button>
+        <button class="crm-nav-btn" type="button" data-view="plan">Plan<span class="crm-nav-badge" id="crmPlanBadge" style="display:none">0</span></button>
       </nav>
 
       <section class="crm-filterbar">
@@ -202,6 +203,36 @@
             opt-outs, bounces and complaints for you. Keeping marketing off <code>shrish.co</code> means a
             bad campaign can never affect whether your order confirmations arrive.
           </div>
+        </section>
+      </div>
+
+      <!-- Plan -->
+      <div class="crm-view" id="view-plan">
+        <section class="crm-panel">
+          <div class="crm-panel-head">
+            <h2>Add something</h2>
+            <span class="crm-panel-note">Ideas, follow-ups, anything you'd otherwise forget</span>
+          </div>
+          <div class="crm-plan-add">
+            <input class="crm-field" id="crmPlanTitle" type="text" maxlength="140" placeholder="e.g. Work out cost per jar so margin shows in the CRM" />
+            <select class="crm-field" id="crmPlanStatus" style="max-width:150px">
+              <option value="now">Now</option>
+              <option value="next" selected>Next</option>
+              <option value="later">Later</option>
+            </select>
+            <button class="crm-action-btn primary" type="button" id="crmPlanAdd">Add</button>
+          </div>
+          <textarea class="crm-field" id="crmPlanNotes" rows="2" placeholder="Notes (optional)" style="margin-top:8px"></textarea>
+        </section>
+
+        <div class="crm-board" id="crmBoard"></div>
+
+        <section class="crm-panel">
+          <div class="crm-panel-head">
+            <h2>Done</h2>
+            <span class="crm-panel-note">Most recent first</span>
+          </div>
+          <div id="crmPlanDone"></div>
         </section>
       </div>
 

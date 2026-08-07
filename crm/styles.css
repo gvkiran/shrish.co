@@ -320,6 +320,51 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600
 .crm-filterbar-divider { width: 1px; height: 22px; background: var(--glass-border); }
 .crm-pill.season { background: rgba(200,121,26,0.16); color: var(--gold-300); }
 
+/* ── Plan board ──────────────────────────────────────── */
+
+.crm-plan-add { display: flex; gap: 8px; flex-wrap: wrap; }
+.crm-plan-add .crm-field { flex: 1; min-width: 200px; }
+
+.crm-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: start;
+}
+
+.crm-column { margin-bottom: 0; }
+.crm-column h2 { font-size: 18px; }
+
+.crm-task {
+  padding: 12px 13px;
+  margin-bottom: 8px;
+  background: var(--obs-700);
+  border: 1px solid var(--glass-border);
+  border-left: 3px solid var(--gold-500);
+  border-radius: 0 10px 10px 0;
+}
+
+.crm-task-title { font-size: 14px; font-weight: 500; line-height: 1.45; }
+.crm-task-notes { font-size: 12px; color: var(--text-faint); line-height: 1.6; margin-top: 5px; }
+.crm-task-actions { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+
+.crm-task-btn {
+  padding: 4px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-faint);
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.crm-task-btn:hover { border-color: var(--glass-border-bright); color: var(--gold-200); }
+.crm-task-btn.done:hover { border-color: var(--green); color: var(--green); }
+.crm-task-btn.danger:hover { border-color: var(--red); color: var(--red); }
+
 /* ── Campaign composer ───────────────────────────────── */
 
 .crm-field-label { display: block; margin: 16px 0 6px; font-size: 13px; font-weight: 600; color: var(--text-dim); }

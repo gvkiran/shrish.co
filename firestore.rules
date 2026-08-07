@@ -180,6 +180,11 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // Owner's own to-do and idea list. Nothing customer-facing.
+    match /crm_tasks/{taskId} {
+      allow read, write: if isAdmin();
+    }
+
     match /order_feedback/{feedbackId} {
       allow get, list: if isAdmin();
       allow create, update, delete: if false;

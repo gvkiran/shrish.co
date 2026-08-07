@@ -20,6 +20,7 @@ import {
   doc,
   getDocs,
   setDoc,
+  deleteDoc,
   updateDoc,
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -169,6 +170,8 @@ const state = {
   rawOrders: [],
   rawProfiles: [],
   campaign: { template: 'checkin', audience: 'due30', esp: 'brevo', fields: {} },
+  tasks: [],
+  planSeeded: false,
   reorderModel: new Map(),
   overlays: new Map(),    // phoneDigits -> { tags: [], notes: '' }
   feedback: new Map(),    // phoneDigits -> [ feedback ]
@@ -1133,6 +1136,149 @@ function renderExtraInsights() {
     </section>`;
 }
 
+/* ── plan ─────────────────────────────────────────────── */
+//
+// Deliberately not Jira. No sprints, story points, assignees, epics or
+// workflows — there is one of you, and every one of those fields would be
+// ceremony with nothing on the other side of it. Three columns and a done
+// pile is the most structure a solo operator can actually maintain.
+
+const PLAN_COLUMNS = [
+  { id: 'now',   label: 'Now',   note: 'This week' },
+  { id: 'next',  label: 'Next',  note: 'Soon, once Now clears' },
+  { id: 'later', label: 'Later', note: 'Worth keeping, not urgent' }
+];
+
+// Seeded from the roadmap so the board is useful the first time it opens
+// rather than being an empty box asking you to do work.
+const PLAN_SEED = [
+  { title: 'Work out cost per product so the CRM can show margin, not just revenue', status: 'now',
+    notes: 'The biggest gap. Everything currently ranks by revenue and nothing knows what anything costs. ~70 products, roughly an hour of entry.' },
+  { title: 'Booth offline mode — queue sales when there is no signal', status: 'now',
+    notes: 'Needed before the next event, not after. Sales are currently lost if the venue has no coverage.' },
+  { title: 'WhatsApp compose from a customer record', status: 'next',
+    notes: 'One tap to a pre-filled message with their name and usual products.' },
+  { title: 'Track mango spoilage as a real cost', status: 'next',
+    notes: 'Damaged boxes exist in the pickup tally but never reach the CRM, so a genuine cost is invisible.' },
+  { title: 'Weekly brief and anomaly watch by email', status: 'next',
+    notes: 'Monday summary, plus alerts for things like repeated failed checkouts from one person.' },
+  { title: 'Pre-season mango campaign builder', status: 'later',
+    notes: 'Useless in August, valuable in February. Countdown, task list and mail list from this season data.' },
+  { title: 'Season-over-season retention', status: 'later',
+    notes: 'Needs April 2027 before there is anything to compare against.' },
+  { title: 'B2B wholesale accounts', status: 'later',
+    notes: 'Only worth building when a real prospect exists.' }
+];
+
+function renderPlan() {
+  const board = document.getElementById('crmBoard');
+  if (!board) return;
+
+  const tasks = state.tasks;
+  const open = tasks.filter((task) => task.status !== 'done');
+
+  const badge = document.getElementById('crmPlanBadge');
+  const nowCount = tasks.filter((task) => task.status === 'now').length;
+  if (badge) {
+    badge.textContent = String(nowCount);
+    badge.style.display = nowCount ? 'inline-block' : 'none';
+  }
+
+  board.innerHTML = PLAN_COLUMNS.map((column) => {
+    const items = open.filter((task) => task.status === column.id);
+    return `<section class="crm-panel crm-column">
+      <div class="crm-panel-head">
+        <h2>${escapeHtml(column.label)}<span class="crm-seg-count">${items.length}</span></h2>
+      </div>
+      <div class="crm-panel-note" style="margin:-8px 0 12px">${escapeHtml(column.note)}</div>
+      ${items.length ? items.map((task) => `
+        <div class="crm-task" data-task="${escapeHtml(task.id)}">
+          <div class="crm-task-title">${escapeHtml(task.title)}</div>
+          ${task.notes ? `<div class="crm-task-notes">${escapeHtml(task.notes)}</div>` : ''}
+          <div class="crm-task-actions">
+            ${PLAN_COLUMNS.filter((c) => c.id !== column.id).map((c) =>
+              `<button class="crm-task-btn" type="button" data-move="${escapeHtml(task.id)}" data-to="${c.id}">→ ${escapeHtml(c.label)}</button>`).join('')}
+            <button class="crm-task-btn done" type="button" data-move="${escapeHtml(task.id)}" data-to="done">✓ Done</button>
+            <button class="crm-task-btn danger" type="button" data-del="${escapeHtml(task.id)}">Delete</button>
+          </div>
+        </div>`).join('') : '<div class="crm-empty">Nothing here.</div>'}
+    </section>`;
+  }).join('');
+
+  const done = tasks.filter((task) => task.status === 'done')
+    .sort((a, b) => String(b.doneAt || '').localeCompare(String(a.doneAt || '')));
+
+  document.getElementById('crmPlanDone').innerHTML = done.length
+    ? done.slice(0, 25).map((task) => `
+      <div class="crm-order-row">
+        <div>
+          <div style="text-decoration:line-through;opacity:.7">${escapeHtml(task.title)}</div>
+          <div class="crm-order-meta">${escapeHtml(task.doneAt ? shortDate(new Date(task.doneAt)) : '')}</div>
+        </div>
+        <button class="crm-task-btn" type="button" data-move="${escapeHtml(task.id)}" data-to="now">Reopen</button>
+      </div>`).join('')
+    : '<div class="crm-empty">Nothing finished yet.</div>';
+}
+
+async function loadPlan() {
+  try {
+    const snap = await getDocs(collection(db, 'crm_tasks'));
+    state.tasks = snap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+      .sort((a, b) => String(a.createdAt || '').localeCompare(String(b.createdAt || '')));
+
+    // First open: fill the board from the roadmap rather than showing nothing.
+    if (!state.tasks.length && !state.planSeeded) {
+      state.planSeeded = true;
+      for (const seed of PLAN_SEED) await addPlanTask(seed.title, seed.status, seed.notes, true);
+      return loadPlan();
+    }
+    renderPlan();
+  } catch (error) {
+    console.error('Could not load plan', error);
+    document.getElementById('crmBoard').innerHTML = '<div class="crm-empty">Could not load the plan.</div>';
+  }
+}
+
+async function addPlanTask(title, status, notes, quiet) {
+  const clean = String(title || '').trim();
+  if (!clean) return;
+  const now = new Date().toISOString();
+  const ref = doc(collection(db, 'crm_tasks'));
+  await setDoc(ref, {
+    title: clean.slice(0, 140),
+    notes: String(notes || '').trim().slice(0, 1000),
+    status: status || 'next',
+    createdAt: now,
+    updatedAt: now,
+    doneAt: ''
+  });
+  if (!quiet) {
+    document.getElementById('crmPlanTitle').value = '';
+    document.getElementById('crmPlanNotes').value = '';
+    await loadPlan();
+  }
+}
+
+async function movePlanTask(id, to) {
+  const now = new Date().toISOString();
+  await updateDoc(doc(db, 'crm_tasks', id), {
+    status: to,
+    updatedAt: now,
+    doneAt: to === 'done' ? now : ''
+  });
+  const task = state.tasks.find((entry) => entry.id === id);
+  if (task) { task.status = to; task.doneAt = to === 'done' ? now : ''; }
+  renderPlan();
+}
+
+async function deletePlanTask(id) {
+  const task = state.tasks.find((entry) => entry.id === id);
+  if (!window.confirm(`Delete "${task?.title || 'this item'}"? This cannot be undone.`)) return;
+  await deleteDoc(doc(db, 'crm_tasks', id));
+  state.tasks = state.tasks.filter((entry) => entry.id !== id);
+  renderPlan();
+}
+
 /* ── campaigns ────────────────────────────────────────── */
 
 const CAMPAIGN_AUDIENCES = [
@@ -1788,6 +1934,7 @@ function setView(view) {
   // display:none container it computes a zero size and stays collapsed, so the
   // chart is rebuilt whenever Overview becomes visible.
   if (view === 'overview') renderChart();
+  if (view === 'plan' && !state.tasks.length) loadPlan();
 
   try { localStorage.setItem('shrish_crm_view', view); } catch (error) { /* private mode */ }
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2180,6 +2327,25 @@ function wire() {
   document.getElementById('crmCampAudience').addEventListener('change', (event) => {
     state.campaign.audience = event.target.value;
     renderCampaign();
+  });
+
+  document.getElementById('crmPlanAdd').addEventListener('click', () => {
+    addPlanTask(
+      document.getElementById('crmPlanTitle').value,
+      document.getElementById('crmPlanStatus').value,
+      document.getElementById('crmPlanNotes').value
+    );
+  });
+
+  document.getElementById('crmPlanTitle').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') document.getElementById('crmPlanAdd').click();
+  });
+
+  document.getElementById('view-plan').addEventListener('click', (event) => {
+    const move = event.target.closest('[data-move]');
+    if (move) { movePlanTask(move.dataset.move, move.dataset.to); return; }
+    const del = event.target.closest('[data-del]');
+    if (del) deletePlanTask(del.dataset.del);
   });
 
   document.getElementById('crmCampEsp').addEventListener('change', (event) => {
