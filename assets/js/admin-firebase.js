@@ -2704,19 +2704,21 @@ function mergeProductsWithBase(docs = []) {
 
 const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
 const VERIFIED_PRODUCT_IMAGE_OVERRIDES = window.SHRISH_VERIFIED_PRODUCT_IMAGE_OVERRIDES || {};
+const PRODUCT_CATALOG_OVERRIDE_ALIASES = { puth_plain: 'puth_plain_sugar' };
 const FORCE_CATALOG_FIELD_OVERRIDE_IDS = new Set([
   'picklespodi-drumstick-leaf-podi-munagaku-podi'
 ]);
 const SWEET_CATALOG_OVERRIDE_CATEGORIES = new Set(['putharekulu', 'jellysnacks']);
+const SOURCE_CONTROLLED_COMMERCE_IDS = new Set(['puth_plain_sugar', 'puth_plain_jaggery']);
 const ADMIN_CATALOG_COMMERCE_FIELDS = ['price', 'unit', 'available', 'displayOnly', 'hidden'];
 const LEGACY_SWEET_VARIANT_FALLBACKS = {
   puth_plain: {
     name: 'Putharekulu - Classic Plain (Sugar)',
-    price: '$7.49',
+    price: '$6.99',
     unit: '5 count or 10 count',
     variants: [
-      { id: 'opt1', label: '5 count', price: '$7.49', sku: 'POPJKP5' },
-      { id: 'opt2', label: '10 count', price: '$13.99', sku: 'POPJKP10' }
+      { id: 'opt1', label: '5 count', price: '$6.99', sku: 'PPLS5' },
+      { id: 'opt2', label: '10 count', price: '$12.99', sku: 'PPLS10' }
     ]
   },
   puth_sugar_kaju_plain: {
@@ -2735,7 +2737,8 @@ function hasAdminManagedCatalogFields(product = {}) {
 }
 
 function applyCatalogFieldOverrides(product = {}) {
-  const override = CATALOG_FIELD_OVERRIDES[product.id];
+  const overrideId = PRODUCT_CATALOG_OVERRIDE_ALIASES[product.id] || product.id;
+  const override = CATALOG_FIELD_OVERRIDES[overrideId];
   const shouldForce = FORCE_CATALOG_FIELD_OVERRIDE_IDS.has(product.id)
     || SWEET_CATALOG_OVERRIDE_CATEGORIES.has(override?.category);
   if (!override || (hasAdminManagedCatalogFields(product) && !shouldForce)) return product;
@@ -2749,16 +2752,18 @@ function applyCatalogFieldOverrides(product = {}) {
   if (!hasAdminManagedCatalogFields(product)) return merged;
 
   ADMIN_CATALOG_COMMERCE_FIELDS.forEach((field) => {
+    if (SOURCE_CONTROLLED_COMMERCE_IDS.has(overrideId) && (field === 'price' || field === 'unit')) return;
     if (Object.prototype.hasOwnProperty.call(product, field)) merged[field] = product[field];
   });
-  if (Array.isArray(product.variants)) {
+  if (Array.isArray(product.variants) && !SOURCE_CONTROLLED_COMMERCE_IDS.has(overrideId)) {
     merged.variants = product.variants.map((variant) => ({ ...variant }));
   }
   return merged;
 }
 
 function applyVerifiedProductImageOverride(product = {}) {
-  const override = VERIFIED_PRODUCT_IMAGE_OVERRIDES[product.id];
+  const overrideId = PRODUCT_CATALOG_OVERRIDE_ALIASES[product.id] || product.id;
+  const override = VERIFIED_PRODUCT_IMAGE_OVERRIDES[overrideId];
   if (!override) return product;
   return {
     ...product,

@@ -697,10 +697,13 @@ function cartItemId(productId, variantId = 'default') {
 }
 
 const CATALOG_FIELD_OVERRIDES = window.SHRISH_CATALOG_FIELD_OVERRIDES || {};
+const VERIFIED_PRODUCT_IMAGE_OVERRIDES = window.SHRISH_VERIFIED_PRODUCT_IMAGE_OVERRIDES || {};
+const PRODUCT_CATALOG_OVERRIDE_ALIASES = { puth_plain: 'puth_plain_sugar' };
 const FORCE_CATALOG_FIELD_OVERRIDE_IDS = new Set([
   'picklespodi-drumstick-leaf-podi-munagaku-podi'
 ]);
 const SWEET_CATALOG_OVERRIDE_CATEGORIES = new Set(['putharekulu', 'jellysnacks']);
+const SOURCE_CONTROLLED_COMMERCE_IDS = new Set(['puth_plain_sugar', 'puth_plain_jaggery']);
 const ADMIN_CATALOG_COMMERCE_FIELDS = ['price', 'unit', 'available', 'displayOnly', 'hidden'];
 
 function hasAdminManagedCatalogFields(product = {}) {
@@ -708,7 +711,8 @@ function hasAdminManagedCatalogFields(product = {}) {
 }
 
 function applyCatalogFieldOverrides(product = {}) {
-  const override = CATALOG_FIELD_OVERRIDES[product.id];
+  const overrideId = PRODUCT_CATALOG_OVERRIDE_ALIASES[product.id] || product.id;
+  const override = CATALOG_FIELD_OVERRIDES[overrideId];
   const shouldForce = FORCE_CATALOG_FIELD_OVERRIDE_IDS.has(product.id)
     || SWEET_CATALOG_OVERRIDE_CATEGORIES.has(override?.category);
   if (!override || (hasAdminManagedCatalogFields(product) && !shouldForce)) return product;
@@ -722,16 +726,29 @@ function applyCatalogFieldOverrides(product = {}) {
   if (!hasAdminManagedCatalogFields(product)) return merged;
 
   ADMIN_CATALOG_COMMERCE_FIELDS.forEach((field) => {
+    if (SOURCE_CONTROLLED_COMMERCE_IDS.has(overrideId) && (field === 'price' || field === 'unit')) return;
     if (Object.prototype.hasOwnProperty.call(product, field)) merged[field] = product[field];
   });
-  if (Array.isArray(product.variants)) {
+  if (Array.isArray(product.variants) && !SOURCE_CONTROLLED_COMMERCE_IDS.has(overrideId)) {
     merged.variants = product.variants.map((variant) => ({ ...variant }));
   }
   return merged;
 }
 
+function applyVerifiedProductImageOverride(product = {}) {
+  const overrideId = PRODUCT_CATALOG_OVERRIDE_ALIASES[product.id] || product.id;
+  const override = VERIFIED_PRODUCT_IMAGE_OVERRIDES[overrideId];
+  if (!override) return product;
+  return {
+    ...product,
+    image: override.image || '',
+    gallery: Array.isArray(override.gallery) ? [...override.gallery] : []
+  };
+}
+
 function staticCatalogProduct(productId) {
-  return window.SHRISH_DATA?.products?.find((product) => product.id === productId) || null;
+  const catalogProductId = PRODUCT_CATALOG_OVERRIDE_ALIASES[productId] || productId;
+  return window.SHRISH_DATA?.products?.find((product) => product.id === catalogProductId) || null;
 }
 
 function variantIdForOption(variant, index) {
@@ -806,6 +823,25 @@ function liveCartItemFromProduct(product, cartItem) {
   };
 }
 
+function syncSourceControlledCartPresentation() {
+  let changed = false;
+  cart = cart.map((item) => {
+    const productId = cartItemProductId(item);
+    const catalogProductId = PRODUCT_CATALOG_OVERRIDE_ALIASES[productId] || productId;
+    if (!SOURCE_CONTROLLED_COMMERCE_IDS.has(catalogProductId)) return item;
+    const sourceProduct = staticCatalogProduct(productId);
+    if (!sourceProduct) return item;
+    const next = liveCartItemFromProduct(
+      applyVerifiedProductImageOverride(applyCatalogFieldOverrides(sourceProduct)),
+      item
+    );
+    if (!next) return item;
+    if (next.name !== item.name || next.price !== item.price || next.unit !== item.unit || next.image !== item.image) changed = true;
+    return next;
+  });
+  if (changed) saveCart();
+}
+
 function showCartValidationMessage(messages = []) {
   const banner = document.getElementById('errorBanner');
   const list = document.getElementById('errorList');
@@ -846,7 +882,7 @@ async function verifyCartAgainstLiveProducts() {
     }
 
     const product = applyStaticVariantFallback(
-      applyCatalogFieldOverrides({ id: productId, ...productSnap.data() }),
+      applyVerifiedProductImageOverride(applyCatalogFieldOverrides({ id: productId, ...productSnap.data() })),
       item
     );
     if (product.hidden || !product.available || product.displayOnly) {
@@ -2321,6 +2357,7 @@ async function submitOrder() {
 
 async function init() {
   if (await renderStripeReturnMessage()) return;
+  syncSourceControlledCartPresentation();
   renderCartReview();
   updateNavCart();
   bindFormUi();

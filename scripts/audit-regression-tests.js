@@ -62,6 +62,8 @@ check(
 
 const homeSource = read('assets/js/home-firebase.js');
 const shopSource = read('assets/js/shop-firebase.js');
+const orderSource = read('assets/js/order-firebase.js');
+const adminSourceForCatalog = read('assets/js/admin-firebase.js');
 const catalogSource = read('assets/js/data.js');
 const indexSource = read('index.html');
 const verifiedProductImageIdsSource = catalogSource.slice(
@@ -93,8 +95,33 @@ check(
 );
 check(
   shopSource.includes("puth_plain_sugar: ['images/products/putharekulu/putharekulu-plain-sugar-2026-1.jpg']") &&
-    verifiedProductImageIdsSource.includes('"puth_plain_sugar"'),
-  'Classic Plain Sugar Putharekulu must use its verified product image in the live shop.'
+    shopSource.includes("puth_plain_jaggery: ['images/products/putharekulu/putharekulu-plain-jaggery-2026-1.jpg']") &&
+    verifiedProductImageIdsSource.includes('"puth_plain_sugar"') &&
+    verifiedProductImageIdsSource.includes('"puth_plain_jaggery"'),
+  'Both Classic Plain Putharekulu products must use only their verified replacement images.'
+);
+const plainSugarStart = catalogSource.indexOf('id: "puth_plain_sugar"');
+const plainSugarEnd = catalogSource.indexOf('\n    {', plainSugarStart + 1);
+const plainSugarSource = catalogSource.slice(plainSugarStart, plainSugarEnd);
+const plainJaggeryStart = catalogSource.indexOf('id: "puth_plain_jaggery"');
+const plainJaggeryEnd = catalogSource.indexOf('\n    {', plainJaggeryStart + 1);
+const plainJaggerySource = catalogSource.slice(plainJaggeryStart, plainJaggeryEnd);
+check(
+  plainSugarSource.includes('price: "$6.99"')
+    && plainSugarSource.includes('{ id: "opt1", label: "5 count", price: "$6.99"')
+    && plainSugarSource.includes('{ id: "opt2", label: "10 count", price: "$12.99"')
+    && plainJaggerySource.includes('price: "$7.49"')
+    && plainJaggerySource.includes('{ id: "opt1", label: "5 count", price: "$7.49"')
+    && plainJaggerySource.includes('{ id: "opt2", label: "10 count", price: "$13.99"'),
+  'Classic Plain Sugar and Jaggery Putharekulu must retain their original source prices.'
+);
+check(
+  [shopSource, orderSource, adminSourceForCatalog].every((source) =>
+    source.includes("puth_plain: 'puth_plain_sugar'")
+      && source.includes("SOURCE_CONTROLLED_COMMERCE_IDS")
+      && source.includes('VERIFIED_PRODUCT_IMAGE_OVERRIDES[overrideId]')
+  ) && orderSource.includes('syncSourceControlledCartPresentation()'),
+  'Legacy Sugar carts and all catalog surfaces must resolve original prices and verified images.'
 );
 check(
   indexSource.includes('id="heroImg" src="images/products/sweets/kajji-kayalu-2026.webp"') &&
@@ -244,7 +271,6 @@ check(
 );
 
 const functionsSource = read('functions/index.js');
-const orderSource = read('assets/js/order-firebase.js');
 check(
   functionsSource.includes('exports.finalizeWebsiteOrder = onCall(') &&
     functionsSource.includes('order.websiteFinalizationState !== "complete" || !order.websiteValidatedAt'),

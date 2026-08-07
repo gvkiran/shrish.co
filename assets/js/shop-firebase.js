@@ -99,7 +99,7 @@ const PRODUCT_IMAGES = {
   rajapuri: ['images/products/mangoes/img_banganapalli.jpg'],
   puth_plain: ['images/products/putharekulu/putharekulu-plain-sugar-2026-1.jpg'],
   puth_plain_sugar: ['images/products/putharekulu/putharekulu-plain-sugar-2026-1.jpg'],
-  puth_plain_jaggery: ['images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg'],
+  puth_plain_jaggery: ['images/products/putharekulu/putharekulu-plain-jaggery-2026-1.jpg'],
   puth_sugar_kaju: ['images/products/putharekulu/img_puth_sugar_kaju.jpg'],
   puth_sugar_kaju_pista: [
     'images/products/putharekulu/puth-sugar-kaju-badam-pista-2026-1.jpg',
@@ -357,6 +357,7 @@ const VERIFIED_PRODUCT_IMAGE_OVERRIDES = window.SHRISH_VERIFIED_PRODUCT_IMAGE_OV
 const PRODUCT_CATALOG_OVERRIDE_ALIASES = {
   puth_plain: 'puth_plain_sugar'
 };
+const SOURCE_CONTROLLED_COMMERCE_IDS = new Set(['puth_plain_sugar', 'puth_plain_jaggery']);
 const ADMIN_CATALOG_COMMERCE_FIELDS = ['price', 'unit', 'available', 'displayOnly', 'hidden'];
 
 function hasAdminManagedCatalogFields(product = {}) {
@@ -379,16 +380,18 @@ function applyCatalogFieldOverrides(product = {}) {
   if (!hasAdminManagedCatalogFields(product)) return merged;
 
   ADMIN_CATALOG_COMMERCE_FIELDS.forEach((field) => {
+    if (SOURCE_CONTROLLED_COMMERCE_IDS.has(overrideId) && (field === 'price' || field === 'unit')) return;
     if (Object.prototype.hasOwnProperty.call(product, field)) merged[field] = product[field];
   });
-  if (Array.isArray(product.variants)) {
+  if (Array.isArray(product.variants) && !SOURCE_CONTROLLED_COMMERCE_IDS.has(overrideId)) {
     merged.variants = product.variants.map((variant) => ({ ...variant }));
   }
   return merged;
 }
 
 function applyVerifiedProductImageOverride(product = {}) {
-  const override = VERIFIED_PRODUCT_IMAGE_OVERRIDES[product.id];
+  const overrideId = PRODUCT_CATALOG_OVERRIDE_ALIASES[product.id] || product.id;
+  const override = VERIFIED_PRODUCT_IMAGE_OVERRIDES[overrideId];
   if (!override) return product;
   return {
     ...product,
@@ -400,11 +403,11 @@ function applyVerifiedProductImageOverride(product = {}) {
 const LEGACY_VARIANT_FALLBACKS = {
   puth_plain: {
     name: 'Putharekulu - Classic Plain (Sugar)',
-    price: '$7.49',
+    price: '$6.99',
     unit: '5 count or 10 count',
     variants: [
-      { id: 'opt1', label: '5 count', price: '$7.49', sku: 'POPJKP5' },
-      { id: 'opt2', label: '10 count', price: '$13.99', sku: 'POPJKP10' }
+      { id: 'opt1', label: '5 count', price: '$6.99', sku: 'PPLS5' },
+      { id: 'opt2', label: '10 count', price: '$12.99', sku: 'PPLS10' }
     ]
   },
   puth_sugar_kaju: {
@@ -500,6 +503,32 @@ function mergeProducts(docs) {
     [...mergedBase, ...extraProducts]
       .filter((product) => !product.hidden && SHOP_CATEGORY_IDS.has(normalizeProductCategory(product.category)))
   );
+  syncCartFromCatalog();
+}
+
+function syncCartFromCatalog() {
+  let changed = false;
+  cart = cart.map((item) => {
+    const productId = item.productId || String(item.id || '').split('__')[0];
+    const catalogProductId = PRODUCT_CATALOG_OVERRIDE_ALIASES[productId] || productId;
+    if (!SOURCE_CONTROLLED_COMMERCE_IDS.has(catalogProductId)) return item;
+    const product = window.SHRISH_DATA.products.find((entry) => entry.id === productId)
+      || baseProducts.find((entry) => entry.id === catalogProductId);
+    if (!product) return item;
+    const variantId = item.variantId || String(item.id || '').split('__')[1] || 'default';
+    const selectedVariant = getSelectedVariant(product, variantId);
+    const next = {
+      ...item,
+      category: product.category || item.category || '',
+      name: selectedVariant.id === 'default' ? product.name : `${product.name} (${selectedVariant.label})`,
+      price: selectedVariant.price || product.price,
+      unit: selectedVariant.unit || product.unit,
+      image: productImages(productId, product)[0] || product.image || SHRISH_LOGO_PRODUCT_IMAGE
+    };
+    if (next.name !== item.name || next.price !== item.price || next.unit !== item.unit || next.image !== item.image) changed = true;
+    return next;
+  });
+  if (changed) saveCart();
 }
 
 function getProductVariants(product) {
