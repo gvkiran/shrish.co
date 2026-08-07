@@ -109,6 +109,23 @@ check(
   "Shipping status and tracking fields must be written to the order atomically."
 );
 
+const shopSource = read("assets/js/shop-firebase.js");
+const orderSource = read("assets/js/order-firebase.js");
+[shopSource, orderSource, adminSource].forEach((source, index) => {
+  const surface = ["shop", "checkout", "admin"][index];
+  check(
+    source.includes("ADMIN_CATALOG_COMMERCE_FIELDS")
+      && source.includes("product.id === 'puth_plain'")
+      && source.includes("merged.variants = product.variants.map"),
+    `Catalog overrides must preserve Admin-managed prices, availability, and variants in ${surface}.`
+  );
+});
+check(
+  orderSource.includes("!String(item.name || '').toLowerCase().includes(rawUnitLabel.toLowerCase())")
+    && orderSource.includes("${unitLabel ? `<div class=\"ri-unit\">") ,
+  "Checkout must not repeat a variant unit already included in the product name."
+);
+
 const crmHtml = read("crm/index.html");
 check(
   crmHtml.includes('id="crmCampPostalAddress"')
