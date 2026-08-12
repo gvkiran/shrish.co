@@ -3,7 +3,7 @@ import { db, collection, doc, onSnapshot, setDoc, serverTimestamp, escapeHtml } 
 'use strict';
 
 let cart = JSON.parse(sessionStorage.getItem('shrish_cart') || '[]');
-let activeFilter = 'sweets';
+let activeFilter = 'all';
 let baseProducts = JSON.parse(JSON.stringify(window.SHRISH_DATA?.products || []));
 let modalQty = 1;
 let modalProductId = null;
@@ -189,7 +189,7 @@ function normalizeCatalogProduct(product = {}) {
 
 const SHOP_CATEGORY_IDS = new Set(['mangoes', 'putharekulu', 'jellysnacks', 'sweets', 'snacks', 'picklespodi']);
 const SHOP_FILTERS = [
-  { id: 'all', label: 'All Products', categories: ['picklespodi', 'putharekulu', 'jellysnacks', 'sweets', 'snacks', 'mangoes'] },
+  { id: 'all', label: 'All Products', categories: ['putharekulu', 'jellysnacks', 'sweets', 'picklespodi', 'snacks', 'mangoes'] },
   { id: 'sweets', label: 'Sweets', categories: ['putharekulu', 'jellysnacks', 'sweets'] },
   { id: 'pickles', label: 'Pickles', categories: ['picklespodi'] },
   { id: 'podi', label: 'Podi', categories: ['picklespodi'] },
