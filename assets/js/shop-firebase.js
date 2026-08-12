@@ -1139,9 +1139,7 @@ function renderCard(p) {
   const variants = getProductVariants(p);
   const hasChoices = usesVariantUI(p);
   const selectedCardVariant = getCardSelectedVariant(p);
-  const cardPriceText = hasChoices
-    ? (getVariantPriceRange(variants) || selectedCardVariant.price || p.price)
-    : (selectedCardVariant.price || p.price);
+  const cardPriceText = selectedCardVariant.price || p.price;
 
   let actionHtml = '';
   if (!liveReady) {
@@ -1270,7 +1268,7 @@ function renderCardQty(productId) {
   if (usesVariantUI(product)) {
     const variants = getProductVariants(product);
     const selectedVariant = getCardSelectedVariant(product);
-    updateCardDisplayedPrice(product.id, getVariantPriceRange(variants) || selectedVariant.price || product.price);
+    updateCardDisplayedPrice(product.id, selectedVariant.price || product.price);
     wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><div class="pc-variant-list">${renderCardVariantChoices(product, variants, selectedVariant)}${renderCardVariantCommitControl(product, selectedVariant, product.preorderOnly)}</div>`;
     return;
   }
