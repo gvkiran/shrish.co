@@ -1148,11 +1148,8 @@ function renderCard(p) {
     actionHtml = `<div class="pc-card-actions" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" disabled>${catalogSyncFailed ? 'Refresh Required' : 'Checking...'}</button></div>`;
   } else if (isSoon) {
     actionHtml = `<button class="pc-notify-btn" onclick="notifyMe('${escapeHtml(p.id)}','${escapeHtml(p.name)}')">Notify when available</button>`;
-  } else if (isAvail && hasChoices && usesDirectVariantButtons(p)) {
-    const sweetsCardClass = normalizeProductCategory(p.category) === 'sweets' ? ' pc-card-actions-sweets' : '';
-    actionHtml = `<div class="pc-card-actions pc-card-actions-variant pc-card-actions-direct${sweetsCardClass}" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button>${renderDirectVariantButtons(p, variants)}</div>`;
   } else if (isAvail && hasChoices) {
-    actionHtml = `<div class="pc-card-actions pc-card-actions-variant pc-card-actions-direct" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><div class="pc-variant-list">${renderCardVariantChoices(p, variants, selectedCardVariant)}<button class="pc-add-btn" onclick="quickAddSelectedVariant('${escapeHtml(p.id)}')">${isPreorder ? '+ Preorder' : '+ Add to Cart'}</button></div></div>`;
+    actionHtml = `<div class="pc-card-actions pc-card-actions-variant" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><div class="pc-variant-list">${renderCardVariantChoices(p, variants, selectedCardVariant)}${renderCardVariantCommitControl(p, selectedCardVariant, isPreorder)}</div></div>`;
   } else if (isAvail) {
     actionHtml = `<div class="pc-card-actions" id="card-actions-${escapeHtml(p.id)}"><button class="pc-details-btn" onclick="openModal('${escapeHtml(p.id)}')">Details</button><button class="pc-add-btn" onclick="quickAdd('${escapeHtml(p.id)}')">${isPreorder ? '+ Preorder' : '+ Add to Cart'}</button></div>`;
   } else {
@@ -1223,10 +1220,25 @@ function getCartVariantQty(productId, variantId) {
 function renderCardVariantChoices(product, variants, selectedVariant) {
   const safeProductId = escapeHtml(product.id);
   const selectedId = selectedVariant && selectedVariant.id;
-  return `<div class="pc-direct-variants pc-choice-variants">${variants.map((variant) => {
+  return `<div class="pc-seg-group" role="group" aria-label="Select size">${variants.map((variant) => {
     const selected = variant.id === selectedId;
-    return `<button type="button" class="pc-size-add-btn pc-choice-btn ${selected ? 'selected' : ''}" onclick="cardVariantChanged('${safeProductId}','${escapeHtml(variant.id)}')" aria-pressed="${selected ? 'true' : 'false'}"><span>${escapeHtml(variant.label)}</span><strong>${escapeHtml(variant.price || product.price || '')}</strong></button>`;
+    const mainLabel = escapeHtml(getCardVariantQuantityLabel(product, variant));
+    const fullLabel = getCardVariantLabel(product, variant);
+    const countMatch = /\(~?(\d+\s*count)\)/i.exec(fullLabel);
+    const subLabel = countMatch ? escapeHtml(`~${countMatch[1]}`) : '';
+    return `<button type="button" class="pc-choice-btn ${selected ? 'selected' : ''}" onclick="cardVariantChanged('${safeProductId}','${escapeHtml(variant.id)}')" aria-pressed="${selected ? 'true' : 'false'}">${mainLabel}${subLabel ? `<span class="pc-seg-sub">${subLabel}</span>` : ''}</button>`;
   }).join('')}</div>`;
+}
+
+function renderCardVariantCommitControl(product, selectedVariant, isPreorder) {
+  const safeProductId = escapeHtml(product.id);
+  const addLabel = isPreorder ? '+ Preorder' : '+ Add to Cart';
+  const qty = getCartVariantQty(product.id, selectedVariant.id);
+  if (qty === 0) {
+    return `<button class="pc-add-btn" onclick="quickAddSelectedVariant('${safeProductId}')">${addLabel}</button>`;
+  }
+  const safeVariantId = escapeHtml(selectedVariant.id);
+  return `<div class="card-qty-wrap"><button class="card-qty-btn remove-btn" onclick="cardVariantQtyChange('${safeProductId}','${safeVariantId}',-1)" title="Remove one">-</button><div class="card-qty-mid"><span class="cqn">${qty}</span><span style="font-size:11px;opacity:.85">${escapeHtml(selectedVariant.label)}</span></div><button class="card-qty-btn" onclick="cardVariantQtyChange('${safeProductId}','${safeVariantId}',1)" title="Add one">+</button></div>`;
 }
 
 function renderDirectVariantButtons(product, variants) {
@@ -1255,32 +1267,18 @@ function renderCardQty(productId) {
     wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><button class="pc-add-btn" disabled>${catalogSyncFailed ? 'Refresh Required' : 'Checking...'}</button>`;
     return;
   }
-  const addLabel = product.preorderOnly ? '+ Preorder' : '+ Add to Cart';
   if (usesVariantUI(product)) {
     const variants = getProductVariants(product);
-    if (usesDirectVariantButtons(product)) {
-      updateCardDisplayedPrice(product.id, getVariantPriceRange(variants) || product.price);
-      wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button>${renderDirectVariantButtons(product, variants)}`;
-      return;
-    }
     const selectedVariant = getCardSelectedVariant(product);
     updateCardDisplayedPrice(product.id, getVariantPriceRange(variants) || selectedVariant.price || product.price);
-    const cartItemId = buildCartItemId(product.id, selectedVariant.id);
-    const item = cart.find((x) => x.id === cartItemId);
-    const qty = item ? item.qty : 0;
-
-    if (qty === 0) {
-      wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><div class="pc-variant-list">${renderCardVariantChoices(product, variants, selectedVariant)}<button class="pc-add-btn" onclick="quickAddSelectedVariant('${escapeHtml(product.id)}')">${addLabel}</button></div>`;
-      return;
-    }
-
-    wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><div class="pc-variant-list">${renderCardVariantChoices(product, variants, selectedVariant)}<div class="card-qty-wrap"><button class="card-qty-btn remove-btn" onclick="cardVariantQtyChange('${escapeHtml(product.id)}','${escapeHtml(selectedVariant.id)}',-1)" title="Remove one">-</button><div class="card-qty-mid"><span class="cqn">${qty}</span><span style="font-size:11px;opacity:.85">${escapeHtml(selectedVariant.label)}</span></div><button class="card-qty-btn" onclick="cardVariantQtyChange('${escapeHtml(product.id)}','${escapeHtml(selectedVariant.id)}',1)" title="Add one">+</button></div></div>`;
+    wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><div class="pc-variant-list">${renderCardVariantChoices(product, variants, selectedVariant)}${renderCardVariantCommitControl(product, selectedVariant, product.preorderOnly)}</div>`;
     return;
   }
   updateCardDisplayedPrice(product.id, product.price);
   const item = cart.find((x) => x.id === productId);
   const qty = item ? item.qty : 0;
   if (qty === 0) {
+    const addLabel = product.preorderOnly ? '+ Preorder' : '+ Add to Cart';
     wrap.innerHTML = `<button class="pc-details-btn" onclick="openModal('${escapeHtml(productId)}')">Details</button><button class="pc-add-btn" onclick="quickAdd('${escapeHtml(productId)}')">${addLabel}</button>`;
     return;
   }

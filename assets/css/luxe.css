@@ -355,6 +355,9 @@ body.luxe .pc-add-btn,body.luxe .pc-size-add-btn{background:linear-gradient(135d
 body.luxe .pc-add-btn:hover,body.luxe .pc-size-add-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(212,160,23,.4)}
 body.luxe .pc-choice-btn.selected{background:linear-gradient(135deg,#F5B53E,#C8791A);border-color:rgba(255,209,102,.75);color:#140C03;box-shadow:0 10px 26px rgba(212,160,23,.28)}
 body.luxe .pc-choice-btn.selected strong{color:#140C03}
+body.luxe .pc-seg-group{background:#120C05;border:1px solid rgba(212,160,23,.3)}
+body.luxe .pc-seg-group .pc-choice-btn{color:#8E7D62}
+body.luxe .pc-seg-group .pc-choice-btn:hover{color:#CDBC9D}
 body.luxe .pc-details-btn{background:transparent;border:1.5px solid rgba(212,160,23,.4);color:var(--gold-l)}
 body.luxe .pc-details-btn:hover{background:rgba(212,160,23,.12)}
 body.luxe .pc-notify-btn{background:#1D1306;border:1.5px solid rgba(212,160,23,.35);color:var(--gold-l)}

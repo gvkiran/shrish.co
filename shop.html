@@ -129,6 +129,12 @@
 .pc-choice-btn{cursor:pointer}
 .pc-choice-btn.selected{background:var(--saffron);border-color:var(--saffron);color:#1a1208;box-shadow:0 8px 18px rgba(200,121,26,.24)}
 .pc-choice-btn.selected strong{color:inherit}
+/* Segmented size toggle: one pill, two segments, instead of two separate buttons */
+.pc-seg-group{display:flex;gap:4px;background:#FBF1E1;border:1.5px solid rgba(200,121,26,.3);border-radius:14px;padding:4px;width:100%}
+.pc-seg-group .pc-choice-btn{flex:1;min-height:38px;border:none;background:transparent;border-radius:10px;padding:6px 4px;font-family:var(--font-body);font-size:11.5px;font-weight:800;color:rgba(26,18,8,.62);line-height:1.25;text-align:center;box-shadow:none;transition:color .2s}
+.pc-seg-group .pc-choice-btn .pc-seg-sub{display:block;font-size:9px;font-weight:600;opacity:.8;margin-top:1px}
+.pc-seg-group .pc-choice-btn:hover{color:var(--dark)}
+.pc-seg-group .pc-choice-btn.selected{color:#1a1208}
 .pc-size-qty{min-height:38px;border-radius:14px;background:var(--saffron);display:flex;align-items:center;overflow:hidden;color:#fff}
 .pc-size-qty-btn{width:30px;height:38px;border:none;background:transparent;color:#fff;font-size:18px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
 .pc-size-qty-btn:hover{background:rgba(0,0,0,.16)}
