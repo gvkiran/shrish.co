@@ -39,7 +39,7 @@ const CARD_SAFETY_NOTE = 'Allergy/spice caution: may contain peanut oil and othe
 function productFilterId(product) {
   if (!product) return 'all';
   if (product.category === 'putharekulu' || product.category === 'jellysnacks' || product.category === 'sweets') return 'sweets';
-  if (product.category === 'picklespodi') return product.filterGroup === 'Podi' ? 'podi' : 'pickles';
+  if (product.category === 'picklespodi') return isPodiProduct(product) ? 'podi' : 'pickles';
   return SHOP_CATEGORY_IDS.has(product.category) ? product.category : 'all';
 }
 
@@ -188,13 +188,42 @@ function normalizeCatalogProduct(product = {}) {
 }
 
 const SHOP_CATEGORY_IDS = new Set(['mangoes', 'putharekulu', 'jellysnacks', 'sweets', 'snacks', 'picklespodi']);
+
+// Podi lives in the picklespodi data category alongside pickles; filterGroup is
+// what separates them. Keep this the single place that decision is made so the
+// shop, the sidebar counts and the admin all agree.
+function isPodiProduct(product) {
+  return String(product?.filterGroup || '').trim().toLowerCase() === 'podi';
+}
+
+// Shop sections are the customer-facing groupings. Most map 1:1 onto a stored
+// category; picklespodi is presented as two sections (Pickles and Podi) without
+// changing the stored category, so product ids, URLs and order history are
+// untouched.
+const SHOP_SECTIONS = {
+  putharekulu: { category: 'putharekulu' },
+  jellysnacks: { category: 'jellysnacks' },
+  sweets: { category: 'sweets' },
+  pickles: { category: 'picklespodi', match: (product) => !isPodiProduct(product) },
+  podi: { category: 'picklespodi', match: isPodiProduct },
+  snacks: { category: 'snacks' },
+  mangoes: { category: 'mangoes' }
+};
+
+function productInSection(sectionId, product) {
+  const section = SHOP_SECTIONS[sectionId];
+  if (!section || !product) return false;
+  if (normalizeProductCategory(product.category) !== section.category) return false;
+  return section.match ? section.match(product) : true;
+}
+
 const SHOP_FILTERS = [
-  { id: 'all', label: 'All Products', categories: ['putharekulu', 'jellysnacks', 'sweets', 'picklespodi', 'snacks', 'mangoes'] },
-  { id: 'sweets', label: 'Sweets', categories: ['putharekulu', 'jellysnacks', 'sweets'] },
-  { id: 'pickles', label: 'Pickles', categories: ['picklespodi'] },
-  { id: 'podi', label: 'Podi', categories: ['picklespodi'] },
-  { id: 'snacks', label: 'Snacks', categories: ['snacks'] },
-  { id: 'mangoes', label: 'Mangoes', categories: ['mangoes'] }
+  { id: 'all', label: 'All Products', sections: ['putharekulu', 'jellysnacks', 'sweets', 'pickles', 'podi', 'snacks', 'mangoes'] },
+  { id: 'sweets', label: 'Sweets', sections: ['putharekulu', 'jellysnacks', 'sweets'] },
+  { id: 'pickles', label: 'Pickles', sections: ['pickles'] },
+  { id: 'podi', label: 'Podi', sections: ['podi'] },
+  { id: 'snacks', label: 'Snacks', sections: ['snacks'] },
+  { id: 'mangoes', label: 'Mangoes', sections: ['mangoes'] }
 ];
 
 const SHOP_FILTER_PATHS = {
@@ -1393,11 +1422,7 @@ function activeFilterProducts() {
 }
 
 function filterIncludesProduct(filter, product) {
-  const category = normalizeProductCategory(product.category);
-  if (!filter.categories.includes(category)) return false;
-  if (filter.id === 'pickles') return product.filterGroup !== 'Podi';
-  if (filter.id === 'podi') return product.filterGroup === 'Podi';
-  return true;
+  return (filter?.sections || []).some((sectionId) => productInSection(sectionId, product));
 }
 
 function updateShopToolbarCounts() {
@@ -1507,10 +1532,13 @@ function buildFilters() {
   });
 }
 
+// Veg/Non-Veg sub-filter inside the Pickles section. The section itself already
+// excludes podi; the podi guard here is belt-and-braces for direct callers.
 function picklesPodiMatches(product) {
+  if (isPodiProduct(product)) return false;
   if (picklePodiFilter === 'veg') return product.filterGroup === 'Veg Pickles';
   if (picklePodiFilter === 'nonveg') return product.filterGroup === 'Non-Veg Pickles';
-  return product.filterGroup !== 'Podi';
+  return true;
 }
 
 function renderPicklesPodiFilters(items) {
@@ -1520,9 +1548,10 @@ function renderPicklesPodiFilters(items) {
     { id: 'nonveg', label: 'Non-Veg' }
   ];
   const countFor = (filterId) => items.filter((product) => {
+    if (isPodiProduct(product)) return false;
     if (filterId === 'veg') return product.filterGroup === 'Veg Pickles';
     if (filterId === 'nonveg') return product.filterGroup === 'Non-Veg Pickles';
-    return product.filterGroup !== 'Podi';
+    return true;
   }).length;
 
   return `<div class="pickle-subfilters" aria-label="Pickle type filters">${filters.map((filter) => `
@@ -1638,56 +1667,57 @@ function renderShop() {
       bannerTitle: 'Snacks Coming Soon!',
       bannerText: 'We are getting select snacks directly from India. Stay tuned for fresh arrivals and limited batches.'
     },
-    picklespodi: {
+    pickles: {
       title: 'Pickles',
-      em: '& Podi',
-      sub: 'Traditional Andhra-style pickles and podi. Non-veg pickles are preorder only. Use package Best Before date as final.',
+      em: '',
+      sub: 'Traditional Andhra-style pickles. Non-veg pickles are preorder only and depend on supplier batch and pickup timing.',
       banner: true,
-      bannerTitle: 'More Pickles & Podi Coming Soon!',
-      bannerText: 'More regional pickle and podi varieties are being planned. Watch this section for limited batches and preorder updates.'
+      bannerTitle: 'More Pickles Coming Soon!',
+      bannerText: 'More regional pickle varieties are being planned. Watch this section for limited batches and preorder updates.'
+    },
+    podi: {
+      title: 'Podi',
+      em: '',
+      sub: 'Traditional South Indian podi and powders, prepared in small batches.',
+      banner: true,
+      bannerTitle: 'More Podi Coming Soon!',
+      bannerText: 'More regional podi and spice powder varieties are being planned. Watch this section for limited batches.'
     }
   };
 
   const activeFilterConfig = SHOP_FILTERS.find((filter) => filter.id === activeFilter) || SHOP_FILTERS[0];
-  const cats = activeFilterConfig.categories;
+  const sectionIds = activeFilterConfig.sections;
   let renderedSections = 0;
-  cats.forEach((catId) => {
-    const allCatItems = sortWithinAvailability(window.SHRISH_DATA.products.filter((p) => !p.hidden && p.category === catId));
+  sectionIds.forEach((sectionId) => {
+    const allCatItems = sortWithinAvailability(window.SHRISH_DATA.products.filter((p) => !p.hidden && productInSection(sectionId, p)));
     const searchedItems = allCatItems.filter((product) => productMatchesSearch(product));
     let baseItems = searchedItems;
-    if (catId === 'picklespodi' && activeFilter !== 'all') {
-      baseItems = baseItems.filter((product) => filterIncludesProduct(activeFilterConfig, product));
-    }
-    if (catId === 'picklespodi' && activeFilter === 'pickles') {
+    if (sectionId === 'pickles' && activeFilter === 'pickles') {
       baseItems = baseItems.filter(picklesPodiMatches);
     }
     const items = applyShopRefinements(baseItems);
-    let m = catMeta[catId] || { title: catId, em: '', sub: '', banner: false };
-    if (catId === 'picklespodi' && activeFilter === 'pickles') {
-      m = { title: 'Pickles', em: '', sub: 'Traditional Andhra-style pickles. Non-veg pickles are preorder only and depend on supplier batch and pickup timing.', banner: false };
-    } else if (catId === 'picklespodi' && activeFilter === 'podi') {
-      m = { title: 'Podi', em: '', sub: 'Traditional South Indian podi and powders, prepared in small batches.', banner: false };
-    }
-    const showEmptyCategory = activeFilter === catId && ['snacks'].includes(catId);
+    const m = catMeta[sectionId] || { title: sectionId, em: '', sub: '', banner: false };
+    const showEmptyCategory = activeFilter === sectionId && ['snacks'].includes(sectionId);
     if (!allCatItems.length && !showEmptyCategory) return;
     if (productSearchQuery && !items.length) return;
     if (shopRefinementsActive() && !items.length) return;
     const hasLiveItems = allCatItems.some((product) => product.available && !product.displayOnly);
     let sectionSub = m.sub;
-    if (catId === 'putharekulu' && hasLiveItems) {
+    if (sectionId === 'putharekulu' && hasLiveItems) {
       sectionSub = 'Hand-crafted in Atreyapuram, Andhra Pradesh. Available items are shown first.';
     }
-    if (catId === 'jellysnacks' && hasLiveItems) {
+    if (sectionId === 'jellysnacks' && hasLiveItems) {
       sectionSub = 'Traditional Mamidi Thandra & Thati Thandra from Atreyapuram. Available items are shown first.';
     }
-    if (catId === 'picklespodi' && activeFilter === 'all') {
-      sectionSub = 'Traditional Andhra-style pickles and podi. Non-veg pickles are preorder only and depend on supplier batch and pickup timing.';
-    }
-    if (catId === 'picklespodi' && activeFilter === 'pickles') updatePickleSidebarFilters(allCatItems.filter((product) => product.filterGroup !== 'Podi'));
+    if (sectionId === 'pickles' && activeFilter === 'pickles') updatePickleSidebarFilters(allCatItems);
     const searchNote = productSearchQuery ? `<div class="shop-search-note">Showing matches for <strong>${escapedSearchQuery}</strong>. <a href="${escapeHtml(shopUrlForFilter(activeFilter, { clearSearch: true, clearProduct: true }))}">Clear search</a></div>` : '';
     const safetyNotice = `<details class="shop-safety-notice"><summary>⚠ Food allergy &amp; spice notice — tap to read</summary><p>${escapeHtml(SHOP_ALLERGEN_NOTICE)} ${escapeHtml(SHOP_SPICE_NOTICE)}</p></details>`;
     let html = `<div class="shop-section"><div class="shop-section-head"><div><div class="shop-section-title">${m.title} <em>${m.em}</em></div><div class="section-divider"></div></div></div>${searchNote}<p style="color:var(--text-light);font-size:14px;margin-bottom:14px">${sectionSub}</p>${safetyNotice}`;
-    const showBanner = m.banner && (!hasLiveItems || activeFilter === catId);
+    // Pickles/Podi keep their pre-split behaviour: the "coming soon" banner only
+    // appears when the section genuinely has no live items, not merely because
+    // the shopper selected that filter.
+    const bannerOnSelect = !['pickles', 'podi'].includes(sectionId);
+    const showBanner = m.banner && (!hasLiveItems || (bannerOnSelect && activeFilter === sectionId));
     if (showBanner) {
       const bannerTitle = m.bannerTitle || 'Coming Soon to Shrish!';
       const bannerText = m.bannerText || 'Authentic GI-tagged Putharekulu from Atreyapuram. Hit "Notify Me" to be first in line when we launch.';

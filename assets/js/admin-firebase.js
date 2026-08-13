@@ -2730,6 +2730,48 @@ function productCategoryLabel(category) {
   return labels[normalizedCategory] || normalizedCategory || 'Product';
 }
 
+// Per-product label for the catalog card chip: picklespodi rows show as either
+// Pickles or Podi so the admin list matches the split shop sections.
+function productSectionLabel(product = {}) {
+  if (normalizeProductCategory(product.category) === 'picklespodi') {
+    return isPodiProduct(product) ? 'Podi' : 'Pickles';
+  }
+  return productCategoryLabel(product.category);
+}
+
+// The Add/Edit Product dropdown offers Pickles and Podi as separate choices;
+// both persist as the picklespodi category and differ only by filterGroup.
+const PRODUCT_FORM_CATEGORY_ALIASES = {
+  pickles: { category: 'picklespodi', podi: false },
+  podi: { category: 'picklespodi', podi: true }
+};
+
+function storedCategoryForFormValue(formValue) {
+  return PRODUCT_FORM_CATEGORY_ALIASES[formValue]?.category || normalizeProductCategory(formValue);
+}
+
+function formCategoryValueForProduct(product = {}) {
+  if (normalizeProductCategory(product.category) === 'picklespodi') {
+    return isPodiProduct(product) ? 'podi' : 'pickles';
+  }
+  return normalizeProductCategory(product.category) || 'mangoes';
+}
+
+// Resolve the filterGroup a picklespodi product should be saved with. Podi is
+// unambiguous; for pickles we keep an existing Veg/Non-Veg value when the row
+// is still a pickle, and otherwise infer it from the name so new items land in
+// the right Veg/Non-Veg sub-filter.
+function filterGroupForFormValue(formValue, payloadDraft = {}, existingProduct = null) {
+  const alias = PRODUCT_FORM_CATEGORY_ALIASES[formValue];
+  if (!alias) return null;
+  if (alias.podi) return 'Podi';
+  const existingGroup = String(existingProduct?.filterGroup || '').trim();
+  if (existingGroup && existingGroup.toLowerCase() !== 'podi') return existingGroup;
+  return isNonVegPickleProduct({ ...payloadDraft, category: 'picklespodi' })
+    ? 'Non-Veg Pickles'
+    : 'Veg Pickles';
+}
+
 function getSortedProducts(products = []) {
   return [...products].sort((a, b) => {
     const aOrder = Number.isFinite(Number(a?.sortOrder)) ? Number(a.sortOrder) : Number.MAX_SAFE_INTEGER;
@@ -2750,8 +2792,13 @@ function productFilterMetadata(product = {}) {
   ].filter(Boolean).join(' ').toLowerCase();
 }
 
+// Pickles and Podi share the picklespodi storage category; filterGroup is what
+// separates them, matching the shop. Older rows that predate filterGroup fall
+// back to the name/tag heuristic so nothing silently changes shelf.
 function isPodiProduct(product = {}) {
   if (normalizeProductCategory(product.category) !== 'picklespodi') return false;
+  const filterGroup = String(product.filterGroup || '').trim().toLowerCase();
+  if (filterGroup) return filterGroup === 'podi';
   return /\bpodi\b|\bpowder\b/.test(productFilterMetadata(product));
 }
 
@@ -2989,7 +3036,7 @@ function applyCategoryDefaults() {
     snacks: 'per pack',
     picklespodi: '250g or 500g'
   };
-  const nextValue = defaults[category] || 'per box';
+  const nextValue = defaults[storedCategoryForFormValue(category)] || 'per box';
   if (!unitInput) return nextValue;
 
   unitInput.value = nextValue;
@@ -2997,11 +3044,11 @@ function applyCategoryDefaults() {
 }
 
 function productUsesVariants(category) {
-  return ['putharekulu', 'jellysnacks', 'picklespodi'].includes(category);
+  return ['putharekulu', 'jellysnacks', 'picklespodi'].includes(storedCategoryForFormValue(category));
 }
 
 function updateVariantFieldHints() {
-  const category = document.getElementById('newProductCategory')?.value || 'mangoes';
+  const category = storedCategoryForFormValue(document.getElementById('newProductCategory')?.value || 'mangoes');
   const labelOneText = document.getElementById('variantOneLabelText');
   const labelTwoText = document.getElementById('variantTwoLabelText');
   const priceOneText = document.getElementById('variantOnePriceText');
@@ -3215,7 +3262,7 @@ function editProduct(id) {
 
   document.getElementById('editingProductId').value = product.id;
   document.getElementById('newProductName').value = product.name || '';
-  document.getElementById('newProductCategory').value = normalizeProductCategory(product.category) || 'mangoes';
+  document.getElementById('newProductCategory').value = formCategoryValueForProduct(product);
   document.getElementById('newProductLocalName').value = product.localName || '';
   document.getElementById('newProductOrigin').value = product.origin || '';
   document.getElementById('newProductStatus').value = product.displayOnly ? 'soon' : (product.available ? 'live' : 'off');
@@ -3258,7 +3305,9 @@ async function submitAddProduct(event) {
   const formData = new FormData(form);
   const editingProductId = String(formData.get('editingProductId') || '').trim();
   const name = String(formData.get('name') || '').trim();
-  const category = normalizeProductCategory(String(formData.get('category') || '').trim());
+  // The dropdown may say "pickles"/"podi"; both are stored as picklespodi.
+  const categoryChoice = String(formData.get('category') || '').trim();
+  const category = storedCategoryForFormValue(normalizeProductCategory(categoryChoice));
   const localName = String(formData.get('localName') || '').trim();
   const origin = String(formData.get('origin') || '').trim();
   const status = String(formData.get('status') || 'live').trim();
@@ -3328,6 +3377,14 @@ async function submitAddProduct(event) {
     catalogManagedAt: nowIso,
     updatedAt: nowIso
   };
+  // Must run after the picklesPodiSaveFields spread so switching an existing row
+  // between Pickles and Podi actually moves it instead of inheriting the old group.
+  const resolvedFilterGroup = filterGroupForFormValue(
+    normalizeProductCategory(categoryChoice),
+    { id, name, tag, badges: existingProduct?.badges, recommendationTags: existingProduct?.recommendationTags },
+    existingProduct
+  );
+  if (resolvedFilterGroup) payload.filterGroup = resolvedFilterGroup;
   if (!editingProductId) payload.createdAt = nowIso;
 
   if (!auth.currentUser) {
@@ -3390,7 +3447,7 @@ function renderProducts() {
       <div class="pm-info">
         <div class="pm-meta">
           <span class="pm-chip pm-status ${statusClass}">${escapeHtml(statusText)}</span>
-          <span class="pm-chip">${escapeHtml(productCategoryLabel(product.category))}</span>
+          <span class="pm-chip">${escapeHtml(productSectionLabel(product))}</span>
           ${product.tag ? `<span class="pm-chip">${escapeHtml(product.tag)}</span>` : ''}
         </div>
         <h4 title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</h4>

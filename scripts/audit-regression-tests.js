@@ -88,10 +88,31 @@ const approximateCountProductIds = [
   'sweets-tokkudu-laddu'
 ];
 check(
-  shopSource.includes("let activeFilter = 'sweets';") &&
+  shopSource.includes("let activeFilter = 'all';") &&
+    shopSource.includes("sections: ['putharekulu', 'jellysnacks', 'sweets', 'pickles', 'podi', 'snacks', 'mangoes']") &&
     shopSource.includes("window.location.pathname.endsWith('/shop.html')") &&
     shopSource.includes("params.get('search') || params.get('q')"),
-  'The bare shop page must start with Sweets while product searches continue across all categories.'
+  'The bare shop page must start on All Products with the sweets sections first, while product searches continue across all categories.'
+);
+check(
+  shopSource.includes("pickles: { category: 'picklespodi', match: (product) => !isPodiProduct(product) }") &&
+    shopSource.includes("podi: { category: 'picklespodi', match: isPodiProduct }") &&
+    shopSource.includes("{ id: 'pickles', label: 'Pickles', sections: ['pickles'] }") &&
+    shopSource.includes("{ id: 'podi', label: 'Podi', sections: ['podi'] }"),
+  'Pickles and Podi must render as two separate shop sections driven by filterGroup, not one combined category.'
+);
+check(
+  adminSourceForCatalog.includes('function productSectionLabel') &&
+    adminSourceForCatalog.includes("pickles: { category: 'picklespodi', podi: false }") &&
+    adminSourceForCatalog.includes("podi: { category: 'picklespodi', podi: true }") &&
+    adminSourceForCatalog.includes('function filterGroupForFormValue'),
+  'Admin must offer Pickles and Podi as separate categories while still storing them under picklespodi.'
+);
+check(
+  !read('admin.html').includes('<option value="picklespodi">') &&
+    read('admin.html').includes('<option value="pickles">Pickles</option>') &&
+    read('admin.html').includes('<option value="podi">Podi</option>'),
+  'The admin product form must list Pickles and Podi as separate category options.'
 );
 check(
   shopSource.includes("puth_plain_sugar: ['images/products/putharekulu/putharekulu-plain-sugar-2026-1.jpg']") &&
