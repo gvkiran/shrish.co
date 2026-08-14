@@ -1607,7 +1607,19 @@ function bindForms() {
     btn.disabled = true;
     if (msg) { msg.className = 'account-message'; msg.textContent = 'Deleting your account...'; }
     try {
-      await requestAccountDeletion({ confirm });
+      try {
+        await requestAccountDeletion({ confirm });
+      } catch (error) {
+        // Safe rolling deployment: the previous callable expected "Shrish".
+        // The customer must still type the new exact phrase in this UI; this
+        // compatibility retry disappears naturally once the callable updates.
+        const code = String(error?.code || '');
+        const message = String(error?.message || '');
+        const legacyCallable = code.includes('failed-precondition')
+          && /type ["']?shrish["']? exactly/i.test(message);
+        if (!legacyCallable) throw error;
+        await requestAccountDeletion({ confirm: 'Shrish' });
+      }
       trackAccountEvent('customer_account_deletion_requested');
       if (msg) { msg.className = 'account-message success'; msg.textContent = 'Your account has been closed. Signing you out...'; }
       setTimeout(async () => {

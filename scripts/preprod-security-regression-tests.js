@@ -88,8 +88,9 @@ check(
   accountHtml.includes("Type <strong>Delete my Account</strong> to confirm")
     && accountSource.includes("const DELETE_ACCOUNT_CONFIRMATION = 'Delete my Account'")
     && accountSource.includes("confirm !== DELETE_ACCOUNT_CONFIRMATION")
+    && accountSource.includes("type [\"']?shrish[\"']? exactly")
     && functionsSource.includes('confirmText !== "Delete my Account"'),
-  "Account deletion must require the exact typed confirmation in both the browser and callable function."
+  "Account deletion must require the exact typed confirmation, retain rolling-deployment compatibility, and enforce the new phrase in the updated callable."
 );
 
 const crmSource = read("crm/app.js");
