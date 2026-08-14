@@ -5,6 +5,7 @@ const vm = require('vm');
 const ROOT = path.resolve(__dirname, '..');
 const SITE_URL = 'https://www.shrish.co';
 const ROOT_PREFIX = '../../../../';
+const { syncSocialPreviews } = require('./sync-social-preview');
 
 const CATEGORY_LABELS = {
   mangoes: 'Mangoes',
@@ -524,7 +525,19 @@ function writeProductPages() {
   fs.writeFileSync(path.join(productsRoot, 'index.html'), renderProductsIndex(products));
 
   const today = new Date().toISOString().slice(0, 10);
-  const staticUrls = ['', 'shop.html', 'about.html', 'recipes.html', 'contact.html', 'privacy.html', 'refund.html', 'terms.html'];
+  const staticUrls = [
+    '',
+    'shop.html',
+    'about.html',
+    'recipes.html',
+    'contact.html',
+    'privacy.html',
+    'refund.html',
+    'terms.html',
+    'blog/what-is-putharekulu-atreyapuram/',
+    'blog/what-is-kaja/',
+    'blog/what-is-laddu/'
+  ];
   const productUrls = products.map(productPagePath);
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -537,6 +550,7 @@ ${[...staticUrls, 'shop/products/', ...productUrls].map((urlPath) => `  <url>
   fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sitemap);
 
   updateShopLinks(products);
+  syncSocialPreviews();
 
   console.log(`Generated ${products.length} product pages and sitemap.xml`);
 }

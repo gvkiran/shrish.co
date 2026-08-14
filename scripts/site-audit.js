@@ -9,6 +9,7 @@ const EXCLUDED_DIRECTORIES = new Set([".git", "archive", "node_modules", "output
 const IGNORED_HTML_FILES = new Set(["google7983544080e9fb70.html"]);
 const VIRTUAL_PATH_PREFIXES = ["/_vercel/", "/api/"];
 const VERCEL_CONFIG_FILE = path.join(ROOT, "vercel.json");
+const SOCIAL_IMAGE_URL = "https://www.shrish.co/images/site/share-putharekulu-gottam-kaja-2026.jpg";
 let vercelConfig = null;
 try {
   vercelConfig = JSON.parse(fs.readFileSync(VERCEL_CONFIG_FILE, "utf8"));
@@ -154,7 +155,23 @@ function validateSitemap() {
     let localPath = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
     if (localPath.endsWith("/")) localPath += "index.html";
     const target = path.join(ROOT, localPath);
-    if (!fs.existsSync(target)) addError("sitemap.xml", `${location} has no local page`);
+    if (!fs.existsSync(target)) {
+      addError("sitemap.xml", `${location} has no local page`);
+      return;
+    }
+
+    const html = fs.readFileSync(target, "utf8");
+    const requiredSocialMeta = [
+      [`property=["']og:image["']`, SOCIAL_IMAGE_URL],
+      [`property=["']og:image:width["']`, "1200"],
+      [`property=["']og:image:height["']`, "630"],
+      [`name=["']twitter:card["']`, "summary_large_image"],
+      [`name=["']twitter:image["']`, SOCIAL_IMAGE_URL],
+    ];
+    requiredSocialMeta.forEach(([attributePattern, expected]) => {
+      const pattern = new RegExp(`<meta\\s+${attributePattern}\\s+content=["']${expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["']`, "i");
+      if (!pattern.test(html)) addError(relative(target), `missing shared social metadata for ${expected}`);
+    });
   });
 
   const robots = fs.readFileSync(path.join(ROOT, "robots.txt"), "utf8");
