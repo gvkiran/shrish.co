@@ -5709,12 +5709,37 @@ function initAuthWatch() {
     clearLoginError();
     setLoggedInUi(true, user.email || '');
     subscribeData();
+    openTabFromUrl();
     window.setTimeout(() => {
       seedProductsIfNeeded().catch((error) => {
         console.warn('Deferred product seed failed', error);
       });
     }, 2200);
   });
+}
+
+// Deep-links into a tab, and optionally an Orders sheet, so other surfaces can
+// point straight at a destination: /admin.html?tab=orders&sheet=shipping.
+// switchTab and setOrderSheet both want the element that was clicked, so match
+// the control by its inline handler and click it rather than calling directly.
+function clickControlFor(selector, call) {
+  const target = [...document.querySelectorAll(selector)]
+    .find((node) => (node.getAttribute('onclick') || '').includes(call));
+  if (target) target.click();
+  return Boolean(target);
+}
+
+function openTabFromUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    const sheet = params.get('sheet');
+    const safe = /^[a-z-]{1,32}$/;
+    if (tab && safe.test(tab)) clickControlFor('.admin-tab', `switchTab('${tab}'`);
+    if (sheet && safe.test(sheet)) clickControlFor('.sheet-pill', `setOrderSheet('${sheet}'`);
+  } catch (error) {
+    console.warn('Unable to open tab from URL', error);
+  }
 }
 
 window.doLogin = doLogin;

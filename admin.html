@@ -44,7 +44,7 @@
       <aside class="admin-sidebar">
         <div class="sidebar-title">Navigation</div>
         <div class="admin-tabs">
-          <button class="admin-tab active" onclick="switchTab('orders',this)">📋 Orders</button>
+          <button class="admin-tab active" data-admin-tab="orders" onclick="switchTab('orders',this)">📋 Orders</button>
           <div class="sidebar-sheet-group">
             <div class="sheet-switcher" id="ordersSheetSwitcher">
               <button class="sheet-pill active" id="ordersSheetActive" onclick="setOrderSheet('active', this)">Active Orders</button>
@@ -55,15 +55,15 @@
             </div>
           </div>
           <div class="sidebar-divider"></div>
-          <button class="admin-tab" onclick="switchTab('products',this)">🛒 Manage Products</button>
-          <button class="admin-tab" onclick="switchTab('customers',this)">Customer Accounts</button>
-          <button class="admin-tab" onclick="switchTab('feedback',this)">Feedback</button>
-          <button class="admin-tab" onclick="switchTab('growth',this)">Growth Dashboard</button>
-          <button class="admin-tab" onclick="switchTab('meta-ads',this)">📣 Meta Ads</button>
-          <button class="admin-tab" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
-          <button class="admin-tab" onclick="switchTab('refunds',this);loadRefundTab()">💸 Refunds</button>
-          <button class="admin-tab" onclick="switchTab('promos',this)">🎟️ Promo Codes</button>
-          <button class="admin-tab" onclick="switchTab('pickup-tally',this)">🧾 Pickup Tally</button>
+          <button class="admin-tab" data-admin-tab="products" onclick="switchTab('products',this)">🛒 Manage Products</button>
+          <button class="admin-tab" data-admin-tab="customers" onclick="switchTab('customers',this)">Customer Accounts</button>
+          <button class="admin-tab" data-admin-tab="feedback" onclick="switchTab('feedback',this)">Feedback</button>
+          <button class="admin-tab" data-admin-tab="growth" onclick="switchTab('growth',this)">Growth Dashboard</button>
+          <button class="admin-tab" data-admin-tab="meta-ads" onclick="switchTab('meta-ads',this)">📣 Meta Ads</button>
+          <button class="admin-tab" data-admin-tab="subscribers" onclick="switchTab('subscribers',this)">✉ Subscribers</button>
+          <button class="admin-tab" data-admin-tab="refunds" onclick="switchTab('refunds',this);loadRefundTab()">💸 Refunds</button>
+          <button class="admin-tab" data-admin-tab="promos" onclick="switchTab('promos',this)">🎟️ Promo Codes</button>
+          <button class="admin-tab" data-admin-tab="pickup-tally" onclick="switchTab('pickup-tally',this)">🧾 Pickup Tally</button>
         </div>
 
         <div class="sidebar-title" style="margin-top:22px">Customer intelligence</div>
@@ -901,7 +901,7 @@
 
 <script src="assets/js/data.js?v=original-catalog-20260807"></script>
 <script src="assets/js/firebase-config.js"></script>
-<script type="module" src="assets/js/admin-firebase.js?v=growth-shipping-20260814"></script>
+<script type="module" src="assets/js/admin-firebase.js?v=deeplink-20260814"></script>
 <script type="module" src="assets/js/admin-ads.js?v=funnel-20260731"></script>
 <link rel="stylesheet" href="assets/css/admin-boost.css?v=boost3-20260610">
   <link rel="stylesheet" href="assets/css/admin-growth-v2.css?v=v2-20260615">
