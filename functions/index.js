@@ -1413,11 +1413,7 @@ function websiteOrderFinalizationResult(orderId, order, options = {}) {
   };
 }
 
-exports.finalizeWebsiteOrder = onCall(
-  callableOptions({
-    secrets: [RESEND_API_KEY],
-  }),
-  async (request) => {
+async function finalizeWebsiteOrderInternal(request) {
     const orderId = String(request.data?.orderId || "").trim();
     if (!/^[A-Za-z0-9]{20}$/.test(orderId)) {
       throw new HttpsError("invalid-argument", "Order ID is invalid.");
@@ -1557,7 +1553,13 @@ exports.finalizeWebsiteOrder = onCall(
       }
       throw asHttpsError(error);
     }
-  }
+}
+
+exports.finalizeWebsiteOrder = onCall(
+  callableOptions({
+    secrets: [RESEND_API_KEY],
+  }),
+  finalizeWebsiteOrderInternal
 );
 
 exports.createStripeCheckoutSession = onCall(
@@ -1576,14 +1578,26 @@ exports.createStripeCheckoutSession = onCall(
 
     const db = admin.firestore();
     const orderRef = db.collection("orders").doc(orderId);
-    const orderSnap = await orderRef.get();
+    let orderSnap = await orderRef.get();
     if (!orderSnap.exists) {
       throw new HttpsError("not-found", "Order not found.");
     }
 
-    const order = orderSnap.data() || {};
+    let order = orderSnap.data() || {};
+    let embeddedFinalization = null;
     if (order.websiteFinalizationState !== "complete" || !order.websiteValidatedAt) {
-      throw new HttpsError("failed-precondition", "Order must be validated before payment can start.");
+      // Online checkout performs validation and Stripe-session creation in one
+      // callable round trip. The same server-authoritative pricing, rate limits,
+      // ownership checks and idempotency used by finalizeWebsiteOrder still run.
+      embeddedFinalization = await finalizeWebsiteOrderInternal(request);
+      orderSnap = await orderRef.get();
+      if (!orderSnap.exists) {
+        throw new HttpsError("not-found", "Order not found after validation.");
+      }
+      order = orderSnap.data() || {};
+      if (order.websiteFinalizationState !== "complete" || !order.websiteValidatedAt) {
+        throw new HttpsError("failed-precondition", "Order validation did not complete.");
+      }
     }
     await enforceCallableRateLimit(db, request, {
       scope: "stripe-checkout-session",
@@ -1626,6 +1640,7 @@ exports.createStripeCheckoutSession = onCall(
 
     let session;
     let stripeCustomerId = "";
+    let checkoutSummary = websiteOrderFinalizationResult(orderId, order);
     const saveCard = Boolean(request.data?.saveCard && request.auth?.uid);
     const customerEmail = String(order.email || request.auth?.token?.email || "").trim().toLowerCase();
     try {
@@ -1638,6 +1653,12 @@ exports.createStripeCheckoutSession = onCall(
             url: existingSession.url,
             sessionId: existingSession.id,
             orderNumber: order.orderNumber || "",
+            itemSubtotal: checkoutSummary.itemSubtotal,
+            promoDiscount: checkoutSummary.promoDiscount,
+            salesTaxAmount: checkoutSummary.salesTaxAmount,
+            shippingAmount: checkoutSummary.shippingAmount,
+            totalPrice: checkoutSummary.totalPrice,
+            noShow: Boolean(embeddedFinalization?.noShow),
             reused: true,
           };
         }
@@ -1656,6 +1677,15 @@ exports.createStripeCheckoutSession = onCall(
       let shippingAmount = orderShippingAmount(order, itemSubtotal);
       if (promo?.freeShipping && String(order.fulfillmentType || "pickup") === "shipping") shippingAmount = 0;
       const totalPrice = roundCurrency(discountedSubtotal + salesTaxAmount + shippingAmount);
+      checkoutSummary = {
+        ...checkoutSummary,
+        orderNumber,
+        itemSubtotal,
+        promoDiscount,
+        salesTaxAmount,
+        shippingAmount,
+        totalPrice,
+      };
 
       const metadata = {
         orderId,
@@ -1784,12 +1814,23 @@ exports.createStripeCheckoutSession = onCall(
         amount_total: session.amount_total || 0,
       },
     });
-    await posthog.flush();
+    // Analytics must not hold the customer on the payment button. Give PostHog
+    // a brief opportunity to flush, then return the Stripe URL immediately.
+    await Promise.race([
+      posthog.flush().catch(() => {}),
+      new Promise((resolve) => setTimeout(resolve, 150)),
+    ]);
 
     return {
       url: session.url,
       sessionId: session.id,
-      orderNumber: order.orderNumber || "",
+      orderNumber: checkoutSummary.orderNumber || order.orderNumber || "",
+      itemSubtotal: checkoutSummary.itemSubtotal,
+      promoDiscount: checkoutSummary.promoDiscount,
+      salesTaxAmount: checkoutSummary.salesTaxAmount,
+      shippingAmount: checkoutSummary.shippingAmount,
+      totalPrice: checkoutSummary.totalPrice,
+      noShow: Boolean(embeddedFinalization?.noShow),
     };
   }
 );
@@ -2390,7 +2431,7 @@ exports.deleteCustomerAccount = onCall(
 const PII_PURGE_DAYS = 90;
 
 // Customer-initiated account deletion. Requires the customer to be signed in and
-// to type "Shrish" to confirm. Saved cards are removed and login is disabled
+// to type "Delete my Account" to confirm. Saved cards are removed and login is disabled
 // immediately; personal data is purged after PII_PURGE_DAYS by a scheduled job.
 exports.requestAccountDeletion = onCall(
   callableOptions({ secrets: [STRIPE_SECRET_KEY] }),
@@ -2400,8 +2441,8 @@ exports.requestAccountDeletion = onCall(
       throw new HttpsError("unauthenticated", "Please sign in to delete your account.");
     }
     const confirmText = String(request.data?.confirm || "").trim();
-    if (confirmText.toLowerCase() !== "shrish") {
-      throw new HttpsError("failed-precondition", 'Type "Shrish" exactly to confirm account deletion.');
+    if (confirmText !== "Delete my Account") {
+      throw new HttpsError("failed-precondition", 'Type "Delete my Account" exactly to confirm account deletion.');
     }
 
     const db = admin.firestore();

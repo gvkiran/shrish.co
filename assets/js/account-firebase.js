@@ -1578,6 +1578,7 @@ function bindForms() {
   });
 
   // ---- Delete account flow ----
+  const DELETE_ACCOUNT_CONFIRMATION = 'Delete my Account';
   const closeDeleteModal = () => {
     const modal = el('deleteAccountModal');
     if (modal) modal.hidden = true;
@@ -1595,14 +1596,14 @@ function bindForms() {
     if (event.target === el('deleteAccountModal')) closeDeleteModal();
   });
   el('deleteConfirmInput')?.addEventListener('input', (event) => {
-    const ok = event.target.value.trim().toLowerCase() === 'shrish';
+    const ok = event.target.value.trim() === DELETE_ACCOUNT_CONFIRMATION;
     if (el('confirmDeleteAccountBtn')) el('confirmDeleteAccountBtn').disabled = !ok;
   });
   el('confirmDeleteAccountBtn')?.addEventListener('click', async () => {
     const btn = el('confirmDeleteAccountBtn');
     const msg = el('deleteAccountMsg');
     const confirm = (el('deleteConfirmInput')?.value || '').trim();
-    if (confirm.toLowerCase() !== 'shrish') return;
+    if (confirm !== DELETE_ACCOUNT_CONFIRMATION) return;
     btn.disabled = true;
     if (msg) { msg.className = 'account-message'; msg.textContent = 'Deleting your account...'; }
     try {

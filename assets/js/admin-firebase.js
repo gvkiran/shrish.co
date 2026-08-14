@@ -550,10 +550,12 @@ function localOrderMix(days = growthDays()) {
     const key = orderDateKey(order);
     if (!key || key < cutoff) return;
     const location = order.pickupLocationLabel || order.locationLabel || order.location || order.pickupLocation || 'Unknown pickup';
+    const fulfillmentGroup = isShippingOrder(order) ? 'Shipping' : 'Pickup';
     const status = safeOrderStatus(order.status);
     const method = order.paymentMethodLabel || order.paymentMethod || order.payment || 'Not selected';
 
-    locations.set(location, (locations.get(location) || 0) + 1);
+    const locationKey = `${fulfillmentGroup}\u0000${location}`;
+    locations.set(locationKey, (locations.get(locationKey) || 0) + 1);
     statuses.set(status, (statuses.get(status) || 0) + 1);
     paymentMethods.set(method, (paymentMethods.get(method) || 0) + 1);
   });
@@ -561,7 +563,10 @@ function localOrderMix(days = growthDays()) {
   const rows = [];
   [...locations.entries()]
     .sort((a, b) => b[1] - a[1])
-    .forEach(([label, total]) => rows.push({ group: 'Pickup', label, total }));
+    .forEach(([locationKey, total]) => {
+      const [group, label] = locationKey.split('\u0000');
+      rows.push({ group, label, total });
+    });
   [...statuses.entries()]
     .sort((a, b) => b[1] - a[1])
     .forEach(([label, total]) => rows.push({ group: 'Status', label: orderStatusLabel(label), total }));
@@ -580,7 +585,7 @@ function renderGrowthKpis(summary) {
     { label: 'Cart adds', value: connected ? numberCompact(eventTotal('product_added_to_cart')) : 'Setup', note: 'Purchase interest' },
     { label: 'Orders database', value: numberCompact(summary.orderCount), note: `Business total, not funnel` },
     { label: 'Tracked orders', value: connected ? numberCompact(eventTotal('order_submitted')) : 'Setup', note: 'PostHog order events' },
-    { label: 'Fulfilled', value: numberCompact(summary.fulfilledCount), note: 'Completed pickups' },
+    { label: 'Fulfilled', value: numberCompact(summary.fulfilledCount), note: 'Completed orders' },
     { label: 'Revenue', value: formatCurrency(summary.revenue), note: 'Pending + fulfilled, excluding cancelled/no-show' },
     { label: 'Avg order', value: formatCurrency(summary.avgOrder), note: `${summary.boxes} boxes total` },
     { label: 'New subscribers', value: numberCompact(summary.subscribers), note: 'Email + notify requests' },

@@ -76,12 +76,20 @@ check(
 );
 
 const accountSource = read("assets/js/account-firebase.js");
+const accountHtml = read("account.html");
 const firebaseAppSource = read("assets/js/firebase-app.js");
 check(
   firebaseAppSource.includes("sendEmailVerification")
     && accountSource.includes("ensureVerificationEmail")
     && accountSource.includes("if (!user.emailVerified)"),
   "Customer accounts must receive verification email and avoid order claiming until verified."
+);
+check(
+  accountHtml.includes("Type <strong>Delete my Account</strong> to confirm")
+    && accountSource.includes("const DELETE_ACCOUNT_CONFIRMATION = 'Delete my Account'")
+    && accountSource.includes("confirm !== DELETE_ACCOUNT_CONFIRMATION")
+    && functionsSource.includes('confirmText !== "Delete my Account"'),
+  "Account deletion must require the exact typed confirmation in both the browser and callable function."
 );
 
 const crmSource = read("crm/app.js");
@@ -124,6 +132,21 @@ check(
   orderSource.includes("!String(item.name || '').toLowerCase().includes(rawUnitLabel.toLowerCase())")
     && orderSource.includes("${unitLabel ? `<div class=\"ri-unit\">") ,
   "Checkout must not repeat a variant unit already included in the product name."
+);
+check(
+  orderSource.includes("if (!payOnline) {")
+    && orderSource.includes("const [session] = await Promise.all([")
+    && orderSource.includes("validated before payment can start")
+    && orderSource.includes("const legacyFinalization = await finalizeWebsiteOrder")
+    && functionsSource.includes("await finalizeWebsiteOrderInternal(request)")
+    && functionsSource.includes("idempotencyKey: `shrish_checkout_${orderId}`"),
+  "Online checkout must combine validation and Stripe creation without losing idempotency or rolling-deployment compatibility."
+);
+
+check(
+  adminSource.includes("const fulfillmentGroup = isShippingOrder(order) ? 'Shipping' : 'Pickup'")
+    && adminSource.includes("rows.push({ group, label, total })"),
+  "Growth order mix must distinguish shipped orders from pickup orders."
 );
 
 const crmHtml = read("crm/index.html");

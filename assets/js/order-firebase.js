@@ -7,7 +7,6 @@ import {
   getDoc,
   setDoc,
   updateDoc,
-  runTransaction,
   onSnapshot,
   onAuthStateChanged,
   cloudFunctions,
@@ -2157,23 +2156,27 @@ async function submitOrder() {
       order.customerEmail = currentCustomer.email || email;
     }
 
-    await runTransaction(db, async (transaction) => {
-      transaction.set(orderRef, order);
-    });
+    // A direct create is sufficient because this document does not exist yet;
+    // using a Firestore transaction here only adds transaction overhead.
+    await setDoc(orderRef, order);
 
-    const finalizationResponse = await finalizeWebsiteOrder({ orderId: orderRef.id });
-    const finalized = finalizationResponse?.data || {};
-    const finalizedOrderNumber = String(finalized.orderNumber || '').trim();
-    if (!finalizedOrderNumber) throw new Error('ORDER_FINALIZATION_FAILED');
-    if (finalized.noShow) await showNoShowNotice();
-    ['itemSubtotal', 'promoDiscount', 'salesTaxAmount', 'shippingAmount', 'totalPrice'].forEach((field) => {
-      if (Number.isFinite(Number(finalized[field]))) order[field] = Number(finalized[field]);
-    });
-    order.orderNumber = finalizedOrderNumber;
-
-    await saveCheckoutDetailsToProfile(order).catch((error) => {
+    const profileSavePromise = saveCheckoutDetailsToProfile(order).catch((error) => {
       console.warn('Could not update customer profile from checkout', error);
     });
+
+    let finalizedOrderNumber = '';
+    if (!payOnline) {
+      const finalizationResponse = await finalizeWebsiteOrder({ orderId: orderRef.id });
+      const finalized = finalizationResponse?.data || {};
+      finalizedOrderNumber = String(finalized.orderNumber || '').trim();
+      if (!finalizedOrderNumber) throw new Error('ORDER_FINALIZATION_FAILED');
+      if (finalized.noShow) await showNoShowNotice();
+      ['itemSubtotal', 'promoDiscount', 'salesTaxAmount', 'shippingAmount', 'totalPrice'].forEach((field) => {
+        if (Number.isFinite(Number(finalized[field]))) order[field] = Number(finalized[field]);
+      });
+      order.orderNumber = finalizedOrderNumber;
+      await profileSavePromise;
+    }
 
     const submittedOrderAnalytics = {
       ...cartAnalyticsSummary(),
@@ -2212,14 +2215,48 @@ async function submitOrder() {
         fulfillment_type: selectedFulfillmentType,
         save_card_requested: saveCard
       });
-      const session = await createStripeCheckoutSession({
-        orderId: orderRef.id,
-        saveCard,
-        origin: window.location.origin
+      // Validation/finalization now happens inside this callable when needed,
+      // removing one full server round trip. The profile save runs concurrently
+      // because it is not part of the payment-security boundary.
+      const startStripeCheckout = async () => {
+        const request = {
+          orderId: orderRef.id,
+          saveCard,
+          origin: window.location.origin
+        };
+        try {
+          return await createStripeCheckoutSession(request);
+        } catch (error) {
+          // Safe rolling deployment: an older callable still requires the
+          // separate validation call. Once the new callable is deployed this
+          // branch is skipped and checkout keeps the faster single round trip.
+          const code = String(error?.code || '');
+          const message = String(error?.message || '');
+          const legacyCallable = code.includes('failed-precondition')
+            && /validated before payment can start/i.test(message);
+          if (!legacyCallable) throw error;
+          const legacyFinalization = await finalizeWebsiteOrder({ orderId: orderRef.id });
+          const legacyOrderNumber = String(legacyFinalization?.data?.orderNumber || '').trim();
+          if (!legacyOrderNumber) throw new Error('ORDER_FINALIZATION_FAILED');
+          if (legacyFinalization?.data?.noShow) await showNoShowNotice();
+          return createStripeCheckoutSession(request);
+        }
+      };
+      const [session] = await Promise.all([
+        startStripeCheckout(),
+        profileSavePromise
+      ]);
+      const finalized = session?.data || {};
+      finalizedOrderNumber = String(finalized.orderNumber || '').trim();
+      if (!finalizedOrderNumber) throw new Error('ORDER_FINALIZATION_FAILED');
+      if (finalized.noShow) await showNoShowNotice();
+      ['itemSubtotal', 'promoDiscount', 'salesTaxAmount', 'shippingAmount', 'totalPrice'].forEach((field) => {
+        if (Number.isFinite(Number(finalized[field]))) order[field] = Number(finalized[field]);
       });
+      order.orderNumber = finalizedOrderNumber;
       const checkoutUrl = session?.data?.url;
       if (!checkoutUrl) throw new Error('STRIPE_CHECKOUT_URL_MISSING');
-      rememberRecentOrderForAccount(orderRef, order, session?.data?.orderNumber || finalizedOrderNumber);
+      rememberRecentOrderForAccount(orderRef, order, finalizedOrderNumber);
       rememberStripeSuccessSnapshot(orderRef.id, order);
       // Proof that THIS browser genuinely initiated the order — required before the
       // Meta Pixel will count a Purchase on the payment=success return (anti-ghost-fire).
