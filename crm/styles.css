@@ -19,6 +19,7 @@
   --amber: #E8A83C;
   --red: #E0736B;
   --blue: #6BA8E0;
+  --crm-sidebar-width: 256px;
 }
 
 * { box-sizing: border-box; }
@@ -96,6 +97,128 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600
 
 /* ── Header ──────────────────────────────────────────── */
 
+.crm-shell { min-height: 100vh; }
+
+.crm-workspace {
+  min-width: 0;
+  margin-left: var(--crm-sidebar-width);
+}
+
+.crm-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 90;
+  width: var(--crm-sidebar-width);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 14px;
+  overflow-y: auto;
+  background: #100C07;
+  border-right: 1px solid var(--glass-border);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(200,121,26,.35) transparent;
+}
+
+.crm-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 4px 6px 14px;
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.crm-sidebar-brand img { width: 38px; height: 38px; object-fit: contain; }
+.crm-sidebar-brand span { display: flex; min-width: 0; flex-direction: column; }
+.crm-sidebar-brand strong { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 20px; line-height: 1.05; color: var(--gold-300); }
+.crm-sidebar-brand small { margin-top: 3px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); }
+
+.crm-sidebar-label {
+  padding: 0 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.material-symbols-rounded {
+  flex: 0 0 auto;
+  font-size: 20px;
+  line-height: 1;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+.crm-admin-menu {
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 8px 0;
+}
+
+.crm-admin-menu summary {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 42px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.crm-admin-menu summary::-webkit-details-marker { display: none; }
+.crm-admin-menu summary:hover { color: var(--gold-200); background: rgba(200,121,26,.08); }
+.crm-admin-menu summary:focus-visible { outline: 2px solid var(--gold-400); outline-offset: 2px; }
+.crm-admin-chevron { margin-left: auto; transition: transform .18s ease; }
+.crm-admin-menu[open] .crm-admin-chevron { transform: rotate(180deg); }
+
+.crm-admin-links {
+  display: grid;
+  gap: 2px;
+  padding: 5px 0 2px 12px;
+}
+
+.crm-admin-links a,
+.crm-sidebar-footer a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  color: var(--text-faint);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.crm-admin-links a .material-symbols-rounded,
+.crm-sidebar-footer a .material-symbols-rounded { font-size: 18px; }
+.crm-admin-links a:hover,
+.crm-sidebar-footer a:hover { color: var(--gold-200); background: rgba(200,121,26,.08); }
+.crm-admin-links a:focus-visible,
+.crm-sidebar-footer a:focus-visible { outline: 2px solid var(--gold-400); outline-offset: 1px; }
+
+.crm-sidebar-footer {
+  display: grid;
+  gap: 3px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.crm-sidebar-scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  border: 0;
+  background: rgba(8,6,4,.72);
+}
+
 .crm-header {
   position: sticky;
   top: 0;
@@ -116,6 +239,21 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600
 .crm-header-sub { font-size: 12px; color: var(--text-faint); }
 .crm-header-right { display: flex; gap: 8px; flex-shrink: 0; }
 
+.crm-menu-toggle {
+  display: none;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--gold-300);
+  cursor: pointer;
+}
+
+.crm-menu-toggle:focus-visible { outline: 2px solid var(--gold-400); outline-offset: 2px; }
+
 .crm-ghost-btn {
   padding: 9px 14px;
   border-radius: 9px;
@@ -135,7 +273,7 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600
 
 /* ── Layout ──────────────────────────────────────────── */
 
-.crm-main { max-width: 1180px; margin: 0 auto; padding: 20px 16px 80px; }
+.crm-main { max-width: 1320px; margin: 0 auto; padding: 20px 22px 80px; }
 .crm-loading { padding: 60px 0; text-align: center; color: var(--text-faint); }
 
 .crm-panel {
@@ -252,40 +390,40 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600
 /* ── View navigation ─────────────────────────────────── */
 
 .crm-nav {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 14px;
-  padding: 5px;
-  background: var(--obs-800);
-  border: 1px solid var(--glass-border);
-  border-radius: 14px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  display: grid;
+  gap: 3px;
 }
 
 .crm-nav-btn {
-  flex: 1;
-  min-width: 96px;
-  padding: 11px 14px;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 10px;
   border: none;
   border-radius: 10px;
   background: transparent;
   color: var(--text-dim);
   font-family: inherit;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   position: relative;
+  text-align: left;
 }
 
-.crm-nav-btn:hover { color: var(--gold-200); }
+.crm-nav-btn:hover { color: var(--gold-200); background: rgba(200,121,26,.08); }
 .crm-nav-btn.active { background: var(--gold-500); color: #1A1208; }
+.crm-nav-btn:focus-visible { outline: 2px solid var(--gold-400); outline-offset: 2px; }
+.crm-nav-btn > span:nth-child(2) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .crm-nav-badge {
   display: inline-block;
   min-width: 19px;
-  margin-left: 6px;
+  margin-left: auto;
   padding: 1px 6px;
   border-radius: 10px;
   background: var(--red);
@@ -711,4 +849,28 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600
   .crm-list-tools input { flex: 1; min-width: 0; }
   .crm-metric-value { font-size: 23px; }
   .crm-header-title { font-size: 19px; }
+}
+
+@media (max-width: 900px) {
+  .crm-workspace { margin-left: 0; }
+
+  .crm-sidebar {
+    width: min(286px, calc(100vw - 48px));
+    transform: translateX(-105%);
+    box-shadow: 18px 0 40px rgba(0,0,0,.35);
+    transition: transform .2s ease;
+  }
+
+  body.crm-sidebar-open { overflow: hidden; }
+  body.crm-sidebar-open .crm-sidebar { transform: translateX(0); }
+  body.crm-sidebar-open .crm-sidebar-scrim { display: block; }
+  .crm-menu-toggle { display: inline-flex; }
+  .crm-header { padding: 11px 12px; }
+  .crm-header-logo { display: none; }
+  .crm-header-sub { max-width: min(58vw, 460px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crm-sidebar,
+  .crm-admin-chevron { transition: none; }
 }

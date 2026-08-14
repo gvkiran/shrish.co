@@ -2289,6 +2289,12 @@ async function doLogin() {
   }
 }
 
+function setSidebarOpen(open) {
+  document.body.classList.toggle('crm-sidebar-open', Boolean(open));
+  const toggle = document.getElementById('crmSidebarToggle');
+  if (toggle) toggle.setAttribute('aria-expanded', String(Boolean(open)));
+}
+
 function wire() {
   document.getElementById('crmLoginBtn').addEventListener('click', doLogin);
   ['crmEmail', 'crmPassword'].forEach((id) => {
@@ -2298,6 +2304,10 @@ function wire() {
   });
 
   document.getElementById('crmLogoutBtn').addEventListener('click', () => signOut(auth));
+  document.getElementById('crmSidebarToggle').addEventListener('click', () => {
+    setSidebarOpen(!document.body.classList.contains('crm-sidebar-open'));
+  });
+  document.getElementById('crmSidebarScrim').addEventListener('click', () => setSidebarOpen(false));
   document.getElementById('crmExportBtn').addEventListener('click', exportCsv);
   document.getElementById('crmDetailClose').addEventListener('click', closeDetail);
 
@@ -2325,7 +2335,10 @@ function wire() {
   });
 
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closeDetail();
+    if (event.key === 'Escape') {
+      closeDetail();
+      setSidebarOpen(false);
+    }
   });
 
   document.getElementById('crmSegments').addEventListener('click', (event) => {
@@ -2360,7 +2373,10 @@ function wire() {
 
   document.getElementById('crmNav').addEventListener('click', (event) => {
     const button = event.target.closest('[data-view]');
-    if (button) setView(button.dataset.view);
+    if (button) {
+      setView(button.dataset.view);
+      setSidebarOpen(false);
+    }
   });
 
   document.getElementById('crmTodayBody').addEventListener('click', (event) => {
