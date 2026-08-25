@@ -82,7 +82,7 @@ function productImage(product) {
 
 function parsePrice(value) {
   const parsed = Number(String(value || '').replace(/[^0-9.]/g, ''));
-  return Number.isFinite(parsed) ? parsed.toFixed(2) : '';
+  return Number.isFinite(parsed) && parsed > 0 ? parsed.toFixed(2) : '';
 }
 
 function statusText(product) {
@@ -141,21 +141,17 @@ function detailRows(product) {
 
 function jsonLd(product, image) {
   const variants = Array.isArray(product.variants) ? product.variants.filter((variant) => variant.label) : [];
-  const offers = variants.length
-    ? variants.map((variant) => ({
-        '@type': 'Offer',
-        priceCurrency: 'USD',
-        price: parsePrice(variant.price || product.price),
-        availability: product.available && !product.displayOnly ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-        url: productPageUrl(product)
-      }))
-    : [{
-        '@type': 'Offer',
-        priceCurrency: 'USD',
-        price: parsePrice(product.price),
-        availability: product.available && !product.displayOnly ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-        url: productPageUrl(product)
-      }];
+  const primaryVariant = variants[0] || null;
+  const price = parsePrice(primaryVariant ? (primaryVariant.price || product.price) : product.price);
+  const offer = {
+    '@type': 'Offer',
+    priceCurrency: 'USD',
+    price,
+    availability: product.available && !product.displayOnly ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    itemCondition: 'https://schema.org/NewCondition',
+    url: productPageUrl(product)
+  };
+  if (primaryVariant && (primaryVariant.sku || primaryVariant.id)) offer.sku = primaryVariant.sku || primaryVariant.id;
 
   return JSON.stringify({
     '@context': 'https://schema.org',
@@ -167,9 +163,19 @@ function jsonLd(product, image) {
       '@type': 'Brand',
       name: 'Shrish'
     },
+    ...(primaryVariant && (primaryVariant.sku || primaryVariant.id) ? { sku: primaryVariant.sku || primaryVariant.id } : {}),
     category: CATEGORY_LABELS[normalizeCategory(product.category)] || product.category,
-    offers
+    offers: offer
   }, null, 2).replace(/</g, '\\u003c');
+}
+
+function commerceMeta(product) {
+  const variants = Array.isArray(product.variants) ? product.variants.filter((variant) => variant.label) : [];
+  const primaryVariant = variants[0] || null;
+  return {
+    price: parsePrice(primaryVariant ? (primaryVariant.price || product.price) : product.price),
+    availability: product.available && !product.displayOnly ? 'in stock' : 'out of stock'
+  };
 }
 
 function jsonScript(value) {
@@ -249,6 +255,7 @@ function renderProductPage(product, products) {
   const metaDescription = truncateText(description, 145);
   const ogDescription = truncateText(description, 165);
   const canonical = productPageUrl(product);
+  const commerce = commerceMeta(product);
   const tags = productTags(product);
   const rows = detailRows(product);
 
@@ -266,6 +273,9 @@ function renderProductPage(product, products) {
   <meta property="og:url" content="${canonical}">
   <meta property="og:type" content="product">
   <meta property="og:site_name" content="Shrish">
+  <meta property="product:price:amount" content="${commerce.price}">
+  <meta property="product:price:currency" content="USD">
+  <meta property="product:availability" content="${commerce.availability}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#C8791A">
   <script>

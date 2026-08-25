@@ -1,10 +1,13 @@
 {
   "scripts": {
-    "test": "npm run test:site && npm run test:functions && npm run test:audit && npm run test:preprod",
+    "test": "npm run test:site && npm run test:functions && npm run test:audit && npm run test:merchant && npm run test:preprod",
+    "generate:merchant": "node scripts/generate-merchant-feed.js",
+    "sync:commerce-meta": "node scripts/sync-product-commerce-meta.js",
     "sync:social-preview": "node scripts/sync-social-preview.js",
     "test:site": "node scripts/site-audit.js",
     "test:functions": "node --check functions/index.js",
     "test:audit": "node scripts/audit-regression-tests.js",
+    "test:merchant": "node scripts/validate-merchant-feed.js",
     "test:preprod": "node scripts/preprod-security-regression-tests.js"
   },
   "dependencies": {

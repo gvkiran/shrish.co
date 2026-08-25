@@ -5,53 +5,766 @@
     <link>https://www.shrish.co</link>
     <description>Handcrafted Andhra-style pickles, podi and sweets made in Richmond, VA. Ships within the USA.</description>
     <item>
-      <g:id>pickle-brinjal-amla-250g</g:id>
-      <g:item_group_id>picklespodi-brinjal-amla-pickle</g:item_group_id>
-      <g:title>Brinjal Amla Pickle — 250g</g:title>
-      <g:description>Unique brinjal and amla pickle with tangy, spicy, and earthy flavors. Good rare variety for customers who want something different.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-brinjal-amla-pickle/</g:link>
+      <g:id>PPLS5</g:id>
+      <g:item_group_id>puth_plain_sugar</g:item_group_id>
+      <g:size>5 count</g:size>
+      <g:title>Putharekulu - Classic Plain (Sugar) — 5 count</g:title>
+      <g:description>The original Atreyapuram Putharekulu in its simplest, most traditional form - delicate paper-thin rice sheets layered with sugar and ghee, no dry fruits. Light, melt-in-mouth, and perfect for customers who love the classic sweet exactly as it has always been made.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_plain_sugar/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/putharekulu-plain-sugar-2026-1.jpg</g:image_link>
       <g:availability>in_stock</g:availability>
-      <g:price>10.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
+      <g:price>6.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
       <g:brand>Shrish</g:brand>
       <g:condition>new</g:condition>
       <g:identifier_exists>no</g:identifier_exists>
     </item>
     <item>
-      <g:id>pickle-brinjal-amla-500g</g:id>
-      <g:item_group_id>picklespodi-brinjal-amla-pickle</g:item_group_id>
-      <g:title>Brinjal Amla Pickle — 500g</g:title>
-      <g:description>Unique brinjal and amla pickle with tangy, spicy, and earthy flavors. Good rare variety for customers who want something different.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-brinjal-amla-pickle/</g:link>
+      <g:id>PPLS10</g:id>
+      <g:item_group_id>puth_plain_sugar</g:item_group_id>
+      <g:size>10 count</g:size>
+      <g:title>Putharekulu - Classic Plain (Sugar) — 10 count</g:title>
+      <g:description>The original Atreyapuram Putharekulu in its simplest, most traditional form - delicate paper-thin rice sheets layered with sugar and ghee, no dry fruits. Light, melt-in-mouth, and perfect for customers who love the classic sweet exactly as it has always been made.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_plain_sugar/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/putharekulu-plain-sugar-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>12.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PPLJ5</g:id>
+      <g:item_group_id>puth_plain_jaggery</g:item_group_id>
+      <g:size>5 count</g:size>
+      <g:title>Putharekulu - Classic Plain (Jaggery) — 5 count</g:title>
+      <g:description>The traditional jaggery (bellam) Putharekulu with no dry fruits - paper-thin rice sheets folded with jaggery and ghee for a deeper, warmer, more rustic sweetness. A pure, old-style version for customers who prefer jaggery over sugar.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_plain_jaggery/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/putharekulu-plain-jaggery-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>7.49 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PPLJ10</g:id>
+      <g:item_group_id>puth_plain_jaggery</g:item_group_id>
+      <g:size>10 count</g:size>
+      <g:title>Putharekulu - Classic Plain (Jaggery) — 10 count</g:title>
+      <g:description>The traditional jaggery (bellam) Putharekulu with no dry fruits - paper-thin rice sheets folded with jaggery and ghee for a deeper, warmer, more rustic sweetness. A pure, old-style version for customers who prefer jaggery over sugar.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_plain_jaggery/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/putharekulu-plain-jaggery-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>13.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PSKB5</g:id>
+      <g:item_group_id>puth_sugar_kaju</g:item_group_id>
+      <g:size>5 count</g:size>
+      <g:title>Putharekulu - Sugar - Kaju Badam — 5 count</g:title>
+      <g:description>A richer sugar-based Putharekulu made with roasted cashews and almonds layered inside paper-thin rice sheets. This is one of the easiest dry-fruit variants to gift and share, with a balanced sweetness and a fuller nutty bite.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_sugar_kaju/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/img_puth_sugar_kaju.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>8.49 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PSKB10</g:id>
+      <g:item_group_id>puth_sugar_kaju</g:item_group_id>
+      <g:size>10 count</g:size>
+      <g:title>Putharekulu - Sugar - Kaju Badam — 10 count</g:title>
+      <g:description>A richer sugar-based Putharekulu made with roasted cashews and almonds layered inside paper-thin rice sheets. This is one of the easiest dry-fruit variants to gift and share, with a balanced sweetness and a fuller nutty bite.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_sugar_kaju/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/img_puth_sugar_kaju.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>15.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PSKBP5</g:id>
+      <g:item_group_id>puth_sugar_kaju_pista</g:item_group_id>
+      <g:size>5 count</g:size>
+      <g:title>Putharekulu - Sugar - Kaju Badam Pista — 5 count</g:title>
+      <g:description>Traditional Atreyapuram Putharekulu finished with sugar and a premium trio of cashews, almonds, and pistachios. It delivers the delicate paper-like layers customers expect, with an extra festive dry-fruit richness in every piece.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_sugar_kaju_pista/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/puth-sugar-kaju-badam-pista-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>9.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PSKBP10</g:id>
+      <g:item_group_id>puth_sugar_kaju_pista</g:item_group_id>
+      <g:size>10 count</g:size>
+      <g:title>Putharekulu - Sugar - Kaju Badam Pista — 10 count</g:title>
+      <g:description>Traditional Atreyapuram Putharekulu finished with sugar and a premium trio of cashews, almonds, and pistachios. It delivers the delicate paper-like layers customers expect, with an extra festive dry-fruit richness in every piece.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_sugar_kaju_pista/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/puth-sugar-kaju-badam-pista-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>18.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PJK5</g:id>
+      <g:item_group_id>puth_jaggery_kaju</g:item_group_id>
+      <g:size>5 count</g:size>
+      <g:title>Putharekulu - Jaggery - Kaju — 5 count</g:title>
+      <g:description>A jaggery-sweetened version of classic dry-fruit Putharekulu with roasted cashews folded into delicate rice starch sheets. It has a deeper, warmer sweetness than the sugar version and a more traditional village-style finish.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_jaggery_kaju/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>8.49 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PJK10</g:id>
+      <g:item_group_id>puth_jaggery_kaju</g:item_group_id>
+      <g:size>10 count</g:size>
+      <g:title>Putharekulu - Jaggery - Kaju — 10 count</g:title>
+      <g:description>A jaggery-sweetened version of classic dry-fruit Putharekulu with roasted cashews folded into delicate rice starch sheets. It has a deeper, warmer sweetness than the sugar version and a more traditional village-style finish.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_jaggery_kaju/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>15.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PJKB5</g:id>
+      <g:item_group_id>puth_jaggery_kaju_badam</g:item_group_id>
+      <g:size>5 count</g:size>
+      <g:title>Putharekulu - Jaggery - Kaju Badam — 5 count</g:title>
+      <g:description>This dry-fruit Putharekulu combines the deeper sweetness of jaggery with roasted cashews and almonds for a fuller bite. It is a dependable crowd-pleaser for customers who want a traditional sweet profile without refined sugar notes.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_jaggery_kaju_badam/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>8.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PJKB10</g:id>
+      <g:item_group_id>puth_jaggery_kaju_badam</g:item_group_id>
+      <g:size>10 count</g:size>
+      <g:title>Putharekulu - Jaggery - Kaju Badam — 10 count</g:title>
+      <g:description>This dry-fruit Putharekulu combines the deeper sweetness of jaggery with roasted cashews and almonds for a fuller bite. It is a dependable crowd-pleaser for customers who want a traditional sweet profile without refined sugar notes.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_jaggery_kaju_badam/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>16.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PJKBP5</g:id>
+      <g:item_group_id>puth_jaggery_kaju_pista</g:item_group_id>
+      <g:size>5 count</g:size>
+      <g:title>Putharekulu - Jaggery - Kaju Badam Pista — 5 count</g:title>
+      <g:description>A premium jaggery Putharekulu layered with cashews, almonds, and pistachios inside delicate rice flour sheets. It offers a richer, more indulgent dry-fruit profile with the darker sweetness and aroma customers expect from traditional jaggery sweets.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_jaggery_kaju_pista/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/puth-jaggery-kaju-badam-pista-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>9.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PJKBP10</g:id>
+      <g:item_group_id>puth_jaggery_kaju_pista</g:item_group_id>
+      <g:size>10 count</g:size>
+      <g:title>Putharekulu - Jaggery - Kaju Badam Pista — 10 count</g:title>
+      <g:description>A premium jaggery Putharekulu layered with cashews, almonds, and pistachios inside delicate rice flour sheets. It offers a richer, more indulgent dry-fruit profile with the darker sweetness and aroma customers expect from traditional jaggery sweets.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_jaggery_kaju_pista/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/puth-jaggery-kaju-badam-pista-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>18.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PSDKBP5</g:id>
+      <g:item_group_id>puth_sugarfree</g:item_group_id>
+      <g:size>5 count</g:size>
+      <g:title>Putharekulu - Sugar (Diabetic) - Kaju Badam Pista — 5 count</g:title>
+      <g:description>Crafted for health-conscious customers, this dry-fruit Putharekulu uses a diabetic-friendly sweetener profile while keeping the classic paper-thin texture and generous mix of cashews, almonds, and pistachios. It is designed to deliver the traditional experience with a lighter sweetness profile.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_sugarfree/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/img_puth_sugarfree.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>9.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PSDKBP10</g:id>
+      <g:item_group_id>puth_sugarfree</g:item_group_id>
+      <g:size>10 count</g:size>
+      <g:title>Putharekulu - Sugar (Diabetic) - Kaju Badam Pista — 10 count</g:title>
+      <g:description>Crafted for health-conscious customers, this dry-fruit Putharekulu uses a diabetic-friendly sweetener profile while keeping the classic paper-thin texture and generous mix of cashews, almonds, and pistachios. It is designed to deliver the traditional experience with a lighter sweetness profile.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_sugarfree/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/img_puth_sugarfree.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>18.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PDKBP5</g:id>
+      <g:item_group_id>puth_dates_kaju_badam_pista</g:item_group_id>
+      <g:size>5 count</g:size>
+      <g:title>Putharekulu - Dates - Kaju Badam Pista — 5 count</g:title>
+      <g:description>An exotic dry-fruit Putharekulu that combines dates with cashews, almonds, and pistachios for a naturally deeper sweetness and chewy, rich finish. It is a premium gifting option for customers who enjoy fruit-based sweetness with traditional Atreyapuram texture.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_dates_kaju_badam_pista/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>11.49 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PDKBP10</g:id>
+      <g:item_group_id>puth_dates_kaju_badam_pista</g:item_group_id>
+      <g:size>10 count</g:size>
+      <g:title>Putharekulu - Dates - Kaju Badam Pista — 10 count</g:title>
+      <g:description>An exotic dry-fruit Putharekulu that combines dates with cashews, almonds, and pistachios for a naturally deeper sweetness and chewy, rich finish. It is a premium gifting option for customers who enjoy fruit-based sweetness with traditional Atreyapuram texture.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_dates_kaju_badam_pista/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>21.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>POPJKBP5</g:id>
+      <g:item_group_id>puth_organic_palm_kaju_badam_pista</g:item_group_id>
+      <g:size>5 count</g:size>
+      <g:title>Putharekulu - Organic Palm Jaggery - Kaju Badam Pista — 5 count</g:title>
+      <g:description>A premium exotic Putharekulu made with organic palm jaggery and a rich blend of cashews, almonds, and pistachios. It offers the deepest caramel-like sweetness in the range, with luxurious dry-fruit texture layered inside the signature paper-thin sheets.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_organic_palm_kaju_badam_pista/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>11.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>POPJKBP10</g:id>
+      <g:item_group_id>puth_organic_palm_kaju_badam_pista</g:item_group_id>
+      <g:size>10 count</g:size>
+      <g:title>Putharekulu - Organic Palm Jaggery - Kaju Badam Pista — 10 count</g:title>
+      <g:description>A premium exotic Putharekulu made with organic palm jaggery and a rich blend of cashews, almonds, and pistachios. It offers the deepest caramel-like sweetness in the range, with luxurious dry-fruit texture layered inside the signature paper-thin sheets.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_organic_palm_kaju_badam_pista/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/img_puth_jaggery_kaju_pista.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>22.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PSAMS5</g:id>
+      <g:item_group_id>puth_samosa_sugar_dryfruit</g:item_group_id>
+      <g:size>5 count</g:size>
+      <g:title>Samosa Putharekulu - Sugar (Dry Fruit) — 5 count</g:title>
+      <g:description>A modern twist on the classic Atreyapuram Putharekulu, folded into a crisp samosa shape and layered with sugar and a rich mix of cashews, almonds, and pistachios. The signature paper-thin rice sheets stay delicate while the folded shape makes it easier to hold, gift, and share.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_samosa_sugar_dryfruit/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/puth-samosa-sugar-dryfruit-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>9.49 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PSAMS10</g:id>
+      <g:item_group_id>puth_samosa_sugar_dryfruit</g:item_group_id>
+      <g:size>10 count</g:size>
+      <g:title>Samosa Putharekulu - Sugar (Dry Fruit) — 10 count</g:title>
+      <g:description>A modern twist on the classic Atreyapuram Putharekulu, folded into a crisp samosa shape and layered with sugar and a rich mix of cashews, almonds, and pistachios. The signature paper-thin rice sheets stay delicate while the folded shape makes it easier to hold, gift, and share.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_samosa_sugar_dryfruit/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/puth-samosa-sugar-dryfruit-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>18.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PSAMJ5</g:id>
+      <g:item_group_id>puth_samosa_jaggery_dryfruit</g:item_group_id>
+      <g:size>5 count</g:size>
+      <g:title>Samosa Putharekulu - Jaggery (Dry Fruit) — 5 count</g:title>
+      <g:description>The samosa-folded Putharekulu made with jaggery instead of sugar for a deeper, warmer sweetness. Delicate rice sheets are folded around roasted cashews, almonds, and pistachios, giving a traditional village-style finish in a fun, easy-to-share shape.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_samosa_jaggery_dryfruit/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/puth-samosa-jaggery-dryfruit-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>9.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PSAMJ10</g:id>
+      <g:item_group_id>puth_samosa_jaggery_dryfruit</g:item_group_id>
+      <g:size>10 count</g:size>
+      <g:title>Samosa Putharekulu - Jaggery (Dry Fruit) — 10 count</g:title>
+      <g:description>The samosa-folded Putharekulu made with jaggery instead of sugar for a deeper, warmer sweetness. Delicate rice sheets are folded around roasted cashews, almonds, and pistachios, giving a traditional village-style finish in a fun, easy-to-share shape.</g:description>
+      <g:link>https://www.shrish.co/shop/products/putharekulu/puth_samosa_jaggery_dryfruit/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/putharekulu/puth-samosa-jaggery-dryfruit-2026-1.jpg</g:image_link>
       <g:availability>in_stock</g:availability>
       <g:price>19.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Bakery &gt; Bakery Assortments</g:google_product_category>
       <g:brand>Shrish</g:brand>
       <g:condition>new</g:condition>
       <g:identifier_exists>no</g:identifier_exists>
     </item>
     <item>
-      <g:id>pickle-carrot-250g</g:id>
-      <g:item_group_id>picklespodi-carrot-pickle</g:item_group_id>
-      <g:title>Carrot Pickle — 250g</g:title>
-      <g:description>Andhra-style carrot pickle made with firm carrot pieces, chilli, mustard, fenugreek, turmeric, salt, and oil. Slightly sweet, spicy, and kid-friendly compared with very hot avakai.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-carrot-pickle/</g:link>
+      <g:id>MJS250</g:id>
+      <g:item_group_id>mango_jelly_sugar</g:item_group_id>
+      <g:size>250g</g:size>
+      <g:title>Mango Jelly - Sugar (Mamidi Thandra) — 250g</g:title>
+      <g:description>A year-round bestseller made from ripe mango pulp slowly dried into soft fruit leather sheets. This classic Mamidi Thandra has a bright mango flavour, chewy bite, and balanced sweetness that makes it an easy favourite for both gifting and snacking.</g:description>
+      <g:link>https://www.shrish.co/shop/products/jellysnacks/mango_jelly_sugar/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/jellysnacks/mango-jelly-sugar-2026.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>7.49 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>MJS500</g:id>
+      <g:item_group_id>mango_jelly_sugar</g:item_group_id>
+      <g:size>500g</g:size>
+      <g:title>Mango Jelly - Sugar (Mamidi Thandra) — 500g</g:title>
+      <g:description>A year-round bestseller made from ripe mango pulp slowly dried into soft fruit leather sheets. This classic Mamidi Thandra has a bright mango flavour, chewy bite, and balanced sweetness that makes it an easy favourite for both gifting and snacking.</g:description>
+      <g:link>https://www.shrish.co/shop/products/jellysnacks/mango_jelly_sugar/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/jellysnacks/mango-jelly-sugar-2026.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>14.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>MJJ250</g:id>
+      <g:item_group_id>mango_jelly_jaggery</g:item_group_id>
+      <g:size>250g</g:size>
+      <g:title>Mango Jelly - Jaggery (Mamidi Thandra) — 250g</g:title>
+      <g:description>A seasonal jaggery-based Mamidi Thandra with a deeper colour and warmer sweetness than the sugar version. It keeps the same chewy mango-fruit texture while adding a richer, more traditional finish that serious mango-jelly lovers usually look for first.</g:description>
+      <g:link>https://www.shrish.co/shop/products/jellysnacks/mango_jelly_jaggery/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/jellysnacks/mango-jelly-jaggery-2026.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>7.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>MJJ500</g:id>
+      <g:item_group_id>mango_jelly_jaggery</g:item_group_id>
+      <g:size>500g</g:size>
+      <g:title>Mango Jelly - Jaggery (Mamidi Thandra) — 500g</g:title>
+      <g:description>A seasonal jaggery-based Mamidi Thandra with a deeper colour and warmer sweetness than the sugar version. It keeps the same chewy mango-fruit texture while adding a richer, more traditional finish that serious mango-jelly lovers usually look for first.</g:description>
+      <g:link>https://www.shrish.co/shop/products/jellysnacks/mango_jelly_jaggery/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/jellysnacks/mango-jelly-jaggery-2026.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>15.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>PFJ500</g:id>
+      <g:item_group_id>palm_jelly</g:item_group_id>
+      <g:size>500g</g:size>
+      <g:title>Palm Fruit Jelly (Thati Thandra) — 500g</g:title>
+      <g:description>A distinctive seasonal Thati Thandra made from palm fruit pulp with a richer, earthier flavour than mango jelly. It is softer, darker, and more rustic in character, making it a niche favourite for customers who want a more traditional Andhra-style fruit sweet.</g:description>
+      <g:link>https://www.shrish.co/shop/products/jellysnacks/palm_jelly/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/jellysnacks/img_palm_jelly.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>16.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-MADKAJA-250</g:id>
+      <g:item_group_id>sweets-madatha-kaja</g:item_group_id>
+      <g:size>250g (~5 count)</g:size>
+      <g:title>Madatha Kaja — 250g (~5 count)</g:title>
+      <g:description>The famous Tapeswaram Madatha Kaja from the Godavari region - deep-fried pastry folded into many delicate layers and soaked in sugar syrup. Crisp on the outside, soft and juicy inside, with a light cardamom aroma. A classic gifting and festival sweet.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-madatha-kaja/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/madatha-kaja-2026-1.jpg</g:image_link>
       <g:availability>in_stock</g:availability>
       <g:price>10.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
       <g:brand>Shrish</g:brand>
       <g:condition>new</g:condition>
       <g:identifier_exists>no</g:identifier_exists>
     </item>
     <item>
-      <g:id>pickle-carrot-500g</g:id>
-      <g:item_group_id>picklespodi-carrot-pickle</g:item_group_id>
-      <g:title>Carrot Pickle — 500g</g:title>
-      <g:description>Andhra-style carrot pickle made with firm carrot pieces, chilli, mustard, fenugreek, turmeric, salt, and oil. Slightly sweet, spicy, and kid-friendly compared with very hot avakai.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-carrot-pickle/</g:link>
+      <g:id>SW-MADKAJA-500</g:id>
+      <g:item_group_id>sweets-madatha-kaja</g:item_group_id>
+      <g:size>500g (~10 count)</g:size>
+      <g:title>Madatha Kaja — 500g (~10 count)</g:title>
+      <g:description>The famous Tapeswaram Madatha Kaja from the Godavari region - deep-fried pastry folded into many delicate layers and soaked in sugar syrup. Crisp on the outside, soft and juicy inside, with a light cardamom aroma. A classic gifting and festival sweet.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-madatha-kaja/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/madatha-kaja-2026-1.jpg</g:image_link>
       <g:availability>in_stock</g:availability>
       <g:price>19.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-GOTKAJA-250</g:id>
+      <g:item_group_id>sweets-gottam-kaja</g:item_group_id>
+      <g:size>250g</g:size>
+      <g:title>Gottam Kaja — 250g</g:title>
+      <g:description>Kakinada's signature tube-shaped Kaja, a Godavari delicacy loved for its juicy syrup-soaked centre and crisp outer bite. A wonderful balance of sweet, fluffy, and crunchy in every hollow piece.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-gottam-kaja/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/gottam-kaja-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>10.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-GOTKAJA-500</g:id>
+      <g:item_group_id>sweets-gottam-kaja</g:item_group_id>
+      <g:size>500g</g:size>
+      <g:title>Gottam Kaja — 500g</g:title>
+      <g:description>Kakinada's signature tube-shaped Kaja, a Godavari delicacy loved for its juicy syrup-soaked centre and crisp outer bite. A wonderful balance of sweet, fluffy, and crunchy in every hollow piece.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-gottam-kaja/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/gottam-kaja-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>19.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-BGAVVALU-250</g:id>
+      <g:item_group_id>sweets-bellam-gavvalu</g:item_group_id>
+      <g:size>250g</g:size>
+      <g:title>Bellam Gavvalu — 250g</g:title>
+      <g:description>Crisp little shell-shaped fritters coated in a glossy jaggery syrup. A traditional Andhra festival sweet with a satisfying crunch and warm, rustic jaggery sweetness - a Sankranthi and Diwali favourite.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-bellam-gavvalu/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/bellam-gavvalu-2026.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>9.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-BGAVVALU-500</g:id>
+      <g:item_group_id>sweets-bellam-gavvalu</g:item_group_id>
+      <g:size>500g</g:size>
+      <g:title>Bellam Gavvalu — 500g</g:title>
+      <g:description>Crisp little shell-shaped fritters coated in a glossy jaggery syrup. A traditional Andhra festival sweet with a satisfying crunch and warm, rustic jaggery sweetness - a Sankranthi and Diwali favourite.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-bellam-gavvalu/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/bellam-gavvalu-2026.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>17.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-RAVALAD-250</g:id>
+      <g:item_group_id>sweets-rava-laddu</g:item_group_id>
+      <g:size>250g (~5 count)</g:size>
+      <g:title>Rava Laddu — 250g (~5 count)</g:title>
+      <g:description>Classic semolina laddus roasted in ghee and bound with sugar syrup, studded with cashews and a hint of cardamom. Soft, melt-in-mouth, and always a crowd-pleaser for festivals and everyday treats.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-rava-laddu/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/rava-laddu-2026.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>10.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-RAVALAD-500</g:id>
+      <g:item_group_id>sweets-rava-laddu</g:item_group_id>
+      <g:size>500g (~10 count)</g:size>
+      <g:title>Rava Laddu — 500g (~10 count)</g:title>
+      <g:description>Classic semolina laddus roasted in ghee and bound with sugar syrup, studded with cashews and a hint of cardamom. Soft, melt-in-mouth, and always a crowd-pleaser for festivals and everyday treats.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-rava-laddu/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/rava-laddu-2026.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>19.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-SUNNUND-250</g:id>
+      <g:item_group_id>sweets-sunnundalu</g:item_group_id>
+      <g:size>250g (~5 count)</g:size>
+      <g:title>Sunnundalu (Urad Dal Laddu) — 250g (~5 count)</g:title>
+      <g:description>A wholesome traditional Andhra laddu made from roasted urad dal ground fine and bound with ghee and jaggery or sugar. Nutty, protein-rich, and deeply comforting - a homestyle sweet often made for new mothers and festivals.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-sunnundalu/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/sunnundalu-2026.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>9.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-SUNNUND-500</g:id>
+      <g:item_group_id>sweets-sunnundalu</g:item_group_id>
+      <g:size>500g (~10 count)</g:size>
+      <g:title>Sunnundalu (Urad Dal Laddu) — 500g (~10 count)</g:title>
+      <g:description>A wholesome traditional Andhra laddu made from roasted urad dal ground fine and bound with ghee and jaggery or sugar. Nutty, protein-rich, and deeply comforting - a homestyle sweet often made for new mothers and festivals.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-sunnundalu/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/sunnundalu-2026.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>18.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-TOKKUDU-250</g:id>
+      <g:item_group_id>sweets-tokkudu-laddu</g:item_group_id>
+      <g:size>250g (~5 count)</g:size>
+      <g:title>Tokkudu Laddu (Bandar Laddu) — 250g (~5 count)</g:title>
+      <g:description>The famous Bandar Laddu from Machilipatnam - crisp besan boondi that is ground and pounded (tokkudu) with sugar syrup and ghee into a stunningly smooth, melt-in-mouth laddu. A prized Andhra sweet with a rich, creamy texture.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-tokkudu-laddu/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/tokkudu-laddu-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>12.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-TOKKUDU-500</g:id>
+      <g:item_group_id>sweets-tokkudu-laddu</g:item_group_id>
+      <g:size>500g (~10 count)</g:size>
+      <g:title>Tokkudu Laddu (Bandar Laddu) — 500g (~10 count)</g:title>
+      <g:description>The famous Bandar Laddu from Machilipatnam - crisp besan boondi that is ground and pounded (tokkudu) with sugar syrup and ghee into a stunningly smooth, melt-in-mouth laddu. A prized Andhra sweet with a rich, creamy texture.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-tokkudu-laddu/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/tokkudu-laddu-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>23.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-FLAXLAD-250</g:id>
+      <g:item_group_id>sweets-flaxseed-laddu</g:item_group_id>
+      <g:size>250g (~5 count)</g:size>
+      <g:title>Flaxseed Laddu (Avise Laddu) — 250g (~5 count)</g:title>
+      <g:description>A nourishing laddu made from roasted flaxseeds bound with jaggery and a touch of ghee. Earthy, lightly sweet, and rich in fibre and omega-3 - a guilt-free treat for health-conscious customers.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-flaxseed-laddu/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/flaxseed-laddu-2026.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>11.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-FLAXLAD-500</g:id>
+      <g:item_group_id>sweets-flaxseed-laddu</g:item_group_id>
+      <g:size>500g (~10 count)</g:size>
+      <g:title>Flaxseed Laddu (Avise Laddu) — 500g (~10 count)</g:title>
+      <g:description>A nourishing laddu made from roasted flaxseeds bound with jaggery and a touch of ghee. Earthy, lightly sweet, and rich in fibre and omega-3 - a guilt-free treat for health-conscious customers.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-flaxseed-laddu/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/flaxseed-laddu-2026.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>21.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-RAGILAD-250</g:id>
+      <g:item_group_id>sweets-ragi-laddu</g:item_group_id>
+      <g:size>250g (~5 count)</g:size>
+      <g:title>Ragi Laddu (Finger Millet Laddu) — 250g (~5 count)</g:title>
+      <g:description>A wholesome millet laddu made with roasted ragi flour, jaggery, ghee, and nuts. Naturally rich in iron and calcium with a warm, malty sweetness - a nutritious sweet the whole family can enjoy.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-ragi-laddu/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/ragi-laddu-2026.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>11.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-RAGILAD-500</g:id>
+      <g:item_group_id>sweets-ragi-laddu</g:item_group_id>
+      <g:size>500g (~10 count)</g:size>
+      <g:title>Ragi Laddu (Finger Millet Laddu) — 500g (~10 count)</g:title>
+      <g:description>A wholesome millet laddu made with roasted ragi flour, jaggery, ghee, and nuts. Naturally rich in iron and calcium with a warm, malty sweetness - a nutritious sweet the whole family can enjoy.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-ragi-laddu/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/ragi-laddu-2026.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>21.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-KAJJIK-250</g:id>
+      <g:item_group_id>sweets-kajji-kayalu</g:item_group_id>
+      <g:size>250g (~5 count)</g:size>
+      <g:title>Kajji Kayalu (Kobbari) — 250g (~5 count)</g:title>
+      <g:description>Crisp half-moon pastries stuffed with a sweet coconut, sugar, and cardamom filling, then deep-fried to a golden crunch. A beloved Andhra festival sweet with a delicate flaky shell and fragrant coconut centre.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-kajji-kayalu/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/kajji-kayalu-2026.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>10.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SW-KAJJIK-500</g:id>
+      <g:item_group_id>sweets-kajji-kayalu</g:item_group_id>
+      <g:size>500g (~10 count)</g:size>
+      <g:title>Kajji Kayalu (Kobbari) — 500g (~10 count)</g:title>
+      <g:description>Crisp half-moon pastries stuffed with a sweet coconut, sugar, and cardamom filling, then deep-fried to a golden crunch. A beloved Andhra festival sweet with a delicate flaky shell and fragrant coconut centre.</g:description>
+      <g:link>https://www.shrish.co/shop/products/sweets/sweets-kajji-kayalu/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/sweets/kajji-kayalu-2026.webp</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>19.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Candy &amp; Chocolate</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SN-RAGIMUR-250</g:id>
+      <g:item_group_id>snacks-ragi-murukulu</g:item_group_id>
+      <g:size>250g</g:size>
+      <g:title>Ragi Murukulu — 250g</g:title>
+      <g:description>Crispy spiral murukulu made with nutritious ragi (finger millet) and rice flour, seasoned with cumin and a gentle spice. A wholesome, crunchy tea-time snack with an earthy millet flavour.</g:description>
+      <g:link>https://www.shrish.co/shop/products/snacks/snacks-ragi-murukulu/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/snacks/ragi-murukulu-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>9.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Snack Foods</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SN-RAGIMUR-500</g:id>
+      <g:item_group_id>snacks-ragi-murukulu</g:item_group_id>
+      <g:size>500g</g:size>
+      <g:title>Ragi Murukulu — 500g</g:title>
+      <g:description>Crispy spiral murukulu made with nutritious ragi (finger millet) and rice flour, seasoned with cumin and a gentle spice. A wholesome, crunchy tea-time snack with an earthy millet flavour.</g:description>
+      <g:link>https://www.shrish.co/shop/products/snacks/snacks-ragi-murukulu/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/snacks/ragi-murukulu-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>17.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Snack Foods</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SN-RIBBON-250</g:id>
+      <g:item_group_id>snacks-ribbon-pakodi</g:item_group_id>
+      <g:size>250g</g:size>
+      <g:title>Ribbon Pakodi — 250g</g:title>
+      <g:description>Flat, ribbon-shaped deep-fried snack made from gram flour and rice flour with a mild spice and garlic note. Light, crisp, and moreish - a classic South Indian festival and tea-time savoury.</g:description>
+      <g:link>https://www.shrish.co/shop/products/snacks/snacks-ribbon-pakodi/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/snacks/ribbon-pakodi-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>8.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Snack Foods</g:google_product_category>
+      <g:brand>Shrish</g:brand>
+      <g:condition>new</g:condition>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>SN-RIBBON-500</g:id>
+      <g:item_group_id>snacks-ribbon-pakodi</g:item_group_id>
+      <g:size>500g</g:size>
+      <g:title>Ribbon Pakodi — 500g</g:title>
+      <g:description>Flat, ribbon-shaped deep-fried snack made from gram flour and rice flour with a mild spice and garlic note. Light, crisp, and moreish - a classic South Indian festival and tea-time savoury.</g:description>
+      <g:link>https://www.shrish.co/shop/products/snacks/snacks-ribbon-pakodi/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/snacks/ribbon-pakodi-2026-1.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>15.99 USD</g:price>
+      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Snack Foods</g:google_product_category>
       <g:brand>Shrish</g:brand>
       <g:condition>new</g:condition>
       <g:identifier_exists>no</g:identifier_exists>
@@ -59,6 +772,7 @@
     <item>
       <g:id>pickle-cauliflower-250g</g:id>
       <g:item_group_id>picklespodi-cauliflower-pickle</g:item_group_id>
+      <g:size>250g</g:size>
       <g:title>Cauliflower Pickle — 250g</g:title>
       <g:description>Andhra-style cauliflower pickle with crunchy cauliflower florets coated in red chilli, mustard, fenugreek, turmeric, salt, and oil. Tangy, spicy, and great as a rice or tiffin side.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-cauliflower-pickle/</g:link>
@@ -73,6 +787,7 @@
     <item>
       <g:id>pickle-cauliflower-500g</g:id>
       <g:item_group_id>picklespodi-cauliflower-pickle</g:item_group_id>
+      <g:size>500g</g:size>
       <g:title>Cauliflower Pickle — 500g</g:title>
       <g:description>Andhra-style cauliflower pickle with crunchy cauliflower florets coated in red chilli, mustard, fenugreek, turmeric, salt, and oil. Tangy, spicy, and great as a rice or tiffin side.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-cauliflower-pickle/</g:link>
@@ -85,34 +800,9 @@
       <g:identifier_exists>no</g:identifier_exists>
     </item>
     <item>
-      <g:id>pickle-chintakaya-250g</g:id>
-      <g:item_group_id>picklespodi-chintakaya-pachadi-tamarind-pickle</g:item_group_id>
-      <g:title>Chintakaya Pachadi / Tamarind Pickle — 250g</g:title>
-      <g:description>Traditional tamarind-style pickle with sharp tangy flavor and South Indian spice. Excellent with rice, dal, curd rice, and breakfast items.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-chintakaya-pachadi-tamarind-pickle/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>10.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
-      <g:id>pickle-chintakaya-500g</g:id>
-      <g:item_group_id>picklespodi-chintakaya-pachadi-tamarind-pickle</g:item_group_id>
-      <g:title>Chintakaya Pachadi / Tamarind Pickle — 500g</g:title>
-      <g:description>Traditional tamarind-style pickle with sharp tangy flavor and South Indian spice. Excellent with rice, dal, curd rice, and breakfast items.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-chintakaya-pachadi-tamarind-pickle/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>18.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
       <g:id>pickle-drumstick-250g</g:id>
       <g:item_group_id>picklespodi-drumstick-pickle</g:item_group_id>
+      <g:size>250g</g:size>
       <g:title>Drumstick Pickle — 250g</g:title>
       <g:description>Traditional drumstick pickle with spicy, tangy flavor. A good South Indian side for rice and dal.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-drumstick-pickle/</g:link>
@@ -127,6 +817,7 @@
     <item>
       <g:id>pickle-drumstick-500g</g:id>
       <g:item_group_id>picklespodi-drumstick-pickle</g:item_group_id>
+      <g:size>500g</g:size>
       <g:title>Drumstick Pickle — 500g</g:title>
       <g:description>Traditional drumstick pickle with spicy, tangy flavor. A good South Indian side for rice and dal.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-drumstick-pickle/</g:link>
@@ -139,34 +830,9 @@
       <g:identifier_exists>no</g:identifier_exists>
     </item>
     <item>
-      <g:id>pickle-garlic-250g</g:id>
-      <g:item_group_id>picklespodi-garlic-pickle</g:item_group_id>
-      <g:title>Garlic Pickle — 250g</g:title>
-      <g:description>Bold garlic pickle with strong spice and deep flavor. Best for customers who love a punchy pickle with rice, dosa, or chapati.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-garlic-pickle/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>10.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
-      <g:id>pickle-garlic-500g</g:id>
-      <g:item_group_id>picklespodi-garlic-pickle</g:item_group_id>
-      <g:title>Garlic Pickle — 500g</g:title>
-      <g:description>Bold garlic pickle with strong spice and deep flavor. Best for customers who love a punchy pickle with rice, dosa, or chapati.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-garlic-pickle/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>18.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
       <g:id>pickle-gongura-250g</g:id>
       <g:item_group_id>picklespodi-gongura-pickle</g:item_group_id>
+      <g:size>250g</g:size>
       <g:title>Gongura Pickle/Pachadi — 250g</g:title>
       <g:description>Tangy gongura pickle with bold South Indian spice. A Telugu favorite that pairs beautifully with hot rice and ghee.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-gongura-pickle/</g:link>
@@ -181,6 +847,7 @@
     <item>
       <g:id>pickle-gongura-500g</g:id>
       <g:item_group_id>picklespodi-gongura-pickle</g:item_group_id>
+      <g:size>500g</g:size>
       <g:title>Gongura Pickle/Pachadi — 500g</g:title>
       <g:description>Tangy gongura pickle with bold South Indian spice. A Telugu favorite that pairs beautifully with hot rice and ghee.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-gongura-pickle/</g:link>
@@ -193,34 +860,9 @@
       <g:identifier_exists>no</g:identifier_exists>
     </item>
     <item>
-      <g:id>pickle-karivepaku-pachadi-250g</g:id>
-      <g:item_group_id>picklespodi-karivepaku-pachadi-curry-leaf-pickle</g:item_group_id>
-      <g:title>Karivepaku / Curry Leaf Pachadi — 250g</g:title>
-      <g:description>Aromatic curry leaf pickle with earthy South Indian flavor and medium spice. Good with rice, idli, dosa, and curd rice.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-karivepaku-pachadi-curry-leaf-pickle/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>10.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
-      <g:id>pickle-karivepaku-pachadi-500g</g:id>
-      <g:item_group_id>picklespodi-karivepaku-pachadi-curry-leaf-pickle</g:item_group_id>
-      <g:title>Karivepaku / Curry Leaf Pachadi — 500g</g:title>
-      <g:description>Aromatic curry leaf pickle with earthy South Indian flavor and medium spice. Good with rice, idli, dosa, and curd rice.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-karivepaku-pachadi-curry-leaf-pickle/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>18.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
       <g:id>pickle-kothimeera-250g</g:id>
       <g:item_group_id>picklespodi-kothimeera-coriander-pickle</g:item_group_id>
+      <g:size>250g</g:size>
       <g:title>Kothimeera Pachadi / Coriander Pickle — 250g</g:title>
       <g:description>Fresh coriander-style pickle with a herby, spicy, and tangy taste. A good everyday pickle for rice, dosa, idli, and chapati.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-kothimeera-coriander-pickle/</g:link>
@@ -235,6 +877,7 @@
     <item>
       <g:id>pickle-kothimeera-500g</g:id>
       <g:item_group_id>picklespodi-kothimeera-coriander-pickle</g:item_group_id>
+      <g:size>500g</g:size>
       <g:title>Kothimeera Pachadi / Coriander Pickle — 500g</g:title>
       <g:description>Fresh coriander-style pickle with a herby, spicy, and tangy taste. A good everyday pickle for rice, dosa, idli, and chapati.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-kothimeera-coriander-pickle/</g:link>
@@ -247,90 +890,13 @@
       <g:identifier_exists>no</g:identifier_exists>
     </item>
     <item>
-      <g:id>pickle-mango-avakai-250g</g:id>
-      <g:item_group_id>picklespodi-mango-avakai-pickle</g:item_group_id>
-      <g:title>Mango Avakai Pickle — 250g</g:title>
-      <g:description>Traditional Andhra-style raw mango avakai with mustard, red chilli, spices, and oil. Spicy, tangy, and perfect with hot rice, curd rice, dosa, idli, and chapati.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-mango-avakai-pickle/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>10.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
-      <g:id>pickle-mango-avakai-500g</g:id>
-      <g:item_group_id>picklespodi-mango-avakai-pickle</g:item_group_id>
-      <g:title>Mango Avakai Pickle — 500g</g:title>
-      <g:description>Traditional Andhra-style raw mango avakai with mustard, red chilli, spices, and oil. Spicy, tangy, and perfect with hot rice, curd rice, dosa, idli, and chapati.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-mango-avakai-pickle/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>20.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
-      <g:id>pickle-mango-ginger-250g</g:id>
-      <g:item_group_id>picklespodi-mango-ginger-pickle</g:item_group_id>
-      <g:title>Mango Ginger Pickle / Pachadi — 250g</g:title>
-      <g:description>A rare and flavorful pickle made with mango ginger. Fresh, aromatic, mildly tangy, and different from regular mango pickle.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-mango-ginger-pickle/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>10.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
-      <g:id>pickle-mango-ginger-500g</g:id>
-      <g:item_group_id>picklespodi-mango-ginger-pickle</g:item_group_id>
-      <g:title>Mango Ginger Pickle / Pachadi — 500g</g:title>
-      <g:description>A rare and flavorful pickle made with mango ginger. Fresh, aromatic, mildly tangy, and different from regular mango pickle.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-mango-ginger-pickle/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>18.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
-      <g:id>pickle-mango-thokku-magai-250g</g:id>
-      <g:item_group_id>picklespodi-mango-thokku-magai-pickle</g:item_group_id>
-      <g:title>Mango Thokku / Magai Pickle — 250g</g:title>
-      <g:description>Classic grated mango-style pickle with a rich spicy and tangy flavor. A strong everyday side for rice, dosa, idli, and curd rice.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-mango-thokku-magai-pickle/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>10.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
-      <g:id>pickle-mango-thokku-magai-500g</g:id>
-      <g:item_group_id>picklespodi-mango-thokku-magai-pickle</g:item_group_id>
-      <g:title>Mango Thokku / Magai Pickle — 500g</g:title>
-      <g:description>Classic grated mango-style pickle with a rich spicy and tangy flavor. A strong everyday side for rice, dosa, idli, and curd rice.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-mango-thokku-magai-pickle/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>18.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
       <g:id>pickle-mixed-vegetable-250g</g:id>
       <g:item_group_id>picklespodi-mixed-vegetable-pickle</g:item_group_id>
+      <g:size>250g</g:size>
       <g:title>Mixed Vegetable Pickle — 250g</g:title>
       <g:description>Andhra-style mixed vegetable pickle with carrot, cauliflower, green chilli, and seasonal vegetables in a bold chilli-mustard spice mix. A colorful, crunchy side for rice and tiffins.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-mixed-vegetable-pickle/</g:link>
-      <g:image_link>https://www.shrish.co/images/products/pickles/mixed-vegetable-2026-1.jpg</g:image_link>
+      <g:image_link>https://www.shrish.co/images/products/pickles/mixed-vegetable-pickle-2026-1.jpg</g:image_link>
       <g:availability>in_stock</g:availability>
       <g:price>10.99 USD</g:price>
       <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
@@ -341,10 +907,11 @@
     <item>
       <g:id>pickle-mixed-vegetable-500g</g:id>
       <g:item_group_id>picklespodi-mixed-vegetable-pickle</g:item_group_id>
+      <g:size>500g</g:size>
       <g:title>Mixed Vegetable Pickle — 500g</g:title>
       <g:description>Andhra-style mixed vegetable pickle with carrot, cauliflower, green chilli, and seasonal vegetables in a bold chilli-mustard spice mix. A colorful, crunchy side for rice and tiffins.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-mixed-vegetable-pickle/</g:link>
-      <g:image_link>https://www.shrish.co/images/products/pickles/mixed-vegetable-2026-1.jpg</g:image_link>
+      <g:image_link>https://www.shrish.co/images/products/pickles/mixed-vegetable-pickle-2026-1.jpg</g:image_link>
       <g:availability>in_stock</g:availability>
       <g:price>18.99 USD</g:price>
       <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
@@ -355,6 +922,7 @@
     <item>
       <g:id>pickle-pandu-mirchi-250g</g:id>
       <g:item_group_id>picklespodi-pandu-mirchi-pickle</g:item_group_id>
+      <g:size>250g</g:size>
       <g:title>Pandu Mirchi Pickle — 250g</g:title>
       <g:description>Spicy red chilli pickle for customers who love serious heat. Strong, flavorful, and best with hot rice, dosa, idli, and curd rice.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-pandu-mirchi-pickle/</g:link>
@@ -369,6 +937,7 @@
     <item>
       <g:id>pickle-pandu-mirchi-500g</g:id>
       <g:item_group_id>picklespodi-pandu-mirchi-pickle</g:item_group_id>
+      <g:size>500g</g:size>
       <g:title>Pandu Mirchi Pickle — 500g</g:title>
       <g:description>Spicy red chilli pickle for customers who love serious heat. Strong, flavorful, and best with hot rice, dosa, idli, and curd rice.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-pandu-mirchi-pickle/</g:link>
@@ -383,6 +952,7 @@
     <item>
       <g:id>pickle-tomato-250g</g:id>
       <g:item_group_id>picklespodi-tomato-pickle</g:item_group_id>
+      <g:size>250g</g:size>
       <g:title>Tomato Pickle — 250g</g:title>
       <g:description>Rich and spicy tomato pickle with a deep, tangy flavor. Great with rice, dosa, upma, idli, chapati, and curd rice.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-tomato-pickle/</g:link>
@@ -397,6 +967,7 @@
     <item>
       <g:id>pickle-tomato-500g</g:id>
       <g:item_group_id>picklespodi-tomato-pickle</g:item_group_id>
+      <g:size>500g</g:size>
       <g:title>Tomato Pickle — 500g</g:title>
       <g:description>Rich and spicy tomato pickle with a deep, tangy flavor. Great with rice, dosa, upma, idli, chapati, and curd rice.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-tomato-pickle/</g:link>
@@ -409,34 +980,9 @@
       <g:identifier_exists>no</g:identifier_exists>
     </item>
     <item>
-      <g:id>podi-dhaniyalu-100g</g:id>
-      <g:item_group_id>picklespodi-dhaniyalu-podi-coriander-spice-powder</g:item_group_id>
-      <g:title>Dhaniyalu Podi / Coriander Spice Powder — 100g</g:title>
-      <g:description>Andhra-style dhaniyalu podi made with roasted coriander seeds, chillies, cumin, and traditional spices. Aromatic, earthy, and perfect for mixing with hot rice and ghee or sprinkling on tiffins.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-dhaniyalu-podi-coriander-spice-powder/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>6.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
-      <g:id>podi-dhaniyalu-200g</g:id>
-      <g:item_group_id>picklespodi-dhaniyalu-podi-coriander-spice-powder</g:item_group_id>
-      <g:title>Dhaniyalu Podi / Coriander Spice Powder — 200g</g:title>
-      <g:description>Andhra-style dhaniyalu podi made with roasted coriander seeds, chillies, cumin, and traditional spices. Aromatic, earthy, and perfect for mixing with hot rice and ghee or sprinkling on tiffins.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-dhaniyalu-podi-coriander-spice-powder/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>12.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
       <g:id>podi-drumstick-leaf-100g</g:id>
       <g:item_group_id>picklespodi-drumstick-leaf-podi-munagaku-podi</g:item_group_id>
+      <g:size>100g</g:size>
       <g:title>Moringa Powder / Munagaku Podi — 100g</g:title>
       <g:description>Andhra-style moringa powder made with roasted munagaku leaves, dals, chillies, garlic, and spices. Nutty, earthy, and a wholesome option with hot rice, ghee, idli, and dosa.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-drumstick-leaf-podi-munagaku-podi/</g:link>
@@ -451,6 +997,7 @@
     <item>
       <g:id>podi-drumstick-leaf-200g</g:id>
       <g:item_group_id>picklespodi-drumstick-leaf-podi-munagaku-podi</g:item_group_id>
+      <g:size>200g</g:size>
       <g:title>Moringa Powder / Munagaku Podi — 200g</g:title>
       <g:description>Andhra-style moringa powder made with roasted munagaku leaves, dals, chillies, garlic, and spices. Nutty, earthy, and a wholesome option with hot rice, ghee, idli, and dosa.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-drumstick-leaf-podi-munagaku-podi/</g:link>
@@ -465,6 +1012,7 @@
     <item>
       <g:id>podi-idli-100g</g:id>
       <g:item_group_id>picklespodi-idli-podi</g:item_group_id>
+      <g:size>100g</g:size>
       <g:title>Idli Podi — 100g</g:title>
       <g:description>Classic South Indian idli karam podi. Mix with ghee or oil and serve with idli, dosa, uttapam, or hot rice.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-idli-podi/</g:link>
@@ -479,6 +1027,7 @@
     <item>
       <g:id>podi-idli-200g</g:id>
       <g:item_group_id>picklespodi-idli-podi</g:item_group_id>
+      <g:size>200g</g:size>
       <g:title>Idli Podi — 200g</g:title>
       <g:description>Classic South Indian idli karam podi. Mix with ghee or oil and serve with idli, dosa, uttapam, or hot rice.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-idli-podi/</g:link>
@@ -491,60 +1040,9 @@
       <g:identifier_exists>no</g:identifier_exists>
     </item>
     <item>
-      <g:id>podi-kandi-100g</g:id>
-      <g:item_group_id>picklespodi-kandi-podi</g:item_group_id>
-      <g:title>Kandi Podi — 100g</g:title>
-      <g:description>Traditional dal-based kandi podi with rich South Indian flavor. Best mixed with hot rice and ghee or served with breakfast items.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-kandi-podi/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>7.49 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
-      <g:id>podi-kandi-200g</g:id>
-      <g:item_group_id>picklespodi-kandi-podi</g:item_group_id>
-      <g:title>Kandi Podi — 200g</g:title>
-      <g:description>Traditional dal-based kandi podi with rich South Indian flavor. Best mixed with hot rice and ghee or served with breakfast items.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-kandi-podi/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>13.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
-      <g:id>podi-karapu-garlic-100g</g:id>
-      <g:item_group_id>picklespodi-karapu-podi-with-garlic</g:item_group_id>
-      <g:title>Karapu Podi with Garlic — 100g</g:title>
-      <g:description>Spicy garlic karam podi with bold flavor. Perfect with hot rice and ghee, idli, dosa, or as a spicy side for everyday meals.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-karapu-podi-with-garlic/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>6.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
-      <g:id>podi-karapu-garlic-200g</g:id>
-      <g:item_group_id>picklespodi-karapu-podi-with-garlic</g:item_group_id>
-      <g:title>Karapu Podi with Garlic — 200g</g:title>
-      <g:description>Spicy garlic karam podi with bold flavor. Perfect with hot rice and ghee, idli, dosa, or as a spicy side for everyday meals.</g:description>
-      <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-karapu-podi-with-garlic/</g:link>
-      <g:availability>in_stock</g:availability>
-      <g:price>12.99 USD</g:price>
-      <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
-      <g:brand>Shrish</g:brand>
-      <g:condition>new</g:condition>
-      <g:identifier_exists>no</g:identifier_exists>
-    </item>
-    <item>
       <g:id>podi-karivepaku-100g</g:id>
       <g:item_group_id>picklespodi-karivepaku-podi-curry-leaf-powder</g:item_group_id>
+      <g:size>100g</g:size>
       <g:title>Karivepaku Podi / Curry Leaf Powder — 100g</g:title>
       <g:description>Aromatic curry leaf podi with traditional South Indian spices. Mix with hot rice and ghee or enjoy with idli, dosa, and upma.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-karivepaku-podi-curry-leaf-powder/</g:link>
@@ -559,6 +1057,7 @@
     <item>
       <g:id>podi-karivepaku-200g</g:id>
       <g:item_group_id>picklespodi-karivepaku-podi-curry-leaf-powder</g:item_group_id>
+      <g:size>200g</g:size>
       <g:title>Karivepaku Podi / Curry Leaf Powder — 200g</g:title>
       <g:description>Aromatic curry leaf podi with traditional South Indian spices. Mix with hot rice and ghee or enjoy with idli, dosa, and upma.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-karivepaku-podi-curry-leaf-powder/</g:link>
@@ -573,6 +1072,7 @@
     <item>
       <g:id>pickle-karela-250g</g:id>
       <g:item_group_id>picklespodi-karela-bitter-gourd-pickle</g:item_group_id>
+      <g:size>250g</g:size>
       <g:title>Karela Pickle / Kakarakaya Pickle — 250g</g:title>
       <g:description>Andhra-style bitter gourd pickle made with crisp fried karela pieces in a tangy, spicy tamarind and chilli masala. The frying and spices balance the natural bitterness, leaving a bold, appetising pickle for rice and tiffins.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-karela-bitter-gourd-pickle/</g:link>
@@ -587,6 +1087,7 @@
     <item>
       <g:id>pickle-karela-500g</g:id>
       <g:item_group_id>picklespodi-karela-bitter-gourd-pickle</g:item_group_id>
+      <g:size>500g</g:size>
       <g:title>Karela Pickle / Kakarakaya Pickle — 500g</g:title>
       <g:description>Andhra-style bitter gourd pickle made with crisp fried karela pieces in a tangy, spicy tamarind and chilli masala. The frying and spices balance the natural bitterness, leaving a bold, appetising pickle for rice and tiffins.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-karela-bitter-gourd-pickle/</g:link>
@@ -601,6 +1102,7 @@
     <item>
       <g:id>podi-flaxseed-100g</g:id>
       <g:item_group_id>picklespodi-flaxseed-podi-avise-podi</g:item_group_id>
+      <g:size>100g</g:size>
       <g:title>Flaxseed Podi / Avise Podi — 100g</g:title>
       <g:description>A wholesome Andhra-style flaxseed podi made with roasted avise ginjalu, dals, chillies, and garlic. Nutty, earthy, and rich in fibre and omega-3 - a healthy option mixed with hot rice and ghee or sprinkled over idli and dosa.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-flaxseed-podi-avise-podi/</g:link>
@@ -615,6 +1117,7 @@
     <item>
       <g:id>podi-flaxseed-200g</g:id>
       <g:item_group_id>picklespodi-flaxseed-podi-avise-podi</g:item_group_id>
+      <g:size>200g</g:size>
       <g:title>Flaxseed Podi / Avise Podi — 200g</g:title>
       <g:description>A wholesome Andhra-style flaxseed podi made with roasted avise ginjalu, dals, chillies, and garlic. Nutty, earthy, and rich in fibre and omega-3 - a healthy option mixed with hot rice and ghee or sprinkled over idli and dosa.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-flaxseed-podi-avise-podi/</g:link>
@@ -629,6 +1132,7 @@
     <item>
       <g:id>podi-kakarakaya-100g</g:id>
       <g:item_group_id>picklespodi-kakarakaya-karam-podi-bitter-gourd</g:item_group_id>
+      <g:size>100g</g:size>
       <g:title>Kakarakaya Karam Podi / Bitter Gourd Podi — 100g</g:title>
       <g:description>A specialty Andhra podi made from dried bitter gourd roasted with chillies, dals, and spices. Bold, earthy, and mildly bitter with a spicy kick - best mixed with hot rice and ghee for an appetising, wholesome meal.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-kakarakaya-karam-podi-bitter-gourd/</g:link>
@@ -643,6 +1147,7 @@
     <item>
       <g:id>podi-kakarakaya-200g</g:id>
       <g:item_group_id>picklespodi-kakarakaya-karam-podi-bitter-gourd</g:item_group_id>
+      <g:size>200g</g:size>
       <g:title>Kakarakaya Karam Podi / Bitter Gourd Podi — 200g</g:title>
       <g:description>A specialty Andhra podi made from dried bitter gourd roasted with chillies, dals, and spices. Bold, earthy, and mildly bitter with a spicy kick - best mixed with hot rice and ghee for an appetising, wholesome meal.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-kakarakaya-karam-podi-bitter-gourd/</g:link>
@@ -657,9 +1162,11 @@
     <item>
       <g:id>podi-sambar-100g</g:id>
       <g:item_group_id>picklespodi-sambar-powder</g:item_group_id>
+      <g:size>100g</g:size>
       <g:title>Sambar Powder / Sambar Karam — 100g</g:title>
       <g:description>A fresh, aromatic South Indian sambar powder made from roasted coriander, dals, chillies, fenugreek, and curry leaves. Adds authentic depth and warmth to sambar, rasam, and vegetable curries.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-sambar-powder/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/podi/sambar-powder-2026.webp</g:image_link>
       <g:availability>in_stock</g:availability>
       <g:price>4.99 USD</g:price>
       <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
@@ -670,9 +1177,11 @@
     <item>
       <g:id>podi-sambar-200g</g:id>
       <g:item_group_id>picklespodi-sambar-powder</g:item_group_id>
+      <g:size>200g</g:size>
       <g:title>Sambar Powder / Sambar Karam — 200g</g:title>
       <g:description>A fresh, aromatic South Indian sambar powder made from roasted coriander, dals, chillies, fenugreek, and curry leaves. Adds authentic depth and warmth to sambar, rasam, and vegetable curries.</g:description>
       <g:link>https://www.shrish.co/shop/products/picklespodi/picklespodi-sambar-powder/</g:link>
+      <g:image_link>https://www.shrish.co/images/products/podi/sambar-powder-2026.webp</g:image_link>
       <g:availability>in_stock</g:availability>
       <g:price>8.99 USD</g:price>
       <g:google_product_category>Food, Beverages &amp; Tobacco &gt; Food Items &gt; Condiments &amp; Sauces</g:google_product_category>
