@@ -48,6 +48,25 @@ function normalizeCategory(category) {
   return category === 'Mango Jelly' ? 'jellysnacks' : category;
 }
 
+// Structured-data shipping + returns config.
+// Shipping amount/threshold mirror functions/index.js
+// (SHRISH_STANDARD_SHIPPING_AMOUNT / SHRISH_FREE_SHIPPING_THRESHOLD).
+const STANDARD_SHIPPING_USD = '8.99';
+const SHIPPING_COUNTRY = 'US';
+
+// Which products actually ship. MUST stay in sync with isShippingEligible in
+// scripts/generate-merchant-feed.js so page structured data matches the Merchant
+// feed: mangoes and non-veg (meat/seafood) pickles are pickup-only, everything
+// else ships within the USA. displayOnly items never ship.
+function isShippingEligible(product) {
+  if (!product || !product.id || !product.category || product.displayOnly) return false;
+  const category = normalizeCategory(product.category);
+  if (category === 'mangoes') return false;
+  if (String(product.shippingNote || '').trim().toLowerCase() === 'pickup only') return false;
+  if (category === 'picklespodi') return product.shippingNote === 'Shipping eligible';
+  return ['putharekulu', 'jellysnacks', 'sweets', 'snacks'].includes(category);
+}
+
 function productPagePath(product) {
   const category = normalizeCategory(product.category);
   return `shop/products/${category}/${product.id}/`;
@@ -152,6 +171,32 @@ function jsonLd(product, image) {
     url: productPageUrl(product)
   };
   if (primaryVariant && (primaryVariant.sku || primaryVariant.id)) offer.sku = primaryVariant.sku || primaryVariant.id;
+
+  // Returns: our products are perishable foods, so returns are not accepted
+  // (refund.html). True for every offer, pickup or shipped.
+  offer.hasMerchantReturnPolicy = {
+    '@type': 'MerchantReturnPolicy',
+    applicableCountry: SHIPPING_COUNTRY,
+    returnPolicyCategory: 'https://schema.org/MerchantReturnNotPermitted'
+  };
+
+  // Shipping details only for items the checkout actually ships. Pickup-only
+  // items (mangoes, non-veg pickles) get no shippingDetails because they do not
+  // ship — asserting a shipping rate for them would be inaccurate.
+  if (isShippingEligible(product)) {
+    offer.shippingDetails = {
+      '@type': 'OfferShippingDetails',
+      shippingRate: {
+        '@type': 'MonetaryAmount',
+        value: STANDARD_SHIPPING_USD,
+        currency: 'USD'
+      },
+      shippingDestination: {
+        '@type': 'DefinedRegion',
+        addressCountry: SHIPPING_COUNTRY
+      }
+    };
+  }
 
   return JSON.stringify({
     '@context': 'https://schema.org',
@@ -375,7 +420,7 @@ function renderProductPage(product, products) {
           <a class="btn-primary" href="${shopProductUrl(product)}" data-product-action="order_from_shop">Order from shop</a>
           <a class="btn-secondary" href="${ROOT_PREFIX}shop.html" data-product-action="back_to_shop">Back to shop</a>
         </div>
-        <p style="font-size:13px;color:var(--saffron);font-weight:700;margin:-14px 0 24px">&#128666; Free US shipping on orders $75+</p>
+        ${isShippingEligible(product) ? `<p style="font-size:13px;color:var(--saffron);font-weight:700;margin:-14px 0 24px">&#128666; Free US shipping on orders $75+</p>` : `<p style="font-size:13px;color:var(--saffron);font-weight:700;margin:-14px 0 24px">&#128205; Local pickup only &mdash; Short Pump, Chesterfield &amp; Mechanicsville</p>`}
         ${rows.length ? `<div class="product-detail-list">${rows.map(([label, value]) => `<div class="product-detail-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('')}</div>` : ''}
         ${relatedHtml(product, products)}
       </article>
