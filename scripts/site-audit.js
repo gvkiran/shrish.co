@@ -9,7 +9,7 @@ const EXCLUDED_DIRECTORIES = new Set([".git", "archive", "node_modules", "output
 const IGNORED_HTML_FILES = new Set(["google7983544080e9fb70.html"]);
 const VIRTUAL_PATH_PREFIXES = ["/_vercel/", "/api/"];
 const VERCEL_CONFIG_FILE = path.join(ROOT, "vercel.json");
-const SOCIAL_IMAGE_URL = "https://www.shrish.co/images/site/share-putharekulu-gottam-kaja-2026.jpg";
+const SOCIAL_IMAGE_URL = "https://www.shrish.co/images/site/share-kajji-kayalu-2026.jpg";
 let vercelConfig = null;
 try {
   vercelConfig = JSON.parse(fs.readFileSync(VERCEL_CONFIG_FILE, "utf8"));

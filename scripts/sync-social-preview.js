@@ -5,8 +5,8 @@ const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
 const SITEMAP_PATH = path.join(ROOT, "sitemap.xml");
-const SOCIAL_IMAGE_URL = "https://www.shrish.co/images/site/share-putharekulu-gottam-kaja-2026.jpg";
-const SOCIAL_IMAGE_ALT = "Putharekulu and Gottam Kaja Andhra sweets from Shrish";
+const SOCIAL_IMAGE_URL = "https://www.shrish.co/images/site/share-kajji-kayalu-2026.jpg";
+const SOCIAL_IMAGE_ALT = "Kajji Kayalu Andhra sweets from Shrish";
 
 const MANAGED_META_KEYS = [
   ["property", "og:image"],
@@ -20,7 +20,7 @@ const MANAGED_META_KEYS = [
   ["name", "twitter:image:alt"],
 ];
 
-const SOCIAL_META_BLOCK = `  <!-- Shared social preview: Putharekulu and Gottam Kaja -->
+const SOCIAL_META_BLOCK = `  <!-- Shared social preview: Kajji Kayalu -->
   <meta property="og:image" content="${SOCIAL_IMAGE_URL}">
   <meta property="og:image:secure_url" content="${SOCIAL_IMAGE_URL}">
   <meta property="og:image:type" content="image/jpeg">
@@ -42,7 +42,7 @@ function sitemapFiles() {
 }
 
 function removeManagedMeta(html) {
-  let updated = html.replace(/\s*<!-- Shared social preview: Putharekulu and Gottam Kaja -->\s*/g, "\n");
+  let updated = html.replace(/\s*<!-- Shared social preview: (?:Putharekulu and Gottam Kaja|Dry-fruit Putharekulu|Kajji Kayalu) -->\s*/g, "\n");
   for (const [attribute, key] of MANAGED_META_KEYS) {
     const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const pattern = new RegExp(`\\s*<meta\\s+${attribute}=["']${escapedKey}["'][^>]*>`, "gi");
