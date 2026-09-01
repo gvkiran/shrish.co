@@ -194,6 +194,12 @@ function jsonLd(product, image) {
       shippingDestination: {
         '@type': 'DefinedRegion',
         addressCountry: SHIPPING_COUNTRY
+      },
+      // Real fulfillment window: 2-3 business days to dispatch, 5-7 in transit.
+      deliveryTime: {
+        '@type': 'ShippingDeliveryTime',
+        handlingTime: { '@type': 'QuantitativeValue', minValue: 2, maxValue: 3, unitCode: 'DAY' },
+        transitTime: { '@type': 'QuantitativeValue', minValue: 5, maxValue: 7, unitCode: 'DAY' }
       }
     };
   }
